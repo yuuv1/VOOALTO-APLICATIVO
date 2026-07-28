@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><meta charset='UTF-8'><title>Limpar Cache - Vooalto V5</title>
+<style>body{font-family:Arial,sans-serif;background:#1a1a2e;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;flex-direction:column}h1{color:#64FFDA}</style>
+</head>
+<body><h1>Limpando Cache...</h1>
+<script>
+(async()=>{
+  try{
+    if('serviceWorker'in navigator){const r=await navigator.serviceWorker.getRegistrations();for(let x of r){await x.unregister();}}
+    if('caches'in window){const k=await caches.keys();for(let x of k){await caches.delete(x);}}
+    localStorage.clear();
+    sessionStorage.clear();
+  }catch(e){}
+  setTimeout(()=>{location.replace('./index.html?v='+Date.now());},1500);
+})();
+</script>
+</body></html>
