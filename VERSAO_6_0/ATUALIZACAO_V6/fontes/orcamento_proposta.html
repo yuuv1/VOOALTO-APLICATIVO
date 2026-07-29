@@ -172,6 +172,65 @@
       gap: 12px;
     }
 
+    /* Barra de gerenciamento de páginas (aba Itens) */
+    .page-manager-bar {
+      background: linear-gradient(135deg, #0B1220, #14263B);
+      border: 1px solid #1E4E6B;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .page-manager-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .page-manager-head label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #38BDF8;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .page-count-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #E2E8F0;
+      background-color: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    .page-manager-bar .form-control {
+      margin-bottom: 10px;
+    }
+
+    .page-manager-actions {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 8px;
+    }
+
+    .page-manager-actions .btn {
+      padding: 10px 12px;
+      font-size: 12.5px;
+    }
+
+    /* Ações no rodapé da lista de itens */
+    .items-footer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
     /* Dynamic Table Row Editor */
     .item-row-card {
       background-color: #0F172A;
@@ -840,10 +899,29 @@ dos Buritis, Goiânia - GO, 74370-661</textarea>
 
         <!-- Tab 2: Itens -->
         <div id="tab-itens" class="tab-content active">
+
+          <!-- Barra de páginas: sempre visível, junto dos itens -->
+          <div class="page-manager-bar">
+            <div class="page-manager-head">
+              <label>Página em edição</label>
+              <span class="page-count-badge" id="page-count-badge">1 / 1</span>
+            </div>
+            <select class="form-control" id="active-page-select" onchange="changeActiveFormPage(this.value)">
+              <option value="0" selected>Página 1</option>
+            </select>
+            <div class="page-manager-actions">
+              <button class="btn btn-primary" id="btn-add-page" onclick="addDocumentPage()">➕ Adicionar Página</button>
+              <button class="btn btn-danger-outline" id="btn-remove-page" onclick="removeLastDocumentPage()">🗑 Remover Última</button>
+            </div>
+          </div>
+
           <div id="items-editor-list">
             <!-- Dynamic rows will be inserted here -->
           </div>
-          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addTableRow()">➕ Adicionar Item</button>
+          <div class="items-footer-actions">
+            <button class="btn btn-secondary" onclick="addTableRow()">➕ Adicionar Item</button>
+            <button class="btn btn-primary" onclick="addDocumentPage()">➕ Adicionar Página</button>
+          </div>
         </div>
 
         <!-- Tab 3: Termos -->
@@ -865,13 +943,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
         <!-- Tab 4: Assinatura & Estilo -->
         <div id="tab-assinatura" class="tab-content">
-          <div class="form-group">
-            <label>Gerenciamento de Páginas</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px;">
-              <button class="btn btn-primary" onclick="addDocumentPage()">➕ Add Página</button>
-              <button class="btn btn-danger-outline" onclick="removeLastDocumentPage()">❌ Rem. Página</button>
-            </div>
-          </div>
           <div class="form-group">
             <label>Nome do Responsável</label>
             <input type="text" id="edit-resp-name" class="form-control" value="Esio Andrade - Financeiro" oninput="updatePreviewFromForm()">
@@ -1128,18 +1199,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       const container = document.getElementById('items-editor-list');
       container.innerHTML = '';
 
-      // Add a header for active page selection if multi-page
-      if (documentPages.length > 1) {
-        const selectorGroup = document.createElement('div');
-        selectorGroup.className = 'form-group';
-        selectorGroup.innerHTML = `
-          <label>Editar Itens da Página:</label>
-          <select class="form-control" onchange="changeActiveFormPage(this.value)">
-            ${documentPages.map((p, idx) => `<option value="${idx}" ${idx === activeFormPageIndex ? 'selected' : ''}>Página ${idx + 1}</option>`).join('')}
-          </select>
-        `;
-        container.appendChild(selectorGroup);
-      }
+      renderPageManagerBar();
 
       const activePage = documentPages[activeFormPageIndex];
 
@@ -1181,9 +1241,36 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       });
     }
 
+    // Keep the always-visible page bar in sync with documentPages
+    function renderPageManagerBar() {
+      const select = document.getElementById('active-page-select');
+      const badge = document.getElementById('page-count-badge');
+      const btnRemove = document.getElementById('btn-remove-page');
+
+      if (select) {
+        select.innerHTML = documentPages
+          .map((p, idx) => `<option value="${idx}">Página ${idx + 1}</option>`)
+          .join('');
+        select.value = String(activeFormPageIndex);
+      }
+      if (badge) {
+        badge.textContent = (activeFormPageIndex + 1) + ' / ' + documentPages.length;
+      }
+      if (btnRemove) {
+        btnRemove.disabled = documentPages.length <= 1;
+        btnRemove.style.opacity = documentPages.length <= 1 ? '0.45' : '1';
+        btnRemove.style.cursor = documentPages.length <= 1 ? 'not-allowed' : 'pointer';
+      }
+    }
+
     function changeActiveFormPage(idx) {
       activeFormPageIndex = parseInt(idx);
       renderItemsEditor();
+      // Traz a folha correspondente para a área visível do preview
+      const pageDom = document.getElementById(`printable-a4-page-${activeFormPageIndex + 1}`);
+      if (pageDom && pageDom.scrollIntoView) {
+        pageDom.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     // Add a new document page
@@ -1227,6 +1314,13 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
       renderItemsEditor();
       updatePreviewFromForm();
+
+      // Garante que a aba de Itens esteja visível e mostra a nova folha
+      const itensTab = document.getElementById('tab-itens');
+      if (itensTab) itensTab.classList.add('active');
+      if (newPageDom.scrollIntoView) {
+        newPageDom.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     // Remove the very last A4 page

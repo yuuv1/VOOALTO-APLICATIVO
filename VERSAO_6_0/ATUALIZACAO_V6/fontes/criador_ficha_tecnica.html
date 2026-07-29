@@ -3094,7 +3094,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
   const DRAFT_KEY='vooalto_ficha_rascunhos_v4';
   const $id=id=>document.getElementById(id);
   function safeJsonParse(v,fb){try{return JSON.parse(v)||fb}catch(e){return fb}}
-  function getDrafts(){return safeJsonParse(localStorage.getItem(DRAFT_KEY),'[]')}
+  function getDrafts(){const v=safeJsonParse(localStorage.getItem(DRAFT_KEY),[]);return Array.isArray(v)?v:[]}
   function setDrafts(v){localStorage.setItem(DRAFT_KEY,JSON.stringify(v))}
   function nowBR(){return new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
   function injectPanel(){
@@ -3733,7 +3733,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     try{
       const data=capturarFichaParaJSON(); data._nome=nome; data._rascunhoV4=true;
       await putDraftData(id,data);
-      const meta=getMeta(); meta.unshift({id,name,date:nowBR(),hasData:true}); setMeta(meta.slice(0,80));
+      const meta=getMeta(); meta.unshift({id,name:nome,date:nowBR(),hasData:true}); setMeta(meta.slice(0,80));
       await renderDraftsFixed(); toastSafe('💾 Rascunho salvo!','sucesso');
     }catch(e){console.error(e);toastSafe('Erro ao salvar rascunho. Tente exportar a ficha como backup.','erro');}
   };
@@ -3843,6 +3843,488 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
       fitNoWrapLocal(el,l);
     },()=>{fitNoWrapLocal(el,l);try{savLayers();snap();}catch(err){}});
   };
+})();
+</script>
+
+
+<script id="v6-ficha-save-reliability-js">
+/* ============================================================
+   V6 — Salvamento confiável da Ficha Técnica
+   ------------------------------------------------------------
+   Corrige:
+   1) Páginas extras (Página 2, 3, ... e páginas brancas) não eram
+      gravadas no JSON — ao reabrir, o trabalho sumia.
+   2) Salvar podia falhar silenciosamente (pasta sem permissão,
+      quota, erro no meio da captura) e o usuário perdia tudo.
+   3) Não havia rede de segurança: agora há autosave contínuo em
+      IndexedDB + recuperação automática ao reabrir o editor.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const AUTOSAVE_DB   = 'vooalto_ficha_autosave_v6';
+  const AUTOSAVE_STORE= 'autosave';
+  const AUTOSAVE_KEY  = 'atual';
+  const AUTOSAVE_FLAG = 'vooalto_ficha_autosave_v6_flag';
+  const AUTOSAVE_MS   = 8000;
+
+  function toastSafe(msg,tipo='',dur=2800){
+    try{ toast(msg,tipo,dur); }catch(e){ try{console.log(msg)}catch(_){} }
+  }
+  const $id = id => document.getElementById(id);
+
+  /* ---------- IndexedDB (suporta payloads grandes, ao contrário do localStorage) ---------- */
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      let req;
+      try{ req = indexedDB.open(AUTOSAVE_DB,1); }catch(e){ return reject(e); }
+      req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(AUTOSAVE_STORE)) req.result.createObjectStore(AUTOSAVE_STORE); };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    });
+  }
+  function idbPut(key,value){
+    return openDB().then(db=>new Promise((resolve,reject)=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readwrite');
+      tx.objectStore(AUTOSAVE_STORE).put(value,key);
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{db.close();reject(tx.error)};
+    }));
+  }
+  function idbGet(key){
+    return openDB().then(db=>new Promise((resolve,reject)=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readonly');
+      const r=tx.objectStore(AUTOSAVE_STORE).get(key);
+      r.onsuccess=()=>{db.close();resolve(r.result||null)};
+      r.onerror=()=>{db.close();reject(r.error)};
+    }));
+  }
+  /* Mantém apenas os N backups de emergência mais recentes */
+  function idbPodarBackups(manter){
+    return openDB().then(db=>new Promise(resolve=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readwrite');
+      const store=tx.objectStore(AUTOSAVE_STORE);
+      const req=store.getAllKeys();
+      req.onsuccess=()=>{
+        const chaves=(req.result||[]).filter(k=>typeof k==='string'&&k.indexOf('backup_')===0).sort();
+        chaves.slice(0,Math.max(0,chaves.length-manter)).forEach(k=>store.delete(k));
+      };
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{db.close();resolve(false)};
+    })).catch(()=>false);
+  }
+
+  function idbDel(key){
+    return openDB().then(db=>new Promise(resolve=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readwrite');
+      tx.objectStore(AUTOSAVE_STORE).delete(key);
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{db.close();resolve(false)};
+    })).catch(()=>false);
+  }
+
+  /* ============================================================
+     1) CAPTURA COMPLETA — inclui as páginas extras
+     ============================================================ */
+  function serializarLayerExtra(l){
+    const b={id:l.id,type:l.type,xp:l.xp,yp:l.yp,wp:l.wp,hp:l.hp,rot:l.rot||0,z:l.z};
+    if(l.type==='img'){ b.src=l.src; b.ratio=l.ratio; b.prop=l.prop; }
+    if(l.type==='txt'){ b.txt=l.txt; b.font=l.font; b.size=l.size; b.color=l.color; b.bold=l.bold; b.italic=l.italic; b.richHtml=l.richHtml||''; }
+    if(l.type==='arr'){ b.color=l.color; b.stroke=l.stroke; b.arStyle=l.arStyle||'full'; b.shape=l.shape||'straight'; b.dashed=!!l.dashed; b.x1p=l.x1p; b.y1p=l.y1p; b.x2p=l.x2p; b.y2p=l.y2p; }
+    if(l.type==='rect'||l.type==='circle'){ b.fillColor=l.fillColor; b.strokeColor=l.strokeColor; b.strokeWidth=l.strokeWidth; }
+    return b;
+  }
+
+  /* Lê o conteúdo de uma página extra direto do DOM */
+  function capturarPaginaExtra(p){
+    const pid=p.id;
+    const out={ id:pid, num:p.num, tipo:p.tipo||'normal', zCnt:p.zCnt||10 };
+    out.layers=(p.layers||[]).map(serializarLayerExtra);
+
+    if(out.tipo!=='branca'){
+      ['fichaNum','fichaData','previsao','entradaVal','sepTxt','avisoTxt','coresTitulo','tipoTitulo'].forEach(k=>{
+        const el=$id(k+'_'+pid); if(el) out[k]=el.value;
+      });
+      const tt=$id('tipoTecido_'+pid); if(tt) out.tipoTecido=tt.innerHTML;
+
+      const grade={m:[],b:[],i:[]};
+      document.querySelectorAll(`.gi[data-g="${pid}m"]`).forEach(el=>grade.m.push(el.value));
+      document.querySelectorAll(`.gi[data-g="${pid}b"]`).forEach(el=>grade.b.push(el.value));
+      document.querySelectorAll(`.gi[data-g="${pid}i"]`).forEach(el=>grade.i.push(el.value));
+      out.grade=grade;
+
+      const cores=[];
+      document.querySelectorAll(`#coresList_${pid} [id^="ci_"]`).forEach(it=>{
+        const i=it.id.replace('ci_','');
+        cores.push({ hex:($id('chi_'+i)||{}).value||'#3B82F6', nome:($id('cni_'+i)||{}).value||'COR' });
+      });
+      out.cores=cores;
+
+      const prod=[];
+      document.querySelectorAll(`#prodLinhas_${pid} tr`).forEach(tr=>{
+        const inp=tr.querySelectorAll('input');
+        prod.push({ modelo:inp[0]?inp[0].value:'', valor:inp[1]?inp[1].value:'', qtd:inp[2]?inp[2].value:'' });
+      });
+      out.prod=prod;
+
+      const medFem=[],medMasc=[];
+      document.querySelectorAll(`#folha_${pid} .med-bloco.fem .med-inp`).forEach(el=>medFem.push(el.value));
+      document.querySelectorAll(`#folha_${pid} .med-bloco.masc .med-inp`).forEach(el=>medMasc.push(el.value));
+      out.medFem=medFem; out.medMasc=medMasc;
+    }
+    return out;
+  }
+
+  function capturarPaginasExtras(){
+    if(typeof paginas==='undefined' || !Array.isArray(paginas)) return [];
+    return paginas.map(p=>{ try{ return capturarPaginaExtra(p); }catch(e){ console.warn('Falha ao capturar página',p&&p.id,e); return null; } })
+                  .filter(Boolean);
+  }
+
+  /* Envolve capturarFichaParaJSON para anexar as páginas extras */
+  if(typeof window.capturarFichaParaJSON==='function' && !window.__v6CaptureWrapped){
+    window.__v6CaptureWrapped=true;
+    const capturaOriginal=window.capturarFichaParaJSON;
+    window.capturarFichaParaJSON=function(){
+      const d=capturaOriginal.apply(this,arguments);
+      try{
+        d._paginasExtras=capturarPaginasExtras();
+        d._totalPaginas=(typeof totalPaginas!=='undefined')?totalPaginas:1;
+        d._version='vooalto_ficha_v6';
+      }catch(e){ console.warn('Não foi possível capturar páginas extras:',e); }
+      return d;
+    };
+  }
+
+  /* ============================================================
+     2) RESTAURAÇÃO — recria as páginas extras
+     ============================================================ */
+  /* Silencia os avisos "Página N adicionada" durante a restauração */
+  let restaurando=false;
+  if(typeof window.toast==='function' && !window.__v6ToastWrapped){
+    window.__v6ToastWrapped=true;
+    const toastOriginal=window.toast;
+    window.toast=function(msg){
+      if(restaurando && /Página .* adicionada/i.test(String(msg||''))) return;
+      return toastOriginal.apply(this,arguments);
+    };
+  }
+
+  function restaurarPaginaExtra(pd){
+    const tipo=pd.tipo==='branca'?'branca':'normal';
+    if(tipo==='branca'){ if(typeof adicionarPaginaBranca==='function') adicionarPaginaBranca(); }
+    else { if(typeof adicionarPagina==='function') adicionarPagina(); }
+
+    const p=(typeof paginas!=='undefined' && paginas.length)?paginas[paginas.length-1]:null;
+    if(!p) return;
+    const pid=p.id;
+
+    if(tipo!=='branca'){
+      ['fichaNum','fichaData','previsao','entradaVal','sepTxt','avisoTxt','coresTitulo','tipoTitulo'].forEach(k=>{
+        const el=$id(k+'_'+pid); if(el && pd[k]!==undefined) el.value=pd[k];
+      });
+      const tt=$id('tipoTecido_'+pid); if(tt && pd.tipoTecido!==undefined) tt.innerHTML=pd.tipoTecido;
+
+      if(pd.grade){
+        ['m','b','i'].forEach(g=>{
+          const vals=pd.grade[g]||[];
+          document.querySelectorAll(`.gi[data-g="${pid}${g}"]`).forEach((el,i)=>{
+            if(vals[i]!==undefined){ el.value=vals[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); }
+          });
+        });
+        if(typeof recalcGradeExtra==='function') recalcGradeExtra(p);
+      }
+
+      if(Array.isArray(pd.cores)){
+        const cl=$id('coresList_'+pid); if(cl) cl.innerHTML='';
+        p.corId=0;
+        pd.cores.forEach(c=>{ if(typeof adicionarCorExtra==='function') adicionarCorExtra(pid,c.hex,c.nome); });
+      }
+
+      if(Array.isArray(pd.prod)){
+        const tb=$id('prodLinhas_'+pid); if(tb) tb.innerHTML='';
+        p.linhaId=0;
+        pd.prod.forEach(r=>{ if(typeof criarLinhaExtra==='function') criarLinhaExtra(p,r.modelo,r.valor,r.qtd); });
+        if(typeof calcTotalExtra==='function') calcTotalExtra(p);
+      }
+
+      if(Array.isArray(pd.medFem)){
+        document.querySelectorAll(`#folha_${pid} .med-bloco.fem .med-inp`).forEach((el,i)=>{ if(pd.medFem[i]!==undefined) el.value=pd.medFem[i]; });
+      }
+      if(Array.isArray(pd.medMasc)){
+        document.querySelectorAll(`#folha_${pid} .med-bloco.masc .med-inp`).forEach((el,i)=>{ if(pd.medMasc[i]!==undefined) el.value=pd.medMasc[i]; });
+      }
+    }
+
+    /* Limpa as camadas criadas por padrão e recria as salvas */
+    (p.layers||[]).slice().forEach(l=>{ const el=$id('ly_'+pid+'_'+l.id); if(el) el.remove(); });
+    p.layers=[]; p.selId=null;
+
+    (pd.layers||[]).forEach(l=>{
+      try{
+        if(l.type==='img' && typeof addImgLayerExtra==='function') addImgLayerExtra(p,l.src,l);
+        else if(l.type==='txt' && typeof renderTxtLayerExtra==='function'){ p.layers.push(l); renderTxtLayerExtra(p,l); }
+        else if(l.type==='arr' && typeof renderArrLayerExtra==='function'){ p.layers.push(l); renderArrLayerExtra(p,l); }
+        else if(l.type==='rect' && typeof addRectLayerExtra==='function') addRectLayerExtra(p,l);
+        else if(l.type==='circle' && typeof addCirculoLayerExtra==='function') addCirculoLayerExtra(p,l);
+      }catch(e){ console.warn('Falha ao restaurar camada',l&&l.id,e); }
+    });
+    if(typeof updPhExtra==='function') updPhExtra(p);
+    if(pd.zCnt) p.zCnt=Math.max(p.zCnt||10,pd.zCnt);
+  }
+
+  function removerTodasPaginasExtras(){
+    if(typeof paginas==='undefined' || !Array.isArray(paginas)) return;
+    paginas.slice().forEach(p=>{
+      const f=$id('folha_'+p.id); if(f) f.remove();
+      const lb=$id('label_'+p.id); if(lb) lb.remove();
+      const inp=$id('canvasInput_'+p.id); if(inp) inp.remove();
+    });
+    paginas.length=0;
+    try{ totalPaginas=1; }catch(e){}
+    if(typeof atualizarNavSidebar==='function') atualizarNavSidebar();
+  }
+
+  if(typeof window.restaurarDeJSON==='function' && !window.__v6RestoreWrapped){
+    window.__v6RestoreWrapped=true;
+    const restauraOriginal=window.restaurarDeJSON;
+    window.restaurarDeJSON=function(d){
+      restauraOriginal.apply(this,arguments);
+      restaurando=true;
+      try{
+        removerTodasPaginasExtras();
+        const extras=(d && Array.isArray(d._paginasExtras)) ? d._paginasExtras : [];
+        extras.forEach(pd=>{
+          try{ restaurarPaginaExtra(pd); }catch(e){ console.warn('Falha ao restaurar página extra',e); }
+        });
+        if(typeof atualizarRodapes==='function') atualizarRodapes();
+        if(extras.length) toastSafe('📄 '+extras.length+' página(s) extra(s) restaurada(s).','sucesso',2600);
+      }catch(e){ console.warn('Falha ao restaurar páginas extras:',e); }
+      finally{ restaurando=false; }
+    };
+  }
+
+  /* ============================================================
+     3) AUTOSAVE contínuo + recuperação
+     ============================================================ */
+  let autosaveTimer=null, autosaveOcupado=false, houveMudanca=false;
+  /* Enquanto a recuperação não for resolvida, nada pode sobrescrever a cópia
+     existente — senão o formulário em branco apagaria o trabalho anterior. */
+  let recuperacaoResolvida=false;
+
+  async function gravarAutosave(silencioso=true){
+    if(autosaveOcupado) return;
+    if(!recuperacaoResolvida) return;
+    if(typeof capturarFichaParaJSON!=='function') return;
+    autosaveOcupado=true;
+    try{
+      const data=capturarFichaParaJSON();
+      data._autosaveTs=Date.now();
+      const nomeCliente=($id('dc_nome')?($id('dc_nome').textContent||'').trim():'')||'';
+      const numFicha=($id('fichaNum')?$id('fichaNum').value:'')||'';
+      data._autosaveLabel=(nomeCliente||('Ficha '+numFicha)||'Ficha sem nome');
+      await idbPut(AUTOSAVE_KEY,data);
+      try{ localStorage.setItem(AUTOSAVE_FLAG,JSON.stringify({ts:data._autosaveTs,label:data._autosaveLabel})); }catch(e){}
+      houveMudanca=false;
+      atualizarIndicador('salvo',data._autosaveTs);
+      if(!silencioso) toastSafe('💾 Cópia de segurança atualizada.','sucesso',1800);
+    }catch(e){
+      console.warn('Autosave falhou:',e);
+      atualizarIndicador('erro');
+    }finally{ autosaveOcupado=false; }
+  }
+
+  function agendarAutosave(){
+    if(restaurando) return;
+    houveMudanca=true;
+    exportadoDesdeUltimaEdicao=false;
+    atualizarIndicador('pendente');
+    clearTimeout(autosaveTimer);
+    autosaveTimer=setTimeout(()=>gravarAutosave(true),1500);
+  }
+
+  document.addEventListener('input',e=>{
+    if(e.target && (e.target.matches('input,textarea,select')||e.target.matches('[contenteditable]'))) agendarAutosave();
+  },true);
+  document.addEventListener('change',agendarAutosave,true);
+  setInterval(()=>{ if(houveMudanca) gravarAutosave(true); },AUTOSAVE_MS);
+
+  /* Avisa antes de fechar com alterações não exportadas */
+  let exportadoDesdeUltimaEdicao=false;
+  window.addEventListener('beforeunload',e=>{
+    if(houveMudanca && !exportadoDesdeUltimaEdicao){
+      gravarAutosave(true);
+      e.preventDefault();
+      e.returnValue='';
+      return '';
+    }
+  });
+
+  /* ---------- Indicador visual de estado ---------- */
+  function criarIndicador(){
+    if($id('v6SaveStatus')) return;
+    const d=document.createElement('div');
+    d.id='v6SaveStatus';
+    d.style.cssText='position:fixed;bottom:10px;right:12px;z-index:99998;font-size:9px;font-weight:800;'+
+      'padding:5px 11px;border-radius:14px;background:rgba(15,23,42,.9);color:#94A3B8;'+
+      'box-shadow:0 3px 12px rgba(0,0,0,.3);pointer-events:none;transition:all .25s;font-family:inherit';
+    d.textContent='●  Cópia de segurança ativa';
+    document.body.appendChild(d);
+  }
+  function atualizarIndicador(estado,ts){
+    const d=$id('v6SaveStatus'); if(!d) return;
+    if(estado==='pendente'){ d.style.color='#FBBF24'; d.textContent='●  Alterações não salvas…'; }
+    else if(estado==='guardado'){ d.style.color='#38BDF8'; d.textContent='●  Cópia anterior guardada'; }
+    else if(estado==='erro'){ d.style.color='#F87171'; d.textContent='⚠  Falha na cópia de segurança'; }
+    else {
+      const h=ts?new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+      d.style.color='#34D399'; d.textContent='●  Protegido'+(h?' · '+h:'');
+    }
+  }
+
+  /* ---------- Recuperação ao abrir ---------- */
+  async function verificarRecuperacao(){
+    let flag=null;
+    try{ flag=JSON.parse(localStorage.getItem(AUTOSAVE_FLAG)||'null'); }catch(e){}
+    let data=null;
+    if(flag&&flag.ts){ try{ data=await idbGet(AUTOSAVE_KEY); }catch(e){} }
+
+    /* Sem cópia anterior: pode autossalvar livremente. */
+    if(!data){ recuperacaoResolvida=true; return; }
+
+    const quando=new Date(flag.ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+    const rotulo=flag.label||'Ficha sem nome';
+    const aceitou=confirm('🔄 Recuperação automática\n\nFoi encontrada uma ficha não finalizada:\n\n   "'+rotulo+'"\n   Última alteração: '+quando+
+               '\n\nDeseja restaurá-la agora?\n(Cancelar mantém a ficha em branco — a cópia continua guardada e só será\nsubstituída quando você começar a editar.)');
+
+    if(aceitou){
+      try{
+        if(typeof restaurarDeJSON==='function'){
+          restaurarDeJSON(data);
+          toastSafe('✔ Ficha recuperada com sucesso!','sucesso',3500);
+        }
+      }catch(e){ console.error(e); toastSafe('⚠ Não foi possível recuperar a ficha.','erro',4000); }
+      recuperacaoResolvida=true;
+      return;
+    }
+
+    /* Recusou: preserva a cópia até que o usuário realmente edite algo. */
+    atualizarIndicador('guardado');
+    const liberar=()=>{
+      if(recuperacaoResolvida) return;
+      recuperacaoResolvida=true;
+      toastSafe('A cópia anterior foi substituída pela ficha atual.','',3000);
+      document.removeEventListener('input',liberar,true);
+      document.removeEventListener('change',liberar,true);
+    };
+    document.addEventListener('input',liberar,true);
+    document.addEventListener('change',liberar,true);
+  }
+
+  /* ============================================================
+     4) SALVAMENTO À PROVA DE FALHAS
+     ============================================================ */
+  /* Sempre grava uma cópia local ANTES de tentar escrever o arquivo,
+     assim uma falha na gravação nunca implica perda de trabalho. */
+  if(typeof window.salvarArquivoJSON==='function' && !window.__v6SaveWrapped){
+    window.__v6SaveWrapped=true;
+    const salvarOriginal=window.salvarArquivoJSON;
+
+    window.salvarArquivoJSON=async function(nomeArquivo,jsonString){
+      /* Rede de segurança antes de qualquer I/O */
+      try{
+        await idbPut('backup_'+Date.now(),{nomeArquivo,jsonString,ts:Date.now()});
+        idbPodarBackups(5);
+      }catch(e){}
+
+      let ok=false;
+      try{
+        ok=await salvarOriginal.call(this,nomeArquivo,jsonString);
+      }catch(e){
+        console.error('Erro ao salvar ficha:',e);
+        ok=false;
+      }
+
+      if(ok===false||ok===undefined){
+        /* Última tentativa: força o download pelo navegador */
+        try{
+          const blob=new Blob([jsonString],{type:'application/json'});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a');
+          a.href=url; a.download=nomeArquivo;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(()=>URL.revokeObjectURL(url),4000);
+          ok=true;
+          toastSafe('💾 Salvo via download do navegador.','sucesso',3000);
+        }catch(e2){
+          console.error('Download de emergência falhou:',e2);
+          toastSafe('⚠ NÃO foi possível salvar o arquivo. Sua ficha está protegida na cópia de segurança — não feche a aba.','erro',9000);
+          return false;
+        }
+      }
+
+      if(ok){
+        exportadoDesdeUltimaEdicao=true;
+        houveMudanca=false;
+        gravarAutosave(true);
+      }
+      return ok;
+    };
+  }
+
+  /* Valida o JSON antes de entregar ao gravador (evita arquivo corrompido) */
+  ['exportarFichaJSON','finalizarESalvar'].forEach(fnName=>{
+    const orig=window[fnName];
+    if(typeof orig!=='function' || orig.__v6Guarded) return;
+    const guarded=async function(){
+      try{
+        return await orig.apply(this,arguments);
+      }catch(e){
+        console.error('Erro em '+fnName+':',e);
+        await gravarAutosave(true);
+        toastSafe('⚠ Erro ao salvar. Sua ficha foi preservada na cópia de segurança — tente novamente.','erro',7000);
+      }
+    };
+    guarded.__v6Guarded=true;
+    window[fnName]=guarded;
+  });
+
+  /* ---------- Botão manual de cópia de segurança ---------- */
+  window.v6SalvarCopiaSeguranca=async function(){
+    recuperacaoResolvida=true; /* pedido explícito do usuário */
+    await gravarAutosave(false);
+  };
+  window.v6RecuperarCopiaSeguranca=async function(){
+    let data=null;
+    try{ data=await idbGet(AUTOSAVE_KEY); }catch(e){}
+    if(!data){ toastSafe('Nenhuma cópia de segurança encontrada.','erro'); return; }
+    const quando=data._autosaveTs?new Date(data._autosaveTs).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'';
+    if(!confirm('Restaurar a cópia de segurança de '+quando+'?\n\nAs alterações atuais não salvas serão substituídas.')) return;
+    try{ restaurarDeJSON(data); toastSafe('✔ Cópia restaurada!','sucesso',3000); }
+    catch(e){ console.error(e); toastSafe('⚠ Erro ao restaurar a cópia.','erro'); }
+  };
+
+  /* ---------- Boot ---------- */
+  function iniciar(){
+    criarIndicador();
+    injetarBotoesSidebar();
+    setTimeout(verificarRecuperacao,1400);
+    setTimeout(()=>gravarAutosave(true),3000);
+  }
+
+  function injetarBotoesSidebar(){
+    const alvo=document.getElementById('fichasRecentesList');
+    if(!alvo||document.getElementById('v6BackupBtns')) return;
+    const box=document.createElement('div');
+    box.id='v6BackupBtns';
+    box.style.cssText='display:flex;gap:4px;padding:4px 6px 2px';
+    box.innerHTML='<button onclick="v6SalvarCopiaSeguranca()" style="flex:1;font-size:7.5px;font-weight:800;padding:5px 4px;border:none;border-radius:5px;background:rgba(52,211,153,.18);color:#34D399;cursor:pointer" title="Grava agora uma cópia local de segurança">🛡 Copiar agora</button>'+
+                    '<button onclick="v6RecuperarCopiaSeguranca()" style="flex:1;font-size:7.5px;font-weight:800;padding:5px 4px;border:none;border-radius:5px;background:rgba(56,189,248,.18);color:#38BDF8;cursor:pointer" title="Restaura a última cópia de segurança">↺ Recuperar</button>';
+    alvo.parentNode.insertBefore(box,alvo);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,600));
+  else setTimeout(iniciar,600);
 })();
 </script>
 
