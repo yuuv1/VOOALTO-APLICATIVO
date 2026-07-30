@@ -795,4 +795,190 @@ window.addEventListener('message',function(e){
 
 load();loadTheme();renderAll();migratePdfsToDB().then(renderAll);
 setInterval(checkPendingFicha,2000);
-</script></body></html>
+</script>
+<script id="v6-pdf-drop-fix-js">
+/* ============================================================
+   V6 — Correção do arrastar-e-soltar de PDF
+   ------------------------------------------------------------
+   Problemas corrigidos:
+   1) TRAVAMENTO: não havia guarda global de drop. Soltar o PDF
+      alguns pixels fora da zona (cabeçalho, laterais, espaços
+      vazios) fazia o navegador ABRIR o arquivo por cima do app,
+      substituindo a tela — parecia que "travou".
+   2) NÃO FUNCIONA: a zona de drop era só o #mainArea. Soltar em
+      qualquer outro ponto era ignorado sem nenhum aviso.
+   3) Arquivo não-PDF era descartado em silêncio.
+   4) Vários PDFs de uma vez abriam um prompt() atrás do outro.
+   5) Falha ao ler ou ao gravar o PDF não avisava nada.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  function toastSafe(msg){ try{ toast(msg); }catch(e){ try{console.log(msg)}catch(_){} } }
+  const ehPDF = f => !!f && (f.type==='application/pdf' || /\.pdf$/i.test(f.name||''));
+
+  /* ---------- 1) Guarda global: nunca deixar o navegador abrir o arquivo ---------- */
+  /* Sem isso, soltar fora da zona navega a página inteira para o PDF. */
+  ['dragover','drop'].forEach(tipo=>{
+    window.addEventListener(tipo, e=>{
+      const temArquivo = [...((e.dataTransfer&&e.dataTransfer.types)||[])].includes('Files');
+      if(!temArquivo) return;
+      if(e.__vooaltoTratado) return;   // já tratado por uma zona específica
+      e.preventDefault();              // impede a navegação
+      if(tipo==='drop'){
+        const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];
+        marcarArrasto(false);
+        if(files.length) receberArquivos(files,'baixa');
+      }else{
+        if(e.dataTransfer) e.dataTransfer.dropEffect='copy';
+        marcarArrasto(true);
+      }
+    }, false);
+  });
+
+  window.addEventListener('dragleave', e=>{
+    if(e.relatedTarget===null) marcarArrasto(false);  /* saiu da janela */
+  });
+  window.addEventListener('dragend', ()=>marcarArrasto(false));
+
+  function marcarArrasto(ativo){
+    const el=document.getElementById('mainArea');
+    if(el) el.classList.toggle('drag-over',!!ativo);
+    let ov=document.getElementById('v6DropOverlay');
+    if(ativo && !ov){
+      ov=document.createElement('div');
+      ov.id='v6DropOverlay';
+      ov.style.cssText='position:fixed;inset:0;z-index:99997;pointer-events:none;'+
+        'background:rgba(37,99,235,.10);border:3px dashed #2563EB;border-radius:14px;'+
+        'display:flex;align-items:center;justify-content:center';
+      ov.innerHTML='<div style="background:#111827;color:#fff;padding:12px 22px;border-radius:999px;'+
+        'font-weight:900;font-size:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)">📄 Solte o PDF para adicionar</div>';
+      document.body.appendChild(ov);
+    }else if(!ativo && ov){ ov.remove(); }
+  }
+
+  /* ---------- 2) Marcar eventos tratados pelas zonas existentes ---------- */
+  /* As zonas (colunas do catálogo) continuam funcionando; só avisamos a
+     guarda global para ela não processar o mesmo arquivo duas vezes. */
+  document.addEventListener('drop', e=>{
+    if(e.target && e.target.closest && e.target.closest('.dropzone')) e.__vooaltoTratado=true;
+  }, true);
+
+  /* ---------- 3) Leitura robusta ---------- */
+  function lerPDF(file){
+    return new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload = e=>resolve(e.target.result);
+      r.onerror = ()=>reject(new Error('Falha ao ler "'+file.name+'"'));
+      r.onabort = ()=>reject(new Error('Leitura de "'+file.name+'" cancelada'));
+      try{ r.readAsDataURL(file); }catch(err){ reject(err); }
+    });
+  }
+
+  /* ---------- 4) Fluxo principal, com feedback em cada passo ---------- */
+  let ocupado=false;
+
+  async function receberArquivos(files, status='baixa'){
+    if(ocupado){ toastSafe('Aguarde: ainda processando o arquivo anterior.'); return; }
+
+    const pdfs = files.filter(ehPDF);
+    const outros = files.length - pdfs.length;
+
+    if(!pdfs.length){
+      toastSafe(outros===1 ? 'Esse arquivo não é PDF. Anexe um arquivo .pdf.'
+                           : 'Nenhum PDF encontrado. Anexe arquivos .pdf.');
+      return;
+    }
+    if(outros>0) toastSafe(outros+' arquivo(s) ignorado(s): só PDF é aceito.');
+
+    ocupado=true;
+    let adicionados=0;
+    try{
+      for(const file of pdfs){
+        /* Arquivo vazio/corrompido */
+        if(file.size===0){ toastSafe('"'+file.name+'" está vazio e foi ignorado.'); continue; }
+
+        const sugestao=(file.name||'Ficha').replace(/\.pdf$/i,'');
+        const titulo=prompt('Nome da ficha técnica:', sugestao);
+        if(titulo===null) continue;              /* cancelou este arquivo */
+        const nome=(titulo||'').trim()||sugestao;
+
+        let data;
+        try{ data=await lerPDF(file); }
+        catch(err){ console.error(err); toastSafe('⚠ '+err.message); continue; }
+
+        const o={ id:uid(), name:nome, clientPhone:'', createdAt:today(), createdTs:Date.now(),
+                  note:'', medDays:state.thresholds.med, highDays:state.thresholds.high,
+                  pdfName:file.name, pdfStored:false, status };
+
+        let guardou=false;
+        try{ await storePdfData(o.id,data); guardou=true; }
+        catch(err){ console.error('Falha ao gravar PDF:',err); }
+
+        if(guardou){ o.pdfStored=true; }
+        else{
+          /* Não conseguiu gravar: mantém em memória para a sessão e avisa,
+             em vez de perder o anexo em silêncio. */
+          o.pdfData=data; o.pdfStored=false;
+          toastSafe('⚠ "'+file.name+'" foi anexado, mas não pôde ser guardado permanentemente (armazenamento cheio?).');
+        }
+
+        o.status=autoStatus(o);
+        state.orders.push(o);
+        addHistory('add',+1);
+        adicionados++;
+      }
+
+      if(adicionados){
+        save();
+        renderAll();
+        toastSafe('✔ '+adicionados+' ficha(s) adicionada(s).');
+      }
+    }catch(err){
+      console.error('Erro ao processar PDFs:',err);
+      toastSafe('⚠ Erro inesperado ao adicionar o PDF.');
+    }finally{
+      ocupado=false;
+      marcarArrasto(false);
+    }
+  }
+
+  /* ---------- 5) Substitui as funções antigas ---------- */
+  window.handleDroppedFiles=function(files,status){ receberArquivos([...(files||[])],status||'baixa'); };
+
+  window.pageDragOver=function(e){
+    if([...((e.dataTransfer&&e.dataTransfer.types)||[])].includes('Files')){
+      e.preventDefault(); marcarArrasto(true);
+    }
+  };
+  window.pageDragLeave=function(){ /* a guarda global cuida de limpar */ };
+  window.pageDrop=function(e){
+    const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];
+    if(files.length){ e.preventDefault(); e.stopPropagation(); e.__vooaltoTratado=true;
+      marcarArrasto(false); receberArquivos(files,'baixa'); }
+  };
+
+  /* Zonas das colunas: aceitam arquivo OU reordenação de card */
+  window.dropOrder=function(e,status){
+    e.preventDefault(); e.stopPropagation(); e.__vooaltoTratado=true;
+    e.currentTarget.classList.remove('drag-over');
+    marcarArrasto(false);
+    const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];
+    if(files.length) return receberArquivos(files,status);
+    const id=e.dataTransfer.getData('text/plain');
+    const o=state.orders.find(x=>x.id===id);
+    if(!o) return;
+    if(status==='concluido') return toastSafe('Use o botão Concluído.');
+    o.status=status; save(); renderAll();
+  };
+
+  /* ---------- 6) Anexo via formulário também fica robusto ---------- */
+  window.readPdfFile=function(file,cb){
+    if(!ehPDF(file)){ toastSafe('Anexe apenas PDF.'); return; }
+    lerPDF(file).then(d=>cb(d,file.name))
+                .catch(err=>{ console.error(err); toastSafe('⚠ '+err.message); });
+  };
+})();
+</script>
+
+</body></html>

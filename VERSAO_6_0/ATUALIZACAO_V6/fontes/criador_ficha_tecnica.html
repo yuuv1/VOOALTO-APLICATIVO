@@ -3876,11 +3876,18 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   /* ---------- IndexedDB (suporta payloads grandes, ao contrário do localStorage) ---------- */
   function openDB(){
     return new Promise((resolve,reject)=>{
+      /* Timeout + onblocked: sem isso, um banco travado (outra aba aberta)
+         deixava o await pendurado para sempre e o botão parava de responder. */
+      let pronto=false;
+      const t=setTimeout(()=>{ if(!pronto){ pronto=true;
+        reject(new Error('Banco de dados não respondeu (outra aba do Vooalto aberta?)')); } },8000);
+      const fim=(fn,arg)=>{ if(pronto)return; pronto=true; clearTimeout(t); fn(arg); };
       let req;
-      try{ req = indexedDB.open(AUTOSAVE_DB,1); }catch(e){ return reject(e); }
-      req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(AUTOSAVE_STORE)) req.result.createObjectStore(AUTOSAVE_STORE); };
-      req.onsuccess=()=>resolve(req.result);
-      req.onerror=()=>reject(req.error);
+      try{ req = indexedDB.open(AUTOSAVE_DB,1); }catch(e){ clearTimeout(t); return reject(e); }
+      req.onupgradeneeded=()=>{ try{ if(!req.result.objectStoreNames.contains(AUTOSAVE_STORE)) req.result.createObjectStore(AUTOSAVE_STORE); }catch(e){} };
+      req.onsuccess=()=>fim(resolve,req.result);
+      req.onerror=()=>fim(reject,req.error||new Error('Erro ao abrir o banco'));
+      req.onblocked=()=>fim(reject,new Error('Banco bloqueado por outra aba do Vooalto'));
     });
   }
   function idbPut(key,value){
@@ -4124,6 +4131,10 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
       const numFicha=($id('fichaNum')?$id('fichaNum').value:'')||'';
       data._autosaveLabel=(nomeCliente||('Ficha '+numFicha)||'Ficha sem nome');
       await idbPut(AUTOSAVE_KEY,data);
+      /* A "flag" também vai para o IndexedDB: se o localStorage estiver cheio
+         (imagens base64 enchem os ~5MB), a recuperação continuava sem ser
+         oferecida e o usuário perdia tudo mesmo havendo backup gravado. */
+      try{ await idbPut('flag',{ts:data._autosaveTs,label:data._autosaveLabel}); }catch(e){}
       try{ localStorage.setItem(AUTOSAVE_FLAG,JSON.stringify({ts:data._autosaveTs,label:data._autosaveLabel})); }catch(e){}
       houveMudanca=false;
       atualizarIndicador('salvo',data._autosaveTs);
@@ -4186,11 +4197,18 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   async function verificarRecuperacao(){
     let flag=null;
     try{ flag=JSON.parse(localStorage.getItem(AUTOSAVE_FLAG)||'null'); }catch(e){}
+    /* Fonte da verdade: o próprio IndexedDB. O localStorage é só um atalho e
+       pode ter falhado por cota — nesse caso o backup existe e precisa ser
+       oferecido do mesmo jeito. */
+    if(!flag||!flag.ts){ try{ flag=await idbGet('flag'); }catch(e){} }
+
     let data=null;
-    if(flag&&flag.ts){ try{ data=await idbGet(AUTOSAVE_KEY); }catch(e){} }
+    try{ data=await idbGet(AUTOSAVE_KEY); }catch(e){}
 
     /* Sem cópia anterior: pode autossalvar livremente. */
     if(!data){ recuperacaoResolvida=true; return; }
+
+    if(!flag||!flag.ts) flag={ts:data._autosaveTs||Date.now(),label:data._autosaveLabel||'Ficha sem nome'};
 
     const quando=new Date(flag.ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
     const rotulo=flag.label||'Ficha sem nome';
@@ -4784,6 +4802,239 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     v4FecharPreenchimentoRapido();
     toastSafe('✔ Preenchimento aplicado em '+dados.length+' página(s)'+(criadas?' · '+criadas+' criada(s)':'')+'.','sucesso',3200);
   };
+})();
+</script>
+
+
+<script id="v6-rascunho-resiliente-js">
+/* ============================================================
+   V6 — Rascunhos e recuperação à prova de falhas
+   ------------------------------------------------------------
+   Problemas corrigidos:
+   1) O índice dos rascunhos vivia só no localStorage (limite ~5MB,
+      já ocupado pelas imagens em base64 de 'va3_layers'). Quando
+      estourava a cota, setMeta() lançava exceção NÃO TRATADA: o
+      dado ia para o IndexedDB mas sumia da lista — "salvei e
+      perdi". Com 2ª página o payload é maior, por isso o bug
+      aparecia justamente aí.
+   2) openDB() não tratava 'onblocked' nem tinha timeout: se o
+      banco travasse, o await ficava pendurado para sempre e o
+      botão não respondia mais.
+   3) A flag de recuperação também dependia do localStorage; se
+      não gravasse, a recuperação nunca era oferecida e o usuário
+      perdia tudo mesmo havendo backup salvo.
+   4) savLayers() enchia o localStorage com imagens base64 e
+      derrubava todo o resto.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const DB_NAME='vooalto_ficha_rascunhos_db_v4';
+  const STORE='drafts';
+  const META_KEY='vooalto_ficha_rascunhos_v4_meta';
+  const META_ID='__meta__';           /* índice espelhado dentro do IndexedDB */
+  const AUTOSAVE_DB='vooalto_ficha_autosave_v6';
+  const AUTOSAVE_STORE='autosave';
+
+  const $id=id=>document.getElementById(id);
+  function toastSafe(msg,tipo=''){ try{ toast(msg,tipo); }catch(e){ try{console.log(msg)}catch(_){} } }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  function nowBR(){ return new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}); }
+
+  /* ---------- IndexedDB com timeout e tratamento de bloqueio ---------- */
+  function abrirDB(nome,store,timeoutMs=8000){
+    return new Promise((resolve,reject)=>{
+      let pronto=false;
+      const t=setTimeout(()=>{ if(!pronto){ pronto=true;
+        reject(new Error('O banco de dados não respondeu. Feche outras abas do Vooalto e tente de novo.')); } },timeoutMs);
+      let req;
+      try{ req=indexedDB.open(nome,1); }
+      catch(e){ clearTimeout(t); return reject(e); }
+      req.onupgradeneeded=()=>{ try{ if(!req.result.objectStoreNames.contains(store)) req.result.createObjectStore(store); }catch(e){} };
+      req.onsuccess=()=>{ if(pronto)return; pronto=true; clearTimeout(t); resolve(req.result); };
+      req.onerror=()=>{ if(pronto)return; pronto=true; clearTimeout(t); reject(req.error||new Error('Erro ao abrir o banco')); };
+      req.onblocked=()=>{ if(pronto)return; pronto=true; clearTimeout(t);
+        reject(new Error('Banco bloqueado por outra aba aberta do Vooalto.')); };
+    });
+  }
+  async function idbPut(nome,store,key,val){
+    const db=await abrirDB(nome,store);
+    return new Promise((resolve,reject)=>{
+      let tx; try{ tx=db.transaction(store,'readwrite'); }catch(e){ db.close(); return reject(e); }
+      try{ tx.objectStore(store).put(val,key); }catch(e){ db.close(); return reject(e); }
+      tx.oncomplete=()=>{ db.close(); resolve(true); };
+      tx.onerror=()=>{ db.close(); reject(tx.error||new Error('Falha ao gravar')); };
+      tx.onabort=()=>{ db.close(); reject(tx.error||new Error('Gravação abortada (espaço insuficiente?)')); };
+    });
+  }
+  async function idbGet(nome,store,key){
+    const db=await abrirDB(nome,store);
+    return new Promise((resolve,reject)=>{
+      let tx; try{ tx=db.transaction(store,'readonly'); }catch(e){ db.close(); return reject(e); }
+      const r=tx.objectStore(store).get(key);
+      r.onsuccess=()=>{ db.close(); resolve(r.result==null?null:r.result); };
+      r.onerror=()=>{ db.close(); reject(r.error); };
+    });
+  }
+  async function idbDel(nome,store,key){
+    try{
+      const db=await abrirDB(nome,store);
+      return await new Promise(resolve=>{
+        const tx=db.transaction(store,'readwrite');
+        tx.objectStore(store).delete(key);
+        tx.oncomplete=()=>{ db.close(); resolve(true); };
+        tx.onerror=()=>{ db.close(); resolve(false); };
+      });
+    }catch(e){ return false; }
+  }
+
+  /* ---------- Índice: IndexedDB é a fonte da verdade ---------- */
+  /* O localStorage vira só um cache rápido; se ele falhar, nada se perde. */
+  function metaDoCache(){
+    try{ const v=JSON.parse(localStorage.getItem(META_KEY)||'[]'); return Array.isArray(v)?v:[]; }
+    catch(e){ return []; }
+  }
+  function gravarCache(meta){
+    try{ localStorage.setItem(META_KEY,JSON.stringify(meta)); return true; }
+    catch(e){
+      /* Cota estourada: limpa lixo conhecido e tenta de novo. */
+      try{
+        localStorage.removeItem('va3_layers');   /* imagens base64: o maior vilão */
+        localStorage.setItem(META_KEY,JSON.stringify(meta));
+        return true;
+      }catch(e2){ return false; }
+    }
+  }
+  async function lerMeta(){
+    try{
+      const doDB=await idbGet(DB_NAME,STORE,META_ID);
+      if(Array.isArray(doDB)) return doDB;
+    }catch(e){ /* cai para o cache */ }
+    return metaDoCache();
+  }
+  async function gravarMeta(meta){
+    /* 1) IndexedDB (obrigatório) — sem limite prático e sem exceção de cota */
+    await idbPut(DB_NAME,STORE,META_ID,meta);
+    /* 2) localStorage (opcional) — falha aqui não invalida o rascunho */
+    gravarCache(meta);
+  }
+
+  /* ---------- Renderização ---------- */
+  async function renderLista(){
+    const list=$id('v4DraftList'); if(!list) return;
+    let drafts=[];
+    try{ drafts=await lerMeta(); }catch(e){ drafts=metaDoCache(); }
+    if(!drafts.length){
+      list.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,.35);padding:6px;text-align:center">Nenhum rascunho salvo</div>';
+      return;
+    }
+    list.innerHTML=drafts.map(d=>
+      `<div class="sb-v4-draft"><div><b title="${esc(d.name)}">${esc(d.name)}</b><small>${esc(d.date||'')}</small></div>`+
+      `<div><button class="load" onclick="v4CarregarRascunho('${esc(d.id)}')">Abrir</button>`+
+      `<button class="del" onclick="v4ExcluirRascunho('${esc(d.id)}')">✕</button></div></div>`
+    ).join('');
+  }
+
+  /* ---------- Salvar ---------- */
+  window.v4SalvarRascunho=async function(){
+    if(typeof capturarFichaParaJSON!=='function'){ toastSafe('Sistema de rascunho indisponível.','erro'); return; }
+
+    const cliente=($id('dc_nome')?.textContent||'').trim();
+    const num=$id('fichaNum')?.value||'';
+    const sugestao=(cliente||num)?`Ficha ${num} ${cliente}`.trim():'Ficha técnica em andamento';
+    const nome=prompt('Nome do rascunho:',sugestao);
+    if(nome===null) return;
+    const nomeFinal=(nome||'').trim()||sugestao;
+
+    const id='d_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+
+    let data;
+    try{
+      data=capturarFichaParaJSON();
+      data._nome=nomeFinal; data._rascunhoV4=true;
+    }catch(e){
+      console.error('Falha ao capturar a ficha:',e);
+      toastSafe('⚠ Erro ao ler a ficha. Nada foi alterado.','erro');
+      return;
+    }
+
+    /* Garante que o objeto é clonável pelo IndexedDB (structured clone).
+       Se algo não for, o JSON round-trip remove — melhor que falhar tudo. */
+    try{ data=JSON.parse(JSON.stringify(data)); }catch(e){}
+
+    toastSafe('💾 Salvando rascunho...');
+    try{
+      await idbPut(DB_NAME,STORE,id,data);          /* 1º o conteúdo */
+      const meta=await lerMeta().catch(()=>metaDoCache());
+      meta.unshift({id,name:nomeFinal,date:nowBR(),hasData:true});
+      await gravarMeta(meta.slice(0,80));           /* 2º o índice */
+      await renderLista();
+      toastSafe('💾 Rascunho salvo!','sucesso');
+    }catch(e){
+      console.error('Erro ao salvar rascunho:',e);
+      /* Não deixa lixo órfão para trás */
+      await idbDel(DB_NAME,STORE,id);
+      toastSafe('⚠ Não foi possível salvar o rascunho: '+(e.message||'erro desconhecido')+
+                ' — sua ficha continua aberta e intacta.','erro');
+    }
+  };
+
+  /* ---------- Carregar ---------- */
+  window.v4CarregarRascunho=async function(id){
+    let data=null;
+    try{ data=await idbGet(DB_NAME,STORE,id); }
+    catch(e){ console.error(e); toastSafe('⚠ Erro ao ler o rascunho: '+(e.message||''),'erro'); return; }
+    if(!data){ toastSafe('⚠ Rascunho sem dados (pode ter sido removido).','erro'); return; }
+
+    if(!confirm('Carregar este rascunho?\n\nAs alterações atuais que ainda não foram salvas serão substituídas.')) return;
+
+    try{ restaurarDeJSON(data); toastSafe('✔ Rascunho carregado.','sucesso'); }
+    catch(e){ console.error(e); toastSafe('⚠ Erro ao aplicar o rascunho na ficha.','erro'); }
+  };
+
+  /* ---------- Excluir ---------- */
+  window.v4ExcluirRascunho=async function(id){
+    if(!confirm('Excluir este rascunho?')) return;
+    try{
+      await idbDel(DB_NAME,STORE,id);
+      const meta=(await lerMeta().catch(()=>metaDoCache())).filter(x=>x.id!==id);
+      await gravarMeta(meta);
+      await renderLista();
+      toastSafe('Rascunho excluído.');
+    }catch(e){ console.error(e); toastSafe('⚠ Erro ao excluir o rascunho.','erro'); }
+  };
+
+  /* ---------- Migração do índice antigo (localStorage -> IndexedDB) ---------- */
+  async function migrarIndice(){
+    try{
+      const jaTem=await idbGet(DB_NAME,STORE,META_ID);
+      if(Array.isArray(jaTem)) return;
+      const antigo=metaDoCache();
+      if(antigo.length) await idbPut(DB_NAME,STORE,META_ID,antigo);
+    }catch(e){}
+  }
+
+  /* ---------- Evita que savLayers() estoure a cota ---------- */
+  /* Imagens em base64 no localStorage derrubavam todo o resto do app. */
+  if(typeof window.savLayers==='function' && !window.__v6SavLayersPatch){
+    window.__v6SavLayersPatch=true;
+    window.savLayers=function(){
+      try{
+        const leves=(layers||[]).map(l=>{
+          const b=(typeof serLayer==='function')?serLayer(l):Object.assign({},l);
+          /* Não guarda a imagem inteira aqui: o autosave/JSON já cuidam disso. */
+          if(b && b.type==='img' && typeof b.src==='string' && b.src.length>65536) b.src='';
+          return b;
+        });
+        localStorage.setItem('va3_layers',JSON.stringify(leves));
+      }catch(e){
+        try{ localStorage.removeItem('va3_layers'); }catch(e2){}
+      }
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(async()=>{ await migrarIndice(); renderLista(); },800));
+  setTimeout(async()=>{ await migrarIndice(); renderLista(); },1500);
 })();
 </script>
 
