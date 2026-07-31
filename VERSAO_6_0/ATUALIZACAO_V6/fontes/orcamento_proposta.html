@@ -771,6 +771,9 @@
         print-color-adjust: exact;
       }
       /* Hide ALL editor / UI chrome — only the A4 pages should print */
+      /* Elementos flutuantes da V6 (ajuda) nao podem sair no PDF */
+      #v6oHelpBtn,
+      #v6oHelp,
       .editor-sidebar,
       .editor-header,
       .editor-content,
@@ -1826,7 +1829,9 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
         '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-        '.v5-highlight-group','#budget-settings-modal','#signature-modal'];
+        '.v5-highlight-group','#budget-settings-modal','#signature-modal',
+        /* botao de ajuda da V6: nao pode aparecer na imagem exportada */
+        '#v6oHelpBtn','#v6oHelp'];
       const saved = [];
       hideSelectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => {
@@ -2247,5 +2252,16 @@ function printProposal() {
 })();
 </script>
 
+
+<style id="v6-nao-imprimir-css">
+/* ============================================================
+   V6 — Nada da interface de apoio pode sair no PDF/impressao
+   Cobre por prefixo de id, entao vale tambem para o que for
+   adicionado depois (ajuda, avisos, indicadores).
+   ============================================================ */
+@media print{
+  [id^="v6"]{display:none!important}
+}
+</style>
 </body>
 </html>

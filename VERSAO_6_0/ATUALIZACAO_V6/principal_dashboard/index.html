@@ -1372,4 +1372,15 @@ setInterval(checkPendingFicha,2000);
 })();
 </script>
 
+
+<style id="v6-nao-imprimir-css">
+/* ============================================================
+   V6 — Nada da interface de apoio pode sair no PDF/impressao
+   Cobre por prefixo de id, entao vale tambem para o que for
+   adicionado depois (ajuda, avisos, indicadores).
+   ============================================================ */
+@media print{
+  [id^="v6"]{display:none!important}
+}
+</style>
 </body></html>
