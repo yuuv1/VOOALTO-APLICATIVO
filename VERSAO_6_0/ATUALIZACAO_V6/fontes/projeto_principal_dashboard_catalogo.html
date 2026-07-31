@@ -981,4 +981,210 @@ setInterval(checkPendingFicha,2000);
 })();
 </script>
 
+
+<script id="v6-catalogo-resiliencia-js">
+/* ============================================================
+   V6 — Blindagem do catálogo (Principal)
+   ------------------------------------------------------------
+   Mesma classe de problema já corrigida na Ficha Técnica:
+   gravação sem tratamento de erro + dado de entrada sem validação.
+
+   1) save() gravava tudo no localStorage sem try/catch. Com o
+      armazenamento cheio, a exceção interrompia o fluxo: a ficha
+      recém-criada sumia da tela e era perdida, sem nenhum aviso.
+   2) importData() fazia JSON.parse sem try/catch e substituía o
+      state inteiro. Importar um arquivo corrompido — ou, pior, um
+      JSON de FICHA TÉCNICA por engano — apagava todo o catálogo
+      sem confirmação e sem volta.
+   3) load() sem defesa contra JSON corrompido no localStorage.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  function toastSafe(msg){ try{ toast(msg); }catch(e){ try{console.log(msg)}catch(_){} } }
+  const KEY_BAK='vooalto_main_catalog_v2_backup';
+
+  /* ---------- 1) save() tolerante a falhas ---------- */
+  if(typeof window.save==='function' && !window.__v6SavePatch){
+    window.__v6SavePatch=true;
+
+    window.save=function(){
+      let payload;
+      try{
+        const clone=JSON.parse(JSON.stringify(state));
+        (clone.orders||[]).forEach(o=>{ if(o.pdfData){ o.pdfStored=true; delete o.pdfData; } });
+        payload=JSON.stringify(clone);
+      }catch(e){
+        console.error('Falha ao preparar os dados do catálogo:',e);
+        toastSafe('⚠ Erro ao preparar os dados. Nada foi alterado.');
+        return false;
+      }
+
+      try{
+        localStorage.setItem('vooalto_main_catalog_v2',payload);
+        /* cópia de segurança rotativa, para o caso de corrupção */
+        try{ localStorage.setItem(KEY_BAK,payload); }catch(e){}
+        return true;
+      }catch(e){
+        console.error('Falha ao gravar o catálogo:',e);
+        /* Última tentativa: libera espaço descartando lixo conhecido */
+        try{
+          localStorage.removeItem(KEY_BAK);
+          localStorage.removeItem('va3_layers');
+          localStorage.setItem('vooalto_main_catalog_v2',payload);
+          toastSafe('⚠ Armazenamento quase cheio. Liberei espaço, mas exporte um backup.');
+          return true;
+        }catch(e2){
+          /* Não conseguiu: avisa de forma inequívoca em vez de perder calado */
+          toastSafe('❌ ARMAZENAMENTO CHEIO — a alteração NÃO foi salva. '+
+                    'Exporte um backup e remova fichas antigas antes de continuar.');
+          try{
+            alert('❌ Não foi possível salvar o catálogo: o armazenamento do navegador está cheio.\n\n'+
+                  'O que fazer agora:\n'+
+                  '1) Clique em "Exportar backup" para não perder nada;\n'+
+                  '2) Exclua fichas antigas que já foram concluídas;\n'+
+                  '3) Refaça a última alteração.\n\n'+
+                  'Atenção: a última alteração ainda NÃO está salva.');
+          }catch(e3){}
+          return false;
+        }
+      }
+    };
+  }
+
+  /* ---------- 2) Importação validada e reversível ---------- */
+  if(typeof window.importData==='function' && !window.__v6ImportPatch){
+    window.__v6ImportPatch=true;
+
+    function pareceBackupDoCatalogo(d){
+      if(!d || typeof d!=='object') return false;
+      if(Array.isArray(d.orders)) return true;                 /* formato esperado */
+      return false;
+    }
+    function pareceFichaTecnica(d){
+      return !!(d && typeof d==='object' &&
+                typeof d._version==='string' && d._version.indexOf('vooalto_ficha')===0);
+    }
+
+    window.importData=function(e){
+      const input=e && e.target;
+      const f=input && input.files && input.files[0];
+      if(!f) return;
+
+      const r=new FileReader();
+
+      r.onerror=()=>{ toastSafe('⚠ Não foi possível ler o arquivo.'); if(input) input.value=''; };
+
+      r.onload=async ev=>{
+        if(input) input.value='';
+        let bruto;
+
+        /* 2a) arquivo precisa ser JSON válido */
+        try{
+          bruto=JSON.parse(ev.target.result);
+        }catch(err){
+          console.error('Backup inválido:',err);
+          toastSafe('⚠ Arquivo inválido: não é um JSON legível.');
+          try{ alert('Este arquivo não é um backup válido.\n\nEscolha o arquivo gerado pelo botão "Exportar backup".'); }catch(e2){}
+          return;
+        }
+
+        /* 2b) precisa ser um backup DO CATÁLOGO, não outra coisa */
+        if(pareceFichaTecnica(bruto)){
+          toastSafe('⚠ Esse arquivo é uma FICHA TÉCNICA, não um backup do catálogo.');
+          try{ alert('Esse arquivo é uma ficha técnica (.json do Criador), não um backup do catálogo.\n\n'+
+                     'Para abrir uma ficha, use o módulo Criador.\n'+
+                     'Aqui, use o arquivo gerado por "Exportar backup".\n\n'+
+                     'Nada foi alterado.'); }catch(e2){}
+          return;
+        }
+        if(!pareceBackupDoCatalogo(bruto)){
+          toastSafe('⚠ Arquivo não reconhecido como backup do catálogo.');
+          try{ alert('Não reconheci este arquivo como um backup do catálogo.\n\nNada foi alterado.'); }catch(e2){}
+          return;
+        }
+
+        /* 2c) importar SUBSTITUI tudo: exige confirmação explícita */
+        const qtdNova=(bruto.orders||[]).length;
+        const qtdAtual=(state && state.orders ? state.orders.length : 0);
+        const ok=confirm('Importar backup?\n\n'+
+          'Fichas no arquivo: '+qtdNova+'\n'+
+          'Fichas atuais: '+qtdAtual+'\n\n'+
+          'A importação SUBSTITUI todo o catálogo atual.'+
+          (qtdAtual?'\n\nAs '+qtdAtual+' ficha(s) atuais serão removidas.':'')+
+          '\n\nDeseja continuar?');
+        if(!ok){ toastSafe('Importação cancelada. Nada foi alterado.'); return; }
+
+        /* 2d) guarda como desfazer o que existe hoje */
+        let anterior=null;
+        try{ anterior=localStorage.getItem('vooalto_main_catalog_v2'); }catch(e2){}
+
+        try{
+          const data=normalizeImportedData(bruto);
+          for(const o of (data.orders||[])){
+            if(o.pdfData){
+              try{ await storePdfData(o.id,o.pdfData); delete o.pdfData; o.pdfStored=true; }
+              catch(err){ console.warn('PDF de "'+(o.name||o.id)+'" não pôde ser guardado:',err); }
+            }
+          }
+          state=data;
+          const gravou=save();
+          load(); renderAll();
+          if(gravou) toastSafe('✔ Backup importado: '+qtdNova+' ficha(s).');
+        }catch(err){
+          console.error('Falha na importação:',err);
+          /* rollback: devolve o catálogo anterior */
+          try{
+            if(anterior!==null){
+              localStorage.setItem('vooalto_main_catalog_v2',anterior);
+              load(); renderAll();
+            }
+          }catch(e3){}
+          toastSafe('⚠ Erro ao importar. O catálogo anterior foi restaurado.');
+        }
+      };
+
+      r.readAsText(f);
+    };
+  }
+
+  /* ---------- 3) load() resistente a dado corrompido ---------- */
+  if(typeof window.load==='function' && !window.__v6LoadPatch){
+    window.__v6LoadPatch=true;
+    const loadOriginal=window.load;
+    window.load=function(){
+      try{
+        return loadOriginal.apply(this,arguments);
+      }catch(e){
+        console.error('Catálogo corrompido, tentando a cópia de segurança:',e);
+        try{
+          const bak=localStorage.getItem(KEY_BAK);
+          if(bak){
+            localStorage.setItem('vooalto_main_catalog_v2',bak);
+            const r=loadOriginal.apply(this,arguments);
+            toastSafe('⚠ O catálogo estava corrompido e foi restaurado da cópia de segurança.');
+            return r;
+          }
+        }catch(e2){}
+        toastSafe('⚠ Não foi possível ler o catálogo salvo. Importe um backup.');
+      }
+    };
+  }
+
+  /* ---------- 4) Aviso preventivo de armazenamento quase cheio ---------- */
+  async function checarEspaco(){
+    try{
+      if(!navigator.storage || !navigator.storage.estimate) return;
+      const {usage,quota}=await navigator.storage.estimate();
+      if(!quota) return;
+      const pct=usage/quota;
+      if(pct>0.85){
+        toastSafe('⚠ Armazenamento em '+Math.round(pct*100)+'%. Exporte um backup e remova fichas antigas.');
+      }
+    }catch(e){}
+  }
+  setTimeout(checarEspaco,5000);
+})();
+</script>
+
 </body></html>
