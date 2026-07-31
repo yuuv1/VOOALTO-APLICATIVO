@@ -2166,6 +2166,14 @@ const grade={};document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[da
 const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');cores.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});
 d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
+/* Tabela de produção: sem isso o Ctrl+Z não recuperava um item excluído
+   por engano — o histórico simplesmente não guardava as linhas. */
+const prod=[];document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const i=tr.querySelectorAll('input');prod.push({modelo:i[0]?i[0].value:'',valor:i[1]?i[1].value:'',qtd:i[2]?i[2].value:''});});
+d._prod=prod;
+const medF=[],medM=[];
+document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach(el=>medF.push(el.value));
+document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach(el=>medM.push(el.value));
+d._medFem=medF;d._medMasc=medM;
 return JSON.parse(JSON.stringify(d));
 }
 function serLayer(l){
@@ -2181,7 +2189,10 @@ CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.value=s[id]
 CAMPOS_CE.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.innerHTML=s[id];});
 if(s._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(s._grade[i]!==undefined){el.value=s._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
 recalcGrade();$('coresList').innerHTML='';corId=0;(s._cores||[]).forEach(c=>adicionarCor(c.hex,c.nome));
-clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);});
+clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);else if(x.type==='rect')addRectLayer(x);else if(x.type==='circle')addCirculoLayer(x);});
+if(s._prod){$('prodLinhas').innerHTML='';linhaId=0;s._prod.forEach(p=>criarLinha(p.modelo,p.valor,p.qtd));document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_',''));if(!isNaN(id))recalcL(id);});}
+if(s._medFem)document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i)=>{if(s._medFem[i]!==undefined)el.value=s._medFem[i];});
+if(s._medMasc)document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i)=>{if(s._medMasc[i]!==undefined)el.value=s._medMasc[i];});
 salvarNum();calcTotal();
 }
 function snap(){
@@ -2190,6 +2201,17 @@ const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.lengt
 undoStack.push(s);if(undoStack.length>60)undoStack.shift();redoStack=[];updUR();
 },400);
 }
+/* Grava o estado NA HORA (snap normal espera 400ms). Necessário antes de
+   uma exclusão, senão o estado "antes" se perde e o Ctrl+Z não recupera. */
+function snapNow(){
+clearTimeout(snapTimer);
+const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(s))return;
+undoStack.push(s);if(undoStack.length>60)undoStack.shift();redoStack=[];updUR();
+}
+window.snapNow=snapNow;
+/* Cancela um snap() agendado (usado ao excluir, para não sobrescrever o
+   estado "antes" que acabou de ser gravado). */
+window.snapCancel=function(){clearTimeout(snapTimer);};
 function undo(){if(!undoStack.length)return;redoStack.push(capState());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
 function redo(){if(!redoStack.length)return;undoStack.push(capState());restState(redoStack.pop());updUR();toast('↪ Refeito');}
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
@@ -5035,6 +5057,228 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 
   document.addEventListener('DOMContentLoaded',()=>setTimeout(async()=>{ await migrarIndice(); renderLista(); },800));
   setTimeout(async()=>{ await migrarIndice(); renderLista(); },1500);
+})();
+</script>
+
+
+<style id="v6-ux-css">
+/* ============================================================
+   V6 — Usabilidade: acoes seguras, botoes visiveis e ajuda
+   ============================================================ */
+
+/* --- 1) Desfazer/Refazer mais visiveis e com estado claro --- */
+.sb-ur button{transition:all .15s}
+.sb-ur button:not(:disabled){background:rgba(56,189,248,.16)!important;color:#7DD3FC!important;font-weight:900!important;cursor:pointer}
+.sb-ur button:not(:disabled):hover{background:rgba(56,189,248,.30)!important;transform:translateY(-1px)}
+.sb-ur button:disabled{opacity:.32;cursor:not-allowed}
+
+/* --- 2) Botoes de excluir: menos "clicavel por acidente" --- */
+.del-btn{opacity:.45;transition:all .15s}
+.del-btn:hover{opacity:1;background:#FEE2E2!important;color:#991B1B!important;transform:scale(1.12)}
+.cor-del{opacity:.7;transition:all .15s}
+.cor-del:hover{opacity:1;transform:scale(1.05)}
+
+/* --- 3) Barra de desfazer (aparece apos excluir algo) --- */
+#v6UndoBar{position:fixed;left:50%;bottom:52px;transform:translateX(-50%) translateY(14px);
+  background:#0F172A;color:#fff;border-radius:14px;padding:11px 15px;display:none;align-items:center;gap:12px;
+  box-shadow:0 16px 44px rgba(0,0,0,.42);z-index:99999;font-size:12px;font-weight:700;
+  border:1px solid rgba(255,255,255,.14);opacity:0;transition:all .22s}
+#v6UndoBar.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+#v6UndoBar b{color:#FBBF24}
+#v6UndoBar button{border:none;border-radius:9px;padding:8px 14px;font-weight:900;font-size:12px;
+  cursor:pointer;background:#38BDF8;color:#06283D;font-family:inherit}
+#v6UndoBar button:hover{background:#7DD3FC}
+#v6UndoBar .v6u-x{background:none;color:rgba(255,255,255,.45);padding:4px 6px;font-size:14px}
+#v6UndoBar .v6u-x:hover{color:#fff;background:none}
+
+/* --- 4) Ajuda / primeiros passos --- */
+#v6HelpBtn{position:fixed;right:14px;bottom:44px;z-index:99996;width:40px;height:40px;border-radius:50%;
+  border:none;background:#2563EB;color:#fff;font-size:19px;font-weight:900;cursor:pointer;
+  box-shadow:0 8px 26px rgba(37,99,235,.5);transition:all .18s;font-family:inherit}
+#v6HelpBtn:hover{background:#1D4ED8;transform:scale(1.09)}
+#v6HelpModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:100000;
+  align-items:center;justify-content:center;padding:18px}
+#v6HelpModal.open{display:flex}
+.v6h-card{width:min(680px,96vw);max-height:88vh;background:#fff;color:#111827;border-radius:20px;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+.v6h-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  background:linear-gradient(135deg,#0F172A,#1E3A8A);color:#fff}
+.v6h-head h3{margin:0;font-size:17px}
+.v6h-head button{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:9px;
+  padding:7px 13px;font-weight:900;cursor:pointer;font-family:inherit;font-size:12px}
+.v6h-body{padding:20px;overflow:auto;font-size:13.5px;line-height:1.62}
+.v6h-step{display:flex;gap:13px;margin-bottom:15px;align-items:flex-start}
+.v6h-num{flex-shrink:0;width:27px;height:27px;border-radius:50%;background:#2563EB;color:#fff;
+  font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+.v6h-step b{display:block;margin-bottom:2px;font-size:13.5px}
+.v6h-step span{color:#475569;font-size:12.5px}
+.v6h-tip{background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #2563EB;
+  border-radius:9px;padding:11px 14px;margin-top:15px;font-size:12.5px;color:#1E3A8A}
+.v6h-tip b{display:block;margin-bottom:3px}
+.v6h-keys{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;margin-top:9px;font-size:12.5px}
+.v6h-keys kbd{background:#1E293B;color:#fff;border-radius:5px;padding:2px 8px;font-size:11px;
+  font-weight:800;font-family:inherit;text-align:center}
+</style>
+
+<script id="v6-ux-js">
+/* ============================================================
+   V6 — Melhorias de usabilidade
+   ------------------------------------------------------------
+   1) BUG: excluir linha de produto NAO era desfazivel — nem com
+      Ctrl+Z. Um clique errado no "✕" apagava o item digitado e
+      nao havia como recuperar. Agora e desfazivel e mostra uma
+      barra "Desfazer" logo apos a exclusao.
+   2) Acoes destrutivas ficam menos clicaveis por acidente e
+      todas passam a registrar historico.
+   3) Botao de Ajuda com os primeiros passos, para quem nunca
+      usou o sistema.
+   4) Tooltips nos botoes que so tinham icone.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $id=id=>document.getElementById(id);
+
+  /* ---------------- Barra "Desfazer" ---------------- */
+  let undoTimer=null;
+  function barra(){
+    let b=$id('v6UndoBar');
+    if(!b){
+      b=document.createElement('div'); b.id='v6UndoBar';
+      b.innerHTML='<span id="v6UndoMsg"></span>'+
+        '<button onclick="v6DesfazerAgora()">↩ Desfazer</button>'+
+        '<button class="v6u-x" onclick="v6FecharUndo()" title="Fechar">✕</button>';
+      document.body.appendChild(b);
+    }
+    return b;
+  }
+  function mostrarUndo(msg){
+    const b=barra();
+    $id('v6UndoMsg').innerHTML=msg;
+    b.classList.add('show');
+    clearTimeout(undoTimer);
+    undoTimer=setTimeout(()=>b.classList.remove('show'),7000);
+  }
+  window.v6FecharUndo=function(){ const b=$id('v6UndoBar'); if(b) b.classList.remove('show'); };
+  window.v6DesfazerAgora=function(){
+    v6FecharUndo();
+    try{ if(typeof undo==='function') undo(); }catch(e){}
+  };
+
+  /* ---------------- 1) Exclusoes desfaziveis ---------------- */
+  /* O historico (snap) so era gravado DEPOIS da mudanca em alguns
+     casos, e removerL nem chamava snap. Aqui garantimos: grava o
+     estado ANTES de excluir e oferece o desfazer. */
+  function protegerExclusao(nomeFn, rotulo){
+    const orig=window[nomeFn];
+    if(typeof orig!=='function' || orig.__v6Protegida) return;
+    const nova=function(){
+      /* Fotografa o estado ANTES de remover. Não chamamos snap() depois:
+         ele é atrasado (400ms) e gravaria o estado já sem o item, fazendo
+         o Ctrl+Z "desfazer para o mesmo lugar". */
+      try{ if(typeof snapNow==='function') snapNow(); }catch(e){}
+      const r=orig.apply(this,arguments);
+      /* Algumas funções originais chamam snap() por dentro; esse snap
+         atrasado gravaria o estado JÁ SEM o item e anularia o desfazer. */
+      try{ if(typeof snapCancel==='function') snapCancel(); }catch(e){}
+      mostrarUndo('<b>'+rotulo+'</b> removido(a)');
+      return r;
+    };
+    nova.__v6Protegida=true;
+    window[nomeFn]=nova;
+  }
+
+  /* snapNow() vem do script principal: grava o histórico imediatamente,
+     sem o atraso de 400ms do snap() normal. */
+
+  ['removerL','removerLExtra'].forEach(f=>protegerExclusao(f,'Item da produção'));
+  protegerExclusao('excluirCor','Cor');
+  protegerExclusao('excluirSel','Elemento');
+  protegerExclusao('excluirSelExtra','Elemento');
+
+  /* ---------------- 3) Ajuda ---------------- */
+  function criarAjuda(){
+    if($id('v6HelpBtn')) return;
+
+    const btn=document.createElement('button');
+    btn.id='v6HelpBtn'; btn.textContent='?';
+    btn.title='Como usar o sistema (primeiros passos)';
+    btn.onclick=()=>v6AbrirAjuda();
+    document.body.appendChild(btn);
+
+    const m=document.createElement('div');
+    m.id='v6HelpModal';
+    m.innerHTML=`<div class="v6h-card">
+      <div class="v6h-head"><h3>👋 Como usar a Ficha Técnica</h3>
+        <button onclick="v6FecharAjuda()">Fechar</button></div>
+      <div class="v6h-body">
+        <div class="v6h-step"><div class="v6h-num">1</div><div>
+          <b>Preencha os dados do cliente</b>
+          <span>Clique direto nos campos da folha e digite. O que você escrever na Página 1 é copiado sozinho para as outras páginas.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">2</div><div>
+          <b>Use o Preenchimento rápido</b>
+          <span>No menu à esquerda, o botão <b>⚡ Preenchimento rápido</b> abre um formulário com tudo: cliente, modelos, cores, tecido e grade. Cada página tem sua própria aba, então dá para ter modelos com tecidos e grades diferentes.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">3</div><div>
+          <b>Adicione imagens do modelo</b>
+          <span>Clique no quadro pontilhado da folha (ou arraste a imagem para lá). Depois arraste para mover, use os cantos para redimensionar e a alça de cima para girar.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">4</div><div>
+          <b>Precisa de mais páginas?</b>
+          <span>No menu à esquerda, em <b>Páginas</b>, use “Adicionar Página”. Cada página tem sua própria tabela de produção, grade e imagens.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">5</div><div>
+          <b>Salve o seu trabalho</b>
+          <span><b>Salvar rascunho</b> guarda dentro do próprio sistema, para continuar depois. <b>Salvar Ficha (.json)</b> gera um arquivo que você pode guardar ou enviar. <b>Exportar PDF</b> gera o arquivo para imprimir ou mandar ao cliente.</span></div></div>
+
+        <div class="v6h-tip"><b>🛡 Seu trabalho está protegido</b>
+          O sistema guarda uma cópia de segurança sozinho, a cada poucos segundos. Se faltar energia ou o navegador fechar, ao abrir de novo ele pergunta se você quer recuperar a ficha. O indicador no canto inferior direito mostra o estado (“Protegido”).</div>
+
+        <div class="v6h-tip" style="background:#F0FDF4;border-color:#BBF7D0;border-left-color:#16A34A;color:#14532D">
+          <b>⌨ Atalhos que ajudam</b>
+          <div class="v6h-keys">
+            <kbd>Ctrl + Z</kbd><span>Desfazer a última ação</span>
+            <kbd>Ctrl + Y</kbd><span>Refazer</span>
+            <kbd>Esc</kbd><span>Cancelar / tirar a seleção</span>
+            <kbd>Duplo clique</kbd><span>Editar um texto do canvas</span>
+          </div></div>
+
+        <div class="v6h-tip" style="background:#FEF3C7;border-color:#FDE68A;border-left-color:#D97706;color:#78350F">
+          <b>💡 Errou? Não tem problema</b>
+          Quase tudo dá para desfazer com <b>Ctrl + Z</b> ou pelo botão <b>↩ Desfazer</b> no rodapé do menu. Ao excluir um item, aparece um aviso com a opção de trazer de volta.</div>
+      </div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{ if(e.target===m) v6FecharAjuda(); });
+  }
+  window.v6AbrirAjuda=function(){ criarAjuda(); $id('v6HelpModal').classList.add('open'); };
+  window.v6FecharAjuda=function(){ const m=$id('v6HelpModal'); if(m) m.classList.remove('open'); };
+
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') v6FecharAjuda(); });
+
+  /* Na primeira vez que abrir o sistema, mostra a ajuda sozinho */
+  function talvezPrimeiraVez(){
+    try{
+      if(localStorage.getItem('v6_ajuda_vista')) return;
+      localStorage.setItem('v6_ajuda_vista','1');
+      setTimeout(()=>v6AbrirAjuda(),2500);
+    }catch(e){}
+  }
+
+  /* ---------------- 4) Tooltips nos botoes so-com-icone ---------------- */
+  const DICAS={'⬆':'Trazer para a frente','⬇':'Enviar para trás','⊕ Centro':'Centralizar na folha',
+    '⤢ Fill':'Preencher todo o espaço','🔒':'Travar/destravar a proporção','🗑':'Excluir o item selecionado',
+    '✕':'Fechar / tirar a seleção','➤':'Ponta cheia','➢':'Ponta vazada','─':'Sem ponta',
+    '↩ Desfazer':'Desfazer (Ctrl+Z)','↪ Refazer':'Refazer (Ctrl+Y)'};
+  function porTooltips(){
+    document.querySelectorAll('button').forEach(b=>{
+      if(b.title) return;
+      const t=(b.textContent||'').trim();
+      if(DICAS[t]) b.title=DICAS[t];
+    });
+  }
+
+  function iniciar(){ criarAjuda(); porTooltips(); talvezPrimeiraVez(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,900));
+  else setTimeout(iniciar,900);
+  /* elementos das paginas extras sao criados depois */
+  setTimeout(porTooltips,2200);
+  document.addEventListener('click',()=>setTimeout(porTooltips,300));
 })();
 </script>
 
