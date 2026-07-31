@@ -2074,5 +2074,179 @@ function printProposal() {
 
 </style>
 
+
+<style id="v6-orc-didatico-css">
+/* ============================================================
+   V6 — Orcamento mais didatico
+   ============================================================ */
+.v6o-passo{display:flex;align-items:center;gap:9px;padding:2px 0 10px}
+.v6o-num{flex-shrink:0;width:21px;height:21px;border-radius:50%;
+  background:linear-gradient(135deg,#38BDF8,#0284C7);color:#fff;font-size:10.5px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(2,132,199,.45)}
+.v6o-passo b{display:block;font-size:12px;color:#F8FAFC;font-weight:900}
+.v6o-passo small{display:block;font-size:10px;color:#94A3B8;font-weight:600;margin-top:1px}
+
+/* dica curta abaixo de um grupo */
+.v6o-dica{font-size:10.5px;line-height:1.5;color:#94A3B8;margin:-4px 0 16px;font-style:italic}
+.v6o-dica b{color:#CBD5E1;font-style:normal}
+
+/* destaque do botao principal de exportar */
+.v6o-nota-exp{background:rgba(2,132,199,.10);border:1px solid rgba(56,189,248,.28);
+  border-left:3px solid #38BDF8;border-radius:8px;padding:9px 11px;margin-bottom:12px;
+  font-size:10.5px;line-height:1.5;color:#BAE6FD}
+.v6o-nota-exp b{color:#E0F2FE;display:block;margin-bottom:2px}
+
+/* botao de ajuda */
+#v6oHelpBtn{position:fixed;right:16px;bottom:16px;z-index:99996;width:42px;height:42px;border-radius:50%;
+  border:none;background:#0284C7;color:#fff;font-size:20px;font-weight:900;cursor:pointer;
+  box-shadow:0 8px 26px rgba(2,132,199,.55);transition:all .18s;font-family:inherit}
+#v6oHelpBtn:hover{background:#0369A1;transform:scale(1.09)}
+#v6oHelp{display:none;position:fixed;inset:0;background:rgba(0,0,0,.66);z-index:100001;
+  align-items:center;justify-content:center;padding:18px}
+#v6oHelp.open{display:flex}
+.v6oh-card{width:min(660px,96vw);max-height:88vh;background:#0F172A;color:#E2E8F0;border-radius:18px;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.55);
+  border:1px solid #1E293B}
+.v6oh-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  background:linear-gradient(135deg,#0C4A6E,#075985);color:#fff}
+.v6oh-head h3{margin:0;font-size:16.5px}
+.v6oh-head button{border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;
+  padding:7px 13px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
+.v6oh-body{padding:20px;overflow:auto;font-size:13px;line-height:1.6}
+.v6oh-step{display:flex;gap:12px;margin-bottom:14px}
+.v6oh-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#0284C7;color:#fff;
+  font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.v6oh-step b{display:block;margin-bottom:2px;color:#F1F5F9}
+.v6oh-step span{color:#94A3B8;font-size:12.5px}
+.v6oh-tip{background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.26);
+  border-left:3px solid #38BDF8;border-radius:9px;padding:11px 13px;margin-top:14px;
+  font-size:12.5px;color:#BAE6FD}
+.v6oh-tip b{display:block;margin-bottom:3px;color:#E0F2FE}
+</style>
+
+<script id="v6-orc-didatico-js">
+/* ============================================================
+   V6 — Orcamento: linguagem didatica
+   ------------------------------------------------------------
+   Problemas: a aba unica "Itens" nao dizia por onde comecar; o
+   botao de gerar o PDF ("Imprimir / Salvar PDF Vetorial") usava
+   jargao; nao havia nenhuma ajuda no modulo.
+   Tudo aqui e adicionado por cima, sem reescrever a estrutura.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+
+  function passo(n,titulo,desc){
+    const d=document.createElement('div');
+    d.className='v6o-passo';
+    d.innerHTML='<div class="v6o-num">'+n+'</div><div><b>'+titulo+'</b><small>'+desc+'</small></div>';
+    return d;
+  }
+
+  function organizar(){
+    const itens=$('tab-itens');
+    if(!itens||itens.dataset.v6Pronto==='1') return;
+    itens.dataset.v6Pronto='1';
+
+    /* --- Passo 1: paginas --- */
+    const barra=itens.querySelector('.page-manager-bar');
+    if(barra){
+      itens.insertBefore(passo(1,'Escolha a página','Cada página é uma folha do orçamento'),barra);
+      const add=$('btn-add-page');
+      if(add) add.title='Cria uma nova folha no orçamento, com a própria lista de itens';
+      const rem=$('btn-remove-page');
+      if(rem) rem.title='Remove a última folha do orçamento';
+    }
+
+    /* --- Passo 2: itens --- */
+    const lista=$('items-editor-list');
+    if(lista){
+      itens.insertBefore(passo(2,'Lance os produtos','Modelo, tecido, quantidade e valor'),lista);
+      const d=document.createElement('div');
+      d.className='v6o-dica';
+      d.innerHTML='O total é calculado sozinho. Você também pode <b>clicar direto na folha</b> à direita para corrigir qualquer texto.';
+      itens.insertBefore(d,lista);
+    }
+
+    /* --- Passo 3: exportar (fica no rodape fixo) --- */
+    const pdf=document.querySelector('button[onclick*="printProposal"]');
+    const png=document.querySelector('button[onclick*="exportPNG"]');
+    if(pdf){
+      pdf.innerHTML='📄 Gerar PDF para o cliente';
+      pdf.title='Abre a janela de impressão. Escolha "Salvar como PDF" para gerar o arquivo.';
+      const área=pdf.parentNode;
+      if(área&&!área.querySelector('.v6o-nota-exp')){
+        const nota=document.createElement('div');
+        nota.className='v6o-nota-exp';
+        nota.innerHTML='<b>Para enviar ao cliente</b>Use <b style="display:inline">PDF</b> — abre a impressão, escolha “Salvar como PDF”. O <b style="display:inline">PNG</b> gera uma imagem, útil para WhatsApp.';
+        área.insertBefore(nota,pdf);
+      }
+    }
+    if(png){
+      png.innerHTML='📸 Salvar como imagem';
+      png.title='Gera uma imagem PNG da folha, boa para mandar por WhatsApp';
+    }
+
+    /* --- Configuracoes (engrenagem) --- */
+    const eng=document.querySelector('button[onclick*="openBudgetSettings"]');
+    if(eng) eng.title='Dados da empresa, condições de pagamento, validade e assinatura';
+  }
+
+  /* ---------------- Ajuda ---------------- */
+  function criarAjuda(){
+    if($('v6oHelpBtn')) return;
+    const b=document.createElement('button');
+    b.id='v6oHelpBtn'; b.textContent='?';
+    b.title='Como montar um orçamento';
+    b.onclick=()=>v6oAbrirAjuda();
+    document.body.appendChild(b);
+
+    const m=document.createElement('div');
+    m.id='v6oHelp';
+    m.innerHTML=`<div class="v6oh-card">
+      <div class="v6oh-head"><h3>💰 Como montar um orçamento</h3>
+        <button onclick="v6oFecharAjuda()">Fechar</button></div>
+      <div class="v6oh-body">
+        <div class="v6oh-step"><div class="v6oh-n">1</div><div>
+          <b>Confira os dados da empresa</b>
+          <span>Clique na engrenagem <b>⚙️</b> no topo do painel para ajustar telefone, CNPJ, endereço, condições de pagamento, validade e assinatura. Esses dados aparecem em todas as folhas.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">2</div><div>
+          <b>Lance os produtos</b>
+          <span>Use <b>➕ Adicionar Item</b> e preencha modelo, tecido, quantidade e valor. O total é somado sozinho.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">3</div><div>
+          <b>Precisa de mais folhas?</b>
+          <span>Use <b>➕ Adicionar Página</b>. Cada folha tem a própria lista de itens — útil quando o orçamento é grande ou quando você quer separar por tipo de produto. O seletor no topo escolhe qual folha você está editando.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">4</div><div>
+          <b>Ajuste direto na folha</b>
+          <span>Quase todo texto da folha à direita pode ser corrigido clicando em cima e digitando — títulos, datas e observações.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">5</div><div>
+          <b>Envie para o cliente</b>
+          <span><b>Gerar PDF</b> abre a janela de impressão: escolha “Salvar como PDF” para ter o arquivo. <b>Salvar como imagem</b> gera um PNG, prático para mandar no WhatsApp.</span></div></div>
+        <div class="v6oh-tip"><b>💡 Dica</b>
+          Se o orçamento for aprovado, você pode montar a ficha técnica de produção no módulo <b>Criador</b> e acompanhar o andamento no <b>Principal</b>.</div>
+      </div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{ if(e.target===m) v6oFecharAjuda(); });
+  }
+  window.v6oAbrirAjuda=function(){ criarAjuda(); $('v6oHelp').classList.add('open'); };
+  window.v6oFecharAjuda=function(){ const m=$('v6oHelp'); if(m) m.classList.remove('open'); };
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') v6oFecharAjuda(); });
+
+  function primeiraVez(){
+    try{
+      if(localStorage.getItem('v6_ajuda_orc')) return;
+      localStorage.setItem('v6_ajuda_orc','1');
+      setTimeout(()=>v6oAbrirAjuda(),2200);
+    }catch(e){}
+  }
+
+  function iniciar(){ organizar(); criarAjuda(); primeiraVez(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,700));
+  else setTimeout(iniciar,700);
+  setTimeout(organizar,1600);
+})();
+</script>
+
 </body>
 </html>
