@@ -771,9 +771,6 @@
         print-color-adjust: exact;
       }
       /* Hide ALL editor / UI chrome — only the A4 pages should print */
-      /* Elementos flutuantes da V6 (ajuda) nao podem sair no PDF */
-      #v6oHelpBtn,
-      #v6oHelp,
       .editor-sidebar,
       .editor-header,
       .editor-content,
@@ -847,17 +844,6 @@
 [data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
-</style>
-<style id="v6-nao-imprimir-css">
-/* V6 — a interface de apoio (ajuda, indicadores) nunca sai no PDF.
-   Fica no <head>: no fim do <body> o proprio <style> virava item
-   flex e abria uma faixa branca no rodape da folha. */
-@media print{
-  #v6HelpBtn,#v6HelpModal,#v6SaveStatus,#v6UndoBar,#v6QuickModal,
-  #v6oHelpBtn,#v6oHelp,#v6pHelpBtn,#v6pHelp,#v6pGuia,#v6DropOverlay{
-    display:none!important
-  }
-}
 </style>
 </head>
 <body>
@@ -1840,9 +1826,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
         '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-        '.v5-highlight-group','#budget-settings-modal','#signature-modal',
-        /* botao de ajuda da V6: nao pode aparecer na imagem exportada */
-        '#v6oHelpBtn','#v6oHelp'];
+        '.v5-highlight-group','#budget-settings-modal','#signature-modal'];
       const saved = [];
       hideSelectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => {
@@ -2262,5 +2246,6 @@ function printProposal() {
   setTimeout(organizar,1600);
 })();
 </script>
+
 </body>
 </html>

@@ -542,17 +542,6 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
 </style>
-<style id="v6-nao-imprimir-css">
-/* V6 — a interface de apoio (ajuda, indicadores) nunca sai no PDF.
-   Fica no <head>: no fim do <body> o proprio <style> virava item
-   flex e abria uma faixa branca no rodape da folha. */
-@media print{
-  #v6HelpBtn,#v6HelpModal,#v6SaveStatus,#v6UndoBar,#v6QuickModal,
-  #v6oHelpBtn,#v6oHelp,#v6pHelpBtn,#v6pHelp,#v6pGuia,#v6DropOverlay{
-    display:none!important
-  }
-}
-</style>
 </head>
 <body>
 <div class="app"><header class="header"><div class="brand"><h1>Fichas Técnicas</h1><p>Prioridade, catálogo e produção</p></div><div class="tabs"><button class="tab active" onclick="switchView('dashboard')">Dashboard</button><button class="tab" onclick="switchView('catalogo')">Catalogação</button></div><select class="theme-select" id="themeSelect" onchange="setTheme(this.value)"><option value="neo">Neo Glass</option><option value="oxford">Oxford Blue</option><option value="cherry">Cherry Vanilla</option><option value="butter">Butter Green</option>
@@ -1382,4 +1371,5 @@ setInterval(checkPendingFicha,2000);
   setTimeout(()=>{faixa();tooltips();estadoVazio();},1800);
 })();
 </script>
+
 </body></html>
