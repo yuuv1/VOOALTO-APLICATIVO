@@ -5282,5 +5282,249 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 })();
 </script>
 
+
+<style id="v6-menu-didatico-css">
+/* ============================================================
+   V6 — Menu lateral didatico
+   ============================================================ */
+
+/* Cabecalho de passo numerado */
+.v6-passo{display:flex;align-items:center;gap:9px;padding:13px 14px 5px}
+.v6-passo-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;
+  background:linear-gradient(135deg,#38BDF8,#2563EB);color:#fff;font-size:10px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(37,99,235,.45)}
+.v6-passo-txt{min-width:0}
+.v6-passo-txt b{display:block;font-size:10.5px;font-weight:900;color:#fff;letter-spacing:.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v6-passo-txt small{display:block;font-size:7.5px;color:rgba(255,255,255,.42);font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+
+/* Sublegenda dentro dos botoes */
+.sb-btn .v6-sub{display:block;font-size:7.5px;font-weight:600;color:rgba(255,255,255,.38);
+  margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-btn .sb-btn-label{line-height:1.2}
+
+/* Acao principal em destaque */
+.sb-v4-btn.v6-destaque,.sb-btn.v6-destaque{
+  background:linear-gradient(135deg,#2563EB,#1D4ED8)!important;color:#fff!important;
+  box-shadow:0 4px 16px rgba(37,99,235,.42);border-radius:11px!important;margin:2px 10px;
+  width:calc(100% - 20px)!important}
+.sb-v4-btn.v6-destaque:hover,.sb-btn.v6-destaque:hover{
+  background:linear-gradient(135deg,#1D4ED8,#1E40AF)!important;transform:translateY(-1px)}
+.v6-destaque .sb-btn-icon{background:rgba(255,255,255,.20)!important;border-color:rgba(255,255,255,.28)!important}
+.v6-destaque .v6-sub{color:rgba(255,255,255,.72)!important}
+
+/* Secao recolhivel */
+.v6-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;
+  border:none;background:transparent;cursor:pointer;font-family:inherit;
+  padding:12px 16px 6px;color:var(--glass-muted);font-size:9px;font-weight:800;
+  letter-spacing:2px;text-transform:uppercase}
+.v6-toggle:hover{color:#fff}
+.v6-toggle span.v6-seta{font-size:9px;transition:transform .2s;opacity:.6}
+.v6-toggle.aberto span.v6-seta{transform:rotate(90deg)}
+.v6-recolhivel{display:none}
+.v6-recolhivel.aberto{display:block}
+
+/* Zona de risco */
+.v6-risco{margin:10px 10px 4px;padding:8px 10px;border-radius:10px;
+  background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18)}
+.v6-risco-tit{font-size:7.5px;font-weight:900;color:#FCA5A5;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:5px}
+.v6-risco .sb-v4-btn{background:rgba(239,68,68,.13)!important;color:#FCA5A5!important;
+  border-radius:8px!important;font-size:9.5px!important}
+.v6-risco .sb-v4-btn:hover{background:rgba(239,68,68,.26)!important;color:#fff!important}
+
+/* Dica de rodape das paginas */
+.v6-dica{margin:2px 14px 8px;font-size:7.5px;line-height:1.45;color:rgba(255,255,255,.34);
+  font-style:italic}
+</style>
+
+<script id="v6-menu-didatico-js">
+/* ============================================================
+   V6 — Menu lateral mais didatico
+   ------------------------------------------------------------
+   Problemas encontrados na auditoria:
+   1) Secao "Geral" era um titulo ORFAO, sem nenhum conteudo.
+   2) Nao havia ordem de uso: quem abria o sistema pela primeira
+      vez nao sabia por onde comecar.
+   3) Tres formas de salvar (rascunho, .json, PDF) sem explicar a
+      diferenca -- a maior fonte de confusao.
+   4) "Resetar ficha tecnica" (destrutivo) ficava colado nas
+      acoes do dia a dia.
+   5) Rotulos tecnicos: ".json", "Painel de Camadas".
+
+   Reorganiza movendo os nos existentes (preserva os onclick),
+   sem reescrever o menu -- por isso o risco e baixo.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $=s=>document.querySelector(s);
+  const $$=s=>[...document.querySelectorAll(s)];
+
+  function acharSecaoPorTitulo(txt){
+    return $$('.sb-section').find(sec=>{
+      const t=sec.querySelector('.sb-section-title');
+      return t && t.textContent.trim().toLowerCase()===txt.toLowerCase();
+    });
+  }
+  function botaoPorOnclick(trecho,raiz){
+    return (raiz||document).querySelector('button[onclick*="'+trecho+'"]');
+  }
+
+  /* Cabecalho de passo */
+  function passo(num,titulo,desc){
+    const d=document.createElement('div');
+    d.className='v6-passo';
+    d.innerHTML='<div class="v6-passo-num">'+num+'</div>'+
+      '<div class="v6-passo-txt"><b>'+titulo+'</b><small>'+desc+'</small></div>';
+    return d;
+  }
+  /* Sublegenda dentro de um botao existente */
+  function sub(btn,texto,dica){
+    if(!btn||btn.querySelector('.v6-sub')) return;
+    const lbl=btn.querySelector('.sb-btn-label');
+    if(lbl){
+      const s=document.createElement('span');
+      s.className='v6-sub'; s.textContent=texto;
+      lbl.appendChild(s);
+    }
+    if(dica&&!btn.title) btn.title=dica;
+  }
+  function renomear(btn,novo){
+    if(!btn) return;
+    const lbl=btn.querySelector('.sb-btn-label');
+    if(!lbl) return;
+    const subEl=lbl.querySelector('.v6-sub');
+    lbl.textContent=novo;
+    if(subEl) lbl.appendChild(subEl);
+  }
+
+  function organizar(){
+    const scroll=$('.sb-scroll');
+    if(!scroll||scroll.dataset.v6Organizado==='1') return;
+
+    const painelV4=document.getElementById('v4DraftPanel');
+    const secPaginas=acharSecaoPorTitulo('Páginas');
+    /* espera o painel V4 ser injetado para nao brigar com ele */
+    if(!painelV4||!secPaginas) return;
+    scroll.dataset.v6Organizado='1';
+
+    /* ---- 1) Remove a secao "Geral", que era um titulo vazio ---- */
+    const geral=acharSecaoPorTitulo('Geral');
+    if(geral && !geral.querySelector('button,input,select')) geral.remove();
+
+    /* ---- 2) PASSO 1: por onde comecar ---- */
+    const btnRapido=botaoPorOnclick('v4AbrirPreenchimentoRapido');
+    const btnAbrir=botaoPorOnclick("fichaJsonInput");
+
+    const p1=passo(1,'Comece por aqui','Preencha os dados de uma vez');
+    scroll.insertBefore(p1,scroll.firstChild);
+
+    if(btnRapido){
+      btnRapido.classList.add('v6-destaque');
+      btnRapido.title='Abre um formulário com cliente, modelos, tecido, cores e grade — separados por página';
+      scroll.insertBefore(btnRapido,p1.nextSibling);
+    }
+    if(btnAbrir){
+      renomear(btnAbrir,'Abrir ficha salva');
+      sub(btnAbrir,'Continuar um arquivo do computador','Abre um arquivo .json de ficha salvo no computador');
+      scroll.insertBefore(btnAbrir,btnRapido?btnRapido.nextSibling:p1.nextSibling);
+    }
+
+    /* ---- 3) PASSO 2: montar a ficha (secao Paginas) ---- */
+    const p2=passo(2,'Monte a ficha','Imagens, textos e páginas');
+    scroll.insertBefore(p2,secPaginas);
+
+    /* rotulos mais claros dentro de Paginas */
+    const bImg=botaoPorOnclick('canvasInput',secPaginas);
+    const bTxt=botaoPorOnclick('criarTexto',secPaginas);
+    const bSeta=botaoPorOnclick('toggleModoSeta',secPaginas);
+    const bCam=botaoPorOnclick('toggleLayersPanel',secPaginas)||botaoPorOnclick('Camadas',secPaginas);
+    const bCor=botaoPorOnclick('adicionarCor',secPaginas);
+    sub(bImg,'Foto do modelo','Clique para escolher uma imagem, ou arraste direto para a folha');
+    sub(bTxt,'Escreva sobre a imagem','Depois dê duplo clique no texto para editar');
+    sub(bSeta,'Aponte um detalhe','Clique e arraste sobre a imagem para desenhar');
+    sub(bCor,'Cores do tecido','Define as cores que aparecem na folha');
+    if(bCam){ renomear(bCam,'Organizar elementos'); sub(bCam,'Ver o que está na frente'); }
+
+    const dica=document.createElement('div');
+    dica.className='v6-dica';
+    dica.textContent='Dica: cada página tem sua própria tabela, grade e imagens.';
+    const navPaginas=document.getElementById('extraPagesNav');
+    if(navPaginas&&navPaginas.parentNode) navPaginas.parentNode.insertBefore(dica,navPaginas);
+
+    /* ---- 4) PASSO 3: salvar (a maior duvida de quem usa) ---- */
+    const secFichas=acharSecaoPorTitulo('Fichas Salvas');
+    const btnRascunho=botaoPorOnclick('v4SalvarRascunho');
+    const btnSalvarJson=botaoPorOnclick('exportarFichaJSON');
+
+    const p3=passo(3,'Salve o trabalho','Rascunho, arquivo ou PDF');
+    const ancora=secFichas||painelV4;
+    if(ancora&&ancora.parentNode) ancora.parentNode.insertBefore(p3,ancora);
+
+    if(btnRascunho){
+      btnRascunho.title='Guarda dentro do próprio sistema, para continuar depois neste computador';
+      if(p3.parentNode) p3.parentNode.insertBefore(btnRascunho,p3.nextSibling);
+    }
+    if(btnSalvarJson){
+      renomear(btnSalvarJson,'Salvar arquivo da ficha');
+      sub(btnSalvarJson,'Guardar ou enviar por e-mail','Gera um arquivo .json que pode ser aberto depois ou em outro computador');
+      if(secFichas) secFichas.insertBefore(btnSalvarJson,secFichas.firstChild.nextSibling);
+    }
+
+    /* explica as tres formas de salvar */
+    if(secFichas){
+      const nota=document.createElement('div');
+      nota.className='v6-dica';
+      nota.innerHTML='<b style="color:rgba(255,255,255,.5)">Rascunho</b> fica no sistema · '+
+                     '<b style="color:rgba(255,255,255,.5)">Arquivo</b> você guarda/envia · '+
+                     '<b style="color:rgba(255,255,255,.5)">PDF</b> é para imprimir e mandar ao cliente.';
+      secFichas.appendChild(nota);
+    }
+
+    /* ---- 5) Configuracoes recolhiveis (menos poluicao visual) ---- */
+    const secCfg=acharSecaoPorTitulo('Configurações');
+    if(secCfg){
+      const tit=secCfg.querySelector('.sb-section-title');
+      const corpo=document.createElement('div');
+      corpo.className='v6-recolhivel';
+      while(tit.nextSibling) corpo.appendChild(tit.nextSibling);
+      const bt=document.createElement('button');
+      bt.className='v6-toggle';
+      bt.innerHTML='<span>Configurações</span><span class="v6-seta">▸</span>';
+      bt.onclick=()=>{ corpo.classList.toggle('aberto'); bt.classList.toggle('aberto'); };
+      tit.replaceWith(bt);
+      secCfg.appendChild(corpo);
+    }
+
+    /* ---- 6) Acao destrutiva isolada, no fim ---- */
+    const btnReset=botaoPorOnclick('v4ResetarFicha');
+    if(btnReset){
+      const box=document.createElement('div');
+      box.className='v6-risco';
+      box.innerHTML='<div class="v6-risco-tit">⚠ Apaga tudo</div>';
+      btnReset.title='Limpa a ficha inteira para começar do zero. Os rascunhos salvos são mantidos.';
+      box.appendChild(btnReset);
+      scroll.appendChild(box);
+    }
+
+    /* ---- 7) Rodape: explica os botoes fixos ---- */
+    const bCat=botaoPorOnclick('enviarParaCatalogacao');
+    if(bCat&&!bCat.title) bCat.title='Envia esta ficha para o módulo Principal, para acompanhar a produção';
+    const bPdf=botaoPorOnclick('exportarPDF');
+    if(bPdf&&!bPdf.title) bPdf.title='Gera o PDF para imprimir ou enviar ao cliente';
+    const bPng=botaoPorOnclick('exportarPNG');
+    if(bPng&&!bPng.title) bPng.title='Salva a folha como imagem (PNG)';
+  }
+
+  /* o painel V4 e injetado ~400-900ms depois; tentamos algumas vezes */
+  let tentativas=0;
+  const timer=setInterval(()=>{
+    organizar();
+    if(++tentativas>14||document.querySelector('.sb-scroll[data-v6-organizado="1"]')) clearInterval(timer);
+  },400);
+})();
+</script>
+
 </body>
 </html>
