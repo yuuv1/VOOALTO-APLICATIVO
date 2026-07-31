@@ -97,7 +97,7 @@ echo   recarregados do zero.
 echo.
 echo   Para fechar o Vooalto, feche esta janela preta.
 echo.
-start "" http://localhost:%PORTA%/limpar_cache.html
+start "" /min cmd /c "ping -n 3 127.0.0.1 >nul & start http://localhost:%PORTA%/limpar_cache.html"
 node server.js %PORTA%
 echo.
 echo   O servidor foi encerrado.
@@ -112,7 +112,7 @@ echo   Endereco: http://localhost:%PORTA%
 echo.
 echo   Para fechar o Vooalto, feche esta janela preta.
 echo.
-start "" http://localhost:%PORTA%
+start "" /min cmd /c "ping -n 3 127.0.0.1 >nul & start http://localhost:%PORTA%"
 node server.js %PORTA%
 echo.
 echo   O servidor foi encerrado.

@@ -27,6 +27,12 @@ p{color:#aaa;font-size:13px;margin:6px 0;line-height:1.55}
 <div class="status" id="status"></div>
 </div>
 <script>
+/* Marcador: se esta pagina foi substituida pelo index.html vindo do cache,
+   este script nao roda e o navegador mostra o app antigo. Por isso o
+   .bat tambem espera o servidor subir antes de abrir. */
+window.__vooaltoLimpeza=true;
+</script>
+<script>
 /* ============================================================
    V6 — Limpeza de cache SEM perder dados
    ------------------------------------------------------------
@@ -88,7 +94,7 @@ p{color:#aaa;font-size:13px;margin:6px 0;line-height:1.55}
   try{ sessionStorage.clear(); }catch(e){}
 
   linha('↻ Abrindo o Vooalto novamente...');
-  setTimeout(()=>{ location.replace('./?fresh='+Date.now()); },1800);
+  setTimeout(()=>{ location.replace('./index.html?fresh='+Date.now()); },1800);
 })();
 </script>
 </body></html>
