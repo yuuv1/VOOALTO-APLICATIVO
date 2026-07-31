@@ -848,6 +848,17 @@
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
 </style>
+<style id="v6-nao-imprimir-css">
+/* V6 — a interface de apoio (ajuda, indicadores) nunca sai no PDF.
+   Fica no <head>: no fim do <body> o proprio <style> virava item
+   flex e abria uma faixa branca no rodape da folha. */
+@media print{
+  #v6HelpBtn,#v6HelpModal,#v6SaveStatus,#v6UndoBar,#v6QuickModal,
+  #v6oHelpBtn,#v6oHelp,#v6pHelpBtn,#v6pHelp,#v6pGuia,#v6DropOverlay{
+    display:none!important
+  }
+}
+</style>
 </head>
 <body>
 
@@ -2251,17 +2262,5 @@ function printProposal() {
   setTimeout(organizar,1600);
 })();
 </script>
-
-
-<style id="v6-nao-imprimir-css">
-/* ============================================================
-   V6 — Nada da interface de apoio pode sair no PDF/impressao
-   Cobre por prefixo de id, entao vale tambem para o que for
-   adicionado depois (ajuda, avisos, indicadores).
-   ============================================================ */
-@media print{
-  [id^="v6"]{display:none!important}
-}
-</style>
 </body>
 </html>
