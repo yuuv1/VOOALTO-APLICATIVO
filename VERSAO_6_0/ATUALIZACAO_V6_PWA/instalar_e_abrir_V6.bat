@@ -27,16 +27,19 @@ echo   Porta atual: %PORTA%
 echo   Endereco:    http://localhost:%PORTA%
 echo.
 echo   [1] Abrir o Vooalto
-echo   [2] Trocar a porta
-echo   [3] Sair
+echo   [2] Abrir limpando o cache
+echo       (use se o sistema abrir desatualizado)
+echo   [3] Trocar a porta
+echo   [4] Sair
 echo.
 set "OPCAO="
 set /p "OPCAO=  Escolha uma opcao (ou Enter para abrir): "
 
 if "%OPCAO%"=="" goto ABRIR
 if "%OPCAO%"=="1" goto ABRIR
-if "%OPCAO%"=="2" goto TROCAR
-if "%OPCAO%"=="3" exit /b 0
+if "%OPCAO%"=="2" goto LIMPAR
+if "%OPCAO%"=="3" goto TROCAR
+if "%OPCAO%"=="4" exit /b 0
 goto MENU
 
 :TROCAR
@@ -48,6 +51,9 @@ echo   ATENCAO: cada porta guarda seus proprios dados.
 echo   As fichas e o catalogo salvos em uma porta NAO
 echo   aparecem em outra. Para nao perder nada, use
 echo   sempre a mesma porta no dia a dia.
+echo.
+echo   Se o problema for o sistema abrir desatualizado,
+echo   prefira a opcao [2], que preserva suas fichas.
 echo.
 set "NOVA="
 set /p "NOVA=  Nova porta (Enter para cancelar): "
@@ -79,6 +85,24 @@ echo.
 echo   Porta alterada para %PORTA% e salva para as proximas vezes.
 timeout /t 2 >nul
 goto MENU
+
+:LIMPAR
+cls
+echo.
+echo   Abrindo o Vooalto e limpando o cache...
+echo.
+echo   Suas fichas, rascunhos e o catalogo NAO sao apagados.
+echo   Apenas os arquivos que o navegador guardou serao
+echo   recarregados do zero.
+echo.
+echo   Para fechar o Vooalto, feche esta janela preta.
+echo.
+start "" http://localhost:%PORTA%/limpar_cache.html
+node server.js %PORTA%
+echo.
+echo   O servidor foi encerrado.
+pause
+exit /b 0
 
 :ABRIR
 cls
