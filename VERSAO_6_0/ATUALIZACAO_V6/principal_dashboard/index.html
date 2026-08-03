@@ -582,14 +582,50 @@ const _pdfDocCache=new Map();
 
 function ensurePdfJs(){
   if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-  if(pdfJsLoadingPromise) return pdfJsLoadingPromise;
-  pdfJsLoadingPromise=new Promise((resolve,reject)=>{
-    const sc=document.createElement('script');
-    sc.src='./assets/pdf.min.js';
-    sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='./assets/pdf.worker.min.js';resolve(window.pdfjsLib)}catch(e){reject(e)}};
-    sc.onerror=()=>reject(new Error('pdf.js nao carregou'));
-    document.head.appendChild(sc);
-  });
+  /* Dentro do PWA este modulo roda em um iframe srcdoc, cujo documento e
+     "about:blank": o caminho relativo ./assets/ nem sempre resolve. Tentamos
+     varios caminhos, inclusive o absoluto derivado da janela pai. */
+  function basesPossiveis(){
+    const l=[];
+    try{ if(window.parent&&window.parent!==window&&window.parent.location&&window.parent.location.href){
+      l.push(window.parent.location.href.replace(/[^/]*$/,'')); } }catch(e){}
+    try{ if(document.baseURI) l.push(document.baseURI.replace(/[^/]*$/,'')); }catch(e){}
+    try{ if(location&&location.href&&location.href.indexOf('about:')!==0)
+      l.push(location.href.replace(/[^/]*$/,'')); }catch(e){}
+    l.push('./');
+    return l.filter((v,i)=>v&&l.indexOf(v)===i);
+  }
+  function tentar(base){
+    return new Promise((resolve,reject)=>{
+      let pronto=false;
+      /* Timeout obrigatorio: se o navegador bloquear o script (politica de
+         origem no srcdoc), onload e onerror podem nunca disparar e a previa
+         ficaria presa em "Carregando..." para sempre. */
+      const t=setTimeout(()=>{ if(!pronto){ pronto=true; reject(new Error('tempo esgotado em '+base)); } },2500);
+      const fim=(fn,arg)=>{ if(pronto)return; pronto=true; clearTimeout(t); fn(arg); };
+      const sc=document.createElement('script');
+      sc.src=base+'assets/pdf.min.js';
+      sc.onload=()=>{
+        try{
+          if(!window.pdfjsLib) return fim(reject,new Error('carregou sem expor pdfjsLib'));
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+'assets/pdf.worker.min.js';
+          fim(resolve,window.pdfjsLib);
+        }catch(e){ fim(reject,e); }
+      };
+      sc.onerror=()=>fim(reject,new Error('falhou em '+sc.src));
+      document.head.appendChild(sc);
+    });
+  }
+  pdfJsLoadingPromise=(async()=>{
+    const bases=basesPossiveis();
+    let ultimo=null;
+    for(const b of bases){
+      try{ return await tentar(b); }
+      catch(e){ ultimo=e; }
+    }
+    pdfJsLoadingPromise=null;   /* permite nova tentativa depois */
+    throw ultimo||new Error('pdf.js nao carregou');
+  })();
   return pdfJsLoadingPromise;
 }
 function dataUrlToUint8Array(d){const b=atob(d.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
@@ -696,18 +732,24 @@ function hide(){currentCard=null;clearTimeout(hoverTimer);if(previewEl)previewEl
 async function show(card){
   const id=card.dataset.orderId,o=state.orders.find(x=>x.id===id);
   if(!o||!(o.pdfName||o.pdfStored||o.pdfData))return;
-  if(currentCard===card&&previewEl&&previewEl.style.display==='block')return;
+  if(currentCard===card&&previewEl&&previewEl.style.display==='flex')return;
   currentCard=card;const el=ensure();
   el.querySelector('.ph-title').textContent=esc(o.name);
   const wrap=el.querySelector('.ph-canvas-wrap');
   wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Carregando...</div>';
-  pos(lastMouse.x,lastMouse.y);el.style.display='block';
-  const thumb=await getThumbLo(id);
-  if(!thumb||currentCard!==card){wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Sem PDF</div>';return;}
+  pos(lastMouse.x,lastMouse.y);el.style.display='flex';
+  let thumb=null,falha=null;
+  try{ thumb=await getThumbLo(id); }catch(e){ falha=e; console.warn('Previa do PDF falhou:',e); }
+  if(currentCard!==card) return;                       /* mouse ja saiu */
+  if(!thumb){
+    wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px;text-align:center;line-height:1.5">'
+      +(falha?'Não foi possível gerar a prévia.<br>Clique para abrir o PDF.':'Sem PDF')+'</div>';
+    return;
+  }
   const display=thumb.cloneNode(true);
   display.style.maxWidth='100%';display.style.maxHeight='100%';display.style.objectFit='contain';display.style.display='block';
   wrap.innerHTML='';wrap.appendChild(display);
-  pos(lastMouse.x,lastMouse.y);el.style.display='block';
+  pos(lastMouse.x,lastMouse.y);el.style.display='flex';
 }
 /* Pre-cache thumbnails for all visible cards */
 async function preCacheThumbs(){
@@ -718,7 +760,7 @@ async function preCacheThumbs(){
     if(o&&(o.pdfName||o.pdfStored||o.pdfData))getThumbLo(id).catch(()=>{});
   }
 }
-document.addEventListener('mousemove',e=>{lastMouse={x:e.clientX,y:e.clientY};if(previewEl&&previewEl.style.display==='block')pos(e.clientX,e.clientY)});
+document.addEventListener('mousemove',e=>{lastMouse={x:e.clientX,y:e.clientY};if(previewEl&&previewEl.style.display==='flex')pos(e.clientX,e.clientY)});
 document.addEventListener('mouseover',e=>{const card=e.target.closest&&e.target.closest('.order-card');if(!card||expandedColumn)return;currentCard=card;clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>show(card),200)});
 document.addEventListener('mouseout',e=>{const card=e.target.closest&&e.target.closest('.order-card');if(!card)return;if(e.relatedTarget&&card.contains(e.relatedTarget))return;hide()});
 document.addEventListener('scroll',hide,true);
