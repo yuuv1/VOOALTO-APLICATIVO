@@ -13,8 +13,26 @@ if %errorlevel% neq 0 (
 )
 
 set "PORTA=4085"
-if exist "porta.txt" set /p PORTA=<porta.txt
-if "%PORTA%"=="" set "PORTA=4085"
+if exist "porta.txt" (
+    set /p PORTA=<porta.txt
+    rem tira espacos que possam ter entrado no arquivo
+    for /f "tokens=* delims= " %%p in ("!PORTA!") do set "PORTA=%%p"
+)
+rem se o arquivo estiver vazio ou com lixo, volta ao padrao
+echo !PORTA!| findstr /r "^[1-9][0-9]*$" >nul || set "PORTA=4085"
+if "!PORTA!"=="" set "PORTA=4085"
+
+rem --- Node.js precisa responder de verdade, nao so existir no PATH ---
+node -v >nul 2>nul
+if !errorlevel! neq 0 (
+    echo.
+    echo   O Node.js esta instalado mas nao respondeu.
+    echo   Feche esta janela, reinicie o computador e tente de novo.
+    echo   Se persistir, reinstale em: https://nodejs.org/
+    echo.
+    pause
+    exit /b 1
+)
 
 :MENU
 cls
@@ -97,8 +115,8 @@ echo   recarregados do zero.
 echo.
 echo   Para fechar o Vooalto, feche esta janela preta.
 echo.
-start "" /min cmd /c "ping -n 3 127.0.0.1 >nul & start http://localhost:%PORTA%/limpar_cache.html"
-node server.js %PORTA%
+start "" /min cmd /c "ping -n 4 127.0.0.1 >nul & start http://localhost:!PORTA!/limpar_cache.html"
+node server.js !PORTA!
 echo.
 echo   O servidor foi encerrado.
 pause
@@ -112,8 +130,8 @@ echo   Endereco: http://localhost:%PORTA%
 echo.
 echo   Para fechar o Vooalto, feche esta janela preta.
 echo.
-start "" /min cmd /c "ping -n 3 127.0.0.1 >nul & start http://localhost:%PORTA%"
-node server.js %PORTA%
+start "" /min cmd /c "ping -n 4 127.0.0.1 >nul & start http://localhost:!PORTA!"
+node server.js !PORTA!
 echo.
 echo   O servidor foi encerrado.
 pause
