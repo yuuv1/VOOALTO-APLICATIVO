@@ -2212,7 +2212,15 @@ window.snapNow=snapNow;
 /* Cancela um snap() agendado (usado ao excluir, para não sobrescrever o
    estado "antes" que acabou de ser gravado). */
 window.snapCancel=function(){clearTimeout(snapTimer);};
-function undo(){if(!undoStack.length)return;redoStack.push(capState());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
+function undo(){
+if(!undoStack.length)return;
+/* snap() grava o estado DEPOIS da mudanca, entao o topo da pilha costuma ser
+   igual ao estado atual — dar pop nele "desfazia para o mesmo lugar" e o
+   primeiro Ctrl+Z parecia nao funcionar. Descartamos esse topo redundante. */
+const atual=capState();
+while(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(atual))undoStack.pop();
+if(!undoStack.length){updUR();toast('Nada para desfazer');return;}
+redoStack.push(atual);restState(undoStack.pop());updUR();toast('↩ Desfeito');}
 function redo(){if(!redoStack.length)return;undoStack.push(capState());restState(redoStack.pop());updUR();toast('↪ Refeito');}
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
 document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select')&&!e.target.matches('.gi'))snap();if(e.target.matches('[contenteditable]'))snap();});
@@ -2933,6 +2941,16 @@ function limparParaNovaFicha(novoNum) {
   clearAllLayers(); updPh(); updList();
   const sep = $('sepTxt'); if(sep) sep.value = '▸ Detalhes do Modelo ◂';
   const aviso = $('avisoTxt'); if(aviso) aviso.value = '⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
+  /* Remove as paginas extras da ficha anterior. Sem isso, a Pagina 2 do
+     cliente antigo (com itens, tecido e grade) continuava na ficha nova. */
+  paginas.slice().forEach(p => {
+    const f = $('folha_'+p.id); if(f) f.remove();
+    const lb = $('label_'+p.id); if(lb) lb.remove();
+    const ci = $('canvasInput_'+p.id); if(ci) ci.remove();
+  });
+  paginas.length = 0;
+  totalPaginas = 1;
+  if(typeof atualizarNavSidebar === 'function') atualizarNavSidebar();
   atualizarRodapes(); sincTodasPaginas(); snap();
   toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!', 'sucesso', 3000);
 }
@@ -2970,9 +2988,11 @@ function restaurarDeJSON(d) {
   if(d._grade) { document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i) => { if(d._grade[i] !== undefined) { el.value = d._grade[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); } }); }
   recalcGrade();
   $('coresList').innerHTML = ''; corId = 0;
-  (d._cores || []).forEach(c => adicionarCor(c.hex, c.nome));
+  /* Array.isArray: um JSON com tipo errado quebrava a restauracao inteira */
+  (Array.isArray(d._cores) ? d._cores : []).forEach(c => adicionarCor((c||{}).hex, (c||{}).nome));
   clearAllLayers();
-  (d._layers || []).forEach(x => {
+  (Array.isArray(d._layers) ? d._layers : []).forEach(x => {
+    if(!x || typeof x !== 'object') return;
     if(x.type==='img') { const ov = Object.assign({}, x); if(x._newSrc) ov.src = x._newSrc; addImgLayer(ov.src, ov); }
     else if(x.type==='txt') addTxtLayer(x);
     else if(x.type==='arr') addArrLayer(x);
@@ -2981,9 +3001,9 @@ function restaurarDeJSON(d) {
   });
   if(d._medFem) document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i) => { if(d._medFem[i] !== undefined) el.value = d._medFem[i]; });
   if(d._medMasc) document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i) => { if(d._medMasc[i] !== undefined) el.value = d._medMasc[i]; });
-  if(d._prod) {
+  if(Array.isArray(d._prod)) {
     $('prodLinhas').innerHTML = ''; linhaId = 0;
-    d._prod.forEach(p => criarLinha(p.modelo, p.valor, p.qtd));
+    (Array.isArray(d._prod) ? d._prod : []).forEach(p => criarLinha((p||{}).modelo, (p||{}).valor, (p||{}).qtd));
     document.querySelectorAll('#prodLinhas tr').forEach(tr => { const id = tr.id.replace('ln_',''); recalcL(parseInt(id)); });
   }
   calcTotal(); salvarNum(); atualizarRodapes(); snap();
