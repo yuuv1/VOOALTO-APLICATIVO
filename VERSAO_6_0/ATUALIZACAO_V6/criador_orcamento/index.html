@@ -2245,6 +2245,96 @@ function printProposal() {
   else setTimeout(iniciar,700);
   setTimeout(organizar,1600);
 })();
+
+  /* ============================================================
+     V6 — Esconde a interface de apoio (o "?" e afins) na exportacao
+     ------------------------------------------------------------
+     Deliberadamente conservador: NAO cria CSS, NAO usa @media print
+     e NAO acrescenta nenhuma tag ao documento -- este codigo mora
+     dentro de um <script> que ja existia. Tentativas anteriores
+     falharam justamente por mexer no CSS de impressao e por inserir
+     uma tag <style> mal fechada, o que abriu faixas brancas.
+
+     Aqui os elementos sao apenas ocultados com style.display no
+     momento da exportacao e devolvidos logo depois.
+     ============================================================ */
+  (function(){
+    var IDS=['v6HelpBtn','v6HelpModal','v6SaveStatus','v6UndoBar','v6QuickModal',
+             'v6oHelpBtn','v6oHelp','v6pHelpBtn','v6pHelp','v6pGuia','v6DropOverlay',
+             'v6BackupBtns'];
+    var salvos=null;
+    function esconder(){
+      if(salvos!==null) return;
+      salvos=[];
+      for(var i=0;i<IDS.length;i++){
+        var el=document.getElementById(IDS[i]);
+        if(!el) continue;
+        salvos.push({el:el,prev:el.style.display});
+        el.style.display='none';
+      }
+    }
+    function restaurar(){
+      if(salvos===null) return;
+      for(var i=0;i<salvos.length;i++){
+        try{ salvos[i].el.style.display=salvos[i].prev||''; }catch(e){}
+      }
+      salvos=null;
+    }
+    window.addEventListener('beforeprint',esconder);
+    window.addEventListener('afterprint',restaurar);
+    /* rede de seguranca: se o afterprint nao vier, o foco devolve */
+    window.addEventListener('focus',restaurar);
+
+    /* PNG: html2canvas ignora @media print, entao envolvemos a funcao */
+    function protegerPNG(nome){
+      var orig=window[nome];
+      if(typeof orig!=='function'||orig.__v6Prot) return;
+      var nova=function(){
+        esconder();
+        var r;
+        try{ r=orig.apply(this,arguments); }
+        catch(e){ restaurar(); throw e; }
+        if(r&&typeof r.then==='function'){
+          return r.then(function(v){restaurar();return v;},
+                        function(e){restaurar();throw e;});
+        }
+        /* As exportacoes nao devolvem promise: restauramos assim que a
+           captura terminar. Detectamos isso pelo fim das chamadas ao
+           html2canvas, com um limite de seguranca. */
+        var t0=Date.now();
+        var iv=setInterval(function(){
+          if(salvos===null){ clearInterval(iv); return; }
+          if(!window.__v6Capturando || Date.now()-t0>20000){ clearInterval(iv); restaurar(); }
+        },250);
+        return r;
+      };
+      nova.__v6Prot=true;
+      window[nome]=nova;
+    }
+    /* Marca enquanto houver captura em andamento, para saber a hora certa
+       de devolver os elementos (em vez de chutar um tempo fixo). */
+    function marcarHtml2Canvas(){
+      var h=window.html2canvas;
+      if(typeof h!=='function'||h.__v6Prot) return;
+      var nova=function(){
+        window.__v6Capturando=(window.__v6Capturando||0)+1;
+        var p;
+        try{ p=h.apply(this,arguments); }
+        catch(e){ window.__v6Capturando--; throw e; }
+        if(p&&typeof p.then==='function'){
+          return p.then(function(v){ window.__v6Capturando--; return v; },
+                        function(e){ window.__v6Capturando--; throw e; });
+        }
+        window.__v6Capturando--;
+        return p;
+      };
+      nova.__v6Prot=true;
+      window.html2canvas=nova;
+    }
+    function ligar(){ marcarHtml2Canvas(); protegerPNG('exportarPNG'); protegerPNG('exportPNG'); }
+    setTimeout(ligar,400); setTimeout(ligar,1800); setTimeout(ligar,3500);
+  })();
+
 </script>
 
 </body>
