@@ -1,4 +1,4 @@
-const CACHE_NAME='vooalto-v6-4085-20260801-v24';
+const CACHE_NAME='vooalto-v6-4085-20260803-v25';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/icone.png','./assets/pdf.min.js','./assets/pdf.worker.min.js'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>/* item a item: se um arquivo faltar, os demais continuam em cache. Com addAll, um unico erro cancelava tudo e o offline parava de funcionar. */Promise.all(APP_SHELL.map(u=>cache.add(u).catch(()=>{})))));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

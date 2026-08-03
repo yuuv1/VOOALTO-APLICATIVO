@@ -580,21 +580,36 @@ const _thumbCache=new Map();
 const _thumbCacheHQ=new Map();
 const _pdfDocCache=new Map();
 
+/* Garante o workerSrc. Sem isso o pdf.js lanca
+   'No "GlobalWorkerOptions.workerSrc" specified' e a previa nunca renderiza --
+   era o caso quando a biblioteca ja estava carregada por outro caminho. */
+function _v6AjustaWorker(){
+  try{
+    const g=window.pdfjsLib&&window.pdfjsLib.GlobalWorkerOptions;
+    if(!g) return;
+    if(g.workerSrc) return;                 /* ja configurado */
+    for(const b of _v6BasesAssets()){
+      g.workerSrc=b+'assets/pdf.worker.min.js';
+      return;
+    }
+  }catch(e){}
+}
+function _v6BasesAssets(){
+  const l=[];
+  try{ if(window.parent&&window.parent!==window&&window.parent.location&&window.parent.location.href){
+    l.push(window.parent.location.href.replace(/[^/]*$/,'')); } }catch(e){}
+  try{ if(document.baseURI) l.push(document.baseURI.replace(/[^/]*$/,'')); }catch(e){}
+  try{ if(location&&location.href&&location.href.indexOf('about:')!==0)
+    l.push(location.href.replace(/[^/]*$/,'')); }catch(e){}
+  l.push('./');
+  return l.filter((v,i)=>v&&l.indexOf(v)===i);
+}
 function ensurePdfJs(){
-  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(window.pdfjsLib){ _v6AjustaWorker(); return Promise.resolve(window.pdfjsLib); }
   /* Dentro do PWA este modulo roda em um iframe srcdoc, cujo documento e
      "about:blank": o caminho relativo ./assets/ nem sempre resolve. Tentamos
      varios caminhos, inclusive o absoluto derivado da janela pai. */
-  function basesPossiveis(){
-    const l=[];
-    try{ if(window.parent&&window.parent!==window&&window.parent.location&&window.parent.location.href){
-      l.push(window.parent.location.href.replace(/[^/]*$/,'')); } }catch(e){}
-    try{ if(document.baseURI) l.push(document.baseURI.replace(/[^/]*$/,'')); }catch(e){}
-    try{ if(location&&location.href&&location.href.indexOf('about:')!==0)
-      l.push(location.href.replace(/[^/]*$/,'')); }catch(e){}
-    l.push('./');
-    return l.filter((v,i)=>v&&l.indexOf(v)===i);
-  }
+  const basesPossiveis=_v6BasesAssets;
   function tentar(base){
     return new Promise((resolve,reject)=>{
       let pronto=false;
@@ -640,7 +655,16 @@ async function getThumbLo(id){
   if(!data||!String(data).startsWith('data:application/pdf')){return null;}
   const pdfjs=await ensurePdfJs();
   let pdf=_pdfDocCache.get(id);
-  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);}
+  if(!pdf){
+    const bytes=dataUrlToUint8Array(data);
+    try{
+      pdf=await pdfjs.getDocument({data:bytes}).promise;
+    }catch(e){
+      /* Worker bloqueado/ausente: tenta sem worker. Mais lento, mas funciona. */
+      pdf=await pdfjs.getDocument({data:bytes,disableWorker:true,isEvalSupported:false}).promise;
+    }
+    _pdfDocCache.set(id,pdf);
+  }
   const page=await pdf.getPage(1);
   const vp=page.getViewport({scale:1.5});
   const canvas=document.createElement('canvas');
