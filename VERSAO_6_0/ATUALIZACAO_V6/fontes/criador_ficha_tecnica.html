@@ -2166,6 +2166,14 @@ const grade={};document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[da
 const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');cores.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});
 d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
+/* Tabela de produção: sem isso o Ctrl+Z não recuperava um item excluído
+   por engano — o histórico simplesmente não guardava as linhas. */
+const prod=[];document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const i=tr.querySelectorAll('input');prod.push({modelo:i[0]?i[0].value:'',valor:i[1]?i[1].value:'',qtd:i[2]?i[2].value:''});});
+d._prod=prod;
+const medF=[],medM=[];
+document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach(el=>medF.push(el.value));
+document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach(el=>medM.push(el.value));
+d._medFem=medF;d._medMasc=medM;
 return JSON.parse(JSON.stringify(d));
 }
 function serLayer(l){
@@ -2181,7 +2189,10 @@ CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.value=s[id]
 CAMPOS_CE.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.innerHTML=s[id];});
 if(s._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(s._grade[i]!==undefined){el.value=s._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
 recalcGrade();$('coresList').innerHTML='';corId=0;(s._cores||[]).forEach(c=>adicionarCor(c.hex,c.nome));
-clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);});
+clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);else if(x.type==='rect')addRectLayer(x);else if(x.type==='circle')addCirculoLayer(x);});
+if(s._prod){$('prodLinhas').innerHTML='';linhaId=0;s._prod.forEach(p=>criarLinha(p.modelo,p.valor,p.qtd));document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_',''));if(!isNaN(id))recalcL(id);});}
+if(s._medFem)document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i)=>{if(s._medFem[i]!==undefined)el.value=s._medFem[i];});
+if(s._medMasc)document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i)=>{if(s._medMasc[i]!==undefined)el.value=s._medMasc[i];});
 salvarNum();calcTotal();
 }
 function snap(){
@@ -2190,7 +2201,26 @@ const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.lengt
 undoStack.push(s);if(undoStack.length>60)undoStack.shift();redoStack=[];updUR();
 },400);
 }
-function undo(){if(!undoStack.length)return;redoStack.push(capState());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
+/* Grava o estado NA HORA (snap normal espera 400ms). Necessário antes de
+   uma exclusão, senão o estado "antes" se perde e o Ctrl+Z não recupera. */
+function snapNow(){
+clearTimeout(snapTimer);
+const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(s))return;
+undoStack.push(s);if(undoStack.length>60)undoStack.shift();redoStack=[];updUR();
+}
+window.snapNow=snapNow;
+/* Cancela um snap() agendado (usado ao excluir, para não sobrescrever o
+   estado "antes" que acabou de ser gravado). */
+window.snapCancel=function(){clearTimeout(snapTimer);};
+function undo(){
+if(!undoStack.length)return;
+/* snap() grava o estado DEPOIS da mudanca, entao o topo da pilha costuma ser
+   igual ao estado atual — dar pop nele "desfazia para o mesmo lugar" e o
+   primeiro Ctrl+Z parecia nao funcionar. Descartamos esse topo redundante. */
+const atual=capState();
+while(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(atual))undoStack.pop();
+if(!undoStack.length){updUR();toast('Nada para desfazer');return;}
+redoStack.push(atual);restState(undoStack.pop());updUR();toast('↩ Desfeito');}
 function redo(){if(!redoStack.length)return;undoStack.push(capState());restState(redoStack.pop());updUR();toast('↪ Refeito');}
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
 document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select')&&!e.target.matches('.gi'))snap();if(e.target.matches('[contenteditable]'))snap();});
@@ -2911,6 +2941,16 @@ function limparParaNovaFicha(novoNum) {
   clearAllLayers(); updPh(); updList();
   const sep = $('sepTxt'); if(sep) sep.value = '▸ Detalhes do Modelo ◂';
   const aviso = $('avisoTxt'); if(aviso) aviso.value = '⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
+  /* Remove as paginas extras da ficha anterior. Sem isso, a Pagina 2 do
+     cliente antigo (com itens, tecido e grade) continuava na ficha nova. */
+  paginas.slice().forEach(p => {
+    const f = $('folha_'+p.id); if(f) f.remove();
+    const lb = $('label_'+p.id); if(lb) lb.remove();
+    const ci = $('canvasInput_'+p.id); if(ci) ci.remove();
+  });
+  paginas.length = 0;
+  totalPaginas = 1;
+  if(typeof atualizarNavSidebar === 'function') atualizarNavSidebar();
   atualizarRodapes(); sincTodasPaginas(); snap();
   toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!', 'sucesso', 3000);
 }
@@ -2948,9 +2988,11 @@ function restaurarDeJSON(d) {
   if(d._grade) { document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i) => { if(d._grade[i] !== undefined) { el.value = d._grade[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); } }); }
   recalcGrade();
   $('coresList').innerHTML = ''; corId = 0;
-  (d._cores || []).forEach(c => adicionarCor(c.hex, c.nome));
+  /* Array.isArray: um JSON com tipo errado quebrava a restauracao inteira */
+  (Array.isArray(d._cores) ? d._cores : []).forEach(c => adicionarCor((c||{}).hex, (c||{}).nome));
   clearAllLayers();
-  (d._layers || []).forEach(x => {
+  (Array.isArray(d._layers) ? d._layers : []).forEach(x => {
+    if(!x || typeof x !== 'object') return;
     if(x.type==='img') { const ov = Object.assign({}, x); if(x._newSrc) ov.src = x._newSrc; addImgLayer(ov.src, ov); }
     else if(x.type==='txt') addTxtLayer(x);
     else if(x.type==='arr') addArrLayer(x);
@@ -2959,9 +3001,9 @@ function restaurarDeJSON(d) {
   });
   if(d._medFem) document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i) => { if(d._medFem[i] !== undefined) el.value = d._medFem[i]; });
   if(d._medMasc) document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i) => { if(d._medMasc[i] !== undefined) el.value = d._medMasc[i]; });
-  if(d._prod) {
+  if(Array.isArray(d._prod)) {
     $('prodLinhas').innerHTML = ''; linhaId = 0;
-    d._prod.forEach(p => criarLinha(p.modelo, p.valor, p.qtd));
+    (Array.isArray(d._prod) ? d._prod : []).forEach(p => criarLinha((p||{}).modelo, (p||{}).valor, (p||{}).qtd));
     document.querySelectorAll('#prodLinhas tr').forEach(tr => { const id = tr.id.replace('ln_',''); recalcL(parseInt(id)); });
   }
   calcTotal(); salvarNum(); atualizarRodapes(); snap();
@@ -3094,7 +3136,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
   const DRAFT_KEY='vooalto_ficha_rascunhos_v4';
   const $id=id=>document.getElementById(id);
   function safeJsonParse(v,fb){try{return JSON.parse(v)||fb}catch(e){return fb}}
-  function getDrafts(){return safeJsonParse(localStorage.getItem(DRAFT_KEY),'[]')}
+  function getDrafts(){const v=safeJsonParse(localStorage.getItem(DRAFT_KEY),[]);return Array.isArray(v)?v:[]}
   function setDrafts(v){localStorage.setItem(DRAFT_KEY,JSON.stringify(v))}
   function nowBR(){return new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
   function injectPanel(){
@@ -3733,7 +3775,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     try{
       const data=capturarFichaParaJSON(); data._nome=nome; data._rascunhoV4=true;
       await putDraftData(id,data);
-      const meta=getMeta(); meta.unshift({id,name,date:nowBR(),hasData:true}); setMeta(meta.slice(0,80));
+      const meta=getMeta(); meta.unshift({id,name:nome,date:nowBR(),hasData:true}); setMeta(meta.slice(0,80));
       await renderDraftsFixed(); toastSafe('💾 Rascunho salvo!','sucesso');
     }catch(e){console.error(e);toastSafe('Erro ao salvar rascunho. Tente exportar a ficha como backup.','erro');}
   };
@@ -3843,6 +3885,1754 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
       fitNoWrapLocal(el,l);
     },()=>{fitNoWrapLocal(el,l);try{savLayers();snap();}catch(err){}});
   };
+})();
+</script>
+
+
+<script id="v6-ficha-save-reliability-js">
+/* ============================================================
+   V6 — Salvamento confiável da Ficha Técnica
+   ------------------------------------------------------------
+   Corrige:
+   1) Páginas extras (Página 2, 3, ... e páginas brancas) não eram
+      gravadas no JSON — ao reabrir, o trabalho sumia.
+   2) Salvar podia falhar silenciosamente (pasta sem permissão,
+      quota, erro no meio da captura) e o usuário perdia tudo.
+   3) Não havia rede de segurança: agora há autosave contínuo em
+      IndexedDB + recuperação automática ao reabrir o editor.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const AUTOSAVE_DB   = 'vooalto_ficha_autosave_v6';
+  const AUTOSAVE_STORE= 'autosave';
+  const AUTOSAVE_KEY  = 'atual';
+  const AUTOSAVE_FLAG = 'vooalto_ficha_autosave_v6_flag';
+  const AUTOSAVE_MS   = 8000;
+
+  function toastSafe(msg,tipo='',dur=2800){
+    try{ toast(msg,tipo,dur); }catch(e){ try{console.log(msg)}catch(_){} }
+  }
+  const $id = id => document.getElementById(id);
+
+  /* ---------- IndexedDB (suporta payloads grandes, ao contrário do localStorage) ---------- */
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      /* Timeout + onblocked: sem isso, um banco travado (outra aba aberta)
+         deixava o await pendurado para sempre e o botão parava de responder. */
+      let pronto=false;
+      const t=setTimeout(()=>{ if(!pronto){ pronto=true;
+        reject(new Error('Banco de dados não respondeu (outra aba do Vooalto aberta?)')); } },8000);
+      const fim=(fn,arg)=>{ if(pronto)return; pronto=true; clearTimeout(t); fn(arg); };
+      let req;
+      try{ req = indexedDB.open(AUTOSAVE_DB,1); }catch(e){ clearTimeout(t); return reject(e); }
+      req.onupgradeneeded=()=>{ try{ if(!req.result.objectStoreNames.contains(AUTOSAVE_STORE)) req.result.createObjectStore(AUTOSAVE_STORE); }catch(e){} };
+      req.onsuccess=()=>fim(resolve,req.result);
+      req.onerror=()=>fim(reject,req.error||new Error('Erro ao abrir o banco'));
+      req.onblocked=()=>fim(reject,new Error('Banco bloqueado por outra aba do Vooalto'));
+    });
+  }
+  function idbPut(key,value){
+    return openDB().then(db=>new Promise((resolve,reject)=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readwrite');
+      tx.objectStore(AUTOSAVE_STORE).put(value,key);
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{db.close();reject(tx.error)};
+    }));
+  }
+  function idbGet(key){
+    return openDB().then(db=>new Promise((resolve,reject)=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readonly');
+      const r=tx.objectStore(AUTOSAVE_STORE).get(key);
+      r.onsuccess=()=>{db.close();resolve(r.result||null)};
+      r.onerror=()=>{db.close();reject(r.error)};
+    }));
+  }
+  /* Mantém apenas os N backups de emergência mais recentes */
+  function idbPodarBackups(manter){
+    return openDB().then(db=>new Promise(resolve=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readwrite');
+      const store=tx.objectStore(AUTOSAVE_STORE);
+      const req=store.getAllKeys();
+      req.onsuccess=()=>{
+        const chaves=(req.result||[]).filter(k=>typeof k==='string'&&k.indexOf('backup_')===0).sort();
+        chaves.slice(0,Math.max(0,chaves.length-manter)).forEach(k=>store.delete(k));
+      };
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{db.close();resolve(false)};
+    })).catch(()=>false);
+  }
+
+  function idbDel(key){
+    return openDB().then(db=>new Promise(resolve=>{
+      const tx=db.transaction(AUTOSAVE_STORE,'readwrite');
+      tx.objectStore(AUTOSAVE_STORE).delete(key);
+      tx.oncomplete=()=>{db.close();resolve(true)};
+      tx.onerror=()=>{db.close();resolve(false)};
+    })).catch(()=>false);
+  }
+
+  /* ============================================================
+     1) CAPTURA COMPLETA — inclui as páginas extras
+     ============================================================ */
+  function serializarLayerExtra(l){
+    const b={id:l.id,type:l.type,xp:l.xp,yp:l.yp,wp:l.wp,hp:l.hp,rot:l.rot||0,z:l.z};
+    if(l.type==='img'){ b.src=l.src; b.ratio=l.ratio; b.prop=l.prop; }
+    if(l.type==='txt'){ b.txt=l.txt; b.font=l.font; b.size=l.size; b.color=l.color; b.bold=l.bold; b.italic=l.italic; b.richHtml=l.richHtml||''; }
+    if(l.type==='arr'){ b.color=l.color; b.stroke=l.stroke; b.arStyle=l.arStyle||'full'; b.shape=l.shape||'straight'; b.dashed=!!l.dashed; b.x1p=l.x1p; b.y1p=l.y1p; b.x2p=l.x2p; b.y2p=l.y2p; }
+    if(l.type==='rect'||l.type==='circle'){ b.fillColor=l.fillColor; b.strokeColor=l.strokeColor; b.strokeWidth=l.strokeWidth; }
+    return b;
+  }
+
+  /* Lê o conteúdo de uma página extra direto do DOM */
+  function capturarPaginaExtra(p){
+    const pid=p.id;
+    const out={ id:pid, num:p.num, tipo:p.tipo||'normal', zCnt:p.zCnt||10 };
+    out.layers=(p.layers||[]).map(serializarLayerExtra);
+
+    if(out.tipo!=='branca'){
+      ['fichaNum','fichaData','previsao','entradaVal','sepTxt','avisoTxt','coresTitulo','tipoTitulo'].forEach(k=>{
+        const el=$id(k+'_'+pid); if(el) out[k]=el.value;
+      });
+      const tt=$id('tipoTecido_'+pid); if(tt) out.tipoTecido=tt.innerHTML;
+
+      const grade={m:[],b:[],i:[]};
+      document.querySelectorAll(`.gi[data-g="${pid}m"]`).forEach(el=>grade.m.push(el.value));
+      document.querySelectorAll(`.gi[data-g="${pid}b"]`).forEach(el=>grade.b.push(el.value));
+      document.querySelectorAll(`.gi[data-g="${pid}i"]`).forEach(el=>grade.i.push(el.value));
+      out.grade=grade;
+
+      const cores=[];
+      document.querySelectorAll(`#coresList_${pid} [id^="ci_"]`).forEach(it=>{
+        const i=it.id.replace('ci_','');
+        cores.push({ hex:($id('chi_'+i)||{}).value||'#3B82F6', nome:($id('cni_'+i)||{}).value||'COR' });
+      });
+      out.cores=cores;
+
+      const prod=[];
+      document.querySelectorAll(`#prodLinhas_${pid} tr`).forEach(tr=>{
+        const inp=tr.querySelectorAll('input');
+        prod.push({ modelo:inp[0]?inp[0].value:'', valor:inp[1]?inp[1].value:'', qtd:inp[2]?inp[2].value:'' });
+      });
+      out.prod=prod;
+
+      const medFem=[],medMasc=[];
+      document.querySelectorAll(`#folha_${pid} .med-bloco.fem .med-inp`).forEach(el=>medFem.push(el.value));
+      document.querySelectorAll(`#folha_${pid} .med-bloco.masc .med-inp`).forEach(el=>medMasc.push(el.value));
+      out.medFem=medFem; out.medMasc=medMasc;
+    }
+    return out;
+  }
+
+  function capturarPaginasExtras(){
+    if(typeof paginas==='undefined' || !Array.isArray(paginas)) return [];
+    return paginas.map(p=>{ try{ return capturarPaginaExtra(p); }catch(e){ console.warn('Falha ao capturar página',p&&p.id,e); return null; } })
+                  .filter(Boolean);
+  }
+
+  /* Envolve capturarFichaParaJSON para anexar as páginas extras */
+  if(typeof window.capturarFichaParaJSON==='function' && !window.__v6CaptureWrapped){
+    window.__v6CaptureWrapped=true;
+    const capturaOriginal=window.capturarFichaParaJSON;
+    window.capturarFichaParaJSON=function(){
+      const d=capturaOriginal.apply(this,arguments);
+      try{
+        d._paginasExtras=capturarPaginasExtras();
+        d._totalPaginas=(typeof totalPaginas!=='undefined')?totalPaginas:1;
+        d._version='vooalto_ficha_v6';
+      }catch(e){ console.warn('Não foi possível capturar páginas extras:',e); }
+      return d;
+    };
+  }
+
+  /* ============================================================
+     2) RESTAURAÇÃO — recria as páginas extras
+     ============================================================ */
+  /* Silencia os avisos "Página N adicionada" durante a restauração */
+  let restaurando=false;
+  if(typeof window.toast==='function' && !window.__v6ToastWrapped){
+    window.__v6ToastWrapped=true;
+    const toastOriginal=window.toast;
+    window.toast=function(msg){
+      if(restaurando && /Página .* adicionada/i.test(String(msg||''))) return;
+      return toastOriginal.apply(this,arguments);
+    };
+  }
+
+  function restaurarPaginaExtra(pd){
+    const tipo=pd.tipo==='branca'?'branca':'normal';
+    if(tipo==='branca'){ if(typeof adicionarPaginaBranca==='function') adicionarPaginaBranca(); }
+    else { if(typeof adicionarPagina==='function') adicionarPagina(); }
+
+    const p=(typeof paginas!=='undefined' && paginas.length)?paginas[paginas.length-1]:null;
+    if(!p) return;
+    const pid=p.id;
+
+    if(tipo!=='branca'){
+      ['fichaNum','fichaData','previsao','entradaVal','sepTxt','avisoTxt','coresTitulo','tipoTitulo'].forEach(k=>{
+        const el=$id(k+'_'+pid); if(el && pd[k]!==undefined) el.value=pd[k];
+      });
+      const tt=$id('tipoTecido_'+pid); if(tt && pd.tipoTecido!==undefined) tt.innerHTML=pd.tipoTecido;
+
+      if(pd.grade){
+        ['m','b','i'].forEach(g=>{
+          const vals=pd.grade[g]||[];
+          document.querySelectorAll(`.gi[data-g="${pid}${g}"]`).forEach((el,i)=>{
+            if(vals[i]!==undefined){ el.value=vals[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); }
+          });
+        });
+        if(typeof recalcGradeExtra==='function') recalcGradeExtra(p);
+      }
+
+      if(Array.isArray(pd.cores)){
+        const cl=$id('coresList_'+pid); if(cl) cl.innerHTML='';
+        p.corId=0;
+        pd.cores.forEach(c=>{ if(typeof adicionarCorExtra==='function') adicionarCorExtra(pid,c.hex,c.nome); });
+      }
+
+      if(Array.isArray(pd.prod)){
+        const tb=$id('prodLinhas_'+pid); if(tb) tb.innerHTML='';
+        p.linhaId=0;
+        pd.prod.forEach(r=>{ if(typeof criarLinhaExtra==='function') criarLinhaExtra(p,r.modelo,r.valor,r.qtd); });
+        if(typeof calcTotalExtra==='function') calcTotalExtra(p);
+      }
+
+      if(Array.isArray(pd.medFem)){
+        document.querySelectorAll(`#folha_${pid} .med-bloco.fem .med-inp`).forEach((el,i)=>{ if(pd.medFem[i]!==undefined) el.value=pd.medFem[i]; });
+      }
+      if(Array.isArray(pd.medMasc)){
+        document.querySelectorAll(`#folha_${pid} .med-bloco.masc .med-inp`).forEach((el,i)=>{ if(pd.medMasc[i]!==undefined) el.value=pd.medMasc[i]; });
+      }
+    }
+
+    /* Limpa as camadas criadas por padrão e recria as salvas */
+    (p.layers||[]).slice().forEach(l=>{ const el=$id('ly_'+pid+'_'+l.id); if(el) el.remove(); });
+    p.layers=[]; p.selId=null;
+
+    (pd.layers||[]).forEach(l=>{
+      try{
+        if(l.type==='img' && typeof addImgLayerExtra==='function') addImgLayerExtra(p,l.src,l);
+        else if(l.type==='txt' && typeof renderTxtLayerExtra==='function'){ p.layers.push(l); renderTxtLayerExtra(p,l); }
+        else if(l.type==='arr' && typeof renderArrLayerExtra==='function'){ p.layers.push(l); renderArrLayerExtra(p,l); }
+        else if(l.type==='rect' && typeof addRectLayerExtra==='function') addRectLayerExtra(p,l);
+        else if(l.type==='circle' && typeof addCirculoLayerExtra==='function') addCirculoLayerExtra(p,l);
+      }catch(e){ console.warn('Falha ao restaurar camada',l&&l.id,e); }
+    });
+    if(typeof updPhExtra==='function') updPhExtra(p);
+    if(pd.zCnt) p.zCnt=Math.max(p.zCnt||10,pd.zCnt);
+  }
+
+  function removerTodasPaginasExtras(){
+    if(typeof paginas==='undefined' || !Array.isArray(paginas)) return;
+    paginas.slice().forEach(p=>{
+      const f=$id('folha_'+p.id); if(f) f.remove();
+      const lb=$id('label_'+p.id); if(lb) lb.remove();
+      const inp=$id('canvasInput_'+p.id); if(inp) inp.remove();
+    });
+    paginas.length=0;
+    try{ totalPaginas=1; }catch(e){}
+    if(typeof atualizarNavSidebar==='function') atualizarNavSidebar();
+  }
+
+  if(typeof window.restaurarDeJSON==='function' && !window.__v6RestoreWrapped){
+    window.__v6RestoreWrapped=true;
+    const restauraOriginal=window.restaurarDeJSON;
+    window.restaurarDeJSON=function(d){
+      restauraOriginal.apply(this,arguments);
+      restaurando=true;
+      try{
+        removerTodasPaginasExtras();
+        const extras=(d && Array.isArray(d._paginasExtras)) ? d._paginasExtras : [];
+        extras.forEach(pd=>{
+          try{ restaurarPaginaExtra(pd); }catch(e){ console.warn('Falha ao restaurar página extra',e); }
+        });
+        if(typeof atualizarRodapes==='function') atualizarRodapes();
+        if(extras.length) toastSafe('📄 '+extras.length+' página(s) extra(s) restaurada(s).','sucesso',2600);
+      }catch(e){ console.warn('Falha ao restaurar páginas extras:',e); }
+      finally{ restaurando=false; }
+    };
+  }
+
+  /* ============================================================
+     3) AUTOSAVE contínuo + recuperação
+     ============================================================ */
+  let autosaveTimer=null, autosaveOcupado=false, houveMudanca=false;
+  /* Enquanto a recuperação não for resolvida, nada pode sobrescrever a cópia
+     existente — senão o formulário em branco apagaria o trabalho anterior. */
+  let recuperacaoResolvida=false;
+
+  async function gravarAutosave(silencioso=true){
+    if(autosaveOcupado) return;
+    if(!recuperacaoResolvida) return;
+    if(typeof capturarFichaParaJSON!=='function') return;
+    autosaveOcupado=true;
+    try{
+      const data=capturarFichaParaJSON();
+      data._autosaveTs=Date.now();
+      const nomeCliente=($id('dc_nome')?($id('dc_nome').textContent||'').trim():'')||'';
+      const numFicha=($id('fichaNum')?$id('fichaNum').value:'')||'';
+      data._autosaveLabel=(nomeCliente||('Ficha '+numFicha)||'Ficha sem nome');
+      await idbPut(AUTOSAVE_KEY,data);
+      /* A "flag" também vai para o IndexedDB: se o localStorage estiver cheio
+         (imagens base64 enchem os ~5MB), a recuperação continuava sem ser
+         oferecida e o usuário perdia tudo mesmo havendo backup gravado. */
+      try{ await idbPut('flag',{ts:data._autosaveTs,label:data._autosaveLabel}); }catch(e){}
+      try{ localStorage.setItem(AUTOSAVE_FLAG,JSON.stringify({ts:data._autosaveTs,label:data._autosaveLabel})); }catch(e){}
+      houveMudanca=false;
+      atualizarIndicador('salvo',data._autosaveTs);
+      if(!silencioso) toastSafe('💾 Cópia de segurança atualizada.','sucesso',1800);
+    }catch(e){
+      console.warn('Autosave falhou:',e);
+      atualizarIndicador('erro');
+    }finally{ autosaveOcupado=false; }
+  }
+
+  function agendarAutosave(){
+    if(restaurando) return;
+    houveMudanca=true;
+    exportadoDesdeUltimaEdicao=false;
+    atualizarIndicador('pendente');
+    clearTimeout(autosaveTimer);
+    autosaveTimer=setTimeout(()=>gravarAutosave(true),1500);
+  }
+
+  document.addEventListener('input',e=>{
+    if(e.target && (e.target.matches('input,textarea,select')||e.target.matches('[contenteditable]'))) agendarAutosave();
+  },true);
+  document.addEventListener('change',agendarAutosave,true);
+  setInterval(()=>{ if(houveMudanca) gravarAutosave(true); },AUTOSAVE_MS);
+
+  /* Avisa antes de fechar com alterações não exportadas */
+  let exportadoDesdeUltimaEdicao=false;
+  window.addEventListener('beforeunload',e=>{
+    if(houveMudanca && !exportadoDesdeUltimaEdicao){
+      gravarAutosave(true);
+      e.preventDefault();
+      e.returnValue='';
+      return '';
+    }
+  });
+
+  /* ---------- Indicador visual de estado ---------- */
+  function criarIndicador(){
+    if($id('v6SaveStatus')) return;
+    const d=document.createElement('div');
+    d.id='v6SaveStatus';
+    d.style.cssText='position:fixed;bottom:10px;right:12px;z-index:99998;font-size:9px;font-weight:800;'+
+      'padding:5px 11px;border-radius:14px;background:rgba(15,23,42,.9);color:#94A3B8;'+
+      'box-shadow:0 3px 12px rgba(0,0,0,.3);pointer-events:none;transition:all .25s;font-family:inherit';
+    d.textContent='●  Cópia de segurança ativa';
+    document.body.appendChild(d);
+  }
+  function atualizarIndicador(estado,ts){
+    const d=$id('v6SaveStatus'); if(!d) return;
+    if(estado==='pendente'){ d.style.color='#FBBF24'; d.textContent='●  Alterações não salvas…'; }
+    else if(estado==='guardado'){ d.style.color='#38BDF8'; d.textContent='●  Cópia anterior guardada'; }
+    else if(estado==='erro'){ d.style.color='#F87171'; d.textContent='⚠  Falha na cópia de segurança'; }
+    else {
+      const h=ts?new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+      d.style.color='#34D399'; d.textContent='●  Protegido'+(h?' · '+h:'');
+    }
+  }
+
+  /* ---------- Recuperação ao abrir ---------- */
+  async function verificarRecuperacao(){
+    let flag=null;
+    try{ flag=JSON.parse(localStorage.getItem(AUTOSAVE_FLAG)||'null'); }catch(e){}
+    /* Fonte da verdade: o próprio IndexedDB. O localStorage é só um atalho e
+       pode ter falhado por cota — nesse caso o backup existe e precisa ser
+       oferecido do mesmo jeito. */
+    if(!flag||!flag.ts){ try{ flag=await idbGet('flag'); }catch(e){} }
+
+    let data=null;
+    try{ data=await idbGet(AUTOSAVE_KEY); }catch(e){}
+
+    /* Sem cópia anterior: pode autossalvar livremente. */
+    if(!data){ recuperacaoResolvida=true; return; }
+
+    if(!flag||!flag.ts) flag={ts:data._autosaveTs||Date.now(),label:data._autosaveLabel||'Ficha sem nome'};
+
+    const quando=new Date(flag.ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+    const rotulo=flag.label||'Ficha sem nome';
+    const aceitou=confirm('🔄 Recuperação automática\n\nFoi encontrada uma ficha não finalizada:\n\n   "'+rotulo+'"\n   Última alteração: '+quando+
+               '\n\nDeseja restaurá-la agora?\n(Cancelar mantém a ficha em branco — a cópia continua guardada e só será\nsubstituída quando você começar a editar.)');
+
+    if(aceitou){
+      try{
+        if(typeof restaurarDeJSON==='function'){
+          restaurarDeJSON(data);
+          toastSafe('✔ Ficha recuperada com sucesso!','sucesso',3500);
+        }
+      }catch(e){ console.error(e); toastSafe('⚠ Não foi possível recuperar a ficha.','erro',4000); }
+      recuperacaoResolvida=true;
+      return;
+    }
+
+    /* Recusou: preserva a cópia até que o usuário realmente edite algo. */
+    atualizarIndicador('guardado');
+    const liberar=()=>{
+      if(recuperacaoResolvida) return;
+      recuperacaoResolvida=true;
+      toastSafe('A cópia anterior foi substituída pela ficha atual.','',3000);
+      document.removeEventListener('input',liberar,true);
+      document.removeEventListener('change',liberar,true);
+    };
+    document.addEventListener('input',liberar,true);
+    document.addEventListener('change',liberar,true);
+  }
+
+  /* ============================================================
+     4) SALVAMENTO À PROVA DE FALHAS
+     ============================================================ */
+  /* Sempre grava uma cópia local ANTES de tentar escrever o arquivo,
+     assim uma falha na gravação nunca implica perda de trabalho. */
+  if(typeof window.salvarArquivoJSON==='function' && !window.__v6SaveWrapped){
+    window.__v6SaveWrapped=true;
+    const salvarOriginal=window.salvarArquivoJSON;
+
+    window.salvarArquivoJSON=async function(nomeArquivo,jsonString){
+      /* Rede de segurança antes de qualquer I/O */
+      try{
+        await idbPut('backup_'+Date.now(),{nomeArquivo,jsonString,ts:Date.now()});
+        idbPodarBackups(5);
+      }catch(e){}
+
+      let ok=false;
+      try{
+        ok=await salvarOriginal.call(this,nomeArquivo,jsonString);
+      }catch(e){
+        console.error('Erro ao salvar ficha:',e);
+        ok=false;
+      }
+
+      if(ok===false||ok===undefined){
+        /* Última tentativa: força o download pelo navegador */
+        try{
+          const blob=new Blob([jsonString],{type:'application/json'});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a');
+          a.href=url; a.download=nomeArquivo;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(()=>URL.revokeObjectURL(url),4000);
+          ok=true;
+          toastSafe('💾 Salvo via download do navegador.','sucesso',3000);
+        }catch(e2){
+          console.error('Download de emergência falhou:',e2);
+          toastSafe('⚠ NÃO foi possível salvar o arquivo. Sua ficha está protegida na cópia de segurança — não feche a aba.','erro',9000);
+          return false;
+        }
+      }
+
+      if(ok){
+        exportadoDesdeUltimaEdicao=true;
+        houveMudanca=false;
+        gravarAutosave(true);
+      }
+      return ok;
+    };
+  }
+
+  /* Valida o JSON antes de entregar ao gravador (evita arquivo corrompido) */
+  ['exportarFichaJSON','finalizarESalvar'].forEach(fnName=>{
+    const orig=window[fnName];
+    if(typeof orig!=='function' || orig.__v6Guarded) return;
+    const guarded=async function(){
+      try{
+        return await orig.apply(this,arguments);
+      }catch(e){
+        console.error('Erro em '+fnName+':',e);
+        await gravarAutosave(true);
+        toastSafe('⚠ Erro ao salvar. Sua ficha foi preservada na cópia de segurança — tente novamente.','erro',7000);
+      }
+    };
+    guarded.__v6Guarded=true;
+    window[fnName]=guarded;
+  });
+
+  /* ---------- Botão manual de cópia de segurança ---------- */
+  window.v6SalvarCopiaSeguranca=async function(){
+    recuperacaoResolvida=true; /* pedido explícito do usuário */
+    await gravarAutosave(false);
+  };
+  window.v6RecuperarCopiaSeguranca=async function(){
+    let data=null;
+    try{ data=await idbGet(AUTOSAVE_KEY); }catch(e){}
+    if(!data){ toastSafe('Nenhuma cópia de segurança encontrada.','erro'); return; }
+    const quando=data._autosaveTs?new Date(data._autosaveTs).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'';
+    if(!confirm('Restaurar a cópia de segurança de '+quando+'?\n\nAs alterações atuais não salvas serão substituídas.')) return;
+    try{ restaurarDeJSON(data); toastSafe('✔ Cópia restaurada!','sucesso',3000); }
+    catch(e){ console.error(e); toastSafe('⚠ Erro ao restaurar a cópia.','erro'); }
+  };
+
+  /* ---------- Boot ---------- */
+  function iniciar(){
+    criarIndicador();
+    injetarBotoesSidebar();
+    setTimeout(verificarRecuperacao,1400);
+    setTimeout(()=>gravarAutosave(true),3000);
+  }
+
+  function injetarBotoesSidebar(){
+    const alvo=document.getElementById('fichasRecentesList');
+    if(!alvo||document.getElementById('v6BackupBtns')) return;
+    const box=document.createElement('div');
+    box.id='v6BackupBtns';
+    box.style.cssText='display:flex;gap:4px;padding:4px 6px 2px';
+    box.innerHTML='<button onclick="v6SalvarCopiaSeguranca()" style="flex:1;font-size:7.5px;font-weight:800;padding:5px 4px;border:none;border-radius:5px;background:rgba(52,211,153,.18);color:#34D399;cursor:pointer" title="Grava agora uma cópia local de segurança">🛡 Copiar agora</button>'+
+                    '<button onclick="v6RecuperarCopiaSeguranca()" style="flex:1;font-size:7.5px;font-weight:800;padding:5px 4px;border:none;border-radius:5px;background:rgba(56,189,248,.18);color:#38BDF8;cursor:pointer" title="Restaura a última cópia de segurança">↺ Recuperar</button>';
+    alvo.parentNode.insertBefore(box,alvo);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,600));
+  else setTimeout(iniciar,600);
+})();
+</script>
+
+
+<style id="v6-quickfill-css">
+/* ============================================================
+   V6 — Preenchimento rápido com separação por página
+   ============================================================ */
+#v6QuickModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:10060;align-items:center;justify-content:center;padding:18px}
+#v6QuickModal.open{display:flex}
+.v6q-card{width:min(1040px,97vw);max-height:94vh;background:#fff;border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.45);overflow:hidden;color:#111827;display:flex;flex-direction:column}
+.v6q-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#F8FAFC;border-bottom:1px solid #E5E7EB;flex-shrink:0}
+.v6q-head h3{font-size:16px;margin:0}
+.v6q-head small{display:block;font-size:9.5px;color:#64748B;font-weight:700;margin-top:2px}
+.v6q-body{padding:18px;overflow:auto;flex:1}
+.v6q-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:13px 18px;border-top:1px solid #E5E7EB;background:#F8FAFC;flex-shrink:0}
+.v6q-foot-hint{font-size:9.5px;color:#64748B;font-weight:700}
+.v6q-btn{border:none;border-radius:12px;padding:10px 16px;font-weight:900;cursor:pointer;font-family:inherit;font-size:13px}
+.v6q-cancel{background:#E5E7EB;color:#374151}
+.v6q-apply{background:#050505;color:#fff}
+.v6q-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.v6q-field label{display:block;font-size:10px;font-weight:900;color:#64748B;text-transform:uppercase;margin-bottom:5px}
+.v6q-field input{width:100%;border:1.5px solid #CBD5E1;border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;background:#fff}
+.v6q-field input:focus{border-color:#111827}
+.v6q-sec{font-size:12px;font-weight:900;color:#111827;margin:16px 0 9px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.v6q-sec small{font-size:9px;color:#64748B;font-weight:700;text-transform:none}
+.v6q-mini{border:none;border-radius:9px;padding:7px 11px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:#111827;color:#fff}
+.v6q-mini.ghost{background:#EEF2F7;color:#334155}
+.v6q-mini.red{background:#FEE2E2;color:#991B1B}
+/* Abas de páginas */
+.v6q-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:2px solid #E5E7EB;padding-bottom:0;margin-bottom:14px}
+.v6q-tab{display:inline-flex;align-items:center;gap:6px;border:none;background:#F1F5F9;color:#475569;border-radius:11px 11px 0 0;padding:9px 14px;font-size:11.5px;font-weight:900;cursor:pointer;font-family:inherit;position:relative;top:2px;border-bottom:2px solid transparent}
+.v6q-tab:hover{background:#E2E8F0}
+.v6q-tab.active{background:#111827;color:#fff;border-bottom-color:#111827}
+.v6q-tab .v6q-tab-x{border:none;background:rgba(255,255,255,.22);color:inherit;border-radius:50%;width:15px;height:15px;line-height:1;font-size:9px;font-weight:900;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.v6q-tab:not(.active) .v6q-tab-x{background:rgba(15,23,42,.12)}
+.v6q-tab-add{background:#DCFCE7;color:#166534}
+.v6q-tab-add:hover{background:#BBF7D0}
+.v6q-panel{display:none}
+.v6q-panel.active{display:block}
+.v6q-pagehdr{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#0F172A,#1E293B);color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:14px}
+.v6q-pagehdr b{font-size:12.5px}
+.v6q-pagehdr small{display:block;font-size:9px;color:#94A3B8;font-weight:700;margin-top:1px}
+.v6q-badge-new{background:#22C55E;color:#062B14;font-size:8.5px;font-weight:900;padding:2px 7px;border-radius:999px;margin-left:6px}
+/* Tabela de modelos */
+.v6q-table{width:100%;border-collapse:separate;border-spacing:0 6px}
+.v6q-table th{font-size:8px;text-transform:uppercase;color:#64748b;text-align:left;padding:0 5px}
+.v6q-table td{padding:0 4px}
+.v6q-table input{width:100%;border:1.5px solid #CBD5E1;border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:#fff}
+/* Cores */
+.v6q-cores{display:flex;flex-wrap:wrap;gap:8px}
+.v6q-cor{display:flex;align-items:center;gap:6px;border:1px solid #E2E8F0;border-radius:10px;padding:6px 8px;background:#F8FAFC}
+.v6q-cor input[type=color]{width:30px;height:30px;border:none;border-radius:7px;padding:0;cursor:pointer;background:none}
+.v6q-cor input[type=text]{width:120px;border:1.5px solid #CBD5E1;border-radius:8px;padding:7px 8px;font-size:11.5px;font-family:inherit;outline:none;text-transform:uppercase}
+.v6q-cor button{border:none;background:none;color:#EF4444;cursor:pointer;font-size:13px;font-weight:900;padding:0 2px}
+/* Grade */
+.v6q-grade{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.v6q-gcard{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}
+.v6q-gcard h4{font-size:11.5px;margin:0 0 9px;color:#111827;display:flex;justify-content:space-between;align-items:center}
+.v6q-gcard h4 span{font-size:9px;color:#64748B;font-weight:800}
+.v6q-ggrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.v6q-ggrid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:#64748B;text-transform:uppercase}
+.v6q-ggrid input{border:1.5px solid #CBD5E1;border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none;font-family:inherit}
+.v6q-gcard.inf{grid-column:1/-1}
+.v6q-gcard.inf .v6q-ggrid{grid-template-columns:repeat(7,1fr)}
+@media(max-width:820px){.v6q-grid{grid-template-columns:1fr 1fr}.v6q-grade{grid-template-columns:1fr}.v6q-ggrid{grid-template-columns:repeat(4,1fr)!important}}
+</style>
+
+<script id="v6-quickfill-por-pagina-js">
+/* ============================================================
+   V6 — Preenchimento rápido separado por página
+   ------------------------------------------------------------
+   Antes: o modal pedia UM tipo de tecido, UMA grade e UMA lista
+   de modelos, e aplicava tudo só na Página 1. Com 2 modelos
+   diferentes (tecidos/grades distintos) era impossível usar.
+
+   Agora: dados do cliente ficam num bloco compartilhado e cada
+   página ganha sua própria aba com tecido, cores, modelos e
+   grade próprios. Dá para criar páginas novas direto do modal.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const $id = id => document.getElementById(id);
+  const TAM_M = ['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
+  const TAM_I = ['2a','4a','6a','8a','10a','12a','14a'];
+
+  let abas = [];        // [{key, pid|null, nova, label}]
+  let abaAtiva = null;
+  let seqAba = 0;
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  function toastSafe(msg,tipo='',dur=2600){ try{ toast(msg,tipo,dur); }catch(e){} }
+
+  /* ---------- Leitura do estado atual de cada página ---------- */
+  function lerPagina1(){
+    const cores=[];
+    document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{
+      const i=it.id.replace('ci_','');
+      cores.push({ hex:($id('chi_'+i)||{}).value||'#3B82F6', nome:($id('cni_'+i)||{}).value||'COR' });
+    });
+    const modelos=[];
+    document.querySelectorAll('#prodLinhas tr').forEach(tr=>{
+      const inp=tr.querySelectorAll('input');
+      const m={ modelo:inp[0]?inp[0].value:'', valor:inp[1]?inp[1].value:'', qtd:inp[2]?inp[2].value:'' };
+      if(m.modelo||m.valor||m.qtd) modelos.push(m);
+    });
+    const grade={m:[],b:[],i:[]};
+    document.querySelectorAll('.gi[data-g="m"]').forEach(el=>grade.m.push(el.value));
+    document.querySelectorAll('.gi[data-g="b"]').forEach(el=>grade.b.push(el.value));
+    document.querySelectorAll('.gi[data-g="i"]').forEach(el=>grade.i.push(el.value));
+    return { tecido:($id('tipoTecido')?.textContent||'').trim(), cores, modelos, grade };
+  }
+
+  function lerPaginaExtra(pid){
+    const cores=[];
+    document.querySelectorAll(`#coresList_${pid} [id^="ci_"]`).forEach(it=>{
+      const i=it.id.replace('ci_','');
+      cores.push({ hex:($id('chi_'+i)||{}).value||'#3B82F6', nome:($id('cni_'+i)||{}).value||'COR' });
+    });
+    const modelos=[];
+    document.querySelectorAll(`#prodLinhas_${pid} tr`).forEach(tr=>{
+      const inp=tr.querySelectorAll('input');
+      const m={ modelo:inp[0]?inp[0].value:'', valor:inp[1]?inp[1].value:'', qtd:inp[2]?inp[2].value:'' };
+      if(m.modelo||m.valor||m.qtd) modelos.push(m);
+    });
+    const grade={m:[],b:[],i:[]};
+    document.querySelectorAll(`.gi[data-g="${pid}m"]`).forEach(el=>grade.m.push(el.value));
+    document.querySelectorAll(`.gi[data-g="${pid}b"]`).forEach(el=>grade.b.push(el.value));
+    document.querySelectorAll(`.gi[data-g="${pid}i"]`).forEach(el=>grade.i.push(el.value));
+    return { tecido:($id('tipoTecido_'+pid)?.textContent||'').trim(), cores, modelos, grade };
+  }
+
+  function paginasNormais(){
+    try{
+      if(typeof paginas==='undefined'||!Array.isArray(paginas)) return [];
+      return paginas.filter(p=>p.tipo!=='branca');
+    }catch(e){ return []; }
+  }
+
+  /* ---------- Construção do HTML ---------- */
+  function gradeCard(key,titulo,prefix,tams,nota){
+    return `<div class="v6q-gcard${prefix==='i'?' inf':''}">
+      <h4>${titulo}<span>${nota||''}</span></h4>
+      <div class="v6q-ggrid">
+        ${tams.map(t=>`<label>${t}<input id="v6g_${key}_${prefix}_${t}" inputmode="numeric" placeholder="0"></label>`).join('')}
+      </div></div>`;
+  }
+
+  function linhaModeloHTML(m){
+    m=m||{};
+    return `<tr><td><input data-modelo value="${esc(m.modelo)}" placeholder="Ex: Camiseta gola polo"></td>`+
+      `<td><input data-valor value="${esc(m.valor)}" placeholder="0,00"></td>`+
+      `<td><input data-qtd value="${esc(m.qtd)}" placeholder="0"></td>`+
+      `<td><button class="v6q-mini red" onclick="this.closest('tr').remove()">✕</button></td></tr>`;
+  }
+
+  function corHTML(c){
+    c=c||{hex:'#3B82F6',nome:'COR'};
+    return `<div class="v6q-cor"><input type="color" value="${esc(c.hex)}">`+
+      `<input type="text" value="${esc(c.nome)}" placeholder="NOME">`+
+      `<button onclick="this.closest('.v6q-cor').remove()" title="Remover cor">✕</button></div>`;
+  }
+
+  function painelHTML(aba,dados){
+    dados=dados||{tecido:'',cores:[],modelos:[],grade:{m:[],b:[],i:[]}};
+    const k=aba.key;
+    const ehExtra=aba.numero>1;
+    return `<div class="v6q-panel" id="v6qPanel_${k}" data-key="${k}">
+      <div class="v6q-pagehdr">
+        <div><b>Página ${aba.numero}${aba.nova?'<span class="v6q-badge-new">NOVA</span>':''}</b>
+        <small>Tecido, cores, modelos e grade próprios desta página</small></div>
+        ${ehExtra?`<button class="v6q-mini ghost" onclick="v6qCopiarDaPagina1('${k}')">⧉ Copiar da Página 1</button>`:''}
+      </div>
+
+      <div class="v6q-grid" style="grid-template-columns:1fr">
+        <div class="v6q-field">
+          <label>Tipo de tecido desta página</label>
+          <input id="v6q_tecido_${k}" value="${esc(dados.tecido)}" placeholder="Ex: Piquet PA / Dry fit">
+        </div>
+      </div>
+
+      <div class="v6q-sec"><span>Cores do tecido</span>
+        <button class="v6q-mini" onclick="v6qAddCor('${k}')">+ Adicionar cor</button></div>
+      <div class="v6q-cores" id="v6qCores_${k}">
+        ${(dados.cores.length?dados.cores:[]).map(corHTML).join('')}
+      </div>
+
+      <div class="v6q-sec"><span>Modelos da produção</span>
+        <button class="v6q-mini" onclick="v6qAddModelo('${k}')">+ Adicionar modelo</button></div>
+      <table class="v6q-table">
+        <thead><tr><th>Modelo / descrição</th><th style="width:120px">Valor unit.</th><th style="width:90px">Qtd</th><th style="width:44px"></th></tr></thead>
+        <tbody id="v6qModelos_${k}">${(dados.modelos.length?dados.modelos:[{}]).map(linhaModeloHTML).join('')}</tbody>
+      </table>
+
+      <div class="v6q-sec"><span>Grade de tamanhos</span><small>Preencha só os tamanhos usados nesta página</small></div>
+      <div class="v6q-grade">
+        ${gradeCard(k,'Masculino','m',TAM_M)}
+        ${gradeCard(k,'Baby look fem.','b',TAM_M)}
+        ${gradeCard(k,'Infantil','i',TAM_I)}
+      </div>
+    </div>`;
+  }
+
+  function preencherGrade(k,dados){
+    ['m','b','i'].forEach(pref=>{
+      const tams = pref==='i'?TAM_I:TAM_M;
+      const vals = (dados.grade&&dados.grade[pref])||[];
+      tams.forEach((t,i)=>{ const el=$id(`v6g_${k}_${pref}_${t}`); if(el) el.value=vals[i]||''; });
+    });
+  }
+
+  /* ---------- Abas ---------- */
+  function renderTabs(){
+    const bar=$id('v6qTabs'); if(!bar) return;
+    bar.innerHTML = abas.map(a=>
+      `<button class="v6q-tab${a.key===abaAtiva?' active':''}" onclick="v6qTrocarAba('${a.key}')">`+
+      `Página ${a.numero}${a.nova?' •':''}`+
+      (a.nova?`<span class="v6q-tab-x" onclick="event.stopPropagation();v6qRemoverAba('${a.key}')" title="Descartar esta página nova">✕</span>`:'')+
+      `</button>`
+    ).join('') + `<button class="v6q-tab v6q-tab-add" onclick="v6qAddPagina()">＋ Página</button>`;
+  }
+
+  window.v6qTrocarAba=function(key){
+    abaAtiva=key;
+    document.querySelectorAll('#v6QuickModal .v6q-panel').forEach(p=>p.classList.toggle('active',p.dataset.key===key));
+    renderTabs();
+  };
+
+  window.v6qAddPagina=function(){
+    const numero=abas.length+1;
+    const aba={ key:'k'+(++seqAba), pid:null, nova:true, numero };
+    abas.push(aba);
+    const cont=$id('v6qPanels');
+    cont.insertAdjacentHTML('beforeend', painelHTML(aba,null));
+    v6qTrocarAba(aba.key);
+    toastSafe('Página '+numero+' será criada ao aplicar.','',2200);
+  };
+
+  window.v6qRemoverAba=function(key){
+    const i=abas.findIndex(a=>a.key===key); if(i===-1) return;
+    if(!abas[i].nova){ toastSafe('Páginas já existentes são removidas pelo menu lateral.','erro',3200); return; }
+    abas.splice(i,1);
+    const p=$id('v6qPanel_'+key); if(p) p.remove();
+    abas.forEach((a,idx)=>{ a.numero=idx+1; });
+    if(abaAtiva===key) abaAtiva=abas.length?abas[abas.length-1].key:null;
+    if(abaAtiva) v6qTrocarAba(abaAtiva); else renderTabs();
+  };
+
+  window.v6qAddModelo=function(k){
+    const tb=$id('v6qModelos_'+k); if(!tb) return;
+    tb.insertAdjacentHTML('beforeend', linhaModeloHTML({}));
+  };
+  window.v6qAddCor=function(k){
+    const c=$id('v6qCores_'+k); if(!c) return;
+    c.insertAdjacentHTML('beforeend', corHTML({hex:'#3B82F6',nome:'COR'}));
+  };
+
+  window.v6qCopiarDaPagina1=function(k){
+    const base=abas[0]; if(!base) return;
+    const tecido=$id('v6q_tecido_'+base.key); const alvo=$id('v6q_tecido_'+k);
+    if(tecido&&alvo) alvo.value=tecido.value;
+    /* grade */
+    ['m','b','i'].forEach(pref=>{
+      const tams=pref==='i'?TAM_I:TAM_M;
+      tams.forEach(t=>{
+        const src=$id(`v6g_${base.key}_${pref}_${t}`), dst=$id(`v6g_${k}_${pref}_${t}`);
+        if(src&&dst) dst.value=src.value;
+      });
+    });
+    /* cores */
+    const cSrc=$id('v6qCores_'+base.key), cDst=$id('v6qCores_'+k);
+    if(cSrc&&cDst) cDst.innerHTML=cSrc.innerHTML;
+    toastSafe('Dados da Página 1 copiados.','sucesso',2000);
+  };
+
+  /* ---------- Abrir ---------- */
+  window.v4AbrirPreenchimentoRapido=function(){
+    let m=$id('v6QuickModal');
+    if(!m){
+      m=document.createElement('div'); m.id='v6QuickModal';
+      m.innerHTML=`<div class="v6q-card">
+        <div class="v6q-head">
+          <div><h3>⚡ Preenchimento rápido</h3><small>Cada página tem seu próprio tecido, cores, modelos e grade</small></div>
+          <button class="v6q-btn v6q-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button>
+        </div>
+        <div class="v6q-body">
+          <div class="v6q-sec" style="margin-top:0"><span>Dados do cliente</span><small>Compartilhados por todas as páginas</small></div>
+          <div class="v6q-grid">
+            <div class="v6q-field"><label>Cliente</label><input id="v6qCliente"></div>
+            <div class="v6q-field"><label>Vendedor</label><input id="v6qVendedor"></div>
+            <div class="v6q-field"><label>Telefone</label><input id="v6qTel"></div>
+            <div class="v6q-field"><label>Previsão</label><input id="v6qPrevisao" placeholder="Ex: 30 dias"></div>
+            <div class="v6q-field" style="grid-column:span 2"><label>Aviso / observação</label><input id="v6qAviso" placeholder="Opcional"></div>
+          </div>
+          <div class="v6q-sec"><span>Conteúdo por página</span><small>Use as abas para separar modelos diferentes</small></div>
+          <div class="v6q-tabs" id="v6qTabs"></div>
+          <div id="v6qPanels"></div>
+        </div>
+        <div class="v6q-foot">
+          <span class="v6q-foot-hint" id="v6qHint"></span>
+          <div style="display:flex;gap:8px">
+            <button class="v6q-btn v6q-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button>
+            <button class="v6q-btn v6q-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar tudo</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.appendChild(m);
+    }
+
+    /* dados compartilhados */
+    $id('v6qCliente').value=($id('dc_nome')?.textContent||'').trim();
+    $id('v6qVendedor').value=($id('dc_vendedor')?.textContent||'').trim();
+    $id('v6qTel').value=($id('dc_tel')?.textContent||'').trim();
+    $id('v6qPrevisao').value=$id('previsao')?.value||'';
+    $id('v6qAviso').value=$id('avisoTxt')?.value||'';
+
+    /* monta uma aba por página existente */
+    abas=[]; seqAba=0;
+    const panels=$id('v6qPanels'); panels.innerHTML='';
+
+    const aba1={ key:'k'+(++seqAba), pid:null, nova:false, numero:1 };
+    abas.push(aba1);
+    const d1=lerPagina1();
+    panels.insertAdjacentHTML('beforeend', painelHTML(aba1,d1));
+    preencherGrade(aba1.key,d1);
+
+    paginasNormais().forEach(p=>{
+      const aba={ key:'k'+(++seqAba), pid:p.id, nova:false, numero:abas.length+1 };
+      abas.push(aba);
+      const d=lerPaginaExtra(p.id);
+      panels.insertAdjacentHTML('beforeend', painelHTML(aba,d));
+      preencherGrade(aba.key,d);
+    });
+
+    const nBrancas=(typeof paginas!=='undefined'&&Array.isArray(paginas))?paginas.filter(p=>p.tipo==='branca').length:0;
+    $id('v6qHint').textContent = abas.length+' página(s) na ficha'+(nBrancas?' · '+nBrancas+' página(s) branca(s) não editável(is) aqui':'');
+
+    v6qTrocarAba(aba1.key);
+    m.classList.add('open');
+  };
+
+  window.v4FecharPreenchimentoRapido=function(){ $id('v6QuickModal')?.classList.remove('open'); };
+
+  /* ---------- Aplicar ---------- */
+  function lerPainel(k){
+    const tecido=($id('v6q_tecido_'+k)?.value||'').trim();
+    const cores=[...document.querySelectorAll(`#v6qCores_${k} .v6q-cor`)].map(d=>({
+      hex:d.querySelector('input[type=color]').value,
+      nome:d.querySelector('input[type=text]').value||'COR'
+    }));
+    const modelos=[...document.querySelectorAll(`#v6qModelos_${k} tr`)].map(tr=>({
+      modelo:tr.querySelector('[data-modelo]')?.value||'',
+      valor:tr.querySelector('[data-valor]')?.value||'',
+      qtd:tr.querySelector('[data-qtd]')?.value||''
+    })).filter(r=>r.modelo||r.valor||r.qtd);
+    const grade={m:[],b:[],i:[]};
+    ['m','b','i'].forEach(pref=>{
+      const tams=pref==='i'?TAM_I:TAM_M;
+      grade[pref]=tams.map(t=>$id(`v6g_${k}_${pref}_${t}`)?.value||'');
+    });
+    return { tecido, cores, modelos, grade };
+  }
+
+  function aplicarPagina1(d){
+    const tt=$id('tipoTecido'); if(tt && d.tecido!=='') tt.textContent=d.tecido;
+
+    if(d.cores.length){
+      $id('coresList').innerHTML='';
+      try{ corId=0; }catch(e){}
+      d.cores.forEach(c=>{ if(typeof adicionarCor==='function') adicionarCor(c.hex,c.nome); });
+    }
+
+    if(d.modelos.length){
+      $id('prodLinhas').innerHTML='';
+      try{ linhaId=0; }catch(e){}
+      d.modelos.forEach(r=>{ if(typeof criarLinha==='function') criarLinha(r.modelo,r.valor,r.qtd); });
+      document.querySelectorAll('#prodLinhas tr').forEach(tr=>{
+        const id=parseInt(String(tr.id).replace('ln_','')); if(typeof recalcL==='function'&&!isNaN(id)) recalcL(id);
+      });
+    }
+
+    ['m','b','i'].forEach(pref=>{
+      const els=document.querySelectorAll(`.gi[data-g="${pref}"]`);
+      (d.grade[pref]||[]).forEach((v,i)=>{
+        if(els[i]){ els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0); }
+      });
+    });
+    if(typeof recalcGrade==='function') recalcGrade();
+    if(typeof calcTotal==='function') calcTotal();
+  }
+
+  function aplicarPaginaExtra(pid,d){
+    const p=(typeof paginas!=='undefined')?paginas.find(x=>x.id===pid):null;
+    if(!p) return;
+
+    const tt=$id('tipoTecido_'+pid); if(tt && d.tecido!=='') tt.textContent=d.tecido;
+
+    if(d.cores.length){
+      const cl=$id('coresList_'+pid); if(cl) cl.innerHTML='';
+      p.corId=0;
+      d.cores.forEach(c=>{ if(typeof adicionarCorExtra==='function') adicionarCorExtra(pid,c.hex,c.nome); });
+    }
+
+    if(d.modelos.length){
+      const tb=$id('prodLinhas_'+pid); if(tb) tb.innerHTML='';
+      p.linhaId=0;
+      d.modelos.forEach(r=>{ if(typeof criarLinhaExtra==='function') criarLinhaExtra(p,r.modelo,r.valor,r.qtd); });
+      if(typeof calcTotalExtra==='function') calcTotalExtra(p);
+    }
+
+    ['m','b','i'].forEach(pref=>{
+      const els=document.querySelectorAll(`.gi[data-g="${pid}${pref}"]`);
+      (d.grade[pref]||[]).forEach((v,i)=>{
+        if(els[i]){ els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0); }
+      });
+    });
+    if(typeof recalcGradeExtra==='function') recalcGradeExtra(p);
+  }
+
+  window.v4AplicarPreenchimentoRapido=function(){
+    /* 1) coleta tudo ANTES de mexer no DOM (páginas novas mudam a árvore) */
+    const dados=abas.map(a=>({ aba:a, d:lerPainel(a.key) }));
+
+    /* 2) dados compartilhados */
+    const setCE=(id,v)=>{const el=$id(id); if(el&&v!=='') el.textContent=v;};
+    setCE('dc_nome',$id('v6qCliente').value.trim());
+    setCE('dc_vendedor',$id('v6qVendedor').value.trim());
+    setCE('dc_tel',$id('v6qTel').value.trim());
+    const prev=$id('v6qPrevisao').value.trim(); if(prev){ const el=$id('previsao'); if(el) el.value=prev; }
+    const av=$id('v6qAviso').value.trim(); if(av){ const el=$id('avisoTxt'); if(el) el.value=av; }
+
+    /* 3) cria as páginas novas pedidas no modal */
+    let criadas=0;
+    dados.forEach(item=>{
+      if(item.aba.nova){
+        if(typeof adicionarPagina==='function'){
+          adicionarPagina();
+          const novas=paginasNormais();
+          item.aba.pid=novas.length?novas[novas.length-1].id:null;
+          item.aba.nova=false;
+          criadas++;
+        }
+      }
+    });
+
+    /* 4) aplica cada página no seu lugar */
+    dados.forEach(item=>{
+      if(item.aba.numero===1) aplicarPagina1(item.d);
+      else if(item.aba.pid) aplicarPaginaExtra(item.aba.pid,item.d);
+    });
+
+    if(typeof sincTodasPaginas==='function') sincTodasPaginas();
+    if(typeof atualizarRodapes==='function') atualizarRodapes();
+    if(typeof snap==='function') snap();
+
+    v4FecharPreenchimentoRapido();
+    toastSafe('✔ Preenchimento aplicado em '+dados.length+' página(s)'+(criadas?' · '+criadas+' criada(s)':'')+'.','sucesso',3200);
+  };
+})();
+</script>
+
+
+<script id="v6-rascunho-resiliente-js">
+/* ============================================================
+   V6 — Rascunhos e recuperação à prova de falhas
+   ------------------------------------------------------------
+   Problemas corrigidos:
+   1) O índice dos rascunhos vivia só no localStorage (limite ~5MB,
+      já ocupado pelas imagens em base64 de 'va3_layers'). Quando
+      estourava a cota, setMeta() lançava exceção NÃO TRATADA: o
+      dado ia para o IndexedDB mas sumia da lista — "salvei e
+      perdi". Com 2ª página o payload é maior, por isso o bug
+      aparecia justamente aí.
+   2) openDB() não tratava 'onblocked' nem tinha timeout: se o
+      banco travasse, o await ficava pendurado para sempre e o
+      botão não respondia mais.
+   3) A flag de recuperação também dependia do localStorage; se
+      não gravasse, a recuperação nunca era oferecida e o usuário
+      perdia tudo mesmo havendo backup salvo.
+   4) savLayers() enchia o localStorage com imagens base64 e
+      derrubava todo o resto.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  const DB_NAME='vooalto_ficha_rascunhos_db_v4';
+  const STORE='drafts';
+  const META_KEY='vooalto_ficha_rascunhos_v4_meta';
+  const META_ID='__meta__';           /* índice espelhado dentro do IndexedDB */
+  const AUTOSAVE_DB='vooalto_ficha_autosave_v6';
+  const AUTOSAVE_STORE='autosave';
+
+  const $id=id=>document.getElementById(id);
+  function toastSafe(msg,tipo=''){ try{ toast(msg,tipo); }catch(e){ try{console.log(msg)}catch(_){} } }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  function nowBR(){ return new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}); }
+
+  /* ---------- IndexedDB com timeout e tratamento de bloqueio ---------- */
+  function abrirDB(nome,store,timeoutMs=8000){
+    return new Promise((resolve,reject)=>{
+      let pronto=false;
+      const t=setTimeout(()=>{ if(!pronto){ pronto=true;
+        reject(new Error('O banco de dados não respondeu. Feche outras abas do Vooalto e tente de novo.')); } },timeoutMs);
+      let req;
+      try{ req=indexedDB.open(nome,1); }
+      catch(e){ clearTimeout(t); return reject(e); }
+      req.onupgradeneeded=()=>{ try{ if(!req.result.objectStoreNames.contains(store)) req.result.createObjectStore(store); }catch(e){} };
+      req.onsuccess=()=>{ if(pronto)return; pronto=true; clearTimeout(t); resolve(req.result); };
+      req.onerror=()=>{ if(pronto)return; pronto=true; clearTimeout(t); reject(req.error||new Error('Erro ao abrir o banco')); };
+      req.onblocked=()=>{ if(pronto)return; pronto=true; clearTimeout(t);
+        reject(new Error('Banco bloqueado por outra aba aberta do Vooalto.')); };
+    });
+  }
+  async function idbPut(nome,store,key,val){
+    const db=await abrirDB(nome,store);
+    return new Promise((resolve,reject)=>{
+      let tx; try{ tx=db.transaction(store,'readwrite'); }catch(e){ db.close(); return reject(e); }
+      try{ tx.objectStore(store).put(val,key); }catch(e){ db.close(); return reject(e); }
+      tx.oncomplete=()=>{ db.close(); resolve(true); };
+      tx.onerror=()=>{ db.close(); reject(tx.error||new Error('Falha ao gravar')); };
+      tx.onabort=()=>{ db.close(); reject(tx.error||new Error('Gravação abortada (espaço insuficiente?)')); };
+    });
+  }
+  async function idbGet(nome,store,key){
+    const db=await abrirDB(nome,store);
+    return new Promise((resolve,reject)=>{
+      let tx; try{ tx=db.transaction(store,'readonly'); }catch(e){ db.close(); return reject(e); }
+      const r=tx.objectStore(store).get(key);
+      r.onsuccess=()=>{ db.close(); resolve(r.result==null?null:r.result); };
+      r.onerror=()=>{ db.close(); reject(r.error); };
+    });
+  }
+  async function idbDel(nome,store,key){
+    try{
+      const db=await abrirDB(nome,store);
+      return await new Promise(resolve=>{
+        const tx=db.transaction(store,'readwrite');
+        tx.objectStore(store).delete(key);
+        tx.oncomplete=()=>{ db.close(); resolve(true); };
+        tx.onerror=()=>{ db.close(); resolve(false); };
+      });
+    }catch(e){ return false; }
+  }
+
+  /* ---------- Índice: IndexedDB é a fonte da verdade ---------- */
+  /* O localStorage vira só um cache rápido; se ele falhar, nada se perde. */
+  function metaDoCache(){
+    try{ const v=JSON.parse(localStorage.getItem(META_KEY)||'[]'); return Array.isArray(v)?v:[]; }
+    catch(e){ return []; }
+  }
+  function gravarCache(meta){
+    try{ localStorage.setItem(META_KEY,JSON.stringify(meta)); return true; }
+    catch(e){
+      /* Cota estourada: limpa lixo conhecido e tenta de novo. */
+      try{
+        localStorage.removeItem('va3_layers');   /* imagens base64: o maior vilão */
+        localStorage.setItem(META_KEY,JSON.stringify(meta));
+        return true;
+      }catch(e2){ return false; }
+    }
+  }
+  async function lerMeta(){
+    try{
+      const doDB=await idbGet(DB_NAME,STORE,META_ID);
+      if(Array.isArray(doDB)) return doDB;
+    }catch(e){ /* cai para o cache */ }
+    return metaDoCache();
+  }
+  async function gravarMeta(meta){
+    /* 1) IndexedDB (obrigatório) — sem limite prático e sem exceção de cota */
+    await idbPut(DB_NAME,STORE,META_ID,meta);
+    /* 2) localStorage (opcional) — falha aqui não invalida o rascunho */
+    gravarCache(meta);
+  }
+
+  /* ---------- Renderização ---------- */
+  async function renderLista(){
+    const list=$id('v4DraftList'); if(!list) return;
+    let drafts=[];
+    try{ drafts=await lerMeta(); }catch(e){ drafts=metaDoCache(); }
+    if(!drafts.length){
+      list.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,.35);padding:6px;text-align:center">Nenhum rascunho salvo</div>';
+      return;
+    }
+    list.innerHTML=drafts.map(d=>
+      `<div class="sb-v4-draft"><div><b title="${esc(d.name)}">${esc(d.name)}</b><small>${esc(d.date||'')}</small></div>`+
+      `<div><button class="load" onclick="v4CarregarRascunho('${esc(d.id)}')">Abrir</button>`+
+      `<button class="del" onclick="v4ExcluirRascunho('${esc(d.id)}')">✕</button></div></div>`
+    ).join('');
+  }
+
+  /* ---------- Salvar ---------- */
+  window.v4SalvarRascunho=async function(){
+    if(typeof capturarFichaParaJSON!=='function'){ toastSafe('Sistema de rascunho indisponível.','erro'); return; }
+
+    const cliente=($id('dc_nome')?.textContent||'').trim();
+    const num=$id('fichaNum')?.value||'';
+    const sugestao=(cliente||num)?`Ficha ${num} ${cliente}`.trim():'Ficha técnica em andamento';
+    const nome=prompt('Nome do rascunho:',sugestao);
+    if(nome===null) return;
+    const nomeFinal=(nome||'').trim()||sugestao;
+
+    const id='d_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+
+    let data;
+    try{
+      data=capturarFichaParaJSON();
+      data._nome=nomeFinal; data._rascunhoV4=true;
+    }catch(e){
+      console.error('Falha ao capturar a ficha:',e);
+      toastSafe('⚠ Erro ao ler a ficha. Nada foi alterado.','erro');
+      return;
+    }
+
+    /* Garante que o objeto é clonável pelo IndexedDB (structured clone).
+       Se algo não for, o JSON round-trip remove — melhor que falhar tudo. */
+    try{ data=JSON.parse(JSON.stringify(data)); }catch(e){}
+
+    toastSafe('💾 Salvando rascunho...');
+    try{
+      await idbPut(DB_NAME,STORE,id,data);          /* 1º o conteúdo */
+      const meta=await lerMeta().catch(()=>metaDoCache());
+      meta.unshift({id,name:nomeFinal,date:nowBR(),hasData:true});
+      await gravarMeta(meta.slice(0,80));           /* 2º o índice */
+      await renderLista();
+      toastSafe('💾 Rascunho salvo!','sucesso');
+    }catch(e){
+      console.error('Erro ao salvar rascunho:',e);
+      /* Não deixa lixo órfão para trás */
+      await idbDel(DB_NAME,STORE,id);
+      toastSafe('⚠ Não foi possível salvar o rascunho: '+(e.message||'erro desconhecido')+
+                ' — sua ficha continua aberta e intacta.','erro');
+    }
+  };
+
+  /* ---------- Carregar ---------- */
+  window.v4CarregarRascunho=async function(id){
+    let data=null;
+    try{ data=await idbGet(DB_NAME,STORE,id); }
+    catch(e){ console.error(e); toastSafe('⚠ Erro ao ler o rascunho: '+(e.message||''),'erro'); return; }
+    if(!data){ toastSafe('⚠ Rascunho sem dados (pode ter sido removido).','erro'); return; }
+
+    if(!confirm('Carregar este rascunho?\n\nAs alterações atuais que ainda não foram salvas serão substituídas.')) return;
+
+    try{ restaurarDeJSON(data); toastSafe('✔ Rascunho carregado.','sucesso'); }
+    catch(e){ console.error(e); toastSafe('⚠ Erro ao aplicar o rascunho na ficha.','erro'); }
+  };
+
+  /* ---------- Excluir ---------- */
+  window.v4ExcluirRascunho=async function(id){
+    if(!confirm('Excluir este rascunho?')) return;
+    try{
+      await idbDel(DB_NAME,STORE,id);
+      const meta=(await lerMeta().catch(()=>metaDoCache())).filter(x=>x.id!==id);
+      await gravarMeta(meta);
+      await renderLista();
+      toastSafe('Rascunho excluído.');
+    }catch(e){ console.error(e); toastSafe('⚠ Erro ao excluir o rascunho.','erro'); }
+  };
+
+  /* ---------- Migração do índice antigo (localStorage -> IndexedDB) ---------- */
+  async function migrarIndice(){
+    try{
+      const jaTem=await idbGet(DB_NAME,STORE,META_ID);
+      if(Array.isArray(jaTem)) return;
+      const antigo=metaDoCache();
+      if(antigo.length) await idbPut(DB_NAME,STORE,META_ID,antigo);
+    }catch(e){}
+  }
+
+  /* ---------- Evita que savLayers() estoure a cota ---------- */
+  /* Imagens em base64 no localStorage derrubavam todo o resto do app. */
+  if(typeof window.savLayers==='function' && !window.__v6SavLayersPatch){
+    window.__v6SavLayersPatch=true;
+    window.savLayers=function(){
+      try{
+        const leves=(layers||[]).map(l=>{
+          const b=(typeof serLayer==='function')?serLayer(l):Object.assign({},l);
+          /* Não guarda a imagem inteira aqui: o autosave/JSON já cuidam disso. */
+          if(b && b.type==='img' && typeof b.src==='string' && b.src.length>65536) b.src='';
+          return b;
+        });
+        localStorage.setItem('va3_layers',JSON.stringify(leves));
+      }catch(e){
+        try{ localStorage.removeItem('va3_layers'); }catch(e2){}
+      }
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(async()=>{ await migrarIndice(); renderLista(); },800));
+  setTimeout(async()=>{ await migrarIndice(); renderLista(); },1500);
+})();
+</script>
+
+
+<style id="v6-ux-css">
+/* ============================================================
+   V6 — Usabilidade: acoes seguras, botoes visiveis e ajuda
+   ============================================================ */
+
+/* --- 1) Desfazer/Refazer mais visiveis e com estado claro --- */
+.sb-ur button{transition:all .15s}
+.sb-ur button:not(:disabled){background:rgba(56,189,248,.16)!important;color:#7DD3FC!important;font-weight:900!important;cursor:pointer}
+.sb-ur button:not(:disabled):hover{background:rgba(56,189,248,.30)!important;transform:translateY(-1px)}
+.sb-ur button:disabled{opacity:.32;cursor:not-allowed}
+
+/* --- 2) Botoes de excluir: menos "clicavel por acidente" --- */
+.del-btn{opacity:.45;transition:all .15s}
+.del-btn:hover{opacity:1;background:#FEE2E2!important;color:#991B1B!important;transform:scale(1.12)}
+.cor-del{opacity:.7;transition:all .15s}
+.cor-del:hover{opacity:1;transform:scale(1.05)}
+
+/* --- 3) Barra de desfazer (aparece apos excluir algo) --- */
+#v6UndoBar{position:fixed;left:50%;bottom:52px;transform:translateX(-50%) translateY(14px);
+  background:#0F172A;color:#fff;border-radius:14px;padding:11px 15px;display:none;align-items:center;gap:12px;
+  box-shadow:0 16px 44px rgba(0,0,0,.42);z-index:99999;font-size:12px;font-weight:700;
+  border:1px solid rgba(255,255,255,.14);opacity:0;transition:all .22s}
+#v6UndoBar.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+#v6UndoBar b{color:#FBBF24}
+#v6UndoBar button{border:none;border-radius:9px;padding:8px 14px;font-weight:900;font-size:12px;
+  cursor:pointer;background:#38BDF8;color:#06283D;font-family:inherit}
+#v6UndoBar button:hover{background:#7DD3FC}
+#v6UndoBar .v6u-x{background:none;color:rgba(255,255,255,.45);padding:4px 6px;font-size:14px}
+#v6UndoBar .v6u-x:hover{color:#fff;background:none}
+
+/* --- 4) Ajuda / primeiros passos --- */
+#v6HelpBtn{position:fixed;right:14px;bottom:44px;z-index:99996;width:40px;height:40px;border-radius:50%;
+  border:none;background:#2563EB;color:#fff;font-size:19px;font-weight:900;cursor:pointer;
+  box-shadow:0 8px 26px rgba(37,99,235,.5);transition:all .18s;font-family:inherit}
+#v6HelpBtn:hover{background:#1D4ED8;transform:scale(1.09)}
+#v6HelpModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:100000;
+  align-items:center;justify-content:center;padding:18px}
+#v6HelpModal.open{display:flex}
+.v6h-card{width:min(680px,96vw);max-height:88vh;background:#fff;color:#111827;border-radius:20px;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+.v6h-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  background:linear-gradient(135deg,#0F172A,#1E3A8A);color:#fff}
+.v6h-head h3{margin:0;font-size:17px}
+.v6h-head button{border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:9px;
+  padding:7px 13px;font-weight:900;cursor:pointer;font-family:inherit;font-size:12px}
+.v6h-body{padding:20px;overflow:auto;font-size:13.5px;line-height:1.62}
+.v6h-step{display:flex;gap:13px;margin-bottom:15px;align-items:flex-start}
+.v6h-num{flex-shrink:0;width:27px;height:27px;border-radius:50%;background:#2563EB;color:#fff;
+  font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center}
+.v6h-step b{display:block;margin-bottom:2px;font-size:13.5px}
+.v6h-step span{color:#475569;font-size:12.5px}
+.v6h-tip{background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #2563EB;
+  border-radius:9px;padding:11px 14px;margin-top:15px;font-size:12.5px;color:#1E3A8A}
+.v6h-tip b{display:block;margin-bottom:3px}
+.v6h-keys{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;margin-top:9px;font-size:12.5px}
+.v6h-keys kbd{background:#1E293B;color:#fff;border-radius:5px;padding:2px 8px;font-size:11px;
+  font-weight:800;font-family:inherit;text-align:center}
+</style>
+
+<script id="v6-ux-js">
+/* ============================================================
+   V6 — Melhorias de usabilidade
+   ------------------------------------------------------------
+   1) BUG: excluir linha de produto NAO era desfazivel — nem com
+      Ctrl+Z. Um clique errado no "✕" apagava o item digitado e
+      nao havia como recuperar. Agora e desfazivel e mostra uma
+      barra "Desfazer" logo apos a exclusao.
+   2) Acoes destrutivas ficam menos clicaveis por acidente e
+      todas passam a registrar historico.
+   3) Botao de Ajuda com os primeiros passos, para quem nunca
+      usou o sistema.
+   4) Tooltips nos botoes que so tinham icone.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $id=id=>document.getElementById(id);
+
+  /* ---------------- Barra "Desfazer" ---------------- */
+  let undoTimer=null;
+  function barra(){
+    let b=$id('v6UndoBar');
+    if(!b){
+      b=document.createElement('div'); b.id='v6UndoBar';
+      b.innerHTML='<span id="v6UndoMsg"></span>'+
+        '<button onclick="v6DesfazerAgora()">↩ Desfazer</button>'+
+        '<button class="v6u-x" onclick="v6FecharUndo()" title="Fechar">✕</button>';
+      document.body.appendChild(b);
+    }
+    return b;
+  }
+  function mostrarUndo(msg){
+    const b=barra();
+    $id('v6UndoMsg').innerHTML=msg;
+    b.classList.add('show');
+    clearTimeout(undoTimer);
+    undoTimer=setTimeout(()=>b.classList.remove('show'),7000);
+  }
+  window.v6FecharUndo=function(){ const b=$id('v6UndoBar'); if(b) b.classList.remove('show'); };
+  window.v6DesfazerAgora=function(){
+    v6FecharUndo();
+    try{ if(typeof undo==='function') undo(); }catch(e){}
+  };
+
+  /* ---------------- 1) Exclusoes desfaziveis ---------------- */
+  /* O historico (snap) so era gravado DEPOIS da mudanca em alguns
+     casos, e removerL nem chamava snap. Aqui garantimos: grava o
+     estado ANTES de excluir e oferece o desfazer. */
+  function protegerExclusao(nomeFn, rotulo){
+    const orig=window[nomeFn];
+    if(typeof orig!=='function' || orig.__v6Protegida) return;
+    const nova=function(){
+      /* Fotografa o estado ANTES de remover. Não chamamos snap() depois:
+         ele é atrasado (400ms) e gravaria o estado já sem o item, fazendo
+         o Ctrl+Z "desfazer para o mesmo lugar". */
+      try{ if(typeof snapNow==='function') snapNow(); }catch(e){}
+      const r=orig.apply(this,arguments);
+      /* Algumas funções originais chamam snap() por dentro; esse snap
+         atrasado gravaria o estado JÁ SEM o item e anularia o desfazer. */
+      try{ if(typeof snapCancel==='function') snapCancel(); }catch(e){}
+      mostrarUndo('<b>'+rotulo+'</b> removido(a)');
+      return r;
+    };
+    nova.__v6Protegida=true;
+    window[nomeFn]=nova;
+  }
+
+  /* snapNow() vem do script principal: grava o histórico imediatamente,
+     sem o atraso de 400ms do snap() normal. */
+
+  ['removerL','removerLExtra'].forEach(f=>protegerExclusao(f,'Item da produção'));
+  protegerExclusao('excluirCor','Cor');
+  protegerExclusao('excluirSel','Elemento');
+  protegerExclusao('excluirSelExtra','Elemento');
+
+  /* ---------------- 3) Ajuda ---------------- */
+  function criarAjuda(){
+    if($id('v6HelpBtn')) return;
+
+    const btn=document.createElement('button');
+    btn.id='v6HelpBtn'; btn.textContent='?';
+    btn.title='Como usar o sistema (primeiros passos)';
+    btn.onclick=()=>v6AbrirAjuda();
+    document.body.appendChild(btn);
+
+    const m=document.createElement('div');
+    m.id='v6HelpModal';
+    m.innerHTML=`<div class="v6h-card">
+      <div class="v6h-head"><h3>👋 Como usar a Ficha Técnica</h3>
+        <button onclick="v6FecharAjuda()">Fechar</button></div>
+      <div class="v6h-body">
+        <div class="v6h-step"><div class="v6h-num">1</div><div>
+          <b>Preencha os dados do cliente</b>
+          <span>Clique direto nos campos da folha e digite. O que você escrever na Página 1 é copiado sozinho para as outras páginas.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">2</div><div>
+          <b>Use o Preenchimento rápido</b>
+          <span>No menu à esquerda, o botão <b>⚡ Preenchimento rápido</b> abre um formulário com tudo: cliente, modelos, cores, tecido e grade. Cada página tem sua própria aba, então dá para ter modelos com tecidos e grades diferentes.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">3</div><div>
+          <b>Adicione imagens do modelo</b>
+          <span>Clique no quadro pontilhado da folha (ou arraste a imagem para lá). Depois arraste para mover, use os cantos para redimensionar e a alça de cima para girar.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">4</div><div>
+          <b>Precisa de mais páginas?</b>
+          <span>No menu à esquerda, em <b>Páginas</b>, use “Adicionar Página”. Cada página tem sua própria tabela de produção, grade e imagens.</span></div></div>
+        <div class="v6h-step"><div class="v6h-num">5</div><div>
+          <b>Salve o seu trabalho</b>
+          <span><b>Salvar rascunho</b> guarda dentro do próprio sistema, para continuar depois. <b>Salvar Ficha (.json)</b> gera um arquivo que você pode guardar ou enviar. <b>Exportar PDF</b> gera o arquivo para imprimir ou mandar ao cliente.</span></div></div>
+
+        <div class="v6h-tip"><b>🛡 Seu trabalho está protegido</b>
+          O sistema guarda uma cópia de segurança sozinho, a cada poucos segundos. Se faltar energia ou o navegador fechar, ao abrir de novo ele pergunta se você quer recuperar a ficha. O indicador no canto inferior direito mostra o estado (“Protegido”).</div>
+
+        <div class="v6h-tip" style="background:#F0FDF4;border-color:#BBF7D0;border-left-color:#16A34A;color:#14532D">
+          <b>⌨ Atalhos que ajudam</b>
+          <div class="v6h-keys">
+            <kbd>Ctrl + Z</kbd><span>Desfazer a última ação</span>
+            <kbd>Ctrl + Y</kbd><span>Refazer</span>
+            <kbd>Esc</kbd><span>Cancelar / tirar a seleção</span>
+            <kbd>Duplo clique</kbd><span>Editar um texto do canvas</span>
+          </div></div>
+
+        <div class="v6h-tip" style="background:#FEF3C7;border-color:#FDE68A;border-left-color:#D97706;color:#78350F">
+          <b>💡 Errou? Não tem problema</b>
+          Quase tudo dá para desfazer com <b>Ctrl + Z</b> ou pelo botão <b>↩ Desfazer</b> no rodapé do menu. Ao excluir um item, aparece um aviso com a opção de trazer de volta.</div>
+      </div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{ if(e.target===m) v6FecharAjuda(); });
+  }
+  window.v6AbrirAjuda=function(){ criarAjuda(); $id('v6HelpModal').classList.add('open'); };
+  window.v6FecharAjuda=function(){ const m=$id('v6HelpModal'); if(m) m.classList.remove('open'); };
+
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') v6FecharAjuda(); });
+
+  /* Na primeira vez que abrir o sistema, mostra a ajuda sozinho */
+  function talvezPrimeiraVez(){
+    try{
+      if(localStorage.getItem('v6_ajuda_vista')) return;
+      localStorage.setItem('v6_ajuda_vista','1');
+      setTimeout(()=>v6AbrirAjuda(),2500);
+    }catch(e){}
+  }
+
+  /* ---------------- 4) Tooltips nos botoes so-com-icone ---------------- */
+  const DICAS={'⬆':'Trazer para a frente','⬇':'Enviar para trás','⊕ Centro':'Centralizar na folha',
+    '⤢ Fill':'Preencher todo o espaço','🔒':'Travar/destravar a proporção','🗑':'Excluir o item selecionado',
+    '✕':'Fechar / tirar a seleção','➤':'Ponta cheia','➢':'Ponta vazada','─':'Sem ponta',
+    '↩ Desfazer':'Desfazer (Ctrl+Z)','↪ Refazer':'Refazer (Ctrl+Y)'};
+  function porTooltips(){
+    document.querySelectorAll('button').forEach(b=>{
+      if(b.title) return;
+      const t=(b.textContent||'').trim();
+      if(DICAS[t]) b.title=DICAS[t];
+    });
+  }
+
+  function iniciar(){ criarAjuda(); porTooltips(); talvezPrimeiraVez(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,900));
+  else setTimeout(iniciar,900);
+  /* elementos das paginas extras sao criados depois */
+  setTimeout(porTooltips,2200);
+  document.addEventListener('click',()=>setTimeout(porTooltips,300));
+})();
+
+  /* ============================================================
+     V6 — Esconde a interface de apoio (o "?" e afins) na exportacao
+     ------------------------------------------------------------
+     Deliberadamente conservador: NAO cria CSS, NAO usa @media print
+     e NAO acrescenta nenhuma tag ao documento -- este codigo mora
+     dentro de um <script> que ja existia. Tentativas anteriores
+     falharam justamente por mexer no CSS de impressao e por inserir
+     uma tag <style> mal fechada, o que abriu faixas brancas.
+
+     Aqui os elementos sao apenas ocultados com style.display no
+     momento da exportacao e devolvidos logo depois.
+     ============================================================ */
+  (function(){
+    var IDS=['v6HelpBtn','v6HelpModal','v6SaveStatus','v6UndoBar','v6QuickModal',
+             'v6oHelpBtn','v6oHelp','v6pHelpBtn','v6pHelp','v6pGuia','v6DropOverlay',
+             'v6BackupBtns'];
+    var salvos=null;
+    function esconder(){
+      if(salvos!==null) return;
+      salvos=[];
+      for(var i=0;i<IDS.length;i++){
+        var el=document.getElementById(IDS[i]);
+        if(!el) continue;
+        salvos.push({el:el,prev:el.style.display});
+        el.style.display='none';
+      }
+    }
+    function restaurar(){
+      if(salvos===null) return;
+      for(var i=0;i<salvos.length;i++){
+        try{ salvos[i].el.style.display=salvos[i].prev||''; }catch(e){}
+      }
+      salvos=null;
+    }
+    window.addEventListener('beforeprint',esconder);
+    window.addEventListener('afterprint',restaurar);
+    /* rede de seguranca: se o afterprint nao vier, o foco devolve */
+    window.addEventListener('focus',restaurar);
+
+    /* PNG: html2canvas ignora @media print, entao envolvemos a funcao */
+    function protegerPNG(nome){
+      var orig=window[nome];
+      if(typeof orig!=='function'||orig.__v6Prot) return;
+      var nova=function(){
+        esconder();
+        var r;
+        try{ r=orig.apply(this,arguments); }
+        catch(e){ restaurar(); throw e; }
+        if(r&&typeof r.then==='function'){
+          return r.then(function(v){restaurar();return v;},
+                        function(e){restaurar();throw e;});
+        }
+        /* As exportacoes nao devolvem promise: restauramos assim que a
+           captura terminar. Detectamos isso pelo fim das chamadas ao
+           html2canvas, com um limite de seguranca. */
+        var t0=Date.now();
+        var iv=setInterval(function(){
+          if(salvos===null){ clearInterval(iv); return; }
+          if(!window.__v6Capturando || Date.now()-t0>20000){ clearInterval(iv); restaurar(); }
+        },250);
+        return r;
+      };
+      nova.__v6Prot=true;
+      window[nome]=nova;
+    }
+    /* Marca enquanto houver captura em andamento, para saber a hora certa
+       de devolver os elementos (em vez de chutar um tempo fixo). */
+    function marcarHtml2Canvas(){
+      var h=window.html2canvas;
+      if(typeof h!=='function'||h.__v6Prot) return;
+      var nova=function(){
+        window.__v6Capturando=(window.__v6Capturando||0)+1;
+        var p;
+        try{ p=h.apply(this,arguments); }
+        catch(e){ window.__v6Capturando--; throw e; }
+        if(p&&typeof p.then==='function'){
+          return p.then(function(v){ window.__v6Capturando--; return v; },
+                        function(e){ window.__v6Capturando--; throw e; });
+        }
+        window.__v6Capturando--;
+        return p;
+      };
+      nova.__v6Prot=true;
+      window.html2canvas=nova;
+    }
+    function ligar(){ marcarHtml2Canvas(); protegerPNG('exportarPNG'); protegerPNG('exportPNG'); }
+    setTimeout(ligar,400); setTimeout(ligar,1800); setTimeout(ligar,3500);
+  })();
+
+</script>
+
+
+<style id="v6-menu-didatico-css">
+/* ============================================================
+   V6 — Menu lateral didatico
+   ============================================================ */
+
+/* Cabecalho de passo numerado */
+.v6-passo{display:flex;align-items:center;gap:9px;padding:13px 14px 5px}
+.v6-passo-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;
+  background:linear-gradient(135deg,#38BDF8,#2563EB);color:#fff;font-size:10px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(37,99,235,.45)}
+.v6-passo-txt{min-width:0}
+.v6-passo-txt b{display:block;font-size:10.5px;font-weight:900;color:#fff;letter-spacing:.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v6-passo-txt small{display:block;font-size:7.5px;color:rgba(255,255,255,.42);font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+
+/* Sublegenda dentro dos botoes */
+.sb-btn .v6-sub{display:block;font-size:7.5px;font-weight:600;color:rgba(255,255,255,.38);
+  margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-btn .sb-btn-label{line-height:1.2}
+
+/* Acao principal em destaque */
+.sb-v4-btn.v6-destaque,.sb-btn.v6-destaque{
+  background:linear-gradient(135deg,#2563EB,#1D4ED8)!important;color:#fff!important;
+  box-shadow:0 4px 16px rgba(37,99,235,.42);border-radius:11px!important;margin:2px 10px;
+  width:calc(100% - 20px)!important}
+.sb-v4-btn.v6-destaque:hover,.sb-btn.v6-destaque:hover{
+  background:linear-gradient(135deg,#1D4ED8,#1E40AF)!important;transform:translateY(-1px)}
+.v6-destaque .sb-btn-icon{background:rgba(255,255,255,.20)!important;border-color:rgba(255,255,255,.28)!important}
+.v6-destaque .v6-sub{color:rgba(255,255,255,.72)!important}
+
+/* Secao recolhivel */
+.v6-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;
+  border:none;background:transparent;cursor:pointer;font-family:inherit;
+  padding:12px 16px 6px;color:var(--glass-muted);font-size:9px;font-weight:800;
+  letter-spacing:2px;text-transform:uppercase}
+.v6-toggle:hover{color:#fff}
+.v6-toggle span.v6-seta{font-size:9px;transition:transform .2s;opacity:.6}
+.v6-toggle.aberto span.v6-seta{transform:rotate(90deg)}
+.v6-recolhivel{display:none}
+.v6-recolhivel.aberto{display:block}
+
+/* Zona de risco */
+.v6-risco{margin:10px 10px 4px;padding:8px 10px;border-radius:10px;
+  background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18)}
+.v6-risco-tit{font-size:7.5px;font-weight:900;color:#FCA5A5;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:5px}
+.v6-risco .sb-v4-btn{background:rgba(239,68,68,.13)!important;color:#FCA5A5!important;
+  border-radius:8px!important;font-size:9.5px!important}
+.v6-risco .sb-v4-btn:hover{background:rgba(239,68,68,.26)!important;color:#fff!important}
+
+/* Dica de rodape das paginas */
+.v6-dica{margin:2px 14px 8px;font-size:7.5px;line-height:1.45;color:rgba(255,255,255,.34);
+  font-style:italic}
+</style>
+
+<script id="v6-menu-didatico-js">
+/* ============================================================
+   V6 — Menu lateral mais didatico
+   ------------------------------------------------------------
+   Problemas encontrados na auditoria:
+   1) Secao "Geral" era um titulo ORFAO, sem nenhum conteudo.
+   2) Nao havia ordem de uso: quem abria o sistema pela primeira
+      vez nao sabia por onde comecar.
+   3) Tres formas de salvar (rascunho, .json, PDF) sem explicar a
+      diferenca -- a maior fonte de confusao.
+   4) "Resetar ficha tecnica" (destrutivo) ficava colado nas
+      acoes do dia a dia.
+   5) Rotulos tecnicos: ".json", "Painel de Camadas".
+
+   Reorganiza movendo os nos existentes (preserva os onclick),
+   sem reescrever o menu -- por isso o risco e baixo.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $=s=>document.querySelector(s);
+  const $$=s=>[...document.querySelectorAll(s)];
+
+  function acharSecaoPorTitulo(txt){
+    return $$('.sb-section').find(sec=>{
+      const t=sec.querySelector('.sb-section-title');
+      return t && t.textContent.trim().toLowerCase()===txt.toLowerCase();
+    });
+  }
+  function botaoPorOnclick(trecho,raiz){
+    return (raiz||document).querySelector('button[onclick*="'+trecho+'"]');
+  }
+
+  /* Cabecalho de passo */
+  function passo(num,titulo,desc){
+    const d=document.createElement('div');
+    d.className='v6-passo';
+    d.innerHTML='<div class="v6-passo-num">'+num+'</div>'+
+      '<div class="v6-passo-txt"><b>'+titulo+'</b><small>'+desc+'</small></div>';
+    return d;
+  }
+  /* Sublegenda dentro de um botao existente */
+  function sub(btn,texto,dica){
+    if(!btn||btn.querySelector('.v6-sub')) return;
+    const lbl=btn.querySelector('.sb-btn-label');
+    if(lbl){
+      const s=document.createElement('span');
+      s.className='v6-sub'; s.textContent=texto;
+      lbl.appendChild(s);
+    }
+    if(dica&&!btn.title) btn.title=dica;
+  }
+  function renomear(btn,novo){
+    if(!btn) return;
+    const lbl=btn.querySelector('.sb-btn-label');
+    if(!lbl) return;
+    const subEl=lbl.querySelector('.v6-sub');
+    lbl.textContent=novo;
+    if(subEl) lbl.appendChild(subEl);
+  }
+
+  function organizar(){
+    const scroll=$('.sb-scroll');
+    if(!scroll||scroll.dataset.v6Organizado==='1') return;
+
+    const painelV4=document.getElementById('v4DraftPanel');
+    const secPaginas=acharSecaoPorTitulo('Páginas');
+    /* espera o painel V4 ser injetado para nao brigar com ele */
+    if(!painelV4||!secPaginas) return;
+    scroll.dataset.v6Organizado='1';
+
+    /* ---- 1) Remove a secao "Geral", que era um titulo vazio ---- */
+    const geral=acharSecaoPorTitulo('Geral');
+    if(geral && !geral.querySelector('button,input,select')) geral.remove();
+
+    /* ---- 2) PASSO 1: por onde comecar ---- */
+    const btnRapido=botaoPorOnclick('v4AbrirPreenchimentoRapido');
+    const btnAbrir=botaoPorOnclick("fichaJsonInput");
+
+    const p1=passo(1,'Comece por aqui','Preencha os dados de uma vez');
+    scroll.insertBefore(p1,scroll.firstChild);
+
+    if(btnRapido){
+      btnRapido.classList.add('v6-destaque');
+      btnRapido.title='Abre um formulário com cliente, modelos, tecido, cores e grade — separados por página';
+      scroll.insertBefore(btnRapido,p1.nextSibling);
+    }
+    if(btnAbrir){
+      renomear(btnAbrir,'Abrir ficha salva');
+      sub(btnAbrir,'Continuar um arquivo do computador','Abre um arquivo .json de ficha salvo no computador');
+      scroll.insertBefore(btnAbrir,btnRapido?btnRapido.nextSibling:p1.nextSibling);
+    }
+
+    /* ---- 3) PASSO 2: montar a ficha (secao Paginas) ---- */
+    const p2=passo(2,'Monte a ficha','Imagens, textos e páginas');
+    scroll.insertBefore(p2,secPaginas);
+
+    /* rotulos mais claros dentro de Paginas */
+    const bImg=botaoPorOnclick('canvasInput',secPaginas);
+    const bTxt=botaoPorOnclick('criarTexto',secPaginas);
+    const bSeta=botaoPorOnclick('toggleModoSeta',secPaginas);
+    const bCam=botaoPorOnclick('toggleLayersPanel',secPaginas)||botaoPorOnclick('Camadas',secPaginas);
+    const bCor=botaoPorOnclick('adicionarCor',secPaginas);
+    sub(bImg,'Foto do modelo','Clique para escolher uma imagem, ou arraste direto para a folha');
+    sub(bTxt,'Escreva sobre a imagem','Depois dê duplo clique no texto para editar');
+    sub(bSeta,'Aponte um detalhe','Clique e arraste sobre a imagem para desenhar');
+    sub(bCor,'Cores do tecido','Define as cores que aparecem na folha');
+    if(bCam){ renomear(bCam,'Organizar elementos'); sub(bCam,'Ver o que está na frente'); }
+
+    const dica=document.createElement('div');
+    dica.className='v6-dica';
+    dica.textContent='Dica: cada página tem sua própria tabela, grade e imagens.';
+    const navPaginas=document.getElementById('extraPagesNav');
+    if(navPaginas&&navPaginas.parentNode) navPaginas.parentNode.insertBefore(dica,navPaginas);
+
+    /* ---- 4) PASSO 3: salvar (a maior duvida de quem usa) ---- */
+    const secFichas=acharSecaoPorTitulo('Fichas Salvas');
+    const btnRascunho=botaoPorOnclick('v4SalvarRascunho');
+    const btnSalvarJson=botaoPorOnclick('exportarFichaJSON');
+
+    const p3=passo(3,'Salve o trabalho','Rascunho, arquivo ou PDF');
+    const ancora=secFichas||painelV4;
+    if(ancora&&ancora.parentNode) ancora.parentNode.insertBefore(p3,ancora);
+
+    if(btnRascunho){
+      btnRascunho.title='Guarda dentro do próprio sistema, para continuar depois neste computador';
+      if(p3.parentNode) p3.parentNode.insertBefore(btnRascunho,p3.nextSibling);
+    }
+    if(btnSalvarJson){
+      renomear(btnSalvarJson,'Salvar arquivo da ficha');
+      sub(btnSalvarJson,'Guardar ou enviar por e-mail','Gera um arquivo .json que pode ser aberto depois ou em outro computador');
+      if(secFichas) secFichas.insertBefore(btnSalvarJson,secFichas.firstChild.nextSibling);
+    }
+
+    /* explica as tres formas de salvar */
+    if(secFichas){
+      const nota=document.createElement('div');
+      nota.className='v6-dica';
+      nota.innerHTML='<b style="color:rgba(255,255,255,.5)">Rascunho</b> fica no sistema · '+
+                     '<b style="color:rgba(255,255,255,.5)">Arquivo</b> você guarda/envia · '+
+                     '<b style="color:rgba(255,255,255,.5)">PDF</b> é para imprimir e mandar ao cliente.';
+      secFichas.appendChild(nota);
+    }
+
+    /* ---- 5) Configuracoes recolhiveis (menos poluicao visual) ---- */
+    const secCfg=acharSecaoPorTitulo('Configurações');
+    if(secCfg){
+      const tit=secCfg.querySelector('.sb-section-title');
+      const corpo=document.createElement('div');
+      corpo.className='v6-recolhivel';
+      while(tit.nextSibling) corpo.appendChild(tit.nextSibling);
+      const bt=document.createElement('button');
+      bt.className='v6-toggle';
+      bt.innerHTML='<span>Configurações</span><span class="v6-seta">▸</span>';
+      bt.onclick=()=>{ corpo.classList.toggle('aberto'); bt.classList.toggle('aberto'); };
+      tit.replaceWith(bt);
+      secCfg.appendChild(corpo);
+    }
+
+    /* ---- 6) Acao destrutiva isolada, no fim ---- */
+    const btnReset=botaoPorOnclick('v4ResetarFicha');
+    if(btnReset){
+      const box=document.createElement('div');
+      box.className='v6-risco';
+      box.innerHTML='<div class="v6-risco-tit">⚠ Apaga tudo</div>';
+      btnReset.title='Limpa a ficha inteira para começar do zero. Os rascunhos salvos são mantidos.';
+      box.appendChild(btnReset);
+      scroll.appendChild(box);
+    }
+
+    /* ---- 7) Rodape: explica os botoes fixos ---- */
+    const bCat=botaoPorOnclick('enviarParaCatalogacao');
+    if(bCat&&!bCat.title) bCat.title='Envia esta ficha para o módulo Principal, para acompanhar a produção';
+    const bPdf=botaoPorOnclick('exportarPDF');
+    if(bPdf&&!bPdf.title) bPdf.title='Gera o PDF para imprimir ou enviar ao cliente';
+    const bPng=botaoPorOnclick('exportarPNG');
+    if(bPng&&!bPng.title) bPng.title='Salva a folha como imagem (PNG)';
+  }
+
+  /* o painel V4 e injetado ~400-900ms depois; tentamos algumas vezes */
+  let tentativas=0;
+  const timer=setInterval(()=>{
+    organizar();
+    if(++tentativas>14||document.querySelector('.sb-scroll[data-v6-organizado="1"]')) clearInterval(timer);
+  },400);
 })();
 </script>
 

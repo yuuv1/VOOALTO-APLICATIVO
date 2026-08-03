@@ -582,14 +582,50 @@ const _pdfDocCache=new Map();
 
 function ensurePdfJs(){
   if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-  if(pdfJsLoadingPromise) return pdfJsLoadingPromise;
-  pdfJsLoadingPromise=new Promise((resolve,reject)=>{
-    const sc=document.createElement('script');
-    sc.src='./assets/pdf.min.js';
-    sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='./assets/pdf.worker.min.js';resolve(window.pdfjsLib)}catch(e){reject(e)}};
-    sc.onerror=()=>reject(new Error('pdf.js nao carregou'));
-    document.head.appendChild(sc);
-  });
+  /* Dentro do PWA este modulo roda em um iframe srcdoc, cujo documento e
+     "about:blank": o caminho relativo ./assets/ nem sempre resolve. Tentamos
+     varios caminhos, inclusive o absoluto derivado da janela pai. */
+  function basesPossiveis(){
+    const l=[];
+    try{ if(window.parent&&window.parent!==window&&window.parent.location&&window.parent.location.href){
+      l.push(window.parent.location.href.replace(/[^/]*$/,'')); } }catch(e){}
+    try{ if(document.baseURI) l.push(document.baseURI.replace(/[^/]*$/,'')); }catch(e){}
+    try{ if(location&&location.href&&location.href.indexOf('about:')!==0)
+      l.push(location.href.replace(/[^/]*$/,'')); }catch(e){}
+    l.push('./');
+    return l.filter((v,i)=>v&&l.indexOf(v)===i);
+  }
+  function tentar(base){
+    return new Promise((resolve,reject)=>{
+      let pronto=false;
+      /* Timeout obrigatorio: se o navegador bloquear o script (politica de
+         origem no srcdoc), onload e onerror podem nunca disparar e a previa
+         ficaria presa em "Carregando..." para sempre. */
+      const t=setTimeout(()=>{ if(!pronto){ pronto=true; reject(new Error('tempo esgotado em '+base)); } },2500);
+      const fim=(fn,arg)=>{ if(pronto)return; pronto=true; clearTimeout(t); fn(arg); };
+      const sc=document.createElement('script');
+      sc.src=base+'assets/pdf.min.js';
+      sc.onload=()=>{
+        try{
+          if(!window.pdfjsLib) return fim(reject,new Error('carregou sem expor pdfjsLib'));
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+'assets/pdf.worker.min.js';
+          fim(resolve,window.pdfjsLib);
+        }catch(e){ fim(reject,e); }
+      };
+      sc.onerror=()=>fim(reject,new Error('falhou em '+sc.src));
+      document.head.appendChild(sc);
+    });
+  }
+  pdfJsLoadingPromise=(async()=>{
+    const bases=basesPossiveis();
+    let ultimo=null;
+    for(const b of bases){
+      try{ return await tentar(b); }
+      catch(e){ ultimo=e; }
+    }
+    pdfJsLoadingPromise=null;   /* permite nova tentativa depois */
+    throw ultimo||new Error('pdf.js nao carregou');
+  })();
   return pdfJsLoadingPromise;
 }
 function dataUrlToUint8Array(d){const b=atob(d.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
@@ -696,18 +732,24 @@ function hide(){currentCard=null;clearTimeout(hoverTimer);if(previewEl)previewEl
 async function show(card){
   const id=card.dataset.orderId,o=state.orders.find(x=>x.id===id);
   if(!o||!(o.pdfName||o.pdfStored||o.pdfData))return;
-  if(currentCard===card&&previewEl&&previewEl.style.display==='block')return;
+  if(currentCard===card&&previewEl&&previewEl.style.display==='flex')return;
   currentCard=card;const el=ensure();
   el.querySelector('.ph-title').textContent=esc(o.name);
   const wrap=el.querySelector('.ph-canvas-wrap');
   wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Carregando...</div>';
-  pos(lastMouse.x,lastMouse.y);el.style.display='block';
-  const thumb=await getThumbLo(id);
-  if(!thumb||currentCard!==card){wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Sem PDF</div>';return;}
+  pos(lastMouse.x,lastMouse.y);el.style.display='flex';
+  let thumb=null,falha=null;
+  try{ thumb=await getThumbLo(id); }catch(e){ falha=e; console.warn('Previa do PDF falhou:',e); }
+  if(currentCard!==card) return;                       /* mouse ja saiu */
+  if(!thumb){
+    wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px;text-align:center;line-height:1.5">'
+      +(falha?'Não foi possível gerar a prévia.<br>Clique para abrir o PDF.':'Sem PDF')+'</div>';
+    return;
+  }
   const display=thumb.cloneNode(true);
   display.style.maxWidth='100%';display.style.maxHeight='100%';display.style.objectFit='contain';display.style.display='block';
   wrap.innerHTML='';wrap.appendChild(display);
-  pos(lastMouse.x,lastMouse.y);el.style.display='block';
+  pos(lastMouse.x,lastMouse.y);el.style.display='flex';
 }
 /* Pre-cache thumbnails for all visible cards */
 async function preCacheThumbs(){
@@ -718,7 +760,7 @@ async function preCacheThumbs(){
     if(o&&(o.pdfName||o.pdfStored||o.pdfData))getThumbLo(id).catch(()=>{});
   }
 }
-document.addEventListener('mousemove',e=>{lastMouse={x:e.clientX,y:e.clientY};if(previewEl&&previewEl.style.display==='block')pos(e.clientX,e.clientY)});
+document.addEventListener('mousemove',e=>{lastMouse={x:e.clientX,y:e.clientY};if(previewEl&&previewEl.style.display==='flex')pos(e.clientX,e.clientY)});
 document.addEventListener('mouseover',e=>{const card=e.target.closest&&e.target.closest('.order-card');if(!card||expandedColumn)return;currentCard=card;clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>show(card),200)});
 document.addEventListener('mouseout',e=>{const card=e.target.closest&&e.target.closest('.order-card');if(!card)return;if(e.relatedTarget&&card.contains(e.relatedTarget))return;hide()});
 document.addEventListener('scroll',hide,true);
@@ -795,4 +837,671 @@ window.addEventListener('message',function(e){
 
 load();loadTheme();renderAll();migratePdfsToDB().then(renderAll);
 setInterval(checkPendingFicha,2000);
-</script></body></html>
+</script>
+<script id="v6-pdf-drop-fix-js">
+/* ============================================================
+   V6 — Correção do arrastar-e-soltar de PDF
+   ------------------------------------------------------------
+   Problemas corrigidos:
+   1) TRAVAMENTO: não havia guarda global de drop. Soltar o PDF
+      alguns pixels fora da zona (cabeçalho, laterais, espaços
+      vazios) fazia o navegador ABRIR o arquivo por cima do app,
+      substituindo a tela — parecia que "travou".
+   2) NÃO FUNCIONA: a zona de drop era só o #mainArea. Soltar em
+      qualquer outro ponto era ignorado sem nenhum aviso.
+   3) Arquivo não-PDF era descartado em silêncio.
+   4) Vários PDFs de uma vez abriam um prompt() atrás do outro.
+   5) Falha ao ler ou ao gravar o PDF não avisava nada.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  function toastSafe(msg){ try{ toast(msg); }catch(e){ try{console.log(msg)}catch(_){} } }
+  const ehPDF = f => !!f && (f.type==='application/pdf' || /\.pdf$/i.test(f.name||''));
+
+  /* ---------- 1) Guarda global: nunca deixar o navegador abrir o arquivo ---------- */
+  /* Sem isso, soltar fora da zona navega a página inteira para o PDF. */
+  ['dragover','drop'].forEach(tipo=>{
+    window.addEventListener(tipo, e=>{
+      const temArquivo = [...((e.dataTransfer&&e.dataTransfer.types)||[])].includes('Files');
+      if(!temArquivo) return;
+      if(e.__vooaltoTratado) return;   // já tratado por uma zona específica
+      e.preventDefault();              // impede a navegação
+      if(tipo==='drop'){
+        const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];
+        marcarArrasto(false);
+        if(files.length) receberArquivos(files,'baixa');
+      }else{
+        if(e.dataTransfer) e.dataTransfer.dropEffect='copy';
+        marcarArrasto(true);
+      }
+    }, false);
+  });
+
+  window.addEventListener('dragleave', e=>{
+    if(e.relatedTarget===null) marcarArrasto(false);  /* saiu da janela */
+  });
+  window.addEventListener('dragend', ()=>marcarArrasto(false));
+
+  function marcarArrasto(ativo){
+    const el=document.getElementById('mainArea');
+    if(el) el.classList.toggle('drag-over',!!ativo);
+    let ov=document.getElementById('v6DropOverlay');
+    if(ativo && !ov){
+      ov=document.createElement('div');
+      ov.id='v6DropOverlay';
+      ov.style.cssText='position:fixed;inset:0;z-index:99997;pointer-events:none;'+
+        'background:rgba(37,99,235,.10);border:3px dashed #2563EB;border-radius:14px;'+
+        'display:flex;align-items:center;justify-content:center';
+      ov.innerHTML='<div style="background:#111827;color:#fff;padding:12px 22px;border-radius:999px;'+
+        'font-weight:900;font-size:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)">📄 Solte o PDF para adicionar</div>';
+      document.body.appendChild(ov);
+    }else if(!ativo && ov){ ov.remove(); }
+  }
+
+  /* ---------- 2) Marcar eventos tratados pelas zonas existentes ---------- */
+  /* As zonas (colunas do catálogo) continuam funcionando; só avisamos a
+     guarda global para ela não processar o mesmo arquivo duas vezes. */
+  document.addEventListener('drop', e=>{
+    if(e.target && e.target.closest && e.target.closest('.dropzone')) e.__vooaltoTratado=true;
+  }, true);
+
+  /* ---------- 3) Leitura robusta ---------- */
+  function lerPDF(file){
+    return new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload = e=>resolve(e.target.result);
+      r.onerror = ()=>reject(new Error('Falha ao ler "'+file.name+'"'));
+      r.onabort = ()=>reject(new Error('Leitura de "'+file.name+'" cancelada'));
+      try{ r.readAsDataURL(file); }catch(err){ reject(err); }
+    });
+  }
+
+  /* ---------- 4) Fluxo principal, com feedback em cada passo ---------- */
+  let ocupado=false;
+
+  async function receberArquivos(files, status='baixa'){
+    if(ocupado){ toastSafe('Aguarde: ainda processando o arquivo anterior.'); return; }
+
+    const pdfs = files.filter(ehPDF);
+    const outros = files.length - pdfs.length;
+
+    if(!pdfs.length){
+      toastSafe(outros===1 ? 'Esse arquivo não é PDF. Anexe um arquivo .pdf.'
+                           : 'Nenhum PDF encontrado. Anexe arquivos .pdf.');
+      return;
+    }
+    if(outros>0) toastSafe(outros+' arquivo(s) ignorado(s): só PDF é aceito.');
+
+    ocupado=true;
+    let adicionados=0;
+    try{
+      for(const file of pdfs){
+        /* Arquivo vazio/corrompido */
+        if(file.size===0){ toastSafe('"'+file.name+'" está vazio e foi ignorado.'); continue; }
+
+        const sugestao=(file.name||'Ficha').replace(/\.pdf$/i,'');
+        const titulo=prompt('Nome da ficha técnica:', sugestao);
+        if(titulo===null) continue;              /* cancelou este arquivo */
+        const nome=(titulo||'').trim()||sugestao;
+
+        let data;
+        try{ data=await lerPDF(file); }
+        catch(err){ console.error(err); toastSafe('⚠ '+err.message); continue; }
+
+        const o={ id:uid(), name:nome, clientPhone:'', createdAt:today(), createdTs:Date.now(),
+                  note:'', medDays:state.thresholds.med, highDays:state.thresholds.high,
+                  pdfName:file.name, pdfStored:false, status };
+
+        let guardou=false;
+        try{ await storePdfData(o.id,data); guardou=true; }
+        catch(err){ console.error('Falha ao gravar PDF:',err); }
+
+        if(guardou){ o.pdfStored=true; }
+        else{
+          /* Não conseguiu gravar: mantém em memória para a sessão e avisa,
+             em vez de perder o anexo em silêncio. */
+          o.pdfData=data; o.pdfStored=false;
+          toastSafe('⚠ "'+file.name+'" foi anexado, mas não pôde ser guardado permanentemente (armazenamento cheio?).');
+        }
+
+        o.status=autoStatus(o);
+        state.orders.push(o);
+        addHistory('add',+1);
+        adicionados++;
+      }
+
+      if(adicionados){
+        save();
+        renderAll();
+        toastSafe('✔ '+adicionados+' ficha(s) adicionada(s).');
+      }
+    }catch(err){
+      console.error('Erro ao processar PDFs:',err);
+      toastSafe('⚠ Erro inesperado ao adicionar o PDF.');
+    }finally{
+      ocupado=false;
+      marcarArrasto(false);
+    }
+  }
+
+  /* ---------- 5) Substitui as funções antigas ---------- */
+  window.handleDroppedFiles=function(files,status){ receberArquivos([...(files||[])],status||'baixa'); };
+
+  window.pageDragOver=function(e){
+    if([...((e.dataTransfer&&e.dataTransfer.types)||[])].includes('Files')){
+      e.preventDefault(); marcarArrasto(true);
+    }
+  };
+  window.pageDragLeave=function(){ /* a guarda global cuida de limpar */ };
+  window.pageDrop=function(e){
+    const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];
+    if(files.length){ e.preventDefault(); e.stopPropagation(); e.__vooaltoTratado=true;
+      marcarArrasto(false); receberArquivos(files,'baixa'); }
+  };
+
+  /* Zonas das colunas: aceitam arquivo OU reordenação de card */
+  window.dropOrder=function(e,status){
+    e.preventDefault(); e.stopPropagation(); e.__vooaltoTratado=true;
+    e.currentTarget.classList.remove('drag-over');
+    marcarArrasto(false);
+    const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])];
+    if(files.length) return receberArquivos(files,status);
+    const id=e.dataTransfer.getData('text/plain');
+    const o=state.orders.find(x=>x.id===id);
+    if(!o) return;
+    if(status==='concluido') return toastSafe('Use o botão Concluído.');
+    o.status=status; save(); renderAll();
+  };
+
+  /* ---------- 6) Anexo via formulário também fica robusto ---------- */
+  window.readPdfFile=function(file,cb){
+    if(!ehPDF(file)){ toastSafe('Anexe apenas PDF.'); return; }
+    lerPDF(file).then(d=>cb(d,file.name))
+                .catch(err=>{ console.error(err); toastSafe('⚠ '+err.message); });
+  };
+})();
+</script>
+
+
+<script id="v6-catalogo-resiliencia-js">
+/* ============================================================
+   V6 — Blindagem do catálogo (Principal)
+   ------------------------------------------------------------
+   Mesma classe de problema já corrigida na Ficha Técnica:
+   gravação sem tratamento de erro + dado de entrada sem validação.
+
+   1) save() gravava tudo no localStorage sem try/catch. Com o
+      armazenamento cheio, a exceção interrompia o fluxo: a ficha
+      recém-criada sumia da tela e era perdida, sem nenhum aviso.
+   2) importData() fazia JSON.parse sem try/catch e substituía o
+      state inteiro. Importar um arquivo corrompido — ou, pior, um
+      JSON de FICHA TÉCNICA por engano — apagava todo o catálogo
+      sem confirmação e sem volta.
+   3) load() sem defesa contra JSON corrompido no localStorage.
+   ============================================================ */
+(function(){
+  'use strict';
+
+  function toastSafe(msg){ try{ toast(msg); }catch(e){ try{console.log(msg)}catch(_){} } }
+  const KEY_BAK='vooalto_main_catalog_v2_backup';
+
+  /* ---------- 1) save() tolerante a falhas ---------- */
+  if(typeof window.save==='function' && !window.__v6SavePatch){
+    window.__v6SavePatch=true;
+
+    window.save=function(){
+      let payload;
+      try{
+        const clone=JSON.parse(JSON.stringify(state));
+        (clone.orders||[]).forEach(o=>{ if(o.pdfData){ o.pdfStored=true; delete o.pdfData; } });
+        payload=JSON.stringify(clone);
+      }catch(e){
+        console.error('Falha ao preparar os dados do catálogo:',e);
+        toastSafe('⚠ Erro ao preparar os dados. Nada foi alterado.');
+        return false;
+      }
+
+      try{
+        localStorage.setItem('vooalto_main_catalog_v2',payload);
+        /* cópia de segurança rotativa, para o caso de corrupção */
+        try{ localStorage.setItem(KEY_BAK,payload); }catch(e){}
+        return true;
+      }catch(e){
+        console.error('Falha ao gravar o catálogo:',e);
+        /* Última tentativa: libera espaço descartando lixo conhecido */
+        try{
+          localStorage.removeItem(KEY_BAK);
+          localStorage.removeItem('va3_layers');
+          localStorage.setItem('vooalto_main_catalog_v2',payload);
+          toastSafe('⚠ Armazenamento quase cheio. Liberei espaço, mas exporte um backup.');
+          return true;
+        }catch(e2){
+          /* Não conseguiu: avisa de forma inequívoca em vez de perder calado */
+          toastSafe('❌ ARMAZENAMENTO CHEIO — a alteração NÃO foi salva. '+
+                    'Exporte um backup e remova fichas antigas antes de continuar.');
+          try{
+            alert('❌ Não foi possível salvar o catálogo: o armazenamento do navegador está cheio.\n\n'+
+                  'O que fazer agora:\n'+
+                  '1) Clique em "Exportar backup" para não perder nada;\n'+
+                  '2) Exclua fichas antigas que já foram concluídas;\n'+
+                  '3) Refaça a última alteração.\n\n'+
+                  'Atenção: a última alteração ainda NÃO está salva.');
+          }catch(e3){}
+          return false;
+        }
+      }
+    };
+  }
+
+  /* ---------- 2) Importação validada e reversível ---------- */
+  if(typeof window.importData==='function' && !window.__v6ImportPatch){
+    window.__v6ImportPatch=true;
+
+    function pareceBackupDoCatalogo(d){
+      if(!d || typeof d!=='object') return false;
+      if(Array.isArray(d.orders)) return true;                 /* formato esperado */
+      return false;
+    }
+    function pareceFichaTecnica(d){
+      return !!(d && typeof d==='object' &&
+                typeof d._version==='string' && d._version.indexOf('vooalto_ficha')===0);
+    }
+
+    window.importData=function(e){
+      const input=e && e.target;
+      const f=input && input.files && input.files[0];
+      if(!f) return;
+
+      const r=new FileReader();
+
+      r.onerror=()=>{ toastSafe('⚠ Não foi possível ler o arquivo.'); if(input) input.value=''; };
+
+      r.onload=async ev=>{
+        if(input) input.value='';
+        let bruto;
+
+        /* 2a) arquivo precisa ser JSON válido */
+        try{
+          bruto=JSON.parse(ev.target.result);
+        }catch(err){
+          console.error('Backup inválido:',err);
+          toastSafe('⚠ Arquivo inválido: não é um JSON legível.');
+          try{ alert('Este arquivo não é um backup válido.\n\nEscolha o arquivo gerado pelo botão "Exportar backup".'); }catch(e2){}
+          return;
+        }
+
+        /* 2b) precisa ser um backup DO CATÁLOGO, não outra coisa */
+        if(pareceFichaTecnica(bruto)){
+          toastSafe('⚠ Esse arquivo é uma FICHA TÉCNICA, não um backup do catálogo.');
+          try{ alert('Esse arquivo é uma ficha técnica (.json do Criador), não um backup do catálogo.\n\n'+
+                     'Para abrir uma ficha, use o módulo Criador.\n'+
+                     'Aqui, use o arquivo gerado por "Exportar backup".\n\n'+
+                     'Nada foi alterado.'); }catch(e2){}
+          return;
+        }
+        if(!pareceBackupDoCatalogo(bruto)){
+          toastSafe('⚠ Arquivo não reconhecido como backup do catálogo.');
+          try{ alert('Não reconheci este arquivo como um backup do catálogo.\n\nNada foi alterado.'); }catch(e2){}
+          return;
+        }
+
+        /* 2c) importar SUBSTITUI tudo: exige confirmação explícita */
+        const qtdNova=(bruto.orders||[]).length;
+        const qtdAtual=(state && state.orders ? state.orders.length : 0);
+        const ok=confirm('Importar backup?\n\n'+
+          'Fichas no arquivo: '+qtdNova+'\n'+
+          'Fichas atuais: '+qtdAtual+'\n\n'+
+          'A importação SUBSTITUI todo o catálogo atual.'+
+          (qtdAtual?'\n\nAs '+qtdAtual+' ficha(s) atuais serão removidas.':'')+
+          '\n\nDeseja continuar?');
+        if(!ok){ toastSafe('Importação cancelada. Nada foi alterado.'); return; }
+
+        /* 2d) guarda como desfazer o que existe hoje */
+        let anterior=null;
+        try{ anterior=localStorage.getItem('vooalto_main_catalog_v2'); }catch(e2){}
+
+        try{
+          const data=normalizeImportedData(bruto);
+          for(const o of (data.orders||[])){
+            if(o.pdfData){
+              try{ await storePdfData(o.id,o.pdfData); delete o.pdfData; o.pdfStored=true; }
+              catch(err){ console.warn('PDF de "'+(o.name||o.id)+'" não pôde ser guardado:',err); }
+            }
+          }
+          state=data;
+          const gravou=save();
+          load(); renderAll();
+          if(gravou) toastSafe('✔ Backup importado: '+qtdNova+' ficha(s).');
+        }catch(err){
+          console.error('Falha na importação:',err);
+          /* rollback: devolve o catálogo anterior */
+          try{
+            if(anterior!==null){
+              localStorage.setItem('vooalto_main_catalog_v2',anterior);
+              load(); renderAll();
+            }
+          }catch(e3){}
+          toastSafe('⚠ Erro ao importar. O catálogo anterior foi restaurado.');
+        }
+      };
+
+      r.readAsText(f);
+    };
+  }
+
+  /* ---------- 3) load() resistente a dado corrompido ---------- */
+  if(typeof window.load==='function' && !window.__v6LoadPatch){
+    window.__v6LoadPatch=true;
+    const loadOriginal=window.load;
+    window.load=function(){
+      try{
+        return loadOriginal.apply(this,arguments);
+      }catch(e){
+        console.error('Catálogo corrompido, tentando a cópia de segurança:',e);
+        try{
+          const bak=localStorage.getItem(KEY_BAK);
+          if(bak){
+            localStorage.setItem('vooalto_main_catalog_v2',bak);
+            const r=loadOriginal.apply(this,arguments);
+            toastSafe('⚠ O catálogo estava corrompido e foi restaurado da cópia de segurança.');
+            return r;
+          }
+        }catch(e2){}
+        toastSafe('⚠ Não foi possível ler o catálogo salvo. Importe um backup.');
+      }
+    };
+  }
+
+  /* ---------- 4) Aviso preventivo de armazenamento quase cheio ---------- */
+  async function checarEspaco(){
+    try{
+      if(!navigator.storage || !navigator.storage.estimate) return;
+      const {usage,quota}=await navigator.storage.estimate();
+      if(!quota) return;
+      const pct=usage/quota;
+      if(pct>0.85){
+        toastSafe('⚠ Armazenamento em '+Math.round(pct*100)+'%. Exporte um backup e remova fichas antigas.');
+      }
+    }catch(e){}
+  }
+  setTimeout(checarEspaco,5000);
+})();
+</script>
+
+
+<style id="v6-principal-didatico-css">
+/* ============================================================
+   V6 — Principal (catalogo) mais didatico
+   ============================================================ */
+/* faixa explicativa no topo do catalogo */
+.v6p-guia{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:color-mix(in srgb,var(--blue) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--blue) 26%,transparent);
+  border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text)}
+.v6p-guia b{font-weight:900}
+.v6p-guia .v6p-sep{opacity:.35;font-weight:900}
+.v6p-guia .v6p-x{margin-left:auto;border:none;background:rgba(118,118,128,.18);color:var(--muted);
+  border-radius:8px;padding:5px 9px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit}
+.v6p-guia .v6p-x:hover{color:var(--text)}
+
+/* estado vazio mais util */
+.v6p-vazio{text-align:center;padding:26px 18px}
+.v6p-vazio .v6p-ico{font-size:30px;opacity:.5;margin-bottom:8px}
+.v6p-vazio b{display:block;font-size:13px;margin-bottom:4px}
+.v6p-vazio span{display:block;font-size:11.5px;color:var(--muted);line-height:1.5}
+
+/* ajuda */
+#v6pHelpBtn{position:fixed;right:16px;bottom:16px;z-index:99996;width:42px;height:42px;border-radius:50%;
+  border:none;background:var(--blue);color:#fff;font-size:20px;font-weight:900;cursor:pointer;
+  box-shadow:0 8px 26px rgba(37,99,235,.5);transition:all .18s;font-family:inherit}
+#v6pHelpBtn:hover{transform:scale(1.09)}
+#v6pHelp{display:none;position:fixed;inset:0;background:rgba(0,0,0,.64);z-index:100001;
+  align-items:center;justify-content:center;padding:18px}
+#v6pHelp.open{display:flex}
+.v6ph-card{width:min(660px,96vw);max-height:88vh;background:#fff;color:#111827;border-radius:18px;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.45)}
+.v6ph-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  background:linear-gradient(135deg,#0F172A,#1D4ED8);color:#fff}
+.v6ph-head h3{margin:0;font-size:16.5px}
+.v6ph-head button{border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;
+  padding:7px 13px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
+.v6ph-body{padding:20px;overflow:auto;font-size:13px;line-height:1.6;color:#111827}
+.v6ph-step{display:flex;gap:12px;margin-bottom:14px}
+.v6ph-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#2563EB;color:#fff;
+  font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.v6ph-step b{display:block;margin-bottom:2px}
+.v6ph-step span{color:#475569;font-size:12.5px}
+.v6ph-cores{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;margin-top:8px;font-size:12.5px}
+.v6ph-bola{width:12px;height:12px;border-radius:50%;margin-top:4px}
+.v6ph-tip{background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #2563EB;
+  border-radius:9px;padding:11px 13px;margin-top:14px;font-size:12.5px;color:#1E3A8A}
+.v6ph-tip b{display:block;margin-bottom:3px}
+.v6ph-tip.amarelo{background:#FEF3C7;border-color:#FDE68A;border-left-color:#D97706;color:#78350F}
+</style>
+
+<script id="v6-principal-didatico-js">
+/* ============================================================
+   V6 — Principal: linguagem didatica
+   ------------------------------------------------------------
+   Problemas: "Reclassificar", "Exportar backup" e as colunas de
+   prioridade nao explicavam nada; o estado vazio ("Nenhuma ficha
+   aqui") nao dizia o que fazer; nao havia ajuda no modulo.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+
+  /* ---- 1) Faixa-guia no topo do catalogo ---- */
+  function faixa(){
+    const sec=$('catalogo');
+    if(!sec||$('v6pGuia')) return;
+    try{ if(localStorage.getItem('v6_guia_principal_oculta')==='1') return; }catch(e){}
+    const tb=sec.querySelector('.toolbar');
+    if(!tb) return;
+    const d=document.createElement('div');
+    d.id='v6pGuia'; d.className='v6p-guia';
+    d.innerHTML='<span>📄 <b>Arraste um PDF</b> para qualquer lugar da tela para criar uma ficha</span>'+
+      '<span class="v6p-sep">·</span>'+
+      '<span>🖱 <b>Arraste os cartões</b> entre as colunas para mudar a prioridade</span>'+
+      '<button class="v6p-x" onclick="v6pOcultarGuia()">Entendi</button>';
+    tb.parentNode.insertBefore(d,tb.nextSibling);
+  }
+  window.v6pOcultarGuia=function(){
+    const d=$('v6pGuia'); if(d) d.remove();
+    try{ localStorage.setItem('v6_guia_principal_oculta','1'); }catch(e){}
+  };
+
+  /* ---- 2) Tooltips nos botoes de jargao ---- */
+  function tooltips(){
+    const t=[
+      ['renderAll','Recarrega a lista de fichas na tela'],
+      ['openOrderModal','Cadastra uma ficha manualmente (sem arrastar PDF)'],
+      ['autoClassifyAll','Recalcula a prioridade de todas as fichas usando os prazos definidos ao lado'],
+      ['exportData','Baixa um arquivo com TODAS as fichas e PDFs — guarde como segurança'],
+      ["getElementById('importInput')",'Restaura as fichas a partir de um arquivo de backup'],
+      ['switchView(\'dashboard\')','Visão geral: números e gráficos da produção'],
+      ['switchView(\'catalogo\')','Quadro das fichas por prioridade']
+    ];
+    t.forEach(([sel,dica])=>{
+      const b=document.querySelector('button[onclick*="'+sel.replace(/"/g,'\\"')+'"]');
+      if(b&&!b.title) b.title=dica;
+    });
+    /* prazos */
+    const cfg=document.querySelector('.settings');
+    if(cfg&&!cfg.title) cfg.title='A partir de quantos dias uma ficha passa a ser média ou alta prioridade';
+  }
+
+  /* ---- 3) Estado vazio que ensina ---- */
+  function estadoVazio(){
+    document.querySelectorAll('.dropzone .empty').forEach(el=>{
+      if(el.dataset.v6==='1') return;
+      el.dataset.v6='1';
+      const col=el.closest('.column');
+      const titulo=col?(col.querySelector('.col-title')||{}).textContent||'':'';
+      const ehConcluido=/Conclu/i.test(titulo);
+      el.classList.add('v6p-vazio');
+      el.innerHTML= ehConcluido
+        ? '<div class="v6p-ico">✔</div><b>Nada finalizado ainda</b><span>As fichas aparecem aqui quando você clica em “✔ Concluído”.</span>'
+        : '<div class="v6p-ico">📄</div><b>Nenhuma ficha aqui</b><span>Arraste um PDF para esta coluna<br>ou use “＋ Nova ficha”.</span>';
+    });
+  }
+
+  /* ---- 4) Ajuda ---- */
+  function criarAjuda(){
+    if($('v6pHelpBtn')) return;
+    const b=document.createElement('button');
+    b.id='v6pHelpBtn'; b.textContent='?';
+    b.title='Como usar o acompanhamento de produção';
+    b.onclick=()=>v6pAbrirAjuda();
+    document.body.appendChild(b);
+
+    const m=document.createElement('div');
+    m.id='v6pHelp';
+    m.innerHTML=`<div class="v6ph-card">
+      <div class="v6ph-head"><h3>🏠 Como acompanhar a produção</h3>
+        <button onclick="v6pFecharAjuda()">Fechar</button></div>
+      <div class="v6ph-body">
+        <div class="v6ph-step"><div class="v6ph-n">1</div><div>
+          <b>Cadastre a ficha</b>
+          <span>O jeito mais rápido é <b>arrastar o PDF</b> para qualquer lugar da tela. Também dá para usar <b>＋ Nova ficha</b> e preencher à mão, ou enviar direto do módulo <b>Criador</b>.</span></div></div>
+        <div class="v6ph-step"><div class="v6ph-n">2</div><div>
+          <b>Entenda as colunas</b>
+          <span>As fichas mudam de coluna sozinhas conforme os dias vão passando:</span>
+          <div class="v6ph-cores">
+            <div class="v6ph-bola" style="background:#34c759"></div><span><b>Baixa</b> — entrou há pouco tempo</span>
+            <div class="v6ph-bola" style="background:#ffb020"></div><span><b>Média</b> — passou do prazo médio (padrão: 15 dias)</span>
+            <div class="v6ph-bola" style="background:#ff3b64"></div><span><b>Alta</b> — passou do prazo alto (padrão: 22 dias), precisa de atenção</span>
+            <div class="v6ph-bola" style="background:#8e8e93"></div><span><b>Concluídos</b> — só entra pelo botão “✔ Concluído”</span>
+          </div></div></div>
+        <div class="v6ph-step"><div class="v6ph-n">3</div><div>
+          <b>Mova as fichas</b>
+          <span>Arraste o cartão de uma coluna para outra para forçar a prioridade. Quando o pedido ficar pronto, clique em <b>✔ Concluído</b>.</span></div></div>
+        <div class="v6ph-step"><div class="v6ph-n">4</div><div>
+          <b>Ajuste os prazos</b>
+          <span>Os campos <b>Baixa / Média / Alta</b> no topo definem em quantos dias a ficha muda de cor. Depois de mudar, clique em <b>Reclassificar</b> para aplicar em todas.</span></div></div>
+        <div class="v6ph-tip amarelo"><b>💾 Faça backup de vez em quando</b>
+          O botão <b>Exportar backup</b> baixa um arquivo com todas as fichas e PDFs. Guarde esse arquivo: se trocar de computador ou limpar o navegador, é com ele que você recupera tudo.</div>
+        <div class="v6ph-tip"><b>💡 Fluxo completo</b>
+          Monte o orçamento no <b>Orçamento</b> → aprovado, crie a ficha no <b>Criador</b> → envie para catalogação e acompanhe aqui até concluir.</div>
+      </div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{ if(e.target===m) v6pFecharAjuda(); });
+  }
+  window.v6pAbrirAjuda=function(){ criarAjuda(); $('v6pHelp').classList.add('open'); };
+  window.v6pFecharAjuda=function(){ const m=$('v6pHelp'); if(m) m.classList.remove('open'); };
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') v6pFecharAjuda(); });
+
+  function primeiraVez(){
+    try{
+      if(localStorage.getItem('v6_ajuda_principal')) return;
+      localStorage.setItem('v6_ajuda_principal','1');
+      setTimeout(()=>v6pAbrirAjuda(),2200);
+    }catch(e){}
+  }
+
+  /* o catalogo e re-renderizado o tempo todo: reaplica o estado vazio */
+  if(typeof window.renderCatalog==='function' && !window.__v6RenderPatch){
+    window.__v6RenderPatch=true;
+    const orig=window.renderCatalog;
+    window.renderCatalog=function(){ const r=orig.apply(this,arguments); try{ estadoVazio(); }catch(e){} return r; };
+  }
+
+  function iniciar(){ faixa(); tooltips(); estadoVazio(); criarAjuda(); primeiraVez(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,700));
+  else setTimeout(iniciar,700);
+  setTimeout(()=>{faixa();tooltips();estadoVazio();},1800);
+})();
+
+  /* ============================================================
+     V6 — Esconde a interface de apoio (o "?" e afins) na exportacao
+     ------------------------------------------------------------
+     Deliberadamente conservador: NAO cria CSS, NAO usa @media print
+     e NAO acrescenta nenhuma tag ao documento -- este codigo mora
+     dentro de um <script> que ja existia. Tentativas anteriores
+     falharam justamente por mexer no CSS de impressao e por inserir
+     uma tag <style> mal fechada, o que abriu faixas brancas.
+
+     Aqui os elementos sao apenas ocultados com style.display no
+     momento da exportacao e devolvidos logo depois.
+     ============================================================ */
+  (function(){
+    var IDS=['v6HelpBtn','v6HelpModal','v6SaveStatus','v6UndoBar','v6QuickModal',
+             'v6oHelpBtn','v6oHelp','v6pHelpBtn','v6pHelp','v6pGuia','v6DropOverlay',
+             'v6BackupBtns'];
+    var salvos=null;
+    function esconder(){
+      if(salvos!==null) return;
+      salvos=[];
+      for(var i=0;i<IDS.length;i++){
+        var el=document.getElementById(IDS[i]);
+        if(!el) continue;
+        salvos.push({el:el,prev:el.style.display});
+        el.style.display='none';
+      }
+    }
+    function restaurar(){
+      if(salvos===null) return;
+      for(var i=0;i<salvos.length;i++){
+        try{ salvos[i].el.style.display=salvos[i].prev||''; }catch(e){}
+      }
+      salvos=null;
+    }
+    window.addEventListener('beforeprint',esconder);
+    window.addEventListener('afterprint',restaurar);
+    /* rede de seguranca: se o afterprint nao vier, o foco devolve */
+    window.addEventListener('focus',restaurar);
+
+    /* PNG: html2canvas ignora @media print, entao envolvemos a funcao */
+    function protegerPNG(nome){
+      var orig=window[nome];
+      if(typeof orig!=='function'||orig.__v6Prot) return;
+      var nova=function(){
+        esconder();
+        var r;
+        try{ r=orig.apply(this,arguments); }
+        catch(e){ restaurar(); throw e; }
+        if(r&&typeof r.then==='function'){
+          return r.then(function(v){restaurar();return v;},
+                        function(e){restaurar();throw e;});
+        }
+        /* As exportacoes nao devolvem promise: restauramos assim que a
+           captura terminar. Detectamos isso pelo fim das chamadas ao
+           html2canvas, com um limite de seguranca. */
+        var t0=Date.now();
+        var iv=setInterval(function(){
+          if(salvos===null){ clearInterval(iv); return; }
+          if(!window.__v6Capturando || Date.now()-t0>20000){ clearInterval(iv); restaurar(); }
+        },250);
+        return r;
+      };
+      nova.__v6Prot=true;
+      window[nome]=nova;
+    }
+    /* Marca enquanto houver captura em andamento, para saber a hora certa
+       de devolver os elementos (em vez de chutar um tempo fixo). */
+    function marcarHtml2Canvas(){
+      var h=window.html2canvas;
+      if(typeof h!=='function'||h.__v6Prot) return;
+      var nova=function(){
+        window.__v6Capturando=(window.__v6Capturando||0)+1;
+        var p;
+        try{ p=h.apply(this,arguments); }
+        catch(e){ window.__v6Capturando--; throw e; }
+        if(p&&typeof p.then==='function'){
+          return p.then(function(v){ window.__v6Capturando--; return v; },
+                        function(e){ window.__v6Capturando--; throw e; });
+        }
+        window.__v6Capturando--;
+        return p;
+      };
+      nova.__v6Prot=true;
+      window.html2canvas=nova;
+    }
+    function ligar(){ marcarHtml2Canvas(); protegerPNG('exportarPNG'); protegerPNG('exportPNG'); }
+    setTimeout(ligar,400); setTimeout(ligar,1800); setTimeout(ligar,3500);
+  })();
+
+</script>
+
+</body></html>
