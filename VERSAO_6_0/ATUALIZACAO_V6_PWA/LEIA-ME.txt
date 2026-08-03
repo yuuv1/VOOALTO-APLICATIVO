@@ -1,0 +1,50 @@
+VOOALTO V6 - Como instalar em um computador novo
+================================================
+
+1) Instale o Node.js (uma vez por computador)
+   Baixe em: https://nodejs.org  (versao LTS)
+   Instale com as opcoes padrao e reinicie o computador.
+
+2) Copie esta pasta INTEIRA para o computador
+   Pode ser em Documentos, na Area de Trabalho, onde preferir.
+   Nao separe os arquivos: todos precisam ficar juntos.
+
+3) Abra o Vooalto
+   De duplo clique em: instalar_e_abrir_V6.bat
+   Vai abrir uma janela preta e o navegador sozinho.
+
+   IMPORTANTE: mantenha a janela preta aberta enquanto usa o
+   sistema. Fechar essa janela desliga o Vooalto.
+
+
+MENU DO PROGRAMA
+----------------
+  [1] Abrir o Vooalto
+  [2] Abrir limpando o cache  (se abrir desatualizado)
+  [3] Trocar a porta          (se der conflito)
+  [4] Sair
+
+Apertar ENTER direto ja abre normalmente.
+
+
+SE NAO ABRIR
+------------
+* "Node.js nao encontrado": faltou o passo 1.
+* "A porta ja esta sendo usada": o Vooalto ja esta aberto em
+  outra janela. Feche as outras janelas pretas, ou use a
+  opcao [3] para escolher outra porta.
+* A janela preta agora mostra o motivo e espera voce ler
+  antes de fechar.
+
+
+ONDE FICAM OS DADOS
+-------------------
+As fichas e o catalogo ficam salvos no navegador daquele
+computador. Eles NAO viajam junto com esta pasta.
+
+Para levar os dados de um computador para outro:
+  - No modulo Principal, use "Exportar backup";
+  - No outro computador, use "Importar".
+
+Dica: cada porta guarda seus proprios dados. Use sempre a
+mesma porta no dia a dia.
