@@ -576,6 +576,23 @@ function renderCatalog(){const wrap=$('columns');if(!wrap)return;state.orders.fo
 
 /* ═══ PDF PREVIEW SYSTEM — optimized ═══ */
 let pdfJsLoadingPromise=null;
+/* Converte o canvas da miniatura em <img>.
+   cloneNode(true) num <canvas> copia so os atributos: o desenho fica para
+   tras e a previa aparecia em branco. Guardamos o dataURL para nao pagar a
+   conversao a cada hover. */
+function _v6ThumbImg(canvas){
+  if(!canvas) return null;
+  try{
+    if(!canvas.__v6DataUrl) canvas.__v6DataUrl=canvas.toDataURL('image/png');
+    const img=new Image();
+    img.src=canvas.__v6DataUrl;
+    img.alt='';
+    return img;
+  }catch(e){
+    /* Se toDataURL falhar, devolve o proprio canvas (melhor que nada). */
+    return canvas;
+  }
+}
 const _thumbCache=new Map();
 const _thumbCacheHQ=new Map();
 const _pdfDocCache=new Map();
@@ -728,7 +745,7 @@ async function loadExpandedPdfCards(){
       const thumb=await getThumbHQ(id);
       if(thumb){
         box.innerHTML='';box.classList.add('pdf-canvas-ready');
-        const display=thumb.cloneNode(true);
+        const display=_v6ThumbImg(thumb);
         display.style.width='100%';display.style.height='100%';display.style.objectFit='contain';display.style.display='block';
         box.appendChild(display);box.dataset.loaded='1';
       }else{
@@ -770,7 +787,7 @@ async function show(card){
       +(falha?'Não foi possível gerar a prévia.<br>Clique para abrir o PDF.':'Sem PDF')+'</div>';
     return;
   }
-  const display=thumb.cloneNode(true);
+  const display=_v6ThumbImg(thumb);
   display.style.maxWidth='100%';display.style.maxHeight='100%';display.style.objectFit='contain';display.style.display='block';
   wrap.innerHTML='';wrap.appendChild(display);
   pos(lastMouse.x,lastMouse.y);el.style.display='flex';
