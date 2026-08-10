@@ -49,6 +49,29 @@ VERSAO_7_0/
 - Títulos/marcas atualizados para V7: `index.html`, `manifest.webmanifest`, `limpar_cache.html`, `instalar_e_abrir_V7.bat`.
 - `save()` com try/catch + toast quando a quota do localStorage estoura (em vez de exceção silenciosa).
 
+---
+
+## Atualização 2 — porta configurável + preview no hover corrigido
+
+### Porta configurável no .bat
+`instalar_e_abrir_V7.bat` agora aceita a porta de duas formas:
+- **Editar o valor** na linha `set "PORTA=4085"` no topo do arquivo; ou
+- **Passar como argumento:** `instalar_e_abrir_V7.bat 5000`.
+
+O servidor usa `PORT` do ambiente (o `server.js` já lia `process.env.PORT`). O script **não limpa cache automaticamente** — para limpar, abra `http://localhost:PORTA/limpar_cache.html` manualmente (conforme preferência).
+
+### Preview no hover (mouse por cima da ficha) — corrigido
+**Diagnóstico:** o preview depende do `pdf.js`. O código carregava `./assets/pdf.min.js` com caminho **fixo**:
+- No PWA embutido o caminho funciona (os assets ficam na pasta do PWA);
+- **Nas cópias standalone** (`principal_dashboard/index.html`, `fontes/*.html`) a pasta `assets/` fica um nível acima, então o `pdf.js` **não carregava** e o preview **congelava em "Carregando..."** — sem try/catch, o erro era silencioso. Esse é o sintoma de "não mostra o preview da ficha técnica" em versões anteriores.
+
+**Correção aplicada na V7:**
+1. `ensurePdfJs()` tenta vários caminhos (`./assets/`, `../assets/`, `assets/`) — funciona no PWA, nos módulos standalone e servido por qualquer pasta; o `workerSrc` é resolvido do mesmo diretório que carregou o `pdf.min.js`.
+2. `show()` do hover agora tem try/catch: se a renderização falhar, mostra "Sem preview disponível" em vez de congelar.
+3. Checagens do hover/pré-cache incluem o novo flag `pdfInIDB` (PDF no IndexedDB).
+
+> Observação: sem PDF anexado à ficha, o preview **não** aparece (comportamento esperado — só há o que exibir quando a ficha tem PDF).
+
 ## Não aplicado nesta versão (decisões conscientes)
 - **CSS acumulado/`!important` no modo expandido do dashboard** (item de manutenção grande, risco de regressão visual — deixado como está).
 - **Undo/redo não restaura páginas adicionadas/removidas** no Criador (`capState`/`restState` não serializam páginas extras). Requer mudança estrutural.

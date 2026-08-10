@@ -583,15 +583,21 @@ const _thumbCache=new Map();
 const _thumbCacheHQ=new Map();
 const _pdfDocCache=new Map();
 
+/* V7 — carregamento resiliente do pdf.js: tenta varios caminhos (PWA embutido, pastas standalone) */
+const PDFJS_CANDIDATES=['./assets/pdf.min.js','../assets/pdf.min.js','assets/pdf.min.js'];
 function ensurePdfJs(){
   if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
   if(pdfJsLoadingPromise) return pdfJsLoadingPromise;
   pdfJsLoadingPromise=new Promise((resolve,reject)=>{
-    const sc=document.createElement('script');
-    sc.src='./assets/pdf.min.js';
-    sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='./assets/pdf.worker.min.js';resolve(window.pdfjsLib)}catch(e){reject(e)}};
-    sc.onerror=()=>reject(new Error('pdf.js nao carregou'));
-    document.head.appendChild(sc);
+    const tryLoad=(i)=>{
+      if(i>=PDFJS_CANDIDATES.length){reject(new Error('pdf.js nao carregou'));return;}
+      const path=PDFJS_CANDIDATES[i],sc=document.createElement('script');
+      sc.src=path;
+      sc.onload=()=>{try{const dir=path.replace(/pdf\.min\.js$/,'');window.pdfjsLib.GlobalWorkerOptions.workerSrc=dir+'pdf.worker.min.js';resolve(window.pdfjsLib);}catch(e){reject(e);}};
+      sc.onerror=()=>{sc.remove();tryLoad(i+1);};
+      document.head.appendChild(sc);
+    };
+    tryLoad(0);
   });
   return pdfJsLoadingPromise;
 }
@@ -698,15 +704,16 @@ function pos(x,y){const el=ensure();let l=x+18,t=y+18;
 function hide(){currentCard=null;clearTimeout(hoverTimer);if(previewEl)previewEl.style.display='none'}
 async function show(card){
   const id=card.dataset.orderId,o=state.orders.find(x=>x.id===id);
-  if(!o||!(o.pdfName||o.pdfStored||o.pdfData))return;
+  if(!o||!(o.pdfName||o.pdfStored||o.pdfData||o.pdfInIDB))return;
   if(currentCard===card&&previewEl&&previewEl.style.display==='block')return;
   currentCard=card;const el=ensure();
   el.querySelector('.ph-title').textContent=esc(o.name);
   const wrap=el.querySelector('.ph-canvas-wrap');
   wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Carregando...</div>';
   pos(lastMouse.x,lastMouse.y);el.style.display='block';
-  const thumb=await getThumbLo(id);
-  if(!thumb||currentCard!==card){wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Sem PDF</div>';return;}
+  let thumb=null;
+  try{thumb=await getThumbLo(id);}catch(e){console.warn('Falha no preview:',e);thumb=null;}
+  if(!thumb||currentCard!==card){wrap.innerHTML='<div style="color:#94A3B8;font-size:11px;font-weight:700;padding:20px">Sem preview disponível</div>';return;}
   const display=thumb.cloneNode(true);
   display.style.maxWidth='100%';display.style.maxHeight='100%';display.style.objectFit='contain';display.style.display='block';
   wrap.innerHTML='';wrap.appendChild(display);
@@ -718,7 +725,7 @@ async function preCacheThumbs(){
   for(const card of cards){
     const id=card.dataset.orderId;
     const o=state.orders.find(x=>x.id===id);
-    if(o&&(o.pdfName||o.pdfStored||o.pdfData))getThumbLo(id).catch(()=>{});
+    if(o&&(o.pdfName||o.pdfStored||o.pdfData||o.pdfInIDB))getThumbLo(id).catch(()=>{});
   }
 }
 document.addEventListener('mousemove',e=>{lastMouse={x:e.clientX,y:e.clientY};if(previewEl&&previewEl.style.display==='block')pos(e.clientX,e.clientY)});
