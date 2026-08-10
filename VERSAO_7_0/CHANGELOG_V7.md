@@ -72,6 +72,21 @@ O servidor usa `PORT` do ambiente (o `server.js` já lia `process.env.PORT`). O 
 
 > Observação: sem PDF anexado à ficha, o preview **não** aparece (comportamento esperado — só há o que exibir quando a ficha tem PDF).
 
+---
+
+## Atualização 3 — aba inicial trocada + rolagem fantasma corrigida + bug dos rascunhos
+
+### Aba inicial do Principal agora é a Catalogação
+Na visão Principal (módulo `projeto_principal_dashboard_catalogo.html`), a **Catalogação virou a aba inicial/principal** e o **Dashboard virou a secundária** — tanto na ordem dos botões quanto na view que abre por padrão.
+
+### Rolagem fantasma na Catalogação eliminada
+**Diagnóstico (medido com Chromium headless):** a view Catálogo usava `height:calc(100vh - 132px)` nas colunas, mas a toolbar + paddings do `.main` somavam mais que a altura disponível, deixando o `.main` com ~47px de rolagem "fantasma". No modo expandido (fichas juntas) o dropzone não tinha scroll e o giro do mouse vazava para o `.main` — a "rolagem leve que não deveria existir".
+
+**Correção:** a view Catálogo agora é `flex` e as colunas usam `flex:1; min-height:0` — ocupam exatamente a altura disponível, em qualquer tamanho de janela. A única rolagem que existe agora é a interna das colunas/dropzone, e só quando há mais fichas do que cabe na tela (comportamento desejado). Testado: `mainScroll == mainClient` (sem scroll) nos modos normal e expandido.
+
+### Bug do painel de rascunhos no primeiro uso (corrigido)
+`getDrafts()` retornava a **string** `'[]'` quando a chave de rascunhos ainda não existia (primeiro uso / após limpar cache) → `'[]'.map is not a function` quebrava o painel "Rascunhos e fluxo rápido" no console. Agora retorna sempre um array real (`Array.isArray` + fallback `[]`). Esse bug existia desde o V4 do painel (pré-existente) e foi corrigido na V7.
+
 ## Não aplicado nesta versão (decisões conscientes)
 - **CSS acumulado/`!important` no modo expandido do dashboard** (item de manutenção grande, risco de regressão visual — deixado como está).
 - **Undo/redo não restaura páginas adicionadas/removidas** no Criador (`capState`/`restState` não serializam páginas extras). Requer mudança estrutural.

@@ -3114,8 +3114,8 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 (function(){
   const DRAFT_KEY='vooalto_ficha_rascunhos_v4';
   const $id=id=>document.getElementById(id);
-  function safeJsonParse(v,fb){try{return JSON.parse(v)||fb}catch(e){return fb}}
-  function getDrafts(){return safeJsonParse(localStorage.getItem(DRAFT_KEY),'[]')}
+  function safeJsonParse(v,fb){try{const p=JSON.parse(v);return (p===null||p===undefined)?fb:p}catch(e){return fb}}
+  function getDrafts(){const d=safeJsonParse(localStorage.getItem(DRAFT_KEY),[]);return Array.isArray(d)?d:[]}
   function setDrafts(v){localStorage.setItem(DRAFT_KEY,JSON.stringify(v))}
   function nowBR(){return new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
   function injectPanel(){
