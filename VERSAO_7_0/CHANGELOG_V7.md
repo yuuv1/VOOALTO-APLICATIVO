@@ -137,3 +137,27 @@ Na visão Principal (módulo `projeto_principal_dashboard_catalogo.html`), a **C
 - Ordem persiste após reload (página 1 no meio continua no meio, numerada corretamente).
 - Sidebar sem seção Páginas e sem botões de adicionar; toolbar aparece ao clicar na miniatura com os botões certos e esconde ao clicar fora.
 - Modal de download continua listando as páginas na nova ordem; sem erros no console.
+---
+
+## Atualização 6 — Correções no arrastar páginas, numeração e cache (atualização forçada)
+
+### 1. Arrastar páginas — agora vai para QUALQUER posição
+Antes só era possível soltar uma página **antes** da miniatura alvo, então era impossível colocar algo **depois da última** página. Agora:
+- Soltar na **metade esquerda** da miniatura → a página entra **antes** dela;
+- Soltar na **metade direita** → entra **depois** dela;
+- Soltar no **espaço vazio** no fim da faixa (ou no fim) → a página vai para o **último lugar**.
+- Indicadores visuais verdes mostram onde a página vai cair (linha antes/depois, "⇤ soltar aqui (fim)").
+
+### 2. Numeração respeita a ordem das páginas
+A faixa inferior, os rótulos "— PÁGINA X —" dentro do documento, os rodapés "Página X de Y" e o modal de download agora usam a **ordem visual real** (a página 1 pode ser movida e passa a ser numerada conforme a posição). Antes a faixa sempre mostrava a página 1 primeiro, mesmo movida para o fim.
+
+### 3. Toolbar de elementos (imagem/texto/seta/formas/cor)
+Confirmado e testado: ao clicar numa miniatura da faixa, a barra de ferramentas aparece acima da página e os botões realmente adicionam os objetos (teste automatizado: texto e círculo criados com sucesso nas páginas extras e na página 1).
+
+### 4. Atualização forçada do app instalado (importante)
+O problema de "não funcionou" que você viu era o **cache do service worker**: o `sw.js` era servido com `Cache-Control: max-age=3600`, então o navegador podia continuar usando a versão antiga por até 1 hora. Corrigido:
+- `server.js` agora serve `sw.js` e `manifest.webmanifest` com `no-cache`;
+- o registro do service worker usa `updateViaCache:'none'`;
+- `CACHE_NAME` incrementado para `v5`.
+
+> Dica: se o app instalado ainda mostrar versão antiga, abra `http://localhost:PORTA/limpar_cache.html` uma vez (ou feche e reabra o app) — a partir daqui as atualizações chegam na hora.

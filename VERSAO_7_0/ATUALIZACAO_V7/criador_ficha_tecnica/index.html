@@ -1238,7 +1238,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 
 <!-- ═══ V7 — FAIXA DE PÁGINAS (estilo Canva) ═══ -->
 <div id="v7PageToolbar" style="display:none"></div>
-<div id="pageStripWrap"><div id="pageStripList"></div><button class="v7-strip-btn" onclick="adicionarPagina()" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="adicionarPaginaBranca()" title="Adicionar página em branco">🗋</button></div>
+<div id="pageStripWrap"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="adicionarPagina()" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="adicionarPaginaBranca()" title="Adicionar página em branco">🗋</button></div>
 
 <!-- ═══ V7 — MODAL BAIXAR COM SELEÇÃO DE PÁGINAS ═══ -->
 <div id="v7DownloadModal"><div class="v7-dl-card"><div class="v7-dl-head"><h3>⬇ Baixar ficha</h3><button class="v7-btn sec" onclick="fecharV7Download()">✕</button></div><div class="v7-dl-body"><div style="font-size:11px;color:#6B7280;margin-bottom:10px">Selecione as páginas que quer baixar (todas marcadas por padrão):</div><div class="v7-dl-pages" id="v7DlPages"></div><div class="v7-dl-fmt"><span>Formato:</span><label><input type="radio" name="v7DlFmt" value="png" checked> 📸 PNG (imagens)</label><label><input type="radio" name="v7DlFmt" value="pdf"> 🖨 PDF (imprimir)</label></div></div><div class="v7-dl-foot"><button class="v7-btn sec" onclick="fecharV7Download()">Cancelar</button><button class="v7-btn primary" onclick="v7Baixar()">Baixar selecionadas</button></div></div></div>
@@ -3797,7 +3797,9 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 .v7-tb-btn:hover{background:rgba(255,255,255,.28)}
 .v7-thumb{cursor:grab}
 .v7-thumb.dragging{opacity:.4;border-style:dashed}
-.v7-thumb.drop-hint{border-color:#34D399!important;box-shadow:0 0 0 2px rgba(52,211,153,.6)!important}
+.v7-thumb.drop-before{box-shadow:inset 4px 0 0 #34D399!important;border-color:#34D399!important}
+.v7-thumb.drop-after{box-shadow:inset -4px 0 0 #34D399!important;border-color:#34D399!important}
+#pageStripList.drop-end::after{content:'⇤ soltar aqui (fim)';color:#34D399;font-size:9px;font-weight:900;padding:0 6px;white-space:nowrap;display:flex;align-items:center}
 @media print{#v7PageToolbar{display:none!important}}
 
 </style>
@@ -3868,6 +3870,7 @@ let v7NumFolha1=1;
 let v7PaginaAtiva=null; /* {id:'folha1'|p.id, tipo:'normal'|'branca', p1:bool} */
 let v7DragId=null;
 let v7DragMoved=false;
+let v7DropMeta=null;
 
 /* ── Autosave (rascunho vivo) ── */
 function v7Autosave(){
@@ -3931,7 +3934,7 @@ function v7ThumbHtml(folhaId,label,extraId,active,drag){
   clone.querySelectorAll('input,textarea,button,select').forEach(el=>el.disabled=true);
   clone.style.cssText='width:794px;height:1123px;margin:0;padding:4px;box-shadow:none;border:0;border-radius:0;transform:scale('+scale+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none;background:#fff;';
   const delBtn = extraId ? '<button class="v7-thumb-del" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();removerPagina(\''+extraId+'\')" title="Remover página">✕</button>' : '';
-  const dragAttrs = drag ? ' draggable="true" ondragstart="v7ThumbDragStart(event,\''+folhaId+'\')" ondragover="v7ThumbDragOver(event)" ondragleave="v7ThumbDragLeave(event)" ondrop="v7ThumbDrop(event,\''+folhaId+'\')" ondragend="v7ThumbDragEnd(event)"' : '';
+  const dragAttrs = drag ? ' draggable="true" ondragstart="v7ThumbDragStart(event,\''+folhaId+'\')" ondragover="v7ThumbDragOver(event,\''+folhaId+'\')" ondragleave="v7ThumbDragLeave(event)" ondrop="v7ThumbDrop(event,\''+folhaId+'\')" ondragend="v7ThumbDragEnd(event)"' : '';
   return '<div class="v7-thumb'+(active?' active':'')+'" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')"'+dragAttrs+'>'
        +'<div class="v7-thumb-scale">'+clone.outerHTML+'</div>'
        +'<span class="v7-thumb-num">'+label+'</span>'+delBtn+'</div>';
@@ -3941,12 +3944,20 @@ function v7ThumbHtml(folhaId,label,extraId,active,drag){
 function renderPageStrip(){
   const list=$('pageStripList'); if(!list)return;
   list.innerHTML='';
-  const all=[{folhaId:'folha1',label:'Pág. '+(v7NumFolha1||1),extra:null}];
-  paginas.forEach(p=>{all.push({folhaId:'folha_'+p.id,label:'Pág. '+p.num+(p.tipo==='branca'?' 🗋':''),extra:p.id});});
-  all.forEach(pg=>{
-    const ativo = v7PaginaAtiva && (v7PaginaAtiva.p1 ? pg.folhaId==='folha1' : pg.folhaId==='folha_'+v7PaginaAtiva.id);
+  /* renderiza na ORDEM VISUAL REAL (a página 1 pode ter sido movida) */
+  const ids=v7OrdemIds();
+  ids.forEach(id=>{
+    let label,extra=null;
+    if(id==='folha1'){label='Pág. '+(v7NumFolha1||1);}
+    else{
+      const p=paginas.find(x=>x.id===id.replace('folha_',''));
+      if(!p)return;
+      label='Pág. '+p.num+(p.tipo==='branca'?' 🗋':'');
+      extra=p.id;
+    }
+    const ativo = v7PaginaAtiva && (v7PaginaAtiva.p1 ? id==='folha1' : id==='folha_'+v7PaginaAtiva.id);
     const div=document.createElement('div');
-    div.innerHTML=v7ThumbHtml(pg.folhaId,pg.label,pg.extra,ativo,true);
+    div.innerHTML=v7ThumbHtml(id,label,extra,ativo,true);
     list.appendChild(div.firstChild);
   });
   v7AtualizarStripAtiva();
@@ -4028,25 +4039,97 @@ function v7AplicarOrdem(ordem){
   paginas.sort((a,b)=>idsExtras.indexOf(a.id)-idsExtras.indexOf(b.id));
   v7Renumerar();
 }
-function v7Reordenar(movedId,beforeId){
+function v7Reordenar(movedId,beforeId,after){
   /* aceita tanto id de página (p2) quanto id de folha (folha_p2) */
   const norm=id=>{const s=String(id);return(s==='folha1'||s.indexOf('folha_')===0)?s:'folha_'+s;};
-  movedId=norm(movedId); beforeId=norm(beforeId);
+  movedId=norm(movedId); if(beforeId)beforeId=norm(beforeId);
   const ordem=v7OrdemIds();
   const from=ordem.indexOf(movedId);
   if(from===-1)return;
   ordem.splice(from,1);
-  let to=ordem.indexOf(beforeId);
+  let to=beforeId?ordem.indexOf(beforeId):ordem.length;
   if(to===-1)to=ordem.length;
+  if(after)to=to+1;
   ordem.splice(to,0,movedId);
   v7AplicarOrdem(ordem);
+  v7Autosave();
   if(v7PaginaAtiva&&(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id)===movedId)v7PosicionarToolbar();
 }
-function v7ThumbDragStart(e,id){v7DragId=id;v7DragMoved=true;try{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move';}catch(_){e.currentTarget.classList.add('dragging');}e.currentTarget.classList.add('dragging');}
-function v7ThumbDragOver(e){if(!v7DragId)return;e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(_){}e.currentTarget.classList.add('drop-hint');}
-function v7ThumbDragLeave(e){e.currentTarget.classList.remove('drop-hint');}
-function v7ThumbDrop(e,id){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('drop-hint');const moved=v7DragId||(e.dataTransfer?e.dataTransfer.getData('text/plain'):'');if(moved&&moved!==id)v7Reordenar(moved,id);v7DragId=null;}
-function v7ThumbDragEnd(e){e.currentTarget.classList.remove('dragging','drop-hint');v7DragId=null;setTimeout(()=>{v7DragMoved=false;},0);}
+function v7LimparDropIndicadores(){
+  document.querySelectorAll('#pageStripList .v7-thumb').forEach(t=>t.classList.remove('drop-before','drop-after'));
+  const l=$('pageStripList'); if(l)l.classList.remove('drop-end');
+}
+function v7ThumbDragStart(e,id){
+  v7DragId=id;v7DragMoved=true;
+  try{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move';}catch(_){}
+  e.currentTarget.classList.add('dragging');
+  v7LimparDropIndicadores();
+}
+function v7ThumbDragOver(e,id){
+  if(!v7DragId||v7DragId===id)return;
+  e.preventDefault();e.stopPropagation();
+  try{e.dataTransfer.dropEffect='move';}catch(_){}
+  const rect=e.currentTarget.getBoundingClientRect();
+  const after=(e.clientX-rect.left)>(rect.width/2);
+  v7DropMeta={id,after};
+  v7LimparDropIndicadores();
+  e.currentTarget.classList.add(after?'drop-after':'drop-before');
+}
+function v7ThumbDragLeave(e){e.currentTarget.classList.remove('drop-before','drop-after');}
+function v7ThumbDrop(e,id){
+  e.preventDefault();e.stopPropagation();
+  const moved=v7DragId||(e.dataTransfer?e.dataTransfer.getData('text/plain'):'');
+  const meta=v7DropMeta;
+  v7DropMeta=null;v7DragId=null;v7DragMoved=true;
+  v7LimparDropIndicadores();
+  if(moved&&moved!==id)v7Reordenar(moved,id,meta?meta.after:false);
+}
+function v7ListDragOver(e){
+  if(!v7DragId)return;
+  e.preventDefault();e.stopPropagation();
+  try{e.dataTransfer.dropEffect='move';}catch(_){}
+  const thumbs=[...document.querySelectorAll('#pageStripList .v7-thumb')];
+  const last=thumbs[thumbs.length-1];
+  let meta=null;
+  if(last){
+    const lr=last.getBoundingClientRect();
+    meta={id:last.dataset.folha,after:(e.clientX>lr.left+lr.width/2)};
+    if(meta.id===v7DragId&&!meta.after)meta=null;
+  }
+  v7DropMeta=meta;
+  v7LimparDropIndicadores();
+  if(meta){const el=document.querySelector('#pageStripList .v7-thumb[data-folha="'+meta.id+'"]');if(el)el.classList.add(meta.after?'drop-after':'drop-before');}
+  else{const l=$('pageStripList');if(l)l.classList.add('drop-end');}
+}
+function v7ListDragLeave(e){
+  const l=$('pageStripList');if(l)l.classList.remove('drop-end');
+}
+function v7ListDrop(e){
+  e.preventDefault();e.stopPropagation();
+  const moved=v7DragId||(e.dataTransfer?e.dataTransfer.getData('text/plain'):'');
+  const meta=v7DropMeta;
+  v7DropMeta=null;v7DragId=null;v7DragMoved=true;
+  v7LimparDropIndicadores();
+  if(!moved)return;
+  if(meta&&meta.id!==moved){v7Reordenar(moved,meta.id,meta.after);}
+  else{
+    /* soltou no vazio (fim da lista) → mover para o último lugar */
+    const ordem=v7OrdemIds();
+    const from=ordem.indexOf(moved);
+    if(from!==-1&&from!==ordem.length-1){
+      const nova=[...ordem.filter(x=>x!==moved),moved];
+      v7AplicarOrdem(nova);
+      v7Autosave();
+      if(v7PaginaAtiva&&(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id)===moved)v7PosicionarToolbar();
+    }
+  }
+}
+function v7ThumbDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  v7DragId=null;v7DropMeta=null;
+  v7LimparDropIndicadores();
+  setTimeout(()=>{v7DragMoved=false;},0);
+}
 
 /* ── Toolbar de elementos acima da página ativa ── */
 function v7MostrarToolbar(meta){
@@ -4100,11 +4183,17 @@ function abrirV7Download(){
   v7EsconderToolbar();
   const m=$('v7DownloadModal'); if(!m)return;
   const list=$('v7DlPages'); list.innerHTML='';
-  const all=[{folhaId:'folha1',label:'Página '+(v7NumFolha1||1),extra:null}];
-  paginas.forEach(p=>{all.push({folhaId:'folha_'+p.id,label:'Página '+p.num+(p.tipo==='branca'?' (branca)':''),extra:p.id});});
-  all.forEach(pg=>{
+  const ids=v7OrdemIds();
+  ids.forEach(id=>{
+    let label;
+    if(id==='folha1'){label='Página '+(v7NumFolha1||1);}
+    else{
+      const p=paginas.find(x=>x.id===id.replace('folha_',''));
+      if(!p)return;
+      label='Página '+p.num+(p.tipo==='branca'?' (branca)':'');
+    }
     const div=document.createElement('div');div.className='v7-dl-page';
-    div.innerHTML='<label><input type="checkbox" class="v7-dl-chk" checked data-folha="'+pg.folhaId+'">'+v7ThumbHtml(pg.folhaId,pg.label,null,false,false)+'</label>';
+    div.innerHTML='<label><input type="checkbox" class="v7-dl-chk" checked data-folha="'+id+'">'+v7ThumbHtml(id,label,null,false,false)+'</label>';
     list.appendChild(div);
   });
   m.classList.add('open');
