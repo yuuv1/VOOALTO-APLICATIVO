@@ -161,3 +161,31 @@ O problema de "não funcionou" que você viu era o **cache do service worker**: 
 - `CACHE_NAME` incrementado para `v5`.
 
 > Dica: se o app instalado ainda mostrar versão antiga, abra `http://localhost:PORTA/limpar_cache.html` uma vez (ou feche e reabra o app) — a partir daqui as atualizações chegam na hora.
+---
+
+## Atualização 7 — Ctrl+Z de página excluída, menu lateral por página e exportação corrigida
+
+### 1. Ctrl+Z (e Ctrl+Y) funcionam para páginas
+- **Excluiu uma página sem querer? Ctrl+Z traz de volta** — com todo o conteúdo (camadas, textos, cores, produção, grade, medidas e cabeçalho). Ctrl+Y refaz a exclusão.
+- O undo de páginas cobre também **adicionar** página e **reordenar** páginas, integrado ao Ctrl+Z/Ctrl+Y existente (undo de texto/camadas continua funcionando).
+- A pilha de undo de páginas é limpa ao "Nova ficha (limpar)" e ao carregar uma ficha salva.
+
+### 2. Menu lateral vertical ao lado da página
+- Ao **clicar na página** (ou na miniatura da faixa), aparece um **menu vertical ao lado da página** com as ferramentas: 🖼 imagem, ✍ texto, ➜ seta, ▭ retângulo, ● círculo, 🎨 cor e ☰ camadas (página 1).
+- O menu acompanha a página ao rolar e fecha com clique fora/ESC.
+- **NÃO aparece na exportação**: no **PNG** ele é escondido durante a captura (e, por construção, está fora da folha renderizada); no **PDF** o `@media print` o oculta.
+
+### 3. Exportação PNG do orçamento corrigida
+- **Guarda para o html2canvas**: se não estiver carregado (ex.: offline), tenta os arquivos locais antes de desistir, com aviso — antes quebrava silenciosamente e a interface ficava escondida.
+- **Downloads sequenciais com intervalo** (evita o bloqueio de "múltiplos downloads" do navegador com várias páginas).
+- A interface é restaurada **sempre**, com ou sem erro; `logging:false` no console.
+
+### 4. Detalhes técnicos
+- Ids de página agora são únicos (evita colisão ao adicionar depois de excluir).
+- O exportador do criador também foi reforçado (toolbar escondida dentro do loop de captura).
+- `CACHE_NAME` do service worker → v6.
+
+### Verificações (Chromium headless, aba ativa como uso real)
+- Excluir página → Ctrl+Z restaura com texto/layers intactos → Ctrl+Y exclui de novo. Sem erros.
+- Menu lateral aparece ao clicar na folha com os botões corretos.
+- PNG do criador e do orçamento gerados com sucesso (arquivos reais ~390KB / ~660KB), sem a toolbar e sem erros no console.

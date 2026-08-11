@@ -1238,7 +1238,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 
 <!-- ═══ V7 — FAIXA DE PÁGINAS (estilo Canva) ═══ -->
 <div id="v7PageToolbar" style="display:none"></div>
-<div id="pageStripWrap"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="adicionarPagina()" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="adicionarPaginaBranca()" title="Adicionar página em branco">🗋</button></div>
+<div id="pageStripWrap"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('normal')" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('branca')" title="Adicionar página em branco">🗋</button></div>
 
 <!-- ═══ V7 — MODAL BAIXAR COM SELEÇÃO DE PÁGINAS ═══ -->
 <div id="v7DownloadModal"><div class="v7-dl-card"><div class="v7-dl-head"><h3>⬇ Baixar ficha</h3><button class="v7-btn sec" onclick="fecharV7Download()">✕</button></div><div class="v7-dl-body"><div style="font-size:11px;color:#6B7280;margin-bottom:10px">Selecione as páginas que quer baixar (todas marcadas por padrão):</div><div class="v7-dl-pages" id="v7DlPages"></div><div class="v7-dl-fmt"><span>Formato:</span><label><input type="radio" name="v7DlFmt" value="png" checked> 📸 PNG (imagens)</label><label><input type="radio" name="v7DlFmt" value="pdf"> 🖨 PDF (imprimir)</label></div></div><div class="v7-dl-foot"><button class="v7-btn sec" onclick="fecharV7Download()">Cancelar</button><button class="v7-btn primary" onclick="v7Baixar()">Baixar selecionadas</button></div></div></div>
@@ -1270,8 +1270,10 @@ let totalPaginas=1;
 
 function adicionarPagina(){
 totalPaginas++;
-const num=totalPaginas;
-const pid='p'+num;
+let num=totalPaginas;
+let pid='p'+num;
+while(paginas.find(x=>x.id===pid)){num++;pid='p'+num;}
+totalPaginas=num;
 const pageData={
 id:pid,num,
 layers:[],selId:null,zCnt:10,
@@ -1321,8 +1323,10 @@ snap();
 /* ═══ PÁGINA BRANCA ═══ */
 function adicionarPaginaBranca(){
 totalPaginas++;
-const num=totalPaginas;
-const pid='pb'+num;
+let num=totalPaginas;
+let pid='pb'+num;
+while(paginas.find(x=>x.id===pid)){num++;pid='pb'+num;}
+totalPaginas=num;
 const pageData={
 id:pid,num,
 layers:[],selId:null,zCnt:10,
@@ -2880,6 +2884,7 @@ window.addEventListener('message', function(e) {
 function limparParaNovaFicha(novoNum) {
   _editandoFichaId = null;
   try{ localStorage.removeItem('vooalto_v7_ficha_ativa'); }catch(e){}
+  try{ v7PageUndoStack=[]; v7PageRedoStack=[]; }catch(e){}
   [...paginas].forEach(pg => removerPagina(pg.id));
   ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id => {
     const el = $(id); if(el) el.innerHTML = '';
@@ -2928,6 +2933,7 @@ function importarFichaJSON(e) {
 }
 
 function restaurarDeJSON(d) {
+  try{ v7PageUndoStack=[]; v7PageRedoStack=[]; }catch(e){}
   CAMPOS_INPUT_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.value = d[id]; });
   CAMPOS_CE_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.innerHTML = d[id]; });
   if(d._grade) { document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i) => { if(d._grade[i] !== undefined) { el.value = d._grade[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); } }); }
@@ -3791,7 +3797,8 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 
 
 /* V7 — TOOLBAR DE PÁGINA + ARRASTAR PARA REORDENAR */
-#v7PageToolbar{position:fixed;z-index:9650;display:flex;align-items:center;gap:4px;background:rgba(15,23,42,.97);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:6px 8px;box-shadow:0 12px 36px rgba(0,0,0,.45)}
+#v7PageToolbar{position:fixed;z-index:9650;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(15,23,42,.97);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:7px 6px;box-shadow:0 12px 36px rgba(0,0,0,.45)}
+.v7-tb-label{margin:0 0 3px!important;text-align:center!important;writing-mode:initial!important}
 .v7-tb-label{font-size:8.5px;font-weight:900;color:#93C5FD;text-transform:uppercase;letter-spacing:.6px;margin-right:4px;white-space:nowrap}
 .v7-tb-btn{border:0;background:rgba(255,255,255,.10);color:#fff;width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
 .v7-tb-btn:hover{background:rgba(255,255,255,.28)}
@@ -3933,12 +3940,99 @@ function v7ThumbHtml(folhaId,label,extraId,active,drag){
   clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
   clone.querySelectorAll('input,textarea,button,select').forEach(el=>el.disabled=true);
   clone.style.cssText='width:794px;height:1123px;margin:0;padding:4px;box-shadow:none;border:0;border-radius:0;transform:scale('+scale+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none;background:#fff;';
-  const delBtn = extraId ? '<button class="v7-thumb-del" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();removerPagina(\''+extraId+'\')" title="Remover página">✕</button>' : '';
+  const delBtn = extraId ? '<button class="v7-thumb-del" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();v7RemoverPaginaComUndo(\''+extraId+'\')" title="Remover página">✕</button>' : '';
   const dragAttrs = drag ? ' draggable="true" ondragstart="v7ThumbDragStart(event,\''+folhaId+'\')" ondragover="v7ThumbDragOver(event,\''+folhaId+'\')" ondragleave="v7ThumbDragLeave(event)" ondrop="v7ThumbDrop(event,\''+folhaId+'\')" ondragend="v7ThumbDragEnd(event)"' : '';
   return '<div class="v7-thumb'+(active?' active':'')+'" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')"'+dragAttrs+'>'
        +'<div class="v7-thumb-scale">'+clone.outerHTML+'</div>'
        +'<span class="v7-thumb-num">'+label+'</span>'+delBtn+'</div>';
 }
+
+/* ── UNDO/REDO DE PÁGINAS (Ctrl+Z restaura página excluída) ── */
+let v7PageUndoStack=[];
+let v7PageRedoStack=[];
+function v7PushPageUndo(op){v7PageUndoStack.push(op);if(v7PageUndoStack.length>60)v7PageUndoStack.shift();v7PageRedoStack=[];}
+function v7CapturarPaginaExtra(p){
+  const pid=p.id;
+  const prod=[];document.querySelectorAll('#prodLinhas_'+pid+' tr').forEach(tr=>{const inps=tr.querySelectorAll('input');prod.push({modelo:inps[0]?inps[0].value:'',valor:inps[1]?inps[1].value:'',qtd:inps[2]?inps[2].value:''});});
+  const medFem=[],medMasc=[];
+  document.querySelectorAll('#folha_'+pid+' .med-bloco.fem .med-inp').forEach(el=>medFem.push(el.value));
+  document.querySelectorAll('#folha_'+pid+' .med-bloco.masc .med-inp').forEach(el=>medMasc.push(el.value));
+  const gm=[],gb=[],gi2=[];
+  document.querySelectorAll('.gi[data-g="'+pid+'m"]').forEach(el=>gm.push(el.value));
+  document.querySelectorAll('.gi[data-g="'+pid+'b"]').forEach(el=>gb.push(el.value));
+  document.querySelectorAll('.gi[data-g="'+pid+'i"]').forEach(el=>gi2.push(el.value));
+  const cores=[];
+  document.querySelectorAll('#coresList_'+pid+' [id^="ci_"]').forEach(it=>{const i2=it.id.replace('ci_','');cores.push({hex:($('cp_'+i2)||{}).value||'#3B82F6',nome:($('cni_'+i2)||{}).value||'COR'});});
+  return {
+    id:p.id,tipo:p.tipo,num:p.num,corId:p.corId||0,linhaId:p.linhaId||0,zCnt:p.zCnt||10,
+    hdr:{fichaNum:($('fichaNum_'+pid)||{}).value||'',fichaData:($('fichaData_'+pid)||{}).value||'',previsao:($('previsao_'+pid)||{}).value||'',sepTxt:($('sepTxt_'+pid)||{}).value||'',tipoTecido:($('tipoTecido_'+pid)||{}).textContent||'',entradaVal:($('entradaVal_'+pid)||{}).value||''},
+    prod,med:{fem:medFem,masc:medMasc},grade:{m:gm,b:gb,i:gi2},cores,
+    layers:(p.layers||[]).map(serLayer)
+  };
+}
+function v7CriarPaginaRestaurada(snap,index){
+  if(!snap||!snap.id)return;
+  const pid=snap.id;
+  const p={id:pid,num:snap.num||index+2,layers:[],selId:null,zCnt:snap.zCnt||10,modoSeta:false,currentArrStyle:'full',linhaId:snap.linhaId||0,corId:snap.corId||0,tipo:snap.tipo||'normal'};
+  const lbl=document.createElement('div');lbl.className='page-label';lbl.id='label_'+pid;
+  lbl.textContent=(p.tipo==='branca')?'— PÁGINA '+(snap.num||'')+' (BRANCA) —':'— PÁGINA '+(snap.num||'')+' —';
+  const folha=document.createElement('div');folha.className=p.tipo==='branca'?'folha-branca':'folha';folha.id='folha_'+pid;
+  folha.innerHTML=p.tipo==='branca'?htmlPaginaBranca(p):htmlPaginaExtra(p);
+  const pw=$('pw');
+  const folhas=[...pw.querySelectorAll('.folha,.folha-branca')];
+  const ref=folhas[index]?folhas[index]:null;
+  if(ref){pw.insertBefore(lbl,ref);pw.insertBefore(folha,ref);}else{pw.appendChild(lbl);pw.appendChild(folha);}
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.style.display='none';inp.id='canvasInput_'+pid;
+  inp.onchange=e=>onCanvasFilesExtra(e,p);document.body.appendChild(inp);
+  paginas.splice(Math.min(index,paginas.length),0,p);
+  const tb=$('prodLinhas_'+pid);if(tb)tb.innerHTML='';
+  p.linhaId=0;
+  (snap.prod||[]).forEach(r=>criarLinhaExtra(p,r.modelo||'',r.valor||'',r.qtd||''));
+  if(snap.cores&&snap.cores.length){const lista=$('coresList_'+pid);if(lista)lista.innerHTML='';p.corId=0;snap.cores.forEach(c=>_addCorExtra(p,c.hex,c.nome));}
+  v7AplicarPaginaSalva(p,snap);
+  const ci=$('canvasInner_'+pid);
+  if(ci)new ResizeObserver(()=>{p.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)posElExtra(p,l,el,false);});}).observe(ci);
+  totalPaginas=paginas.length+1;
+  if(typeof v7Renumerar==='function')v7Renumerar();
+  if(typeof atualizarRodapes==='function')atualizarRodapes();
+  if(typeof renderPageStrip==='function')renderPageStrip();
+  if(typeof v7Autosave==='function')v7Autosave();
+}
+function v7AdicionarPaginaComUndo(tipo){
+  const idx=paginas.length;
+  if(tipo==='branca')adicionarPaginaBranca();else adicionarPagina();
+  const p=paginas[paginas.length-1];
+  if(p)v7PushPageUndo({type:'add',index:idx,id:p.id,snap:v7CapturarPaginaExtra(p)});
+  if(typeof v7Autosave==='function')v7Autosave();
+}
+function v7RemoverPaginaComUndo(pid){
+  const idx=paginas.findIndex(p=>p.id===pid);
+  if(idx===-1)return;
+  v7PushPageUndo({type:'remove',index:idx,snap:v7CapturarPaginaExtra(paginas[idx])});
+  removerPagina(pid);
+}
+function v7PageDesfazer(op){
+  if(!op)return;
+  if(op.type==='remove'){v7CriarPaginaRestaurada(op.snap,Math.min(op.index,paginas.length));}
+  else if(op.type==='add'){const p=paginas.find(x=>x.id===op.id);if(p)removerPagina(p.id);}
+  else if(op.type==='reorder'){v7AplicarOrdem(op.ordemAntes);}
+  if(typeof v7Autosave==='function')v7Autosave();
+}
+function v7PageRefazer(op){
+  if(!op)return;
+  if(op.type==='remove'){const ex=paginas.find(x=>x.id===op.snap.id);if(ex)removerPagina(ex.id);}
+  else if(op.type==='add'){const ex=paginas.find(x=>x.id===op.id);if(!ex)v7CriarPaginaRestaurada(op.snap,Math.min(op.index,paginas.length));}
+  else if(op.type==='reorder'){v7AplicarOrdem(op.ordemDepois);}
+  if(typeof v7Autosave==='function')v7Autosave();
+}
+if(window.undo){const _u=window.undo;window.undo=function(){
+  if(v7PageUndoStack.length){const op=v7PageUndoStack.pop();v7PageRedoStack.push(op);v7PageDesfazer(op);toast('↩ Página desfeita');return;}
+  return _u.apply(this,arguments);
+};}
+if(window.redo){const _r=window.redo;window.redo=function(){
+  if(v7PageRedoStack.length){const op=v7PageRedoStack.pop();v7PageUndoStack.push(op);v7PageRefazer(op);toast('↪ Página refeita');return;}
+  return _r.apply(this,arguments);
+};}
 
 /* ── Faixa de páginas ── */
 function renderPageStrip(){
@@ -4043,14 +4137,16 @@ function v7Reordenar(movedId,beforeId,after){
   /* aceita tanto id de página (p2) quanto id de folha (folha_p2) */
   const norm=id=>{const s=String(id);return(s==='folha1'||s.indexOf('folha_')===0)?s:'folha_'+s;};
   movedId=norm(movedId); if(beforeId)beforeId=norm(beforeId);
-  const ordem=v7OrdemIds();
-  const from=ordem.indexOf(movedId);
+  const original=v7OrdemIds();
+  const from=original.indexOf(movedId);
   if(from===-1)return;
+  const ordem=original.slice();
   ordem.splice(from,1);
   let to=beforeId?ordem.indexOf(beforeId):ordem.length;
   if(to===-1)to=ordem.length;
   if(after)to=to+1;
   ordem.splice(to,0,movedId);
+  v7PushPageUndo({type:'reorder',ordemAntes:original,ordemDepois:ordem.slice()});
   v7AplicarOrdem(ordem);
   v7Autosave();
   if(v7PaginaAtiva&&(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id)===movedId)v7PosicionarToolbar();
@@ -4118,6 +4214,7 @@ function v7ListDrop(e){
     const from=ordem.indexOf(moved);
     if(from!==-1&&from!==ordem.length-1){
       const nova=[...ordem.filter(x=>x!==moved),moved];
+      v7PushPageUndo({type:'reorder',ordemAntes:ordem.slice(),ordemDepois:nova});
       v7AplicarOrdem(nova);
       v7Autosave();
       if(v7PaginaAtiva&&(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id)===moved)v7PosicionarToolbar();
@@ -4150,6 +4247,7 @@ function v7MostrarToolbar(meta){
   tb.style.display='flex';
   v7PosicionarToolbar();
 }
+function v7MostrarToolbarP1(){v7MostrarToolbar({id:'folha1',tipo:'normal',p1:true});}
 function v7ToolAcao(a){
   const m=v7PaginaAtiva; if(!m)return;
   const pid=m.id,isP1=m.p1;
@@ -4169,11 +4267,11 @@ function v7PosicionarToolbar(){
   const el=document.getElementById(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id);
   if(!el)return;
   const r=el.getBoundingClientRect();
-  const w=tb.offsetWidth||200;
-  let left=r.left+r.width/2-w/2;
-  left=Math.max(8,Math.min(left,window.innerWidth-w-8));
-  let top=r.top-tb.offsetHeight-10;
-  if(top<8)top=r.top+10;
+  const w=tb.offsetWidth||46,h=tb.offsetHeight||220;
+  let left=r.right+10;
+  if(left+w>window.innerWidth-8)left=r.left-w-10;
+  let top=r.top+40;
+  top=Math.max(8,Math.min(top,window.innerHeight-h-8));
   tb.style.left=left+'px';tb.style.top=top+'px';
 }
 function v7EsconderToolbar(){const tb=$('v7PageToolbar');if(tb)tb.style.display='none';}
@@ -4215,10 +4313,13 @@ function v7NomeArquivo(){
   return n;
 }
 function v7BaixarPNG(folhaIds){
+  v7EsconderToolbar();
   if(typeof prepPrint==='function')prepPrint();
+  v7EsconderToolbar();
   toast('📸 Gerando PNG das páginas selecionadas...');
   const doIt=async()=>{
     for(const id of folhaIds){
+      v7EsconderToolbar();
       const el=document.getElementById(id); if(!el)continue;
       try{
         const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false,windowWidth:794,windowHeight:1123});
@@ -4229,6 +4330,7 @@ function v7BaixarPNG(folhaIds){
       }catch(err){console.error('html2canvas error:',err);toast('❌ Erro ao exportar página '+id,'erro');}
     }
     if(typeof restAllPx==='function')restAllPx();
+    if(v7PaginaAtiva&&typeof v7MostrarToolbar==='function'){try{v7MostrarToolbar(v7PaginaAtiva);}catch(e){}}
     toast('✅ PNG exportado!');
   };
   if(window.html2canvas){doIt();}
@@ -4260,8 +4362,16 @@ if(window.restaurarDeJSON){const _rest=window.restaurarDeJSON;window.restaurarDe
 if(window.capturarFichaParaJSON){const _cap=window.capturarFichaParaJSON;window.capturarFichaParaJSON=function(){const d=_cap.apply(this,arguments);try{d._ordemPaginas=v7OrdemIds();}catch(e){}return d;};}
 document.addEventListener('input',()=>v7Autosave());
 document.addEventListener('mousedown',e=>{
-  if(e.target.closest&&(e.target.closest('#v7PageToolbar')||e.target.closest('#pageStripWrap')))return;
+  if(e.target.closest&&(e.target.closest('#v7PageToolbar')||e.target.closest('#pageStripWrap')||e.target.closest('.folha,.folha-branca')))return;
   v7EsconderToolbar();
+});
+document.addEventListener('click',e=>{
+  const f=e.target.closest&&e.target.closest('.folha,.folha-branca');
+  if(!f)return;
+  let meta=null;
+  if(f.id==='folha1')meta={id:'folha1',tipo:'normal',p1:true};
+  else{const pid=f.id.replace('folha_','');const p=paginas.find(x=>x.id===pid);if(p)meta={id:p.id,tipo:p.tipo,p1:false};}
+  if(meta){v7MostrarToolbar(meta);v7AtualizarStripAtiva();}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')v7EsconderToolbar();});
 window.addEventListener('scroll',()=>{clearTimeout(v7ScrollTimer);v7ScrollTimer=setTimeout(()=>{v7AtualizarStripAtiva();v7PosicionarToolbar();},150);},true);

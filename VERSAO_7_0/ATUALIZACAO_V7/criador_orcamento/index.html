@@ -1729,6 +1729,20 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     
     // Export PNG captures all pages one by one as dynamic downloads
     function exportPNG() {
+      /* V7 — garante o html2canvas (local primeiro, CDN como fallback) */
+      if(typeof html2canvas !== 'function'){
+        const paths=['../assets/html2canvas.min.js','./assets/html2canvas.min.js','assets/html2canvas.min.js'];
+        let i=0;
+        const tryLoad=()=>{
+          if(i>=paths.length){if(typeof toast==='function')toast('❌ Não foi possível carregar o html2canvas (offline?)','erro');return;}
+          const s=document.createElement('script');s.src=paths[i];
+          s.onload=()=>setTimeout(()=>exportPNG(),250);
+          s.onerror=()=>{s.remove();i++;tryLoad();};
+          document.head.appendChild(s);
+        };
+        tryLoad();
+        return;
+      }
       /* Hide ALL editor UI elements before capturing — must stay hidden
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
@@ -1742,36 +1756,40 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         });
       });
 
-      /* Capture every page, collecting promises so we restore UI only AFTER
-         all renders complete */
-      const promises = documentPages.map(pState => {
-        const page = document.getElementById(`printable-a4-page-${pState.id}`);
-        const prevShadow = page.style.boxShadow;
-        page.style.boxShadow = 'none';
-
-        return html2canvas(page, {
-          scale: 2.5,
-          useCORS: true,
-          backgroundColor: '#F3F0E7'
-        }).then(canvas => {
-          page.style.boxShadow = prevShadow || '0 15px 35px rgba(0, 0, 0, 0.4)';
-          const link = document.createElement('a');
-          link.download = `PROPOSTA DE VENDA - Pagina ${pState.id} - ${Date.now()}.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        }).catch(err => {
-          page.style.boxShadow = prevShadow || '0 15px 35px rgba(0, 0, 0, 0.4)';
-          console.error('html2canvas error:', err);
-        });
-      });
-
-      /* Restore editor UI only after ALL captures finish */
-      Promise.all(promises).finally(() => {
+      /* Capture pages one by one (evita o bloqueio de múltiplos downloads
+         do navegador) e restaura a UI no final, com ou sem erro */
+      (async () => {
+        for(const pState of documentPages){
+          const page = document.getElementById(`printable-a4-page-${pState.id}`);
+          if(!page)continue;
+          const prevShadow = page.style.boxShadow;
+          page.style.boxShadow = 'none';
+          try{
+            const canvas = await html2canvas(page, {
+              scale: 2.5,
+              useCORS: true,
+              backgroundColor: '#F3F0E7',
+              logging: false
+            });
+            page.style.boxShadow = prevShadow || '0 15px 35px rgba(0, 0, 0, 0.4)';
+            const link = document.createElement('a');
+            link.download = `PROPOSTA DE VENDA - Pagina ${pState.id} - ${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            await new Promise(r=>setTimeout(r,400));
+          }catch(err){
+            page.style.boxShadow = prevShadow || '0 15px 35px rgba(0, 0, 0, 0.4)';
+            console.error('html2canvas error:', err);
+            if(typeof toast==='function')toast('❌ Erro ao exportar página '+pState.id,'erro');
+          }
+        }
         saved.forEach(({el, prevDisplay, prevVisibility}) => {
           el.style.display = prevDisplay || '';
           el.style.visibility = prevVisibility || '';
         });
-      });
+      })();
     }
   </script>
 
