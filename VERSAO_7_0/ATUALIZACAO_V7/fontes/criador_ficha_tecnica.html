@@ -683,6 +683,44 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 [data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
+
+/* ═══ V7 — FAIXA DE PÁGINAS ESTILO CANVA + BAIXAR COM SELEÇÃO ═══ */
+#pageStripWrap{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.93);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:8px 10px;z-index:9600;box-shadow:0 12px 40px rgba(0,0,0,.45);max-width:72vw;overflow-x:auto;overflow-y:hidden}
+#pageStripList{display:flex;gap:8px;align-items:center}
+.v7-thumb{position:relative;width:64px;height:92px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,.28);cursor:pointer;background:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.v7-thumb.active{border-color:#3B82F6;box-shadow:0 0 0 2px rgba(59,130,246,.55)}
+.v7-thumb-scale{position:absolute;top:0;left:0;width:64px;height:92px;overflow:hidden}
+.v7-thumb-scale .folha,.v7-thumb-scale .folha-branca{margin:0!important;box-shadow:none!important;border:0!important;border-radius:0!important}
+.v7-thumb-num{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:7.5px;font-weight:900;text-align:center;padding:2px;letter-spacing:.4px;line-height:1.2}
+.v7-thumb-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:0;background:rgba(239,68,68,.92);color:#fff;font-size:9px;line-height:1;cursor:pointer;z-index:5;padding:0}
+.v7-thumb-del:hover{background:#ef4444}
+.v7-strip-btn{flex-shrink:0;width:38px;height:38px;border-radius:10px;border:1px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.08);color:#fff;font-size:17px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
+.v7-strip-btn:hover{background:rgba(255,255,255,.22)}
+@media(max-width:900px){#pageStripWrap{max-width:96vw;bottom:8px}}
+@media print{#pageStripWrap,#v7DownloadModal{display:none!important}}
+#v7DownloadModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9700;align-items:center;justify-content:center;padding:16px}
+#v7DownloadModal.open{display:flex}
+.v7-dl-card{width:min(780px,96vw);max-height:92vh;background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 28px 80px rgba(0,0,0,.35);font-family:'Segoe UI',system-ui,sans-serif}
+.v7-dl-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #E5E7EB}
+.v7-dl-head h3{margin:0;font-size:15px;color:#111827}
+.v7-dl-head .v7-btn{padding:6px 12px}
+.v7-dl-body{padding:14px 18px;overflow:auto;flex:1}
+.v7-dl-pages{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px}
+.v7-dl-page label{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:10px;color:#374151;font-weight:700;text-align:center}
+.v7-dl-page .v7-thumb{width:64px;height:92px;border-color:#D1D5DB}
+.v7-dl-page .v7-thumb-scale{width:64px;height:92px}
+.v7-dl-page input[type="checkbox"]{width:16px;height:16px;accent-color:#2563EB;cursor:pointer}
+.v7-dl-page .v7-thumb.dim{opacity:.45;border-color:#CBD5E1}
+.v7-dl-fmt{margin:14px 0 4px;display:flex;gap:14px;align-items:center;font-size:12px;color:#111827;font-weight:700}
+.v7-dl-fmt label{display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer}
+.v7-dl-fmt input{accent-color:#2563EB;cursor:pointer}
+.v7-dl-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #E5E7EB}
+.v7-btn{border:0;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
+.v7-btn.sec{background:#F3F4F6;color:#111827}
+.v7-btn.sec:hover{background:#E5E7EB}
+.v7-btn.primary{background:#111827;color:#fff}
+.v7-btn.primary:hover{background:#1F2937}
+
 </style>
 </head>
 <body>
@@ -812,16 +850,12 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <span style="font-size:13px;font-weight:900">Enviar para Catalogação</span>
 </button>
 <div class="sb-export-row">
-<button class="sb-footer-btn sb-pdf sb-export-half" onclick="exportarPDF()">
-<span style="font-size:14px">🖨</span>
-<span>Exportar PDF</span>
-</button>
-<button class="sb-footer-btn sb-png sb-export-half" onclick="exportarPNG()">
-<span style="font-size:14px">📸</span>
-<span>Exportar PNG</span>
+<button class="sb-footer-btn sb-pdf" onclick="abrirV7Download()" style="width:100%">
+<span style="font-size:14px">⬇</span>
+<span>Baixar (escolher páginas)</span>
 </button>
 </div>
-<div class="sb-version">VOOALTO UNIFORMES · V6</div>
+<div class="sb-version">VOOALTO UNIFORMES · V7</div>
 </div>
 </nav>
 <button id="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/expandir menu">❮</button>
@@ -1256,6 +1290,13 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 </div>
 </div>
 </div>
+
+<!-- ═══ V7 — FAIXA DE PÁGINAS (estilo Canva) ═══ -->
+<div id="pageStripWrap"><div id="pageStripList"></div><button class="v7-strip-btn" onclick="adicionarPagina()" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="adicionarPaginaBranca()" title="Adicionar página em branco">🗋</button></div>
+
+<!-- ═══ V7 — MODAL BAIXAR COM SELEÇÃO DE PÁGINAS ═══ -->
+<div id="v7DownloadModal"><div class="v7-dl-card"><div class="v7-dl-head"><h3>⬇ Baixar ficha</h3><button class="v7-btn sec" onclick="fecharV7Download()">✕</button></div><div class="v7-dl-body"><div style="font-size:11px;color:#6B7280;margin-bottom:10px">Selecione as páginas que quer baixar (todas marcadas por padrão):</div><div class="v7-dl-pages" id="v7DlPages"></div><div class="v7-dl-fmt"><span>Formato:</span><label><input type="radio" name="v7DlFmt" value="png" checked> 📸 PNG (imagens)</label><label><input type="radio" name="v7DlFmt" value="pdf"> 🖨 PDF (imprimir)</label></div></div><div class="v7-dl-foot"><button class="v7-btn sec" onclick="fecharV7Download()">Cancelar</button><button class="v7-btn primary" onclick="v7Baixar()">Baixar selecionadas</button></div></div></div>
+
 <script>
 const fmt=n=>{
   const partes=n.toFixed(2).split('.');
@@ -1326,6 +1367,7 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }
 
 atualizarNavSidebar();
+renderPageStrip();v7Autosave();
 toast(`✔ Página ${num} adicionada!`,'sucesso');
 snap();
 }
@@ -1371,6 +1413,7 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }
 
 atualizarNavSidebar();
+renderPageStrip();v7Autosave();
 atualizarRodapes();
 toast(`✔ Página branca ${num} adicionada!`,'sucesso');
 snap();
@@ -1480,6 +1523,7 @@ const sth=$('secTitleProd_'+p.id);if(sth)sth.textContent=`Informações da Produ
 const stg=$('secTitleGrade_'+p.id);if(stg)stg.textContent=`Grade da Produção — Página ${p.num}`;
 });
 atualizarNavSidebar();
+renderPageStrip();
 atualizarRodapes();
 toast(`Página ${num} removida.`);
 snap();
@@ -2775,7 +2819,35 @@ function capturarFichaParaJSON() {
     if(l.type==='rect'||l.type==='circle') { b.fillColor=l.fillColor; b.strokeColor=l.strokeColor; b.strokeWidth=l.strokeWidth; }
     return b;
   });
-  d._version = 'vooalto_ficha_v4';
+  d._paginas = paginas.map(p => {
+    const pid = p.id;
+    const prod = [];
+    document.querySelectorAll('#prodLinhas_'+pid+' tr').forEach(tr => {
+      const inps = tr.querySelectorAll('input');
+      prod.push({ modelo: inps[0]?inps[0].value:'', valor: inps[1]?inps[1].value:'', qtd: inps[2]?inps[2].value:'' });
+    });
+    const medFem = [], medMasc = [];
+    document.querySelectorAll('#folha_'+pid+' .med-bloco.fem .med-inp').forEach(el => medFem.push(el.value));
+    document.querySelectorAll('#folha_'+pid+' .med-bloco.masc .med-inp').forEach(el => medMasc.push(el.value));
+    const gm = [], gb = [], gi2 = [];
+    document.querySelectorAll('.gi[data-g="'+pid+'m"]').forEach(el => gm.push(el.value));
+    document.querySelectorAll('.gi[data-g="'+pid+'b"]').forEach(el => gb.push(el.value));
+    document.querySelectorAll('.gi[data-g="'+pid+'i"]').forEach(el => gi2.push(el.value));
+    return {
+      id: p.id, num: p.num, tipo: p.tipo,
+      layers: p.layers.map(serLayer),
+      prod, med: { fem: medFem, masc: medMasc }, grade: { m: gm, b: gb, i: gi2 },
+      hdr: {
+        fichaNum: ($('fichaNum_'+pid)||{}).value || '',
+        fichaData: ($('fichaData_'+pid)||{}).value || '',
+        previsao: ($('previsao_'+pid)||{}).value || '',
+        sepTxt: ($('sepTxt_'+pid)||{}).value || '',
+        tipoTecido: ($('tipoTecido_'+pid)||{}).textContent || '',
+        entradaVal: ($('entradaVal_'+pid)||{}).value || ''
+      }
+    };
+  });
+  d._version = 'vooalto_ficha_v7';
   d._timestamp = Date.now();
   return d;
 }
@@ -2844,19 +2916,6 @@ function enviarParaCatalogacao() {
   data._nome = nome;
   data._numFicha = numFicha;
 
-  /* Save as draft backup first (unificado com o painel de rascunhos V4.10) */
-  const draftName = nome + (editando ? ' (backup edição)' : ' (backup catalogação)');
-  try {
-    if(typeof window.v7AddDraftBackup === 'function') {
-      window.v7AddDraftBackup(draftName, data).catch(()=>{});
-    } else {
-      const DRAFT_KEY='vooalto_ficha_rascunhos_v4';
-      let drafts = JSON.parse(localStorage.getItem(DRAFT_KEY)||'[]');
-      drafts.unshift({id:'d_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),name:draftName,date:new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}),data});
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts.slice(0,40)));
-    }
-  } catch(e){}
-
   /* Send to parent/wrapper which relays to Principal module */
   try {
     parent.postMessage(editando ? {
@@ -2918,6 +2977,8 @@ window.addEventListener('message', function(e) {
 /* ══ Limpar para nova ficha ══ */
 function limparParaNovaFicha(novoNum) {
   _editandoFichaId = null;
+  try{ localStorage.removeItem('vooalto_v7_ficha_ativa'); }catch(e){}
+  [...paginas].forEach(pg => removerPagina(pg.id));
   ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id => {
     const el = $(id); if(el) el.innerHTML = '';
   });
@@ -2985,6 +3046,14 @@ function restaurarDeJSON(d) {
     $('prodLinhas').innerHTML = ''; linhaId = 0;
     d._prod.forEach(p => criarLinha(p.modelo, p.valor, p.qtd));
     document.querySelectorAll('#prodLinhas tr').forEach(tr => { const id = tr.id.replace('ln_',''); recalcL(parseInt(id)); });
+  }
+  if(d._paginas && Array.isArray(d._paginas)) {
+    [...paginas].forEach(pg => removerPagina(pg.id));
+    d._paginas.forEach(s => {
+      if(s.tipo === 'branca') adicionarPaginaBranca(); else adicionarPagina();
+      const pg = paginas[paginas.length - 1];
+      if(pg) v7AplicarPaginaSalva(pg, s);
+    });
   }
   calcTotal(); salvarNum(); atualizarRodapes(); snap();
 }
@@ -3123,10 +3192,9 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
     const oldSections=[...document.querySelectorAll('.sb-section')].filter(sec=>(sec.textContent||'').toLowerCase().includes('fichas salvas'));
     oldSections.forEach(sec=>sec.style.display='none');
     const panel=document.createElement('div'); panel.className='sb-v4-panel'; panel.id='v4DraftPanel';
-    panel.innerHTML=`<div class="sb-v4-title">V4 · Rascunhos e fluxo rápido</div><div class="sb-v4-body"><button class="sb-v4-btn primary" onclick="v4SalvarRascunho()">💾 Salvar rascunho atual</button><div class="sb-v4-row"><button class="sb-v4-btn blue" style="flex:1 1 100%" onclick="v4AbrirPreenchimentoRapido()">⚡ Preenchimento rápido</button></div><button class="sb-v4-btn danger" onclick="v4ResetarFicha()">🧹 Resetar ficha técnica</button></div><div class="sb-v4-title" style="padding-top:4px">Rascunhos salvos</div><div class="sb-v4-list" id="v4DraftList"></div>`;
+    panel.innerHTML=`<div class="sb-v4-title">V7 · Fluxo rápido</div><div class="sb-v4-body"><div class="sb-v4-row"><button class="sb-v4-btn blue" style="flex:1 1 100%" onclick="v4AbrirPreenchimentoRapido()">⚡ Preenchimento rápido</button></div><button class="sb-v4-btn danger" onclick="v4ResetarFicha()">🧹 Nova ficha (limpar)</button></div>`;
     const pagesSection=[...scroll.children].find(el=>(el.textContent||'').toLowerCase().includes('páginas'));
     scroll.insertBefore(panel,pagesSection||scroll.firstChild);
-    renderDrafts();
   }
   function renderDrafts(){
     const list=$id('v4DraftList'); if(!list) return; const drafts=getDrafts();
@@ -3870,6 +3938,204 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     },()=>{fitNoWrapLocal(el,l);try{savLayers();snap();}catch(err){}});
   };
 })();
+</script>
+
+
+<script id="v7-canva-pages-js">
+/* ═══ V7 — MOTOR DE PÁGINAS ESTILO CANVA ═══
+   - Faixa de páginas na parte inferior (miniaturas) + botão de adicionar
+   - As páginas ficam sempre no editor (rascunho vivo, autosave)
+   - Download com escolha de páginas (PNG ou PDF)
+   O padrão antigo de rascunhos (salvar/carregar/excluir) foi eliminado. */
+const V7_AUTOSAVE_KEY='vooalto_v7_ficha_ativa';
+let v7AutosaveTimer=null;
+let v7StripTimer=null;
+let v7ScrollTimer=null;
+
+/* ── Autosave (rascunho vivo) ── */
+function v7Autosave(){
+  clearTimeout(v7AutosaveTimer);
+  v7AutosaveTimer=setTimeout(()=>{
+    try{
+      if(typeof capturarFichaParaJSON!=='function')return;
+      const d=capturarFichaParaJSON();
+      localStorage.setItem(V7_AUTOSAVE_KEY, JSON.stringify(d));
+    }catch(e){}
+  },700);
+}
+
+/* ── Aplicar dados salvos de uma página extra ── */
+function v7AplicarPaginaSalva(p,s){
+  if(!p||!s)return;
+  const pid=p.id;
+  const setH=(id,v)=>{const el=$(id);if(el&&v!==undefined&&v!==''){if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.value=v;else el.innerHTML=v;}};
+  if(s.hdr){setH('fichaNum_'+pid,s.hdr.fichaNum);setH('fichaData_'+pid,s.hdr.fichaData);setH('previsao_'+pid,s.hdr.previsao);setH('sepTxt_'+pid,s.hdr.sepTxt);setH('tipoTecido_'+pid,s.hdr.tipoTecido);setH('entradaVal_'+pid,s.hdr.entradaVal);}
+  if(Array.isArray(s.prod)){
+    const tb=$('prodLinhas_'+pid);if(tb)tb.innerHTML='';
+    p.linhaId=0;
+    s.prod.forEach(r=>criarLinhaExtra(p,r.modelo||'',r.valor||'',r.qtd||''));
+    if(typeof calcTotalExtra==='function')calcTotalExtra(p);
+  }
+  if(s.grade){
+    [['m','m'],['b','b'],['i','i']].forEach(([k,pref])=>{
+      const arr=s.grade[k]||[];
+      document.querySelectorAll('.gi[data-g="'+pid+pref+'"]').forEach((el,i)=>{if(arr[i]!==undefined){el.value=arr[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});
+    });
+    if(typeof recalcGradeExtra==='function')recalcGradeExtra(p);
+  }
+  if(s.med){
+    document.querySelectorAll('#folha_'+pid+' .med-bloco.fem .med-inp').forEach((el,i)=>{if(s.med.fem&&s.med.fem[i]!==undefined)el.value=s.med.fem[i];});
+    document.querySelectorAll('#folha_'+pid+' .med-bloco.masc .med-inp').forEach((el,i)=>{if(s.med.masc&&s.med.masc[i]!==undefined)el.value=s.med.masc[i];});
+  }
+  if(Array.isArray(s.layers)){
+    (p.layers||[]).forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.remove();});
+    p.layers=[];p.zCnt=10;p.selId=null;
+    s.layers.forEach(l=>{
+      if(!l||!l.type)return;
+      if(l.type==='img'){addImgLayerExtra(p,l.src,l);}
+      else if(l.type==='txt'){const nl=Object.assign({type:'txt',txt:'Texto',richHtml:'',font:"'Segoe UI',sans-serif",size:22,color:'#1E2937',bold:false,italic:false,xp:0.15,yp:0.4,wp:0.7,rot:0},l,{z:l.z!==undefined?l.z:++p.zCnt});p.layers.push(nl);renderTxtLayerExtra(p,nl);}
+      else if(l.type==='arr'){const nl=Object.assign({},l,{z:l.z!==undefined?l.z:++p.zCnt});p.layers.push(nl);renderArrLayerExtra(p,nl);}
+      else if(l.type==='rect'){addRectLayerExtra(p,l);}
+      else if(l.type==='circle'){addCirculoLayerExtra(p,l);}
+    });
+  }
+  if(typeof updPhExtra==='function')updPhExtra(p);
+  if(typeof snap==='function')snap();
+}
+
+/* ── Miniatura de página (clone escalado) ── */
+function v7ThumbHtml(folhaId,label,extraId){
+  const folha=document.getElementById(folhaId);
+  if(!folha)return '<div class="v7-thumb"><span class="v7-thumb-num">'+label+'</span></div>';
+  const scale=64/794;
+  const clone=folha.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  clone.querySelectorAll('input,textarea,button,select').forEach(el=>el.disabled=true);
+  clone.style.cssText='width:794px;height:1123px;margin:0;padding:4px;box-shadow:none;border:0;border-radius:0;transform:scale('+scale+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none;background:#fff;';
+  const delBtn = extraId ? '<button class="v7-thumb-del" onclick="event.stopPropagation();removerPagina(\''+extraId+'\')" title="Remover página">✕</button>' : '';
+  return '<div class="v7-thumb" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')">'
+       +'<div class="v7-thumb-scale">'+clone.outerHTML+'</div>'
+       +'<span class="v7-thumb-num">'+label+'</span>'+delBtn+'</div>';
+}
+
+/* ── Faixa de páginas ── */
+function renderPageStrip(){
+  const list=$('pageStripList'); if(!list)return;
+  list.innerHTML='';
+  const all=[{folhaId:'folha1',label:'Pág. 1',extra:null}];
+  paginas.forEach(p=>{all.push({folhaId:'folha_'+p.id,label:'Pág. '+p.num+(p.tipo==='branca'?' 🗋':''),extra:p.id});});
+  all.forEach(pg=>{const div=document.createElement('div');div.innerHTML=v7ThumbHtml(pg.folhaId,pg.label,pg.extra);list.appendChild(div.firstChild);});
+  v7AtualizarStripAtiva();
+}
+function v7GoToPage(folhaId){
+  const el=document.getElementById(folhaId);
+  if(!el)return;
+  try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){el.scrollIntoView(true);}
+  document.querySelectorAll('#pageStripList .v7-thumb').forEach(t=>t.classList.toggle('active',t.dataset.folha===folhaId));
+}
+function v7AtualizarStripAtiva(){
+  let melhor=null,melhorDist=1e9;
+  document.querySelectorAll('.folha,.folha-branca').forEach(f=>{
+    const r=f.getBoundingClientRect();
+    if(r.top<window.innerHeight*0.6 && r.bottom>0){
+      const d=Math.abs(r.top-60);
+      if(d<melhorDist){melhorDist=d;melhor=f.id;}
+    }
+  });
+  document.querySelectorAll('#pageStripList .v7-thumb').forEach(t=>t.classList.toggle('active',t.dataset.folha===melhor));
+}
+
+/* ── Modal de download com seleção de páginas ── */
+function abrirV7Download(){
+  const m=$('v7DownloadModal'); if(!m)return;
+  const list=$('v7DlPages'); list.innerHTML='';
+  const all=[{folhaId:'folha1',label:'Página 1',extra:null}];
+  paginas.forEach(p=>{all.push({folhaId:'folha_'+p.id,label:'Página '+p.num+(p.tipo==='branca'?' (branca)':''),extra:p.id});});
+  all.forEach(pg=>{
+    const div=document.createElement('div');div.className='v7-dl-page';
+    div.innerHTML='<label><input type="checkbox" class="v7-dl-chk" checked data-folha="'+pg.folhaId+'">'+v7ThumbHtml(pg.folhaId,pg.label,null)+'</label>';
+    list.appendChild(div);
+  });
+  m.classList.add('open');
+}
+function fecharV7Download(){const m=$('v7DownloadModal');if(m)m.classList.remove('open');}
+function v7Baixar(){
+  const chk=[...document.querySelectorAll('.v7-dl-chk:checked')].map(c=>c.dataset.folha);
+  if(!chk.length){toast('Selecione ao menos uma página.','erro');return;}
+  const fmt=(document.querySelector('input[name="v7DlFmt"]:checked')||{}).value||'png';
+  fecharV7Download();
+  if(fmt==='png')v7BaixarPNG(chk);else v7BaixarPDF(chk);
+}
+function v7NomeArquivo(){
+  const nc=($('dc_nome')?($('dc_nome').textContent||'').trim():'')||'';
+  const nf=($('fichaNum')?$('fichaNum').value:'')||'';
+  let n='Ficha_Tecnica';
+  if(nc)n+='_'+nc.replace(/[^a-zA-Z0-9À-ÿ]/g,'_');
+  if(nf)n+='_N'+nf;
+  return n;
+}
+function v7BaixarPNG(folhaIds){
+  if(typeof prepPrint==='function')prepPrint();
+  toast('📸 Gerando PNG das páginas selecionadas...');
+  const doIt=async()=>{
+    for(const id of folhaIds){
+      const el=document.getElementById(id); if(!el)continue;
+      try{
+        const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false,windowWidth:794,windowHeight:1123});
+        const a=document.createElement('a');
+        a.download=v7NomeArquivo()+'_Pag'+id.replace(/^folha1?$/,'1').replace('folha_','')+'.png';
+        a.href=canvas.toDataURL('image/png');a.click();
+      }catch(err){console.error('html2canvas error:',err);toast('❌ Erro ao exportar página '+id,'erro');}
+    }
+    if(typeof restAllPx==='function')restAllPx();
+    toast('✅ PNG exportado!');
+  };
+  if(window.html2canvas){doIt();}
+  else{
+    const paths=['../assets/html2canvas.min.js','./assets/html2canvas.min.js','assets/html2canvas.min.js'];
+    const tryLoad=(i)=>{
+      if(i>=paths.length){toast('❌ Erro ao carregar html2canvas','erro');if(typeof restAllPx==='function')restAllPx();return;}
+      const s=document.createElement('script');s.src=paths[i];
+      s.onload=()=>setTimeout(doIt,250);
+      s.onerror=()=>{s.remove();tryLoad(i+1);};
+      document.head.appendChild(s);
+    };
+    tryLoad(0);
+  }
+}
+function v7BaixarPDF(folhaIds){
+  const sel=new Set(folhaIds);
+  document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.toggle('print-skip',!sel.has(f.id)));
+  document.title='Ficha técnica de produção';
+  try{if(window.parent&&window.parent.document)window.parent.document.title='Ficha técnica de produção';}catch(e){}
+  window.print();
+  setTimeout(()=>document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.remove('print-skip')),2500);
+}
+window.addEventListener('afterprint',()=>{document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.remove('print-skip'));});
+
+/* ── Hooks: snap → autosave+faixa ; restaurarDeJSON → faixa ; input → autosave ── */
+if(window.snap){const _snap=window.snap;window.snap=function(){const r=_snap.apply(this,arguments);v7Autosave();clearTimeout(v7StripTimer);v7StripTimer=setTimeout(renderPageStrip,600);return r;};}
+if(window.restaurarDeJSON){const _rest=window.restaurarDeJSON;window.restaurarDeJSON=function(d){const r=_rest.apply(this,arguments);setTimeout(()=>{renderPageStrip();v7Autosave();},80);return r;};}
+document.addEventListener('input',()=>v7Autosave());
+window.addEventListener('scroll',()=>{clearTimeout(v7ScrollTimer);v7ScrollTimer=setTimeout(v7AtualizarStripAtiva,150);},true);
+
+/* ── Init: restaura a ficha em andamento (rascunho vivo) e desenha a faixa ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    try{
+      const raw=localStorage.getItem(V7_AUTOSAVE_KEY);
+      if(raw){
+        const d=JSON.parse(raw);
+        if(d&&d._version&&typeof restaurarDeJSON==='function'){
+          restaurarDeJSON(d);
+          toast('↩ Ficha em andamento restaurada (páginas salvas)','',2600);
+        }
+      }
+    }catch(e){console.warn('Falha ao restaurar autosave',e);}
+    setTimeout(renderPageStrip,120);
+  },200);
+});
 </script>
 
 </body>

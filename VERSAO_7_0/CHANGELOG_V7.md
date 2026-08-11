@@ -101,3 +101,24 @@ Na visão Principal (módulo `projeto_principal_dashboard_catalogo.html`), a **C
 2. Rode `python3 build_v7_pwa.py` — regenera `index.html` do PWA, as cópias nas subpastas, o unificado e o ZIP.
 3. O `sw.js` tem `CACHE_NAME` com data/versão — **incremente** (ex.: `vooalto-v7-4085-20260810-v2`) para forçar atualização do cache nos dispositivos instalados.
 4. Teste: `cd ATUALIZACAO_V7_PWA && node server.js` e abra http://localhost:4085 (ou use `instalar_e_abrir_V7.bat`).
+---
+
+## Atualização 4 — Páginas estilo Canva + download com seleção (rascunhos antigos eliminados)
+
+### O que mudou no Criador de Ficha Técnica (V7)
+1. **Faixa de páginas estilo Canva** na parte inferior do editor: miniaturas de todas as páginas, clique para navegar até a página (com destaque automático conforme rola), botão **＋** para adicionar página e **🗋** para página em branco, e ✕ para remover na própria miniatura. O menu lateral continua funcionando para as ferramentas de cada página.
+2. **Páginas ficam como rascunho vivo**: o editor salva automaticamente a ficha inteira (incluindo as páginas extras, com camadas, produção, grade, medidas e cabeçalho) no `localStorage` (`vooalto_v7_ficha_ativa`). Ao reabrir o app, a ficha em andamento volta com todas as páginas. O botão "Nova ficha (limpar)" zera tudo.
+3. **Padrão de rascunhos anterior eliminado**: o painel "Rascunhos e fluxo rápido" não tem mais salvar/carregar/excluir rascunhos nem backups de catalogação — virou só "Fluxo rápido" (Preenchimento rápido + Nova ficha). A função `v7AddDraftBackup` deixou de ser usada.
+4. **Download com escolha de páginas (Canva)**: o rodapé agora tem **⬇ Baixar (escolher páginas)**. Abre um modal com miniatura + checkbox de cada página (todas marcadas por padrão) e formato:
+   - **📸 PNG** → baixa 1 imagem por página selecionada;
+   - **🖨 PDF (imprimir)** → imprime/salva em PDF somente as páginas selecionadas (as demais ficam ocultas na impressão).
+5. **Fichas com múltiplas páginas no catálogo**: `capturarFichaParaJSON` agora serializa as páginas extras (`_paginas`) — ao enviar para a catalogação e depois clicar em "Modificar Ficha", todas as páginas voltam intactas (antes as páginas extras se perdiam).
+
+### Verificações (Chromium headless)
+- Faixa renderiza 1 miniatura (página 1) e passa a 3 ao adicionar página normal + branca.
+- Modal de download lista as 3 páginas com checkboxes marcados.
+- `capturarFichaParaJSON` retorna `_paginas` (normal + branca) com as camadas.
+- "Nova ficha (limpar)" remove as páginas extras.
+- Autosave: alterar o nº da ficha salva e restaura após recarregar.
+- **Páginas + conteúdo sobrevivem ao reload**: página extra com texto "TESTE PAGINA 2" restaurada com a camada intacta.
+- Sem erros no console.
