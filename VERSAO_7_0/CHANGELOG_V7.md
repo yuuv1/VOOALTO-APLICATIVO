@@ -218,3 +218,27 @@ Ao desfazer a exclusão de uma página que não era a última, o par "rótulo + 
 ### Observações (sem correção — decisão)
 - `postMessage` sem checagem de `e.origin` (risco baixo em app local/LAN; mudar poderia quebrar uso via `file://`).
 - CSS com muitos `!important` acumulados no dashboard (manutenção, não quebra).
+---
+
+## Atualização 9 — Excluir QUALQUER página (incluindo a página 1) e ficar sem nenhuma
+
+### O que mudou
+1. **Toda página agora tem o botão ✕ na faixa inferior**, inclusive a **página 1** (antes ela era fixa e não podia ser removida).
+2. **É possível ficar sem nenhuma página**: exclua todas (a faixa fica vazia, apenas com os botões ＋/🗋). Depois é só adicionar páginas novas — a primeira adicionada vira "Página 1".
+3. **Ctrl+Z funciona para a página 1 também**: excluir a página 1 e desfazer restaura ela com **todo o conteúdo** (textos, imagens, grade, medidas, produção, cores, cabeçalho).
+4. **"Nova ficha (limpar)"** sempre recria a página 1 se ela foi removida (para nunca ficar num estado quebrado).
+5. A numeração das páginas é sempre recalculada pela ordem real (mesmo sem a folha1).
+
+### Correções internas
+- Guarda o template original da folha1 para restaurar via undo mesmo depois de removida.
+- `v7Renumerar` recalculava o total de páginas a partir da ordem real.
+- `limparParaNovaFicha` restaura a folha1 antes de limpar (evita erro quando `#prodLinhas`/`#coresList` não existiam).
+- Captura/restauração de ficha salva respeitam `_folha1Removida` (uma ficha sem página 1 continua sem página 1 ao recarregar).
+
+### Verificações (Chromium headless)
+- Excluir página 1 → 0 folhas, 0 miniaturas, sem erros.
+- Ctrl+Z → folha1 restaurada com o texto "TEXTO P1" intacto.
+- Excluir folha1 + adicionar normal/branca → numeração correta (Pág. 1, Pág. 2).
+- Persistência: ficha com folha1 removida recarrega com 0 páginas.
+- "Nova ficha (limpar)" com folha1 removida → recria a folha1 (Nº 0005) sem erro.
+- Exportação PNG real da folha1 restaurada → arquivo gerado, sem erros.
