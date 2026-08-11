@@ -873,7 +873,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="dc-inp" id="dc_doc" contenteditable="true" data-ph="000.000.000-00" oninput="sincTodasPaginas()"></div>
 </div>
 <div class="dc-cell">
-<span class="dc-lbl">Vendedor</span>
+<span class="dc-lbl">Vendedor (a)</span>
 <div class="dc-inp" id="dc_vendedor" contenteditable="true" data-ph="Nome do vendedor" oninput="sincTodasPaginas()"></div>
 </div>
 </div>
@@ -926,7 +926,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <span class="fin-lbl-white">Entrada</span>
 <div style="display:flex;align-items:center;gap:3px">
 <span class="fin-rs-white">R$</span>
-<input class="fin-inp-white" id="entradaVal" type="text" placeholder="0,00" oninput="calcEntrada()">
+<input class="fin-inp-white" id="entradaVal" type="text" placeholder="0,00" oninput="v7MascaraEntrada(this);calcEntrada()" onfocus="v7MascaraEntradaFocus(this)" onblur="v7MascaraEntradaBlur(this)">
 </div>
 </div>
 <div class="fin-row">
@@ -1509,7 +1509,7 @@ return `
 <div class="dc-grid-r1">
 <div class="dc-cell" style="border-right:1px solid var(--bd)"><span class="dc-lbl">Nome / Razão Social</span><div class="dc-inp" id="syn_nome_${pid}" style="color:var(--az)"></div></div>
 <div class="dc-cell" style="border-right:1px solid var(--bd)"><span class="dc-lbl">CPF / CNPJ</span><div class="dc-inp" id="syn_doc_${pid}" style="color:var(--az)"></div></div>
-<div class="dc-cell"><span class="dc-lbl">Vendedor</span><div class="dc-inp" id="syn_vendedor_${pid}" style="color:var(--az)"></div></div>
+<div class="dc-cell"><span class="dc-lbl">Vendedor (a)</span><div class="dc-inp" id="syn_vendedor_${pid}" style="color:var(--az)"></div></div>
 </div>
 <div class="dc-grid-r2" style="border-top:1px solid var(--bd)">
 <div class="dc-cell" style="border-right:1px solid var(--bd)"><span class="dc-lbl">Telefone</span><div class="dc-inp" id="syn_tel_${pid}" style="color:var(--az)"></div></div>
@@ -1535,7 +1535,7 @@ return `
 <div class="tot-card"><div class="tot-lbl">Total da Produção</div><div class="tot-val" id="totalDisp_${pid}">R$ 0,00</div></div>
 <div class="fin-row entrada"><span class="fin-lbl-white">Entrada</span>
 <div style="display:flex;align-items:center;gap:3px"><span class="fin-rs-white">R$</span>
-<input class="fin-inp-white" id="entradaVal_${pid}" type="text" placeholder="0,00" oninput="calcEntradaExtra('${pid}')">
+<input class="fin-inp-white" id="entradaVal_${pid}" type="text" placeholder="0,00" oninput="v7MascaraEntrada(this);calcEntradaExtra('${pid}')" onfocus="v7MascaraEntradaFocus(this)" onblur="v7MascaraEntradaBlur(this)">
 </div></div>
 <div class="fin-row"><span class="fin-lbl">Restante</span>
 <div style="display:flex;align-items:center;gap:3px"><span class="fin-rs">R$</span>
@@ -1787,7 +1787,7 @@ function calcEntradaExtra(pid,total){
 const p=paginas.find(x=>x.id===pid);
 const t=total===undefined?(p?getTotalLinhasExtra(p):0):total;
 const ev=$('entradaVal_'+pid),rv=$('restanteVal_'+pid);if(!ev||!rv)return;
-const raw=ev.value.replace(/[R$\s]/g,'').replace(',','.').trim();
+const raw=ev.value.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.').trim();
 rv.value=fmt(t-(parseFloat(raw)||0));
 }
 
@@ -2486,7 +2486,7 @@ function getTotalLinhas(){let t=0;document.querySelectorAll('#prodLinhas tr').fo
 function recalcL(id){const tr=$(`ln_${id}`);if(!tr)return;const inps=tr.querySelectorAll('input');const v=parseFloat(((inps[1]?inps[1].value:'0')||'0').replace(',','.'))||0;const q=parseFloat(inps[2]?inps[2].value:'0')||0;const vt=$(`vt_${id}`);if(vt)vt.textContent=(v&&q)?'R$\u00a0'+fmt(v*q):'—';calcTotal();}
 function removerL(id){const el=$(`ln_${id}`);if(el)el.remove();calcTotal();}
 function calcTotal(){const t=getTotalLinhas();const td=$('totalDisp');if(td)td.textContent='R$\u00a0'+fmt(t);calcEntrada(t);}
-function calcEntrada(total){const t=total===undefined?getTotalLinhas():total;const ev=$('entradaVal'),rv=$('restanteVal');if(!ev||!rv)return;const raw=ev.value.replace(/[R$\s]/g,'').replace(',','.').trim();rv.value=fmt(t-(parseFloat(raw)||0));}
+function calcEntrada(total){const t=total===undefined?getTotalLinhas():total;const ev=$('entradaVal'),rv=$('restanteVal');if(!ev||!rv)return;const raw=ev.value.replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.').trim();rv.value=fmt(t-(parseFloat(raw)||0));}
 
 /* ═══ GRADE P1 ═══ */
 function cg(inp){const v=parseInt(inp.value)||0;inp.classList.toggle('v',v>0);recalcGrade();}
@@ -3142,7 +3142,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
     $id('v4qCliente').value=($id('dc_nome')?.textContent||'').trim(); $id('v4qVendedor').value=($id('dc_vendedor')?.textContent||'').trim(); $id('v4qTel').value=($id('dc_tel')?.textContent||'').trim(); $id('v4qPrevisao').value=$id('previsao')?.value||''; $id('v4qTecido').value=$id('tipoTecido')?.textContent||'';
     $id('v4QuickModal').classList.add('open');
   }
-  function createQuickModal(){const m=document.createElement('div');m.id='v4QuickModal';m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Modelo / descrição primeira linha</label><input id="v4qModelo" placeholder="Ex: Camiseta gola polo"></div><div class="v4-field"><label>Valor unitário</label><input id="v4qValor" placeholder="0,00"></div><div class="v4-field"><label>Quantidade</label><input id="v4qQtd" placeholder="0"></div><div class="v4-field" style="grid-column:1/-1"><label>Observação / aviso</label><textarea id="v4qAviso" placeholder="Observação opcional"></textarea></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar preenchimento</button></div></div></div>`;document.body.appendChild(m)}
+  function createQuickModal(){const m=document.createElement('div');m.id='v4QuickModal';m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor (a)</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Modelo / descrição primeira linha</label><input id="v4qModelo" placeholder="Ex: Camiseta gola polo"></div><div class="v4-field"><label>Valor unitário</label><input id="v4qValor" placeholder="0,00"></div><div class="v4-field"><label>Quantidade</label><input id="v4qQtd" placeholder="0"></div><div class="v4-field" style="grid-column:1/-1"><label>Observação / aviso</label><textarea id="v4qAviso" placeholder="Observação opcional"></textarea></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar preenchimento</button></div></div></div>`;document.body.appendChild(m)}
   window.v4FecharPreenchimentoRapido=function(){ $id('v4QuickModal')?.classList.remove('open') }
 
   document.addEventListener('DOMContentLoaded',()=>setTimeout(injectPanel,400));
@@ -3189,7 +3189,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
   const $id=id=>document.getElementById(id);
   const sizesM=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
   const sizesI=['2a','4a','6a','8a','10a','12a','14a'];
-  function createBetterQuickModal(){let m=$id('v4QuickModal'); if(m) m.remove(); m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus'; const modelRow=()=>`<tr data-row><td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove()">✕</button></td></tr>`; const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric"></label>`).join(''); m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido completo</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Aviso / observação</label><input id="v4qAviso" placeholder="Opcional"></div></div><div class="v4-section-title"><span>Modelos da produção</span><button class="v4-mini-btn" onclick="v4AddModeloRow()">+ Adicionar modelo</button></div><table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:120px">Valor unit.</th><th style="width:90px">Qtd</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows">${modelRow()}</tbody></table><div class="v4-section-title"><span>Grade de tamanhos</span><small>Preencha só os tamanhos usados</small></div><div class="v4-grade-box"><div class="v4-grade-card"><h4>Masculino</h4><div class="v4-grade-grid">${gradeInputs('m',sizesM)}</div></div><div class="v4-grade-card"><h4>Baby look fem.</h4><div class="v4-grade-grid">${gradeInputs('b',sizesM)}</div></div><div class="v4-grade-card inf" style="grid-column:1/-1"><h4>Infantil</h4><div class="v4-grade-grid">${gradeInputs('i',sizesI)}</div></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar tudo</button></div></div></div>`; document.body.appendChild(m);}
+  function createBetterQuickModal(){let m=$id('v4QuickModal'); if(m) m.remove(); m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus'; const modelRow=()=>`<tr data-row><td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove()">✕</button></td></tr>`; const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric"></label>`).join(''); m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido completo</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor (a)</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Aviso / observação</label><input id="v4qAviso" placeholder="Opcional"></div></div><div class="v4-section-title"><span>Modelos da produção</span><button class="v4-mini-btn" onclick="v4AddModeloRow()">+ Adicionar modelo</button></div><table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:120px">Valor unit.</th><th style="width:90px">Qtd</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows">${modelRow()}</tbody></table><div class="v4-section-title"><span>Grade de tamanhos</span><small>Preencha só os tamanhos usados</small></div><div class="v4-grade-box"><div class="v4-grade-card"><h4>Masculino</h4><div class="v4-grade-grid">${gradeInputs('m',sizesM)}</div></div><div class="v4-grade-card"><h4>Baby look fem.</h4><div class="v4-grade-grid">${gradeInputs('b',sizesM)}</div></div><div class="v4-grade-card inf" style="grid-column:1/-1"><h4>Infantil</h4><div class="v4-grade-grid">${gradeInputs('i',sizesI)}</div></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar tudo</button></div></div></div>`; document.body.appendChild(m);}
   window.v4AddModeloRow=function(){const body=$id('v4ModelRows'); if(!body)return; const tr=document.createElement('tr'); tr.innerHTML='<td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest(\'tr\').remove()">✕</button></td>'; body.appendChild(tr)};
   window.v4AbrirPreenchimentoRapido=function(){createBetterQuickModal(); $id('v4qCliente').value=($id('dc_nome')?.textContent||'').trim(); $id('v4qVendedor').value=($id('dc_vendedor')?.textContent||'').trim(); $id('v4qTel').value=($id('dc_tel')?.textContent||'').trim(); $id('v4qPrevisao').value=$id('previsao')?.value||''; $id('v4qTecido').value=$id('tipoTecido')?.textContent||''; fillCurrentGradeToQuick(); $id('v4QuickModal').classList.add('open');};
   function fillCurrentGradeToQuick(){document.querySelectorAll('.gi[data-g="m"]').forEach((el,i)=>{if($id('v4g_m_'+sizesM[i]))$id('v4g_m_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="b"]').forEach((el,i)=>{if($id('v4g_b_'+sizesM[i]))$id('v4g_b_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="i"]').forEach((el,i)=>{if($id('v4g_i_'+sizesI[i]))$id('v4g_i_'+sizesI[i]).value=el.value});}
@@ -4488,6 +4488,98 @@ document.addEventListener('DOMContentLoaded',()=>{
     setTimeout(renderPageStrip,120);
   },200);
 });
+
+/* ═══ V7 — CORREÇÃO: alça "A" (expandir tamanho do texto) em PÁGINAS EXTRAS ═══
+   O handler original só procura o layer no array `layers` (página 1). Em páginas
+   extras o texto vive em `paginas[].layers`, então a alça não fazia nada. */
+(function(){
+  function v7AcharTextoPorElemento(layer){
+    try{
+      if(typeof layers!=='undefined'){
+        const l1=layers.find(x=>x.type==='txt' && 'ly_'+x.id===layer.id);
+        if(l1)return {l:l1,p1:true,p:null};
+      }
+      if(typeof paginas!=='undefined'){
+        for(const p of paginas){
+          const lx=p.layers.find(x=>x.type==='txt' && 'ly_'+p.id+'_'+x.id===layer.id);
+          if(lx)return {l:lx,p1:false,p:p};
+        }
+      }
+    }catch(e){}
+    return null;
+  }
+  function v7InstalarAlca(layer){
+    if(!layer||layer.dataset.v7AlcaTamanho)return;
+    const alca=layer.querySelector('.tl-fontsize-handle');
+    if(!alca)return;
+    layer.dataset.v7AlcaTamanho='1';
+    alca.addEventListener('mousedown',function(e){
+      e.preventDefault();e.stopPropagation();
+      const alvo=v7AcharTextoPorElemento(layer);
+      if(!alvo)return;
+      const l=alvo.l;
+      const startY=e.clientY,startSize=parseInt(l.size)||20;
+      function move(ev){
+        const ns=Math.max(6,Math.min(180,startSize+(startY-ev.clientY)/2));
+        l.size=Math.round(ns);
+        const tc=layer.querySelector('.tc'); if(tc)tc.style.fontSize=l.size+'px';
+        const szIn=alvo.p1?document.getElementById('ttSize'):document.getElementById('ttSize_'+(alvo.p?alvo.p.id:''));
+        if(szIn)szIn.value=l.size;
+        const sl=document.querySelector('.v4-font-slider'); if(sl)sl.value=l.size;
+      }
+      function up(){
+        document.removeEventListener('mousemove',move);
+        document.removeEventListener('mouseup',up);
+        try{if(typeof savLayers==='function')savLayers();}catch(e){}
+        try{if(typeof snap==='function')snap();}catch(e){}
+        if(typeof v7Autosave==='function')v7Autosave();
+      }
+      document.addEventListener('mousemove',move);
+      document.addEventListener('mouseup',up);
+    });
+  }
+  const obs=new MutationObserver(()=>{try{document.querySelectorAll('.txt-layer').forEach(v7InstalarAlca);}catch(e){}});
+  obs.observe(document.body,{childList:true,subtree:true});
+  try{document.querySelectorAll('.txt-layer').forEach(v7InstalarAlca);}catch(e){}
+  document.addEventListener('click',()=>setTimeout(()=>{try{document.querySelectorAll('.txt-layer').forEach(v7InstalarAlca);}catch(e){}},120));
+})();
+
+/* ═══ V7 — MÁSCARA DE MOEDA para a ENTRADA do cliente ═══
+   "1000" → "1.000,00" · "25,90" → "25,90" · "1500" → "1.500,00" */
+function v7MascaraEntrada(el){
+  if(!el)return;
+  let v=el.value;
+  const temVirgula=v.indexOf(',')!==-1;
+  let inteiro,decimal='';
+  if(temVirgula){
+    const idx=v.indexOf(',');
+    inteiro=v.slice(0,idx).replace(/[^\d]/g,'');
+    decimal=v.slice(idx+1).replace(/[^\d]/g,'').slice(0,2);
+  }else{
+    inteiro=v.replace(/[^\d]/g,'');
+  }
+  inteiro=inteiro.replace(/^0+(?=\d)/,'').slice(0,12);
+  const inteiroFmt=inteiro?inteiro.replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';
+  /* preserva a vírgula digitada mesmo com centavos vazios ("25," fica "25,") */
+  el.value=inteiroFmt+(temVirgula?','+decimal:'');
+  try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}
+}
+function v7MascaraEntradaFocus(el){
+  if(!el)return;
+  try{
+    const idx=el.value.indexOf(',');
+    const pos=idx===-1?el.value.length:idx;
+    el.setSelectionRange(pos,pos);
+  }catch(e){}
+}
+function v7MascaraEntradaBlur(el){
+  if(!el)return;
+  if(el.value && !el.value.includes(',')) el.value+=',00';
+  try{
+    if(el.id==='entradaVal'&&typeof calcEntrada==='function')calcEntrada();
+    else if(el.id.indexOf('entradaVal_')===0&&typeof calcEntradaExtra==='function')calcEntradaExtra(el.id.replace('entradaVal_',''));
+  }catch(e){}
+}
 </script>
 
 </body>

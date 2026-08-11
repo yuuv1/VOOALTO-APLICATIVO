@@ -242,3 +242,26 @@ Ao desfazer a exclusão de uma página que não era a última, o par "rótulo + 
 - Persistência: ficha com folha1 removida recarrega com 0 páginas.
 - "Nova ficha (limpar)" com folha1 removida → recria a folha1 (Nº 0005) sem erro.
 - Exportação PNG real da folha1 restaurada → arquivo gerado, sem erros.
+---
+
+## Atualização 10 — Expandir texto corrigido (páginas extras), "Vendedor (a)" e máscara de moeda na entrada
+
+### 1. "Expandir texto" (alça "A") corrigido em páginas extras
+A alça "A" que aparece ao selecionar um texto (para aumentar/diminuir o tamanho da fonte arrastando) **só funcionava na página 1** — em páginas extras ela não fazia nada (o handler original procurava o texto só no array da página 1). Corrigido com um handler extra que encontra o texto na página certa (P1 ou extra) e expande normalmente, atualizando o campo de tamanho correto. O resize do canto (caixa) continua funcionando.
+
+### 2. "Vendedor" → "Vendedor (a)"
+Os rótulos do campo de vendedor no criador (página 1, páginas extras e preenchimento rápido) agora exibem **"Vendedor (a)"**.
+
+### 3. Máscara de moeda na ENTRADA do cliente
+O campo de entrada (e os das páginas extras) agora formata o valor digitado em moeda brasileira:
+- `1000` → `1.000` enquanto digita → `1.000,00` ao sair do campo;
+- `25,90` → `25,90` (vírgula preservada);
+- `1234567` → `1.234.567,00`.
+- O cálculo do restante foi corrigido para aceitar o ponto de milhar (`1.000,00` agora subtrai 1.000, e não 1).
+
+### Verificações (Chromium headless)
+- Alça "A" em página extra: tamanho 22 → 57 ao arrastar.
+- Alça "A" na página 1 continua funcionando.
+- Labels "Vendedor (a)" nas 4 ocorrências.
+- Máscara: 1000 → 1.000,00 · 25,90 → 25,90 · 1500 (extra) → 1.500,00 · restante correto.
+- Abas Principal/Criador/Orçamento sem erros no console.
