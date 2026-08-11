@@ -1317,6 +1317,7 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 
 atualizarNavSidebar();
 renderPageStrip();v7Autosave();
+if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
 toast(`✔ Página ${num} adicionada!`,'sucesso');
 snap();
 }
@@ -1366,6 +1367,7 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 atualizarNavSidebar();
 renderPageStrip();v7Autosave();
 atualizarRodapes();
+if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
 toast(`✔ Página branca ${num} adicionada!`,'sucesso');
 snap();
 }
@@ -2048,7 +2050,21 @@ l.wp=nwp;l.hp=nhp;l.xp=nxp;l.yp=nyp;
 el.style.width=(nwp*W)+'px';el.style.height=(nhp*H)+'px';el.style.left=(nxp*W)+'px';el.style.top=(nyp*H)+'px';
 },()=>{snap();});
 }
-function initResizeTxtExtra(e,p,l,el){const pid=p.id,W=cwExtra(pid),sx=e.clientX,sw=l.wp*W;makeDragExtra(e,ev=>{const nwp=Math.max(.06,(sw+(ev.clientX-sx))/W);l.wp=nwp;el.style.width=(nwp*W)+'px';},()=>{snap();});}
+function initResizeTxtExtra(e,p,l,el){
+  const pid=p.id,W=cwExtra(pid),sx=e.clientX,sy=e.clientY,sw=l.wp*W,startSize=parseInt(l.size)||20;
+  const tc=el.querySelector('.tc');
+  makeDragExtra(e,ev=>{
+    const delta=ev.clientX-sx;
+    const nwp=Math.max(.06,(sw+delta)/W);
+    l.wp=nwp;el.style.width=(nwp*W)+'px';
+    /* expande também o TAMANHO do texto (como na página 1) */
+    const ns=Math.max(6,Math.min(180,startSize + delta/6 - (ev.clientY-sy)/10));
+    l.size=Math.round(ns);
+    if(tc)tc.style.fontSize=l.size+'px';
+    const sizeInput=document.getElementById('ttSize_'+pid); if(sizeInput)sizeInput.value=l.size;
+    const slider=document.querySelector('.v4-font-slider'); if(slider)slider.value=l.size;
+  },()=>{snap();if(typeof v7Autosave==='function')v7Autosave();});
+}
 function initResizeArrExtra(e,p,l,el){const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDragExtra(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{snap();});}
 function initRotElExtra(e,p,l,el){const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;makeDragExtra(e,ev=>{l.rot=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;el.style.transform=`rotate(${l.rot}deg)`;},()=>{snap();});}
 
@@ -3195,7 +3211,34 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
   function fillCurrentGradeToQuick(){document.querySelectorAll('.gi[data-g="m"]').forEach((el,i)=>{if($id('v4g_m_'+sizesM[i]))$id('v4g_m_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="b"]').forEach((el,i)=>{if($id('v4g_b_'+sizesM[i]))$id('v4g_b_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="i"]').forEach((el,i)=>{if($id('v4g_i_'+sizesI[i]))$id('v4g_i_'+sizesI[i]).value=el.value});}
   window.v4AplicarPreenchimentoRapido=function(){const setCE=(id,v)=>{const el=$id(id);if(el)el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$id(id);if(el)el.value=v||''}; setCE('dc_nome',$id('v4qCliente').value); setCE('dc_vendedor',$id('v4qVendedor').value); setCE('dc_tel',$id('v4qTel').value); setVal('previsao',$id('v4qPrevisao').value); setCE('tipoTecido',$id('v4qTecido').value); if($id('v4qAviso').value)setVal('avisoTxt',$id('v4qAviso').value); const rows=[...document.querySelectorAll('#v4ModelRows tr')].map(r=>({modelo:r.querySelector('[data-modelo]').value,valor:r.querySelector('[data-valor]').value,qtd:r.querySelector('[data-qtd]').value})).filter(r=>r.modelo||r.valor||r.qtd); if(rows.length){$id('prodLinhas').innerHTML=''; if(typeof linhaId!=='undefined') linhaId=0; rows.forEach(r=>criarLinha(r.modelo,r.valor,r.qtd)); document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_','')); if(typeof recalcL==='function')recalcL(id);});} applyGrade('m',sizesM); applyGrade('b',sizesM); applyGrade('i',sizesI); if(typeof recalcGrade==='function')recalcGrade(); if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap(); v4FecharPreenchimentoRapido(); toast('Preenchimento completo aplicado.','sucesso');};
   function applyGrade(prefix,arr){const els=document.querySelectorAll(`.gi[data-g="${prefix}"]`); arr.forEach((t,i)=>{const v=$id(`v4g_${prefix}_${t}`)?.value||''; if(els[i]){els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0);}})}
-  function enhanceTextToolbar(){const tb=$id('textTb'); if(!tb||tb.dataset.v4TextReady)return; tb.dataset.v4TextReady='1'; const font=$id('ttFont'); if(font){const fonts=[['Montserrat','Montserrat, Arial, sans-serif'],['Poppins','Poppins, Arial, sans-serif'],['Arial Black','Arial Black, Arial, sans-serif'],['Impact','Impact, sans-serif'],['Georgia','Georgia, serif'],['Courier','Courier New, monospace']]; fonts.forEach(f=>{if(![...font.options].some(o=>o.value===f[1])){const op=document.createElement('option');op.textContent=f[0];op.value=f[1];font.appendChild(op);}});} const slider=document.createElement('input'); slider.type='range'; slider.min='6'; slider.max='120'; slider.value=$id('ttSize')?.value||20; slider.className='v4-font-slider'; slider.oninput=()=>{if($id('ttSize')){$id('ttSize').value=slider.value;applyTxtProps();}}; const presets=document.createElement('div'); presets.className='v4-font-presets'; presets.innerHTML='<button onclick="v4SetTextSize(14)">14</button><button onclick="v4SetTextSize(20)">20</button><button onclick="v4SetTextSize(32)">32</button><button onclick="v4SetTextSize(48)">48</button>'; tb.insertBefore(slider, tb.querySelector('.ct-sep')||null); tb.insertBefore(presets, tb.querySelector('.ct-sep')||null);}
+  function enhanceTextToolbar(){const tb=$id('textTb'); if(tb&&!tb.dataset.v4TextReady){tb.dataset.v4TextReady='1';v7EnhanceTxtTb('textTb');} v7EnhanceTxtTbExtra();}
+  function v7EnhanceTxtTb(tbId){
+  const tb=$id(tbId); if(!tb||tb.dataset.v4TbReady)return; tb.dataset.v4TbReady='1';
+  /* ids seguem o padrão: textTb (P1) usa ttFont/ttSize; extras usam ttFont_<pid>/ttSize_<pid> */
+  const isExtra = tbId.indexOf('textTb_')===0;
+  const suf = isExtra ? tbId.replace('textTb','') : '';
+  const font=$id('ttFont'+suf);
+  if(font){const fonts=[['Montserrat','Montserrat, Arial, sans-serif'],['Poppins','Poppins, Arial, sans-serif'],['Arial Black','Arial Black, Arial, sans-serif'],['Impact','Impact, sans-serif'],['Georgia','Georgia, serif'],['Courier','Courier New, monospace']]; fonts.forEach(f=>{if(![...font.options].some(o=>o.value===f[1])){const op=document.createElement('option');op.textContent=f[0];op.value=f[1];font.appendChild(op);}});}
+  const sizeIn=$id('ttSize'+suf);
+  const slider=document.createElement('input'); slider.type='range'; slider.min='6'; slider.max='120'; slider.value=sizeIn?.value||20; slider.className='v4-font-slider';
+  slider.oninput=()=>{if(sizeIn){sizeIn.value=slider.value;} if(isExtra){const pid=suf.replace('_',''); if(typeof applyTxtPropsExtra==='function')applyTxtPropsExtra(pid);} else if(typeof applyTxtProps==='function')applyTxtProps();};
+  const presets=document.createElement('div'); presets.className='v4-font-presets';
+  presets.innerHTML='<button onclick="v7SetTextSize(14,\''+suf+'\')">14</button><button onclick="v7SetTextSize(20,\''+suf+'\')">20</button><button onclick="v7SetTextSize(32,\''+suf+'\')">32</button><button onclick="v7SetTextSize(48,\''+suf+'\')">48</button>';
+  tb.insertBefore(slider, tb.querySelector('.ct-sep')||null);
+  tb.insertBefore(presets, tb.querySelector('.ct-sep')||null);
+}
+window.v7SetTextSize=function(size,suf){
+  suf=suf||'';
+  const sizeIn=document.getElementById('ttSize'+suf);
+  if(sizeIn)sizeIn.value=size;
+  if(suf){const pid=suf.replace('_',''); if(typeof applyTxtPropsExtra==='function')applyTxtPropsExtra(pid);}
+  else if(typeof applyTxtProps==='function')applyTxtProps();
+  const sl=document.querySelector('.v4-font-slider'); if(sl)sl.value=size;
+}
+function v7EnhanceTxtTbExtra(){
+  /* aplica slider+presets em todas as toolbars de páginas extras */
+  document.querySelectorAll('[id^="textTb_"]').forEach(tb=>v7EnhanceTxtTb(tb.id));
+}
   window.v4SetTextSize=function(size){if($id('ttSize')){$id('ttSize').value=size;applyTxtProps();}const sl=document.querySelector('.v4-font-slider');if(sl)sl.value=size;}
   function addFontSizeHandle(layer){if(!layer||layer.querySelector('.tl-fontsize-handle'))return; const h=document.createElement('div'); h.className='tl-fontsize-handle'; layer.appendChild(h); h.addEventListener('mousedown',e=>{const id=layer.id.replace('ly_',''); const l=layers.find(x=>x.id===id); if(!l||l.type!=='txt')return; const startY=e.clientY,startSize=parseInt(l.size)||20; function move(ev){const ns=Math.max(6,Math.min(180,startSize+(startY-ev.clientY)/2)); l.size=Math.round(ns); const tc=layer.querySelector('.tc'); if(tc)tc.style.fontSize=l.size+'px'; if($id('ttSize'))$id('ttSize').value=l.size; const sl=document.querySelector('.v4-font-slider'); if(sl)sl.value=l.size;} function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);savLayers();snap();} document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);e.preventDefault();e.stopPropagation();});}
   const obs=new MutationObserver(()=>document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle)); obs.observe(document.body,{childList:true,subtree:true}); document.addEventListener('click',()=>setTimeout(()=>{enhanceTextToolbar();document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle);},80)); setTimeout(()=>{enhanceTextToolbar();document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle);},800);

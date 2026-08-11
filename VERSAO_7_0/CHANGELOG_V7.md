@@ -265,3 +265,23 @@ O campo de entrada (e os das páginas extras) agora formata o valor digitado em 
 - Labels "Vendedor (a)" nas 4 ocorrências.
 - Máscara: 1000 → 1.000,00 · 25,90 → 25,90 · 1500 (extra) → 1.500,00 · restante correto.
 - Abas Principal/Criador/Orçamento sem erros no console.
+---
+
+## Atualização 11 — Expansão do TAMANHO do texto corrigida de vez (páginas extras)
+
+### O que estava errado
+A expansão do tamanho do texto (a **alça "A"** e o **arrastar o canto** da caixa) **só funcionava na página 1**. Em páginas extras:
+- Arrastar o **canto** (`.tl-resize`) aumentava a **caixa** mas o **texto continuava do mesmo tamanho** (fonte não crescia);
+- Os **presets 14/20/32/48** e o **slider de tamanho** não apareciam na toolbar das páginas extras;
+- `v7SetTextSize` não estava acessível globalmente (quebrava o clique nos presets).
+
+### Correções
+1. `initResizeTxtExtra` agora faz o mesmo que a página 1: ao arrastar o canto, **aumenta/diminui a caixa E o tamanho da fonte** juntos, atualizando o campo de tamanho correto (`ttSize_<página>`).
+2. Slider + presets agora são aplicados também às **toolbars de páginas extras** (`v7EnhanceTxtTbExtra`), chamados ao adicionar página e em cada clique.
+3. `v7SetTextSize` exposto no `window` (funciona nos presets das duas toolbars, P1 e extras).
+
+### Verificações (Chromium headless, mouse real)
+- **Página extra**: arrastar o canto → fonte 22 → 36 (antes ficava 22).
+- **Página extra**: clicar no preset 48 → fonte 36 → 48; slider presente.
+- **Página 1**: alça "A" 22 → 52, preset 48 → 48, exportação PNG sem erros.
+- Sem erros no console.
