@@ -744,62 +744,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="sb-divider"></div>
 </div>
 
-<!-- PÁGINA 1 -->
-<div class="sb-section">
-<div class="sb-section-title">Páginas</div>
-<div class="sb-page-group" id="pgGroup1">
-<div class="sb-page-header">
-<div class="sb-page-num">1</div>
-<span>Página 1</span>
-</div>
-<div class="sb-page-actions">
-<button class="sb-btn" onclick="$('canvasInput').click()">
-<div class="sb-btn-icon">🖼</div>
-<span class="sb-btn-label">Adicionar Imagem</span>
-</button>
-<button class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
-<div class="sb-btn-icon">✍</div>
-<span class="sb-btn-label">Adicionar Texto</span>
-</button>
-<button class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
-<div class="sb-btn-icon">➜</div>
-<span class="sb-btn-label">Desenhar Seta</span>
-</button>
-<button class="sb-btn" onclick="criarRetangulo()">
-<div class="sb-btn-icon">▭</div>
-<span class="sb-btn-label">Retângulo</span>
-</button>
-<button class="sb-btn" onclick="criarCirculo()">
-<div class="sb-btn-icon">●</div>
-<span class="sb-btn-label">Círculo</span>
-</button>
-<button class="sb-btn" onclick="toggleLayersPanel()">
-<div class="sb-btn-icon">☰</div>
-<span class="sb-btn-label">Painel de Camadas</span>
-</button>
-<button class="sb-btn" onclick="adicionarCor()">
-<div class="sb-btn-icon">🎨</div>
-<span class="sb-btn-label">Adicionar Cor</span>
-</button>
-</div>
-</div>
-
-<!-- Grupos de páginas extras serão inseridos aqui via JS -->
-<div id="extraPagesNav"></div>
-
-<!-- Botão adicionar página normal -->
-<button class="sb-add-page" onclick="adicionarPagina()">
-<span class="sb-add-page-icon">＋</span>
-<span>Adicionar Página</span>
-</button>
-<!-- Botão adicionar página branca -->
-<button class="sb-add-page" onclick="adicionarPaginaBranca()" style="border-color:rgba(255,255,255,.35);margin-top:2px;">
-<span class="sb-add-page-icon">🗋</span>
-<span>Adicionar Página Branca</span>
-</button>
-</div>
-
-
+<!-- Navegação de páginas agora é feita pela faixa inferior (estilo Canva) -->
 <!-- CONFIGURAÇÕES -->
 <div class="sb-section" style="margin-top:4px;">
 <div class="sb-section-title">Configurações</div>
@@ -885,7 +830,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div id="pw">
 
 <!-- ═══ PÁGINA 1 ═══ -->
-<div class="page-label">— PÁGINA 1 —</div>
+<div class="page-label" id="label_folha1">— PÁGINA 1 —</div>
 <div class="folha" id="folha1">
 
 <div class="header">
@@ -1292,6 +1237,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 </div>
 
 <!-- ═══ V7 — FAIXA DE PÁGINAS (estilo Canva) ═══ -->
+<div id="v7PageToolbar" style="display:none"></div>
 <div id="pageStripWrap"><div id="pageStripList"></div><button class="v7-strip-btn" onclick="adicionarPagina()" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="adicionarPaginaBranca()" title="Adicionar página em branco">🗋</button></div>
 
 <!-- ═══ V7 — MODAL BAIXAR COM SELEÇÃO DE PÁGINAS ═══ -->
@@ -1515,61 +1461,17 @@ const lb=$('label_'+pid);if(lb)lb.remove();
 const inp=$('canvasInput_'+pid);if(inp)inp.remove();
 paginas.splice(idx,1);
 totalPaginas--;
-paginas.forEach((p,i)=>{
-p.num=i+2;
-const lbl=$('label_'+p.id);if(lbl)lbl.textContent=p.tipo==='branca'?`— PÁGINA ${p.num} (BRANCA) —`:`— PÁGINA ${p.num} —`;
-const rn=$('rodNum_'+p.id);if(rn)rn.textContent=`Ficha Nº — · Página ${p.num} de ${totalPaginas}`;
-const sth=$('secTitleProd_'+p.id);if(sth)sth.textContent=`Informações da Produção — Página ${p.num}`;
-const stg=$('secTitleGrade_'+p.id);if(stg)stg.textContent=`Grade da Produção — Página ${p.num}`;
-});
+if(typeof v7PaginaAtiva==='object'&&v7PaginaAtiva&&v7PaginaAtiva.id===pid&&typeof v7EsconderToolbar==='function')v7EsconderToolbar();
 atualizarNavSidebar();
 renderPageStrip();
-atualizarRodapes();
+if(typeof v7Renumerar==='function')v7Renumerar();else atualizarRodapes();
 toast(`Página ${num} removida.`);
 snap();
 }
 
 function atualizarNavSidebar(){
-const nav=$('extraPagesNav');if(!nav)return;
-nav.innerHTML='';
-paginas.forEach(p=>{
-const grp=document.createElement('div');
-grp.className='sb-page-group';grp.id='sbGroup_'+p.id;
-const isBranca=p.tipo==='branca';
-grp.innerHTML=`
-<div class="sb-page-header">
-<div class="sb-page-num">${p.num}</div>
-<span>Página ${p.num}${isBranca?' 🗋':''}</span>
-<button class="sb-remove-page" onclick="removerPagina('${p.id}')">✕ Remover</button>
-</div>
-<div class="sb-page-actions">
-<button class="sb-btn" onclick="$('canvasInput_${p.id}').click()">
-<div class="sb-btn-icon">🖼</div>
-<span class="sb-btn-label">Adicionar Imagem</span>
-</button>
-<button class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">
-<div class="sb-btn-icon">✍</div>
-<span class="sb-btn-label">Adicionar Texto</span>
-</button>
-<button class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">
-<div class="sb-btn-icon">➜</div>
-<span class="sb-btn-label">Desenhar Seta</span>
-</button>
-<button class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">
-<div class="sb-btn-icon">▭</div>
-<span class="sb-btn-label">Retângulo</span>
-</button>
-<button class="sb-btn" onclick="criarCirculoExtra('${p.id}')">
-<div class="sb-btn-icon">●</div>
-<span class="sb-btn-label">Círculo</span>
-</button>
-${!isBranca?`<button class="sb-btn" onclick="adicionarCorExtra('${p.id}')">
-<div class="sb-btn-icon">🎨</div>
-<span class="sb-btn-label">Adicionar Cor</span>
-</button>`:''}
-</div>`;
-nav.appendChild(grp);
-});
+/* V7: a navegação e as ferramentas de página agora ficam na faixa inferior
+   (estilo Canva) e na toolbar que aparece ao clicar na página. */
 }
 
 function htmlPaginaExtra(p){
@@ -2451,13 +2353,13 @@ function toggleModoSeta(){modoSeta?desativarModoSeta():ativarModoSeta();}
 function ativarModoSeta(){
 if(eyeAtivo)desativarEye();deselecionarTudo();modoSeta=true;
 canvasInner.classList.add('modo-seta');arrDrawHint.classList.add('vis');
-$('btnSeta').classList.add('ativo-desenho');
+const _bs=$('btnSeta');if(_bs)_bs.classList.add('ativo-desenho');
 canvasInner.addEventListener('mousedown',onSetaMouseDown);
 toast('➜ Modo seta · Clique e arraste','',2500);
 }
 function desativarModoSeta(){
 modoSeta=false;canvasInner.classList.remove('modo-seta');arrDrawHint.classList.remove('vis');
-$('btnSeta').classList.remove('ativo-desenho');arrowPreview.style.display='none';
+const _bs=$('btnSeta');if(_bs)_bs.classList.remove('ativo-desenho');arrowPreview.style.display='none';
 canvasInner.removeEventListener('mousedown',onSetaMouseDown);
 }
 function buildArrSVGFromPoints(x1,y1,x2,y2,color,stroke,style,id,W,H){
@@ -2592,7 +2494,7 @@ function applySepFontSize(targetId,inputId){const target=$(targetId);const input
 function atualizarRodapes(){
 const n1=$('fichaNum')?$('fichaNum').value:'';
 const total=totalPaginas;
-const r1=$('rodNum');if(r1)r1.textContent=n1?`Ficha Nº ${n1} · Página 1 de ${total}`:`Ficha Nº — · Página 1 de ${total}`;
+const numP1=(typeof v7NumFolha1!=='undefined'&&v7NumFolha1)?v7NumFolha1:1;const r1=$('rodNum');if(r1)r1.textContent=n1?`Ficha Nº ${n1} · Página ${numP1} de ${total}`:`Ficha Nº — · Página ${numP1} de ${total}`;
 paginas.forEach(p=>{
 const rn=$('rodNum_'+p.id);
 if(rn)rn.textContent=n1?`Ficha Nº ${n1} · Página ${p.num} de ${total}`:`Ficha Nº — · Página ${p.num} de ${total}`;
@@ -3887,6 +3789,17 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 [data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
+
+/* V7 — TOOLBAR DE PÁGINA + ARRASTAR PARA REORDENAR */
+#v7PageToolbar{position:fixed;z-index:9650;display:flex;align-items:center;gap:4px;background:rgba(15,23,42,.97);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:6px 8px;box-shadow:0 12px 36px rgba(0,0,0,.45)}
+.v7-tb-label{font-size:8.5px;font-weight:900;color:#93C5FD;text-transform:uppercase;letter-spacing:.6px;margin-right:4px;white-space:nowrap}
+.v7-tb-btn{border:0;background:rgba(255,255,255,.10);color:#fff;width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
+.v7-tb-btn:hover{background:rgba(255,255,255,.28)}
+.v7-thumb{cursor:grab}
+.v7-thumb.dragging{opacity:.4;border-style:dashed}
+.v7-thumb.drop-hint{border-color:#34D399!important;box-shadow:0 0 0 2px rgba(52,211,153,.6)!important}
+@media print{#v7PageToolbar{display:none!important}}
+
 </style>
 <script id="v5-text-nowrap-fix-js">
 (function(){
@@ -3942,15 +3855,19 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 
 
 <script id="v7-canva-pages-js">
-/* ═══ V7 — MOTOR DE PÁGINAS ESTILO CANVA ═══
-   - Faixa de páginas na parte inferior (miniaturas) + botão de adicionar
-   - As páginas ficam sempre no editor (rascunho vivo, autosave)
-   - Download com escolha de páginas (PNG ou PDF)
-   O padrão antigo de rascunhos (salvar/carregar/excluir) foi eliminado. */
+/* ═══ V7 — MOTOR DE PÁGINAS ESTILO CANVA (v2) ═══
+   - Faixa inferior com miniaturas: clique = navegar e abrir a barra de
+     ferramentas (imagem, texto, seta, formas, cor, camadas) logo acima da página
+   - ARRASTE as miniaturas para reorganizar as páginas
+   - Rascunho vivo (autosave) + download com seleção de páginas */
 const V7_AUTOSAVE_KEY='vooalto_v7_ficha_ativa';
 let v7AutosaveTimer=null;
 let v7StripTimer=null;
 let v7ScrollTimer=null;
+let v7NumFolha1=1;
+let v7PaginaAtiva=null; /* {id:'folha1'|p.id, tipo:'normal'|'branca', p1:bool} */
+let v7DragId=null;
+let v7DragMoved=false;
 
 /* ── Autosave (rascunho vivo) ── */
 function v7Autosave(){
@@ -4004,7 +3921,7 @@ function v7AplicarPaginaSalva(p,s){
 }
 
 /* ── Miniatura de página (clone escalado) ── */
-function v7ThumbHtml(folhaId,label,extraId){
+function v7ThumbHtml(folhaId,label,extraId,active,drag){
   const folha=document.getElementById(folhaId);
   if(!folha)return '<div class="v7-thumb"><span class="v7-thumb-num">'+label+'</span></div>';
   const scale=64/794;
@@ -4013,8 +3930,9 @@ function v7ThumbHtml(folhaId,label,extraId){
   clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
   clone.querySelectorAll('input,textarea,button,select').forEach(el=>el.disabled=true);
   clone.style.cssText='width:794px;height:1123px;margin:0;padding:4px;box-shadow:none;border:0;border-radius:0;transform:scale('+scale+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none;background:#fff;';
-  const delBtn = extraId ? '<button class="v7-thumb-del" onclick="event.stopPropagation();removerPagina(\''+extraId+'\')" title="Remover página">✕</button>' : '';
-  return '<div class="v7-thumb" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')">'
+  const delBtn = extraId ? '<button class="v7-thumb-del" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();removerPagina(\''+extraId+'\')" title="Remover página">✕</button>' : '';
+  const dragAttrs = drag ? ' draggable="true" ondragstart="v7ThumbDragStart(event,\''+folhaId+'\')" ondragover="v7ThumbDragOver(event)" ondragleave="v7ThumbDragLeave(event)" ondrop="v7ThumbDrop(event,\''+folhaId+'\')" ondragend="v7ThumbDragEnd(event)"' : '';
+  return '<div class="v7-thumb'+(active?' active':'')+'" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')"'+dragAttrs+'>'
        +'<div class="v7-thumb-scale">'+clone.outerHTML+'</div>'
        +'<span class="v7-thumb-num">'+label+'</span>'+delBtn+'</div>';
 }
@@ -4023,18 +3941,38 @@ function v7ThumbHtml(folhaId,label,extraId){
 function renderPageStrip(){
   const list=$('pageStripList'); if(!list)return;
   list.innerHTML='';
-  const all=[{folhaId:'folha1',label:'Pág. 1',extra:null}];
+  const all=[{folhaId:'folha1',label:'Pág. '+(v7NumFolha1||1),extra:null}];
   paginas.forEach(p=>{all.push({folhaId:'folha_'+p.id,label:'Pág. '+p.num+(p.tipo==='branca'?' 🗋':''),extra:p.id});});
-  all.forEach(pg=>{const div=document.createElement('div');div.innerHTML=v7ThumbHtml(pg.folhaId,pg.label,pg.extra);list.appendChild(div.firstChild);});
+  all.forEach(pg=>{
+    const ativo = v7PaginaAtiva && (v7PaginaAtiva.p1 ? pg.folhaId==='folha1' : pg.folhaId==='folha_'+v7PaginaAtiva.id);
+    const div=document.createElement('div');
+    div.innerHTML=v7ThumbHtml(pg.folhaId,pg.label,pg.extra,ativo,true);
+    list.appendChild(div.firstChild);
+  });
   v7AtualizarStripAtiva();
 }
 function v7GoToPage(folhaId){
+  if(v7DragMoved){v7DragMoved=false;return;}
   const el=document.getElementById(folhaId);
   if(!el)return;
   try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){el.scrollIntoView(true);}
+  let meta=null;
+  if(folhaId==='folha1'){meta={id:'folha1',tipo:'normal',p1:true};}
+  else{
+    const pid=folhaId.replace('folha_','');
+    const p=paginas.find(x=>x.id===pid);
+    if(p)meta={id:p.id,tipo:p.tipo,p1:false};
+  }
+  if(meta)v7MostrarToolbar(meta);
   document.querySelectorAll('#pageStripList .v7-thumb').forEach(t=>t.classList.toggle('active',t.dataset.folha===folhaId));
 }
 function v7AtualizarStripAtiva(){
+  const thumbs=[...document.querySelectorAll('#pageStripList .v7-thumb')];
+  if(v7PaginaAtiva){
+    const alvo=v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id;
+    thumbs.forEach(t=>t.classList.toggle('active',t.dataset.folha===alvo));
+    return;
+  }
   let melhor=null,melhorDist=1e9;
   document.querySelectorAll('.folha,.folha-branca').forEach(f=>{
     const r=f.getBoundingClientRect();
@@ -4043,18 +3981,130 @@ function v7AtualizarStripAtiva(){
       if(d<melhorDist){melhorDist=d;melhor=f.id;}
     }
   });
-  document.querySelectorAll('#pageStripList .v7-thumb').forEach(t=>t.classList.toggle('active',t.dataset.folha===melhor));
+  thumbs.forEach(t=>t.classList.toggle('active',t.dataset.folha===melhor));
 }
+
+/* ── Reordenar páginas (arraste na faixa) ── */
+function v7OrdemIds(){
+  /* a ordem real é a ordem visual das folhas dentro de #pw */
+  const pw=$('pw'); if(!pw)return ['folha1'];
+  const ids=[];
+  pw.querySelectorAll('.folha,.folha-branca').forEach(f=>{if(f.id)ids.push(f.id);});
+  return ids.length?ids:['folha1'];
+}
+function v7Renumerar(){
+  const ordem=v7OrdemIds();
+  ordem.forEach((id,i)=>{
+    const num=i+1;
+    if(id==='folha1'){
+      v7NumFolha1=num;
+      const lb=$('label_folha1'); if(lb)lb.textContent='— PÁGINA '+num+' —';
+    }else{
+      const pid=id.replace('folha_','');
+      const p=paginas.find(x=>x.id===pid);
+      if(p){
+        p.num=num;
+        const lbl=$('label_'+pid); if(lbl)lbl.textContent=p.tipo==='branca'?`— PÁGINA ${num} (BRANCA) —`:`— PÁGINA ${num} —`;
+        const sth=$('secTitleProd_'+pid); if(sth)sth.textContent=`Informações da Produção — Página ${num}`;
+        const stg=$('secTitleGrade_'+pid); if(stg)stg.textContent=`Grade da Produção — Página ${num}`;
+      }
+    }
+  });
+  if(typeof atualizarRodapes==='function')atualizarRodapes();
+  renderPageStrip();
+  if(typeof snap==='function')snap();
+}
+function v7AplicarOrdem(ordem){
+  const pw=$('pw'); if(!pw)return;
+  /* ordem contém ids de FOLHA (folha1, folha_p2, ...) */
+  ordem.forEach(id=>{
+    const folha=document.getElementById(id);
+    const label=folha?folha.previousElementSibling:null;
+    if(label&&label.classList&&label.classList.contains('page-label'))pw.appendChild(label);
+    if(folha)pw.appendChild(folha);
+  });
+  /* sincroniza o array paginas com a nova ordem (exportação/impressão seguem a ordem) */
+  const idsExtras=ordem.filter(id=>id!=='folha1').map(id=>id.replace('folha_',''));
+  paginas.sort((a,b)=>idsExtras.indexOf(a.id)-idsExtras.indexOf(b.id));
+  v7Renumerar();
+}
+function v7Reordenar(movedId,beforeId){
+  /* aceita tanto id de página (p2) quanto id de folha (folha_p2) */
+  const norm=id=>{const s=String(id);return(s==='folha1'||s.indexOf('folha_')===0)?s:'folha_'+s;};
+  movedId=norm(movedId); beforeId=norm(beforeId);
+  const ordem=v7OrdemIds();
+  const from=ordem.indexOf(movedId);
+  if(from===-1)return;
+  ordem.splice(from,1);
+  let to=ordem.indexOf(beforeId);
+  if(to===-1)to=ordem.length;
+  ordem.splice(to,0,movedId);
+  v7AplicarOrdem(ordem);
+  if(v7PaginaAtiva&&(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id)===movedId)v7PosicionarToolbar();
+}
+function v7ThumbDragStart(e,id){v7DragId=id;v7DragMoved=true;try{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move';}catch(_){e.currentTarget.classList.add('dragging');}e.currentTarget.classList.add('dragging');}
+function v7ThumbDragOver(e){if(!v7DragId)return;e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(_){}e.currentTarget.classList.add('drop-hint');}
+function v7ThumbDragLeave(e){e.currentTarget.classList.remove('drop-hint');}
+function v7ThumbDrop(e,id){e.preventDefault();e.stopPropagation();e.currentTarget.classList.remove('drop-hint');const moved=v7DragId||(e.dataTransfer?e.dataTransfer.getData('text/plain'):'');if(moved&&moved!==id)v7Reordenar(moved,id);v7DragId=null;}
+function v7ThumbDragEnd(e){e.currentTarget.classList.remove('dragging','drop-hint');v7DragId=null;setTimeout(()=>{v7DragMoved=false;},0);}
+
+/* ── Toolbar de elementos acima da página ativa ── */
+function v7MostrarToolbar(meta){
+  v7PaginaAtiva=meta;
+  const tb=$('v7PageToolbar'); if(!tb)return;
+  const pid=meta.id,isP1=meta.p1,isBranca=meta.tipo==='branca';
+  const numTxt=isP1?1:((paginas.find(x=>x.id===pid)||{}).num||'');
+  const btns=[];
+  const b=(a,ico,t)=>{btns.push('<button class="v7-tb-btn" onclick="v7ToolAcao(\''+a+'\')" title="'+t+'">'+ico+'</button>');};
+  b('img','🖼','Adicionar imagem');
+  b('txt','✍','Adicionar texto');
+  b('seta','➜','Desenhar seta');
+  b('ret','▭','Retângulo');
+  b('circ','●','Círculo');
+  if(!isBranca)b('cor','🎨','Adicionar cor');
+  if(isP1)b('camadas','☰','Painel de camadas');
+  tb.innerHTML='<span class="v7-tb-label">Pág. '+numTxt+'</span>'+btns.join('');
+  tb.style.display='flex';
+  v7PosicionarToolbar();
+}
+function v7ToolAcao(a){
+  const m=v7PaginaAtiva; if(!m)return;
+  const pid=m.id,isP1=m.p1;
+  try{
+    if(a==='img'){const el=isP1?$('canvasInput'):$('canvasInput_'+pid);if(el)el.click();}
+    else if(a==='txt'){if(isP1)criarTexto();else criarTextoExtra(pid);}
+    else if(a==='seta'){if(isP1)toggleModoSeta();else toggleModoSetaExtra(pid);}
+    else if(a==='ret'){if(isP1)criarRetangulo();else criarRetanguloExtra(pid);}
+    else if(a==='circ'){if(isP1)criarCirculo();else criarCirculoExtra(pid);}
+    else if(a==='cor'){if(isP1)adicionarCor();else adicionarCorExtra(pid);}
+    else if(a==='camadas'){toggleLayersPanel();}
+  }catch(e){console.warn('v7ToolAcao',e);}
+  v7PosicionarToolbar();
+}
+function v7PosicionarToolbar(){
+  const tb=$('v7PageToolbar'); if(!tb||tb.style.display==='none'||!v7PaginaAtiva)return;
+  const el=document.getElementById(v7PaginaAtiva.p1?'folha1':'folha_'+v7PaginaAtiva.id);
+  if(!el)return;
+  const r=el.getBoundingClientRect();
+  const w=tb.offsetWidth||200;
+  let left=r.left+r.width/2-w/2;
+  left=Math.max(8,Math.min(left,window.innerWidth-w-8));
+  let top=r.top-tb.offsetHeight-10;
+  if(top<8)top=r.top+10;
+  tb.style.left=left+'px';tb.style.top=top+'px';
+}
+function v7EsconderToolbar(){const tb=$('v7PageToolbar');if(tb)tb.style.display='none';}
 
 /* ── Modal de download com seleção de páginas ── */
 function abrirV7Download(){
+  v7EsconderToolbar();
   const m=$('v7DownloadModal'); if(!m)return;
   const list=$('v7DlPages'); list.innerHTML='';
-  const all=[{folhaId:'folha1',label:'Página 1',extra:null}];
+  const all=[{folhaId:'folha1',label:'Página '+(v7NumFolha1||1),extra:null}];
   paginas.forEach(p=>{all.push({folhaId:'folha_'+p.id,label:'Página '+p.num+(p.tipo==='branca'?' (branca)':''),extra:p.id});});
   all.forEach(pg=>{
     const div=document.createElement('div');div.className='v7-dl-page';
-    div.innerHTML='<label><input type="checkbox" class="v7-dl-chk" checked data-folha="'+pg.folhaId+'">'+v7ThumbHtml(pg.folhaId,pg.label,null)+'</label>';
+    div.innerHTML='<label><input type="checkbox" class="v7-dl-chk" checked data-folha="'+pg.folhaId+'">'+v7ThumbHtml(pg.folhaId,pg.label,null,false,false)+'</label>';
     list.appendChild(div);
   });
   m.classList.add('open');
@@ -4084,7 +4134,8 @@ function v7BaixarPNG(folhaIds){
       try{
         const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false,windowWidth:794,windowHeight:1123});
         const a=document.createElement('a');
-        a.download=v7NomeArquivo()+'_Pag'+id.replace(/^folha1?$/,'1').replace('folha_','')+'.png';
+        const num=id==='folha1'?1:((paginas.find(x=>x.id===id.replace('folha_',''))||{}).num||id.replace('folha_',''));
+        a.download=v7NomeArquivo()+'_Pag'+num+'.png';
         a.href=canvas.toDataURL('image/png');a.click();
       }catch(err){console.error('html2canvas error:',err);toast('❌ Erro ao exportar página '+id,'erro');}
     }
@@ -4114,11 +4165,18 @@ function v7BaixarPDF(folhaIds){
 }
 window.addEventListener('afterprint',()=>{document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.remove('print-skip'));});
 
-/* ── Hooks: snap → autosave+faixa ; restaurarDeJSON → faixa ; input → autosave ── */
+/* ── Hooks ── */
 if(window.snap){const _snap=window.snap;window.snap=function(){const r=_snap.apply(this,arguments);v7Autosave();clearTimeout(v7StripTimer);v7StripTimer=setTimeout(renderPageStrip,600);return r;};}
-if(window.restaurarDeJSON){const _rest=window.restaurarDeJSON;window.restaurarDeJSON=function(d){const r=_rest.apply(this,arguments);setTimeout(()=>{renderPageStrip();v7Autosave();},80);return r;};}
+if(window.restaurarDeJSON){const _rest=window.restaurarDeJSON;window.restaurarDeJSON=function(d){const r=_rest.apply(this,arguments);setTimeout(()=>{if(d&&Array.isArray(d._ordemPaginas)&&typeof v7AplicarOrdem==='function'){try{v7AplicarOrdem(d._ordemPaginas);}catch(e){console.warn('ordem',e);}}renderPageStrip();v7Autosave();},80);return r;};}
+if(window.capturarFichaParaJSON){const _cap=window.capturarFichaParaJSON;window.capturarFichaParaJSON=function(){const d=_cap.apply(this,arguments);try{d._ordemPaginas=v7OrdemIds();}catch(e){}return d;};}
 document.addEventListener('input',()=>v7Autosave());
-window.addEventListener('scroll',()=>{clearTimeout(v7ScrollTimer);v7ScrollTimer=setTimeout(v7AtualizarStripAtiva,150);},true);
+document.addEventListener('mousedown',e=>{
+  if(e.target.closest&&(e.target.closest('#v7PageToolbar')||e.target.closest('#pageStripWrap')))return;
+  v7EsconderToolbar();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')v7EsconderToolbar();});
+window.addEventListener('scroll',()=>{clearTimeout(v7ScrollTimer);v7ScrollTimer=setTimeout(()=>{v7AtualizarStripAtiva();v7PosicionarToolbar();},150);},true);
+window.addEventListener('resize',()=>v7PosicionarToolbar());
 
 /* ── Init: restaura a ficha em andamento (rascunho vivo) e desenha a faixa ── */
 document.addEventListener('DOMContentLoaded',()=>{

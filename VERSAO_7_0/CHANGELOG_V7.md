@@ -122,3 +122,18 @@ Na visão Principal (módulo `projeto_principal_dashboard_catalogo.html`), a **C
 - Autosave: alterar o nº da ficha salva e restaura após recarregar.
 - **Páginas + conteúdo sobrevivem ao reload**: página extra com texto "TESTE PAGINA 2" restaurada com a camada intacta.
 - Sem erros no console.
+---
+
+## Atualização 5 — Páginas arrastáveis na faixa + toolbar de elementos ao clicar na página
+
+### O que mudou
+1. **Arraste para organizar as páginas**: na faixa inferior (estilo Canva), as miniaturas agora são arrastáveis — segure e solte sobre outra miniatura para reordenar. A ordem vale para a visualização, para a numeração das páginas, para a impressão/exportação e é salva no rascunho vivo (sobrevive a reload e à catalogação). A página 1 também pode ser movida (a numeração acompanha).
+2. **Menu lateral sem "Páginas"**: a seção "Páginas" do menu lateral (grupos de páginas e botões "Adicionar Página"/"Adicionar Página Branca") foi removida. Tudo de página agora é feito pela faixa inferior (＋ / 🗋 / ✕ / arrastar).
+3. **Ferramentas ao clicar na página (Canva)**: ao clicar numa miniatura da faixa, aparece uma **barra de ferramentas flutuante logo acima da página** com: 🖼 Adicionar imagem, ✍ Adicionar texto, ➜ Desenhar seta, ▭ Retângulo, ● Círculo, 🎨 Adicionar cor (nas páginas normais) e ☰ Painel de camadas (na página 1). A barra acompanha a página ao rolar, esconde ao clicar fora ou pressionar ESC, e some na impressão.
+4. Robustez: `v7Reordenar` aceita id de página ou de folha; a numeração é derivada da ordem visual real do documento.
+
+### Verificações (Chromium headless)
+- Faixa: 3 miniaturas arrastáveis; reordenar folha1 para o meio → DOM, rótulos, numeração e faixa corretos ("Pág. 2, Pág. 1, Pág. 3").
+- Ordem persiste após reload (página 1 no meio continua no meio, numerada corretamente).
+- Sidebar sem seção Páginas e sem botões de adicionar; toolbar aparece ao clicar na miniatura com os botões certos e esconde ao clicar fora.
+- Modal de download continua listando as páginas na nova ordem; sem erros no console.
