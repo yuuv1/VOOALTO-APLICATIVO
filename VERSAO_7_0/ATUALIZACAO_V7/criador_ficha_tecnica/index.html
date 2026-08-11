@@ -570,6 +570,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 /* PRINT */
 @media print{
 @page{size:A4 portrait;margin:0}
+.folha.print-skip,.folha-branca.print-skip{display:none!important}
 html,body{width:210mm;height:auto;background:#fff!important;margin:0!important;padding:0!important;font-size:11px!important}
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 #sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb{display:none!important}
@@ -3981,7 +3982,14 @@ function v7CriarPaginaRestaurada(snap,index){
   const pw=$('pw');
   const folhas=[...pw.querySelectorAll('.folha,.folha-branca')];
   const ref=folhas[index]?folhas[index]:null;
-  if(ref){pw.insertBefore(lbl,ref);pw.insertBefore(folha,ref);}else{pw.appendChild(lbl);pw.appendChild(folha);}
+  if(ref){
+    /* insere o par (label+folha) antes do LABEL da página de referência,
+       mantendo a estrutura label→folha emparelhada no DOM */
+    const refLabel=ref.previousElementSibling;
+    const antesDe=(refLabel&&refLabel.classList&&refLabel.classList.contains('page-label'))?refLabel:ref;
+    pw.insertBefore(folha,antesDe);
+    pw.insertBefore(lbl,folha);
+  }else{pw.appendChild(lbl);pw.appendChild(folha);}
   const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=true;inp.style.display='none';inp.id='canvasInput_'+pid;
   inp.onchange=e=>onCanvasFilesExtra(e,p);document.body.appendChild(inp);
   paginas.splice(Math.min(index,paginas.length),0,p);

@@ -189,3 +189,32 @@ O problema de "não funcionou" que você viu era o **cache do service worker**: 
 - Excluir página → Ctrl+Z restaura com texto/layers intactos → Ctrl+Y exclui de novo. Sem erros.
 - Menu lateral aparece ao clicar na folha com os botões corretos.
 - PNG do criador e do orçamento gerados com sucesso (arquivos reais ~390KB / ~660KB), sem a toolbar e sem erros no console.
+---
+
+## Atualização 8 — Checagem geral de bugs (2 corrigidos)
+
+### 🔴 Bug 1: "Baixar PDF com páginas selecionadas" imprimia TODAS as páginas
+O código de download em PDF adicionava a classe `.print-skip` nas páginas não selecionadas, mas **não existia a regra CSS** `@media print` para escondê-las — ou seja, a seleção de páginas não tinha efeito na impressão. Corrigido adicionando:
+```css
+@media print{ .folha.print-skip,.folha-branca.print-skip{display:none!important} }
+```
+
+### 🔴 Bug 2: Ctrl+Z de página excluída no meio da lista bagunçava os rótulos
+Ao desfazer a exclusão de uma página que não era a última, o par "rótulo + folha" era inserido no lugar errado: a folha entrava antes da folha de referência, mas **depois do rótulo dela**, quebrando a estrutura do documento (rótulos apareciam fora de ordem). Corrigido inserindo o par **antes do rótulo** da página de referência, mantendo a estrutura `rótulo → folha` sempre emparelhada.
+
+### Verificações da checagem geral (Chromium headless)
+- ✅ Sintaxe JS de todos os scripts (`node --check`)
+- ✅ IDs de elementos referenciados existem (criador/catálogo/orçamento)
+- ✅ Abas Principal (catálogo ativa), Criador e Orçamento carregam sem erros
+- ✅ Fluxo completo de **edição de ficha**: catálogo → Criador (`vooalto-ficha-edit`) → salvar (`vooalto-ficha-updated`) → catálogo atualizado
+- ✅ Backup do catálogo: exporta com PDF+fichaData embutidos e importa de volta
+- ✅ Exportação PNG multi-página: orçamento (2 páginas → 2 arquivos) e criador (2 páginas → Pag1/Pag2), sem bloqueio de downloads
+- ✅ Cálculos: orçamento e produção do criador com valores "25,90" e "R$ 1.234,56" (vírgula/milhar)
+- ✅ Undo/redo de páginas sob estresse: adicionar → reordenar (página 1 no fim) → excluir no meio → undo → redo → undo(2x) — ordem, números e rótulos sempre corretos
+- ✅ Hover preview do catálogo: pdf.js carrega pelos caminhos locais
+- ✅ Modais do orçamento (configurações, abas, assinatura) e preenchimento rápido do criador
+- ✅ `sw.js`/`server.js`/`manifest` consistentes (V7, no-cache para sw)
+
+### Observações (sem correção — decisão)
+- `postMessage` sem checagem de `e.origin` (risco baixo em app local/LAN; mudar poderia quebrar uso via `file://`).
+- CSS com muitos `!important` acumulados no dashboard (manutenção, não quebra).
