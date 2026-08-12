@@ -2124,6 +2124,7 @@ document.addEventListener('keyup',e=>{if(e.shiftKey||['ArrowLeft','ArrowRight','
 const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','coresTitulo','tipoTitulo'];
 const CAMPOS_CE=['dc_nome','dc_doc','dc_tel','dc_end','dc_cidade','dc_cep','dc_vendedor','tipoTecido'];
 let undoStack=[],redoStack=[],snapTimer=null;
+let undoSeqStack=[],redoSeqStack=[],v7OpSeq=0,v7SuppressSnap=false;
 
 function capState(){
 const d={};
@@ -2133,6 +2134,7 @@ const grade={};document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[da
 const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');cores.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});
 d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
+d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0}));
 return JSON.parse(JSON.stringify(d));
 }
 function serLayer(l){
@@ -2148,17 +2150,36 @@ CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.value=s[id]
 CAMPOS_CE.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.innerHTML=s[id];});
 if(s._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(s._grade[i]!==undefined){el.value=s._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
 recalcGrade();$('coresList').innerHTML='';corId=0;(s._cores||[]).forEach(c=>adicionarCor(c.hex,c.nome));
-clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);});
+clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);else if(x.type==='rect')addRectLayer(x);else if(x.type==='circle')addCirculoLayer(x);});
+/* restaura camadas das páginas extras (undo/redo funcionam nelas também) */
+if(Array.isArray(s._paginasDetalhe)){
+  s._paginasDetalhe.forEach(snap=>{
+    const p=paginas.find(x=>x.id===snap.id);
+    if(!p)return;
+    (p.layers||[]).forEach(l=>{const el=document.getElementById('ly_'+p.id+'_'+l.id);if(el)el.remove();});
+    p.layers=[];p.zCnt=snap.zCnt||10;p.linhaId=snap.linhaId||0;p.corId=snap.corId||0;p.selId=null;
+    (snap.layers||[]).forEach(x=>{
+      if(!x||!x.type)return;
+      if(x.type==='img'){addImgLayerExtra(p,x.src,x);}
+      else if(x.type==='txt'){const nl=Object.assign({type:'txt',txt:'Texto',richHtml:'',font:"'Segoe UI',sans-serif",size:22,color:'#1E2937',bold:false,italic:false,xp:0.15,yp:0.4,wp:0.7,rot:0},x,{z:x.z!==undefined?x.z:++p.zCnt});p.layers.push(nl);renderTxtLayerExtra(p,nl);}
+      else if(x.type==='arr'){const nl=Object.assign({},x,{z:x.z!==undefined?x.z:++p.zCnt});p.layers.push(nl);renderArrLayerExtra(p,nl);}
+      else if(x.type==='rect'){addRectLayerExtra(p,x);}
+      else if(x.type==='circle'){addCirculoLayerExtra(p,x);}
+    });
+    if(typeof updPhExtra==='function')updPhExtra(p);
+  });
+}
 salvarNum();calcTotal();
 }
 function snap(){
+if(v7SuppressSnap)return;
 clearTimeout(snapTimer);snapTimer=setTimeout(()=>{
 const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(s))return;
-undoStack.push(s);if(undoStack.length>60)undoStack.shift();redoStack=[];updUR();
+undoStack.push(s);undoSeqStack.push(++v7OpSeq);if(undoStack.length>60){undoStack.shift();undoSeqStack.shift();}redoStack=[];redoSeqStack=[];updUR();
 },400);
 }
-function undo(){if(!undoStack.length)return;redoStack.push(capState());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
-function redo(){if(!redoStack.length)return;undoStack.push(capState());restState(redoStack.pop());updUR();toast('↪ Refeito');}
+function undo(){if(!undoStack.length)return;redoStack.push(capState());redoSeqStack.push(undoSeqStack.pop());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
+function redo(){if(!redoStack.length)return;undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop());restState(redoStack.pop());updUR();toast('↪ Refeito');}
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
 document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select')&&!e.target.matches('.gi'))snap();if(e.target.matches('[contenteditable]'))snap();});
 document.addEventListener('keydown',e=>{
@@ -4010,7 +4031,7 @@ function v7ThumbHtml(folhaId,label,extraId,active,drag,removable){
 /* ── UNDO/REDO DE PÁGINAS (Ctrl+Z restaura página excluída) ── */
 let v7PageUndoStack=[];
 let v7PageRedoStack=[];
-function v7PushPageUndo(op){v7PageUndoStack.push(op);if(v7PageUndoStack.length>60)v7PageUndoStack.shift();v7PageRedoStack=[];}
+function v7PushPageUndo(op){op.seq=++v7OpSeq;v7PageUndoStack.push(op);if(v7PageUndoStack.length>60)v7PageUndoStack.shift();v7PageRedoStack=[];}
 function v7CapturarPaginaP1(){
   const d={};
   d.tipo='p1';
@@ -4137,12 +4158,14 @@ function v7RemoverPaginaComUndo(pid){
   }
   const idx=paginas.findIndex(p=>p.id===pid);
   if(idx===-1)return;
-  v7PushPageUndo({type:'remove',index:idx,snap:v7CapturarPaginaExtra(paginas[idx])});
+  const folhas=[...document.querySelectorAll('#pw .folha,#pw .folha-branca')];
+  const domIndex=Math.max(0,folhas.indexOf(document.getElementById('folha_'+pid)));
+  v7PushPageUndo({type:'remove',index:idx,domIndex,snap:v7CapturarPaginaExtra(paginas[idx])});
   removerPagina(pid);
 }
 function v7PageDesfazer(op){
   if(!op)return;
-  if(op.type==='remove'){if(op.p1)v7RestaurarPaginaP1(op.snap);else v7CriarPaginaRestaurada(op.snap,Math.min(op.index,paginas.length));}
+  if(op.type==='remove'){if(op.p1)v7RestaurarPaginaP1(op.snap);else v7CriarPaginaRestaurada(op.snap,(op.domIndex!==undefined)?op.domIndex:Math.min(op.index,paginas.length));}
   else if(op.type==='add'){const p=paginas.find(x=>x.id===op.id);if(p)removerPagina(p.id);}
   else if(op.type==='reorder'){v7AplicarOrdem(op.ordemAntes);}
   if(typeof v7Autosave==='function')v7Autosave();
@@ -4150,17 +4173,26 @@ function v7PageDesfazer(op){
 function v7PageRefazer(op){
   if(!op)return;
   if(op.type==='remove'){if(op.p1){const f=$('folha1');if(f)f.remove();const lb=$('label_folha1');if(lb)lb.remove();try{clearAllLayers();}catch(e){}if(typeof v7Renumerar==='function')v7Renumerar();if(typeof renderPageStrip==='function')renderPageStrip();if(typeof v7Autosave==='function')v7Autosave();}else{const ex=paginas.find(x=>x.id===op.snap.id);if(ex)removerPagina(ex.id);}}
-  else if(op.type==='add'){const ex=paginas.find(x=>x.id===op.id);if(!ex)v7CriarPaginaRestaurada(op.snap,Math.min(op.index,paginas.length));}
+  else if(op.type==='add'){const ex=paginas.find(x=>x.id===op.id);if(!ex){const nFolhas=document.querySelectorAll('#pw .folha,#pw .folha-branca').length;v7CriarPaginaRestaurada(op.snap,nFolhas);}}
   else if(op.type==='reorder'){v7AplicarOrdem(op.ordemDepois);}
   if(typeof v7Autosave==='function')v7Autosave();
 }
 if(window.undo){const _u=window.undo;window.undo=function(){
-  if(v7PageUndoStack.length){const op=v7PageUndoStack.pop();v7PageRedoStack.push(op);v7PageDesfazer(op);toast('↩ Página desfeita');return;}
-  return _u.apply(this,arguments);
+  try{v7SuppressSnap=true;}catch(e){}
+  const seqP = v7PageUndoStack.length ? v7PageUndoStack[v7PageUndoStack.length-1].seq||0 : -1;
+  const seqS = undoSeqStack.length ? undoSeqStack[undoSeqStack.length-1] : -1;
+  if(seqP>=seqS&&v7PageUndoStack.length){const op=v7PageUndoStack.pop();v7PageRedoStack.push(op);v7PageDesfazer(op);toast('↩ Página desfeita');}
+  else _u.apply(this,arguments);
+  try{v7SuppressSnap=false;}catch(e){}
 };}
 if(window.redo){const _r=window.redo;window.redo=function(){
-  if(v7PageRedoStack.length){const op=v7PageRedoStack.pop();v7PageUndoStack.push(op);v7PageRefazer(op);toast('↪ Página refeita');return;}
-  return _r.apply(this,arguments);
+  try{v7SuppressSnap=true;}catch(e){}
+  const seqP = v7PageRedoStack.length ? v7PageRedoStack[v7PageRedoStack.length-1].seq||0 : 1e9;
+  const seqS = redoSeqStack.length ? redoSeqStack[redoSeqStack.length-1] : 1e9;
+  /* redo restaura na ordem INVERSA do undo: menor seq primeiro */
+  if(seqP<=seqS&&v7PageRedoStack.length){const op=v7PageRedoStack.pop();v7PageUndoStack.push(op);v7PageRefazer(op);toast('↪ Página refeita');}
+  else _r.apply(this,arguments);
+  try{v7SuppressSnap=false;}catch(e){}
 };}
 
 /* ── Template original da página 1 (para restaurar via undo) ── */

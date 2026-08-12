@@ -1,4 +1,4 @@
-const CACHE_NAME='vooalto-v7-4085-20260810-v11';
+const CACHE_NAME='vooalto-v7-4085-20260810-v12';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/icone.png','./assets/logo_empresa.png','./assets/pdf.min.js','./assets/pdf.worker.min.js','./assets/html2canvas.min.js','./assets/cropper.min.js','./assets/cropper.min.css'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(APP_SHELL).catch(()=>{})));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

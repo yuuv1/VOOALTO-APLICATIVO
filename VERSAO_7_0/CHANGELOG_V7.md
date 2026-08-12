@@ -302,3 +302,22 @@ O print mostrou as alças (redimensionar, rotacionar, "A") **muito longe do text
 - Re-selecionar → caixa re-encaixa ao texto.
 - Alça "A" (aumentar fonte) funciona (35 → 65).
 - Sem erros no console.
+---
+
+## Atualização 13 — Revisão de bugs: undo/redo corrigido em páginas extras
+
+### Bugs encontrados e corrigidos na revisão
+1. **Undo/redo não funcionava para objetos (texto/imagem) em páginas extras** — `capState()`/`restState()` só serializavam a página 1. Criar, mover ou excluir um texto numa página extra não podia ser desfeito. Agora as camadas de todas as páginas são capturadas e restauradas.
+2. **Ctrl+Z desfazia a página antes do texto recém-criado nela** — eram duas pilhas de undo separadas (páginas + snapshot) e a de páginas sempre tinha prioridade, ignorando a ordem real das ações. Agora há um contador de sequência global (`v7OpSeq`) e o undo/redo escolhem a operação mais recente entre as duas pilhas.
+3. **Redo perdia operações** — durante undo/redo, funções internas chamavam `snap()` que limpava a pilha de redo. Adicionada supressão (`v7SuppressSnap`) durante undo/redo, e o redo agora restaura na ordem inversa correta (menor sequência primeiro).
+4. **Página restaurada no lugar errado** — o índice salvo era o do array `paginas` (sem a folha1), mas a restauração inseria pelo índice no DOM (com a folha1). Agora captura o índice DOM real (`domIndex`).
+
+### Verificações (Chromium headless)
+- Criar texto em página extra → Ctrl+Z (2x) remove o texto → Ctrl+Z remove a página → Ctrl+Y (3x) restaura página + texto.
+- Reordenar página 1 para o fim → Ctrl+Z volta à ordem original.
+- Excluir página no meio → Ctrl+Z restaura na posição correta.
+- Texto na página 1 continua com undo funcionando.
+- Abas Principal/Criador/Orçamento sem erros no console.
+
+### Observação (não alterado)
+- O print de referência dos espaçamentos não está acessível no meu ambiente (a mensagem anterior sobre espaçamentos foi desconsiderada pelo usuário). Os espaçamentos atuais dos controles de texto são consistentes entre P1 e páginas extras.
