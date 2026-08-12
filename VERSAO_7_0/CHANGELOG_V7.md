@@ -285,3 +285,20 @@ A expansão do tamanho do texto (a **alça "A"** e o **arrastar o canto** da cai
 - **Página extra**: clicar no preset 48 → fonte 36 → 48; slider presente.
 - **Página 1**: alça "A" 22 → 52, preset 48 → 48, exportação PNG sem erros.
 - Sem erros no console.
+---
+
+## Atualização 12 — Alças/controles do texto colados ao texto (páginas extras)
+
+### O problema
+O print mostrou as alças (redimensionar, rotacionar, "A") **muito longe do texto**. Causa medida: na página 1, selecionar um texto **encolhe a caixa ao tamanho do conteúdo** (por isso as alças ficam coladas); nas **páginas extras** esse ajuste não existia — a caixa ficava com a largura antiga (ex.: 403px) enquanto o texto tinha 195px, e as alças (nos cantos da caixa) ficavam **~200px longe do texto**.
+
+### Correção
+- Nova função `v7FitTxtExtra(p,l,el)`: encolhe a caixa do texto ao conteúdo ao **selecionar um texto em qualquer página extra** (hook no `selLayerExtra`).
+- Medição após a correção: caixa 203px vs texto 195px na página extra (gap das alças ~1-6px) — igual à página 1.
+
+### Verificações (Chromium headless)
+- Selecionar texto em página extra → caixa colada ao texto (gap alça 1px).
+- Arrastar o canto → expande caixa + fonte (22 → 35).
+- Re-selecionar → caixa re-encaixa ao texto.
+- Alça "A" (aumentar fonte) funciona (35 → 65).
+- Sem erros no console.

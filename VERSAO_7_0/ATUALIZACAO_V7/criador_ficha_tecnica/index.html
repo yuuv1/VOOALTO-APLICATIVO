@@ -4587,6 +4587,39 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('click',()=>setTimeout(()=>{try{document.querySelectorAll('.txt-layer').forEach(v7InstalarAlca);}catch(e){}},120));
 })();
 
+/* ═══ V7 — CAIXA DO TEXTO COLADA AO CONTEÚDO (PÁGINAS EXTRAS) ═══
+   Na página 1, selecionar um texto encolhe a caixa ao tamanho do texto.
+   Nas páginas extras isso não acontecia → as alças (redimensionar/rotacionar/"A")
+   ficavam ~200px longe do texto. Agora o ajuste roda também ao selecionar
+   qualquer texto de página extra. */
+function v7FitTxtExtra(p,l,el){
+  if(!el||!l)return;
+  const tc=el.querySelector('.tc'); if(!tc)return;
+  const ci=document.getElementById('canvasInner_'+p.id);
+  const W=(ci&&ci.clientWidth)||400;
+  const rect=tc.getBoundingClientRect();
+  const w=Math.max(28, Math.ceil(rect.width)+8);
+  l.wp=Math.min(.98, w/W);
+  el.style.width=(l.wp*W)+'px';
+}
+(function(){
+  if(typeof selLayerExtra==='function'&&!window.__v7FitTxtExtraHook){
+    window.__v7FitTxtExtraHook=true;
+    const _sel=window.selLayerExtra;
+    window.selLayerExtra=function(p,id){
+      const r=_sel.apply(this,arguments);
+      setTimeout(()=>{
+        try{
+          const l=p.layers.find(x=>x.id===id);
+          const el=document.getElementById('ly_'+p.id+'_'+id);
+          if(l&&l.type==='txt'&&el)v7FitTxtExtra(p,l,el);
+        }catch(e){}
+      },60);
+      return r;
+    };
+  }
+})();
+
 /* ═══ V7 — MÁSCARA DE MOEDA para a ENTRADA do cliente ═══
    "1000" → "1.000,00" · "25,90" → "25,90" · "1500" → "1.500,00" */
 function v7MascaraEntrada(el){
