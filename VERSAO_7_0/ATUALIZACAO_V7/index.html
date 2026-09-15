@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vooalto V7</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050505" id="themeColorMeta">
+<meta name="application-name" content="Vooalto V7">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f5f7;color:#111827}
+:root{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
+/* ── temas (degradê) ── */
+body[data-theme="neo"]{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
+body[data-theme="oxford"]{--top-grad:linear-gradient(135deg,#002147,#d2b48c);--bar-text:#f6e7ca;--shell-bg:#002147;--top-solid:#002147}
+body[data-theme="cherry"]{--top-grad:linear-gradient(135deg,#9a0002,#efe6de);--bar-text:#fff8ec;--shell-bg:#efe6de;--top-solid:#9a0002}
+body[data-theme="butter"]{--top-grad:linear-gradient(135deg,#ffefb3,#013e37);--bar-text:#ffefb3;--shell-bg:#ffefb3;--top-solid:#013e37}
+body[data-theme="asphalt"]{--top-grad:linear-gradient(135deg,#10002b,#8338ec);--bar-text:#fff;--shell-bg:#10002b;--top-solid:#10002B}
+body[data-theme="vanilla"]{--top-grad:linear-gradient(135deg,#fff7e6,#0a122a);--bar-text:#0a122a;--shell-bg:#fff7e6;--top-solid:#fff7e6}
+body[data-theme="yellowblack"]{--top-grad:linear-gradient(135deg,#f9d344,#2e2d29);--bar-text:#111;--shell-bg:#f9d344;--top-solid:#f9d344}
+body[data-theme="wine"]{--top-grad:linear-gradient(135deg,#7f011f,#f5ebd0);--bar-text:#fff;--shell-bg:#f5ebd0;--top-solid:#7f011f}
+body[data-theme="burgundy"]{--top-grad:linear-gradient(135deg,#93032e,#151515);--bar-text:#fff;--shell-bg:#151515;--top-solid:#93032e}
+body[data-theme="crimson"]{--top-grad:linear-gradient(135deg,#c50337,#021024);--bar-text:#fff;--shell-bg:#021024;--top-solid:#c50337}
+body[data-theme="sunset"]{--top-grad:linear-gradient(135deg,#e51a2b,#ffa586,#242f49);--bar-text:#fff;--shell-bg:#242f49;--top-solid:#242f49}
+body[data-theme="ocean"]{--top-grad:linear-gradient(135deg,#c1e8ff,#052659,#021024);--bar-text:#fff;--shell-bg:#021024;--top-solid:#021024}
+body[data-theme="coffee"]{--top-grad:linear-gradient(135deg,#fff8ee,#8b5e3c);--bar-text:#2b2118;--shell-bg:#f7f1e8;--top-solid:#8b5e3c}
+body[data-theme="pastel"]{--top-grad:linear-gradient(135deg,#fff,#ffc8dd,#bde0fe);--bar-text:#242038;--shell-bg:#f8f7ff;--top-solid:#f8f7ff}
+body[data-theme="dark"]{--top-grad:linear-gradient(135deg,#171b24,#050505);--bar-text:#fff;--shell-bg:#0b0f17;--top-solid:#0b0f17}
+/* ── temas (sólidos) ── */
+body[data-theme="givry"]{--top-solid:#F5E4CF;--bar-text:#275CCC;--shell-bg:#F5E4CF}
+body[data-theme="neon"]{--top-solid:#000000;--bar-text:#FD4012;--shell-bg:#000000}
+body[data-theme="stratos"]{--top-solid:#011936;--bar-text:#ED254E;--shell-bg:#011936}
+body[data-theme="kiwi"]{--top-solid:#222222;--bar-text:#89E900;--shell-bg:#222222}
+body[data-theme="asphaltsolid"]{--top-solid:#10002B;--bar-text:#8338EC;--shell-bg:#10002B}
+body[data-theme="tech"]{--top-solid:#0A1929;--bar-text:#64FFDA;--shell-bg:#0A1929}
+body[data-theme="coral"]{--top-solid:#1A0A0A;--bar-text:#FF6B6B;--shell-bg:#1A0A0A}
+body[data-theme="lime"]{--top-solid:#0D1A0D;--bar-text:#00E676;--shell-bg:#0D1A0D}
+body[data-theme="violet"]{--top-solid:#1A0D2E;--bar-text:#BB86FC;--shell-bg:#1A0D2E}
+body[data-theme="givry"] .switch-btn.active,body[data-theme="neon"] .switch-btn.active,body[data-theme="stratos"] .switch-btn.active,body[data-theme="kiwi"] .switch-btn.active,body[data-theme="asphaltsolid"] .switch-btn.active,body[data-theme="tech"] .switch-btn.active,body[data-theme="coral"] .switch-btn.active,body[data-theme="lime"] .switch-btn.active,body[data-theme="violet"] .switch-btn.active{background:rgba(255,255,255,.95)!important;color:#111!important}
+body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-theme="tech"] .switcher,body[data-theme="coral"] .switcher,body[data-theme="lime"] .switcher,body[data-theme="violet"] .switcher{background:rgba(255,255,255,.10)!important}
+
+.app-shell{height:100vh;display:flex;flex-direction:column;background:var(--shell-bg)}
+.topbar{min-height:64px;flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--top-solid);color:var(--bar-text);border-bottom:1px solid rgba(0,0,0,.12);z-index:50;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{height:38px;object-fit:contain;object-position:left center;display:block;filter:none}
+.brand-name{font-size:15px;font-weight:900;letter-spacing:.5px;line-height:1.1}
+.brand-name small{display:block;font-size:8.5px;font-weight:700;letter-spacing:2px;opacity:.65;text-transform:uppercase}
+.switcher{display:flex;gap:4px;align-items:center;background:rgba(0,0,0,.14);padding:4px;border-radius:999px}
+.switch-btn{position:relative;border:0;background:transparent;color:inherit;padding:8px 14px;border-radius:999px;cursor:pointer;font-size:12.5px;font-weight:760;font-family:inherit;white-space:nowrap}
+.switch-btn.active{background:rgba(255,255,255,.92);color:#050505;box-shadow:0 4px 14px rgba(17,24,39,.16)}
+.badge{position:absolute;top:-3px;right:-4px;background:#DC2626;color:#fff;font-size:9.5px;font-weight:900;min-width:17px;height:17px;border-radius:999px;display:none;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.badge.show{display:inline-flex}
+.controls{display:flex;align-items:center;gap:8px;margin-left:auto}
+.theme-select{border:1px solid rgba(0,0,0,.18);background:rgba(255,255,255,.25);color:inherit;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:760;cursor:pointer;max-width:150px;font-family:inherit}
+.utility-btn{border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.22);color:inherit;padding:8px 11px;border-radius:999px;cursor:pointer;font-size:11.5px;font-weight:760;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+.utility-btn:hover{background:rgba(255,255,255,.4)}
+.frame-wrap{position:relative;flex:1;min-height:0;background:var(--shell-bg)}
+.project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:none}
+.project-frame.active{display:block}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--bar-text);background:var(--shell-bg);z-index:10;font-weight:760;font-size:13px}
+.loading .spin{width:34px;height:34px;border:3px solid rgba(127,127,140,.3);border-top-color:currentColor;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.90);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:760;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999}
+.toast.show{opacity:1;transform:translateY(0)}
+.help-modal{position:fixed;inset:0;background:rgba(5,5,10,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:18px}
+.help-modal.open{display:flex}
+.help-card{background:#fff;color:#111827;border-radius:18px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.help-card h3{font-size:17px;margin-bottom:4px}
+.help-card .sub{font-size:11.5px;color:#6b7280;margin-bottom:14px}
+.help-item{display:flex;gap:12px;padding:12px 0;border-top:1px solid #eef0f3}
+.help-item .ico{font-size:22px;flex:0 0 30px}
+.help-item b{font-size:13px}
+.help-item p{font-size:12px;color:#4b5563;margin-top:3px;line-height:1.45}
+.help-x{float:right;border:0;background:#f3f4f6;border-radius:999px;padding:7px 13px;font-weight:800;cursor:pointer;font-size:12px}
+@media(max-width:860px){
+  .topbar{gap:8px}
+  .brand-logo{height:30px}
+  .switcher{order:3;width:100%;overflow-x:auto}
+  .controls{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="assets/logo_empresa.png" alt="Vooalto Uniformes">
+      <div class="brand-name">VOOALTO<small>V7 · Uniformes</small></div>
+    </div>
+    <nav class="switcher">
+      <button class="switch-btn active" id="btn-principal" onclick="showProject('principal')" title="Fichas em produção, prioridades e PDFs">🏠 Catalogação<span class="badge" id="badgeAlta">0</span></button>
+      <button class="switch-btn" id="btn-ficha" onclick="showProject('ficha')" title="Criar ficha técnica de produção (A4)">📋 Ficha Técnica</button>
+      <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
+    </nav>
+    <div class="controls">
+      <select class="theme-select" id="themeSelect" onchange="applyThemeFromShell(this.value)" title="Tema do sistema inteiro">
+        <option value="neo">Tema: Neo Glass</option>
+        <option value="dark">Tema: Dark</option>
+        <option value="oxford">Tema: Oxford Blue</option>
+        <option value="cherry">Tema: Cherry</option>
+        <option value="butter">Tema: Butter</option>
+        <option value="givry">Tema: Givry</option>
+        <option value="neon">Tema: Neon</option>
+        <option value="stratos">Tema: Stratos</option>
+        <option value="kiwi">Tema: Kiwi</option>
+        <option value="asphaltsolid">Tema: Asfalto</option>
+        <option value="tech">Tema: Tech</option>
+        <option value="coral">Tema: Coral</option>
+        <option value="lime">Tema: Lime</option>
+        <option value="violet">Tema: Violet</option>
+      </select>
+      <button class="utility-btn" id="installAppBtn" onclick="installPWA()" style="display:none" title="Instalar como aplicativo">⬇ Instalar</button>
+      <button class="utility-btn" onclick="reloadActive()" title="Recarregar o módulo atual">↻</button>
+      <button class="utility-btn" onclick="openHelp()" title="Ajuda — como usar o Vooalto V7">? Ajuda</button>
+    </div>
+  </header>
+  <main class="frame-wrap">
+    <div class="loading" id="loading"><div class="spin"></div>Carregando V7...</div>
+    <iframe class="project-frame active" id="frame-principal" src="principal_dashboard/index.html"></iframe>
+    <iframe class="project-frame" id="frame-ficha" src="criador_ficha_tecnica/index.html"></iframe>
+    <iframe class="project-frame" id="frame-orcamento" src="criador_orcamento/index.html"></iframe>
+  </main>
+</div>
+
+<div class="help-modal" id="helpModal">
+  <div class="help-card">
+    <button class="help-x" onclick="closeHelp()">Fechar ✕</button>
+    <h3>Como usar o Vooalto V7</h3>
+    <div class="sub">Três módulos integrados: crie a ficha, catalogue a produção e envie orçamentos.</div>
+    <div class="help-item"><div class="ico">📋</div><div>
+      <b>1 · Ficha Técnica</b>
+      <p>Crie a ficha de produção no <b>Ficha Técnica</b>: dados do cliente, modelos, valores, cores e imagens. Quando terminar, clique em <b>Enviar para Catalogação</b> (embaixo). O número da ficha avança sozinho.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">🏠</div><div>
+      <b>2 · Catalogação</b>
+      <p>Acompanhe todas as fichas em produção: a prioridade sobe sozinha com os dias (Média/Alta). Abra o PDF, marque <b>✔ Concluído</b> quando terminar, ou clique em <b>✏️ Modificar Ficha</b> para voltar ao editor (a ficha é atualizada na hora, sem duplicar).</p>
+    </div></div>
+    <div class="help-item"><div class="ico">💰</div><div>
+      <b>3 · Orçamento</b>
+      <p>Crie orçamentos/propostas com itens, valores, cliente e assinatura. O conteúdo é <b>salvo automaticamente</b> neste navegador — feche e volte que continua de onde parou. Use <b>Salvar .json</b> para guardar um arquivo.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">🎨</div><div>
+      <b>Tema</b>
+      <p>O seletor no topo muda o tema do sistema inteiro (todos os módulos + barra).</p>
+    </div></div>
+    <div class="help-item"><div class="ico">💾</div><div>
+      <b>Backup</b>
+      <p>Em <b>Catalogação</b> use <b>Exportar backup</b> / <b>Importar</b>. O import pergunta se quer mesclar ou substituir — nada é apagado sem sua confirmação.</p>
+    </div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PROJECTS={
+  principal:{name:'Catalogação',button:'btn-principal',frame:'frame-principal'},
+  ficha:{name:'Ficha Técnica',button:'btn-ficha',frame:'frame-ficha'},
+  orcamento:{name:'Orçamento',button:'btn-orcamento',frame:'frame-orcamento'}
+};
+let activeProject='principal';
+let deferredInstallPrompt=null;
+
+function setShellTheme(t){
+  t=t||'neo';
+  document.body.dataset.theme=(t==='neo')?'':t;
+  const meta=document.getElementById('themeColorMeta');
+  if(meta){
+    const bg=getComputedStyle(document.body).getPropertyValue('--shell-bg').trim()||'#eef0ff';
+    meta.content=bg;
+  }
+  const sel=document.getElementById('themeSelect');
+  if(sel&&sel.value!==t)sel.value=t;
+  try{localStorage.setItem('vooalto_theme_v5',t)}catch(e){}
+}
+function applyThemeFromShell(t){
+  setShellTheme(t);
+  broadcastTheme(t);
+  toast('🎨 Tema aplicado: '+(t||'Neo Glass'));
+}
+function broadcastTheme(t){
+  Object.keys(PROJECTS).forEach(k=>{
+    const fr=document.getElementById(PROJECTS[k].frame);
+    try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}
+  });
+}
+
+/* ── Mensagens entre módulos ── */
+window.addEventListener('message',e=>{
+  if(!e.data||!e.data.type)return;
+  if(e.data.type==='vooalto-theme'){
+    setShellTheme(e.data.theme);
+    /* repassa aos outros módulos */
+    Object.keys(PROJECTS).forEach(k=>{
+      const fr=document.getElementById(PROJECTS[k].frame);
+      try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:e.data.theme},'*')}catch(err){}
+    });
+  }
+  if(e.data.type==='vooalto-ficha-to-catalog'){
+    const pf=document.getElementById(PROJECTS.principal.frame);
+    if(pf&&pf.contentWindow){
+      pf.contentWindow.postMessage(e.data,'*');
+      showProject('principal');
+    }
+  }
+  if(e.data.type==='vooalto-ficha-edit'){
+    const ff=document.getElementById(PROJECTS.ficha.frame);
+    if(ff&&ff.contentWindow){
+      ff.contentWindow.postMessage(e.data,'*');
+      showProject('ficha');
+    }
+  }
+  if(e.data.type==='vooalto-ficha-updated'){
+    const pf=document.getElementById(PROJECTS.principal.frame);
+    if(pf&&pf.contentWindow){
+      pf.contentWindow.postMessage(e.data,'*');
+      toast('✅ Ficha atualizada na Catalogação');
+    }
+  }
+  if(e.data.type==='vooalto-switch-tab'&&e.data.tab&&PROJECTS[e.data.tab]){
+    showProject(e.data.tab);
+  }
+  if(e.data.type==='vooalto-counts'){
+    updateBadge(e.data.alta||0);
+  }
+});
+
+function updateBadge(n){
+  const b=document.getElementById('badgeAlta');
+  if(!b)return;
+  b.textContent=n;
+  b.classList.toggle('show',n>0);
+}
+function pollCounts(){
+  try{
+    const fr=document.getElementById(PROJECTS.principal.frame);
+    const c=fr&&fr.contentWindow&&fr.contentWindow.vooaltoCounts;
+    if(c)updateBadge(c.alta||0);
+  }catch(e){}
+}
+setInterval(pollCounts,3000);
+
+function showProject(key){
+  activeProject=key;
+  Object.keys(PROJECTS).forEach(k=>{
+    const p=PROJECTS[k];
+    document.getElementById(p.button).classList.toggle('active',k===key);
+    document.getElementById(p.frame).classList.toggle('active',k===key);
+  });
+  const l=document.getElementById('loading');
+  if(l)l.style.display='none';
+  toast('Aberto: '+PROJECTS[key].name);
+}
+function reloadActive(){
+  const fr=document.getElementById(PROJECTS[activeProject].frame);
+  try{fr.contentWindow.location.reload()}catch(e){fr.src=fr.src}
+  toast('Recarregado: '+PROJECTS[activeProject].name);
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+function openHelp(){document.getElementById('helpModal').classList.add('open')}
+function closeHelp(){document.getElementById('helpModal').classList.remove('open')}
+document.getElementById('helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')closeHelp()});
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  const b=document.getElementById('installAppBtn');
+  if(b)b.style.display='inline-flex';
+});
+async function installPWA(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(()=>{});
+    deferredInstallPrompt=null;
+    const b=document.getElementById('installAppBtn');
+    if(b)b.style.display='none';
+  }else{
+    alert('No Edge/Chrome: menu ⋮ > Aplicativos > Instalar este site como app.');
+  }
+}
+
+function initVooalto(){
+  try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'neo')}catch(e){}
+  /* esconde o loading quando o primeiro iframe carregar */
+  const fr=document.getElementById('frame-principal');
+  const hide=()=>{const l=document.getElementById('loading');if(l)l.style.display='none'};
+  fr.addEventListener('load',hide);
+  setTimeout(hide,4000);
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initVooalto)}else{initVooalto()}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
