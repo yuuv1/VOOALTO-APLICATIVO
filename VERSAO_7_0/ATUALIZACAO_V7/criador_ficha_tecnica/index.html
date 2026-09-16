@@ -86,9 +86,13 @@ box-shadow:0 4px 20px rgba(212,24,122,.3);
 /* ═══ SECTION ═══ */
 .sb-section{margin-bottom:4px}
 .sb-section-title{
-font-size:9px;font-weight:800;
+font-size:9.5px;font-weight:800;
 color:var(--glass-muted);letter-spacing:2px;text-transform:uppercase;
-padding:12px 16px 6px;white-space:nowrap;overflow:hidden;
+padding:14px 16px 3px;white-space:nowrap;overflow:hidden;
+}
+.sb-section-desc{
+font-size:8px;font-weight:500;color:rgba(255,255,255,.34);
+padding:0 16px 7px;line-height:1.4;letter-spacing:.2px;
 }
 
 /* ═══ BUTTONS ═══ */
@@ -125,6 +129,28 @@ box-shadow:0 2px 12px rgba(245,158,11,.3)}
 
 /* ═══ BUTTON LABEL & BADGE ═══ */
 .sb-btn-label{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sb-btn:hover .sb-btn-icon{transform:scale(1.1)}
+.sb-btn-primary{
+width:calc(100% - 20px);margin:0 10px 7px;
+background:linear-gradient(135deg,rgba(59,130,246,.30),rgba(29,78,216,.16));
+border:1px solid rgba(59,130,246,.45);border-radius:11px;
+}
+.sb-btn-primary .sb-btn-icon{background:rgba(59,130,246,.38);border-color:rgba(59,130,246,.55);font-size:15px}
+.sb-btn-primary .sb-btn-label{font-size:12px;font-weight:800}
+.sb-btn-primary:hover{background:linear-gradient(135deg,rgba(59,130,246,.45),rgba(29,78,216,.28));transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.25)}
+.sb-btn-accent{
+width:calc(100% - 20px);margin:0 10px 7px;
+background:linear-gradient(135deg,rgba(212,24,122,.26),rgba(212,24,122,.10));
+border:1px solid rgba(212,24,122,.45);border-radius:11px;
+}
+.sb-btn-accent .sb-btn-icon{background:rgba(212,24,122,.32);border-color:rgba(212,24,122,.5);font-size:15px}
+.sb-btn-accent .sb-btn-label{font-size:12px;font-weight:800}
+.sb-btn-accent:hover{background:linear-gradient(135deg,rgba(212,24,122,.40),rgba(212,24,122,.20));transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,24,122,.22)}
+.sb-page-actions .sb-btn{padding:6px 10px;gap:8px}
+.sb-page-actions .sb-btn-icon{width:26px;height:26px;font-size:12px;background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.28)}
+.sb-page-actions .sb-btn-label{font-size:10.5px;font-weight:600}
+.sb-add-page{border-color:rgba(59,130,246,.4);color:var(--glass-text)}
+.sb-add-page:hover{border-color:rgba(59,130,246,.7);background:rgba(59,130,246,.08)}
 .sb-btn-badge{background:var(--accent-1);color:#fff;font-size:7px;font-weight:800;padding:2px 6px;border-radius:10px;flex-shrink:0}
 .sb-btn-badge.verde{background:var(--accent-4)}
 
@@ -326,6 +352,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .dc-inp{border:none;border-bottom:2px dashed transparent;background:transparent;outline:none;font-family:inherit;font-size:12px;font-weight:700;color:var(--tx);width:100%;padding:1px 0;transition:border-color .15s;line-height:1.3;min-height:20px;display:inline-block}
 .dc-inp:focus{border-bottom-color:var(--ro)}
 .dc-inp:empty::before{content:attr(data-ph);color:#C5CDD9;font-style:italic;font-weight:400;font-size:10px;pointer-events:none}
+.v7-exporting .dc-inp:empty::before{content:none!important}
 
 /* PRODUÇÃO */
 .prod-wrap{display:flex;gap:6px;align-items:flex-start}
@@ -583,7 +610,8 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 @page{size:A4 portrait;margin:0}
 html,body{width:210mm;height:auto;background:#fff!important;margin:0!important;padding:0!important;font-size:11px!important}
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-#sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb{display:none!important}
+#sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb,#fichaFloatCta,#fichaSugBox{display:none!important}
+.dc-inp:empty::before{content:none!important}
 #pw{padding:0!important;display:block!important;background:#fff!important;min-height:unset!important;gap:0!important;margin-left:0!important}
 .page-label{display:none!important}
 .folha,.folha-branca{width:210mm!important;height:297mm!important;padding:5mm 5.5mm 3.5mm!important;gap:0!important;min-height:unset!important;box-shadow:none!important;border-radius:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;page-break-after:always}
@@ -713,11 +741,12 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <!-- AÇÕES -->
 <div class="sb-section">
 <div class="sb-section-title">Ações</div>
-<button class="sb-btn" onclick="novaFicha()">
+<div class="sb-section-desc">Comece uma nova ficha ou preencha os dados principais num clique</div>
+<button class="sb-btn sb-btn-primary" onclick="novaFicha()" title="Limpa tudo e começa uma ficha nova (o número avança)">
 <div class="sb-btn-icon">🗋</div>
-<span class="sb-btn-label">Nova ficha (limpar)</span>
+<span class="sb-btn-label">Nova ficha</span>
 </button>
-<button class="sb-btn" onclick="abrirPreenchimentoRapido()">
+<button class="sb-btn sb-btn-accent" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelo, valores e aviso de uma vez">
 <div class="sb-btn-icon">⚡</div>
 <span class="sb-btn-label">Preenchimento rápido</span>
 </button>
@@ -727,6 +756,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <!-- PÁGINA 1 -->
 <div class="sb-section">
 <div class="sb-section-title">Páginas</div>
+<div class="sb-section-desc">Ferramentas para adicionar elementos em cada folha</div>
 <div class="sb-page-group" id="pgGroup1">
 <div class="sb-page-header">
 <div class="sb-page-num">1</div>
@@ -783,6 +813,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <!-- CONFIGURAÇÕES -->
 <div class="sb-section" style="margin-top:4px;">
 <div class="sb-section-title">Configurações</div>
+<div class="sb-section-desc">Número automático da ficha e pasta de exportação</div>
 
 <div style="padding:4px 14px 2px;display:flex;align-items:center;gap:6px;">
 <span style="font-size:8px;font-weight:700;color:rgba(255,255,255,.5);white-space:nowrap;flex-shrink:0">Nº Próxima Ficha:</span>
@@ -805,6 +836,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <!-- SALVAR & RECUPERAR -->
 <div class="sb-section" style="margin-top:4px;">
 <div class="sb-section-title">Salvar &amp; Recuperar</div>
+<div class="sb-section-desc">Guarde o rascunho agora e continue depois</div>
 <button class="sb-btn" onclick="v4SalvarRascunho()" style="margin-top:2px;">
 <div class="sb-btn-icon">💾</div>
 <span class="sb-btn-label">Salvar rascunho</span>
@@ -2294,7 +2326,7 @@ function posArrEl(l,el,usePct,W,H){
 if(l.x1p!==undefined){const x1=l.x1p*W,y1=l.y1p*H,x2=l.x2p*W,y2=l.y2p*H;const len=Math.sqrt((x2-x1)**2+(y2-y1)**2),ang=Math.atan2(y2-y1,x2-x1)*(180/Math.PI);el.style.left=usePct?(l.x1p*100)+'%':x1+'px';el.style.top=usePct?(l.y1p*100)+'%':y1+'px';el.style.width=usePct?(len/W*100)+'%':len+'px';el.style.height='20px';el.style.transformOrigin='0 50%';el.style.transform=`rotate(${ang}deg)`;el.style.marginTop='-10px';el.style.zIndex=l.z;}
 else{el.style.left=usePct?(l.xp*100)+'%':(l.xp*W)+'px';el.style.top=usePct?(l.yp*100)+'%':(l.yp*H)+'px';el.style.width=usePct?(l.wp*100)+'%':(l.wp*W)+'px';el.style.height=usePct?(l.hp*100)+'%':(l.hp*H)+'px';el.style.transform=`rotate(${l.rot||0}deg)`;el.style.zIndex=l.z;}
 }
-function restAllPx(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});}
+function restAllPx(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});document.documentElement.classList.remove('v7-exporting');}
 function makeDrag(e,onMove,onUp){document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',function up(ev){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',up);onUp&&onUp(ev);});e.preventDefault();}
 function onCanvasFiles(e){Array.from(e.target.files).forEach(f=>{if(f.type.startsWith('image/'))lerArq(f);});e.target.value='';}
 function lerArq(f){const r=new FileReader();r.onload=ev=>addImgLayer(ev.target.result);r.readAsDataURL(f);}
@@ -2602,6 +2634,7 @@ recalcGrade();calcTotal();
 
 /* ═══ PDF ═══ */
 function prepPrint(){
+document.documentElement.classList.add('v7-exporting');
 if(modoSeta)desativarModoSeta();
 paginas.forEach(p=>{if(p.modoSeta)desativarModoSetaExtra(p);deselecionarTudoExtra(p.id);});
 fecharLogo();deselecionarTudo();
@@ -2609,6 +2642,7 @@ layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el
 paginas.forEach(p=>{p.layers.forEach(l=>{const el=document.getElementById('ly_'+p.id+'_'+l.id);if(el)posElExtra(p,l,el,true);});});
 }
 function exportarPDF(){document.title='Ficha técnica de produção';try{if(window.parent&&window.parent.document)window.parent.document.title='Ficha técnica de produção';}catch(e){}prepPrint();setTimeout(()=>window.print(),200);}
+window.addEventListener('afterprint',()=>{document.documentElement.classList.remove('v7-exporting');});
 window.addEventListener('beforeprint',()=>{
 layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,true);});
 paginas.forEach(p=>{p.layers.forEach(l=>{const el=document.getElementById('ly_'+p.id+'_'+l.id);if(el)posElExtra(p,l,el,true);});});

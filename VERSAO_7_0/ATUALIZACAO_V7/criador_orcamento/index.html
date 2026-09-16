@@ -87,6 +87,51 @@
       border-bottom: 1px solid #334155;
     }
 
+    .orc-running-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0F172A;
+      border-bottom: 1px solid #1E293B;
+      padding: 9px 16px;
+      font-size: 10.5px;
+      color: #94A3B8;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .orc-running-total .ort-values { display: flex; align-items: baseline; gap: 8px; }
+    .orc-running-total b { font-size: 17px; color: #38BDF8; text-transform: none; letter-spacing: 0; }
+    .orc-running-total .ort-items { font-size: 10px; color: #64748B; text-transform: none; }
+
+    .btn-dup-row {
+      position: absolute;
+      top: 12px;
+      right: 38px;
+      background: none;
+      border: none;
+      color: #38BDF8;
+      cursor: pointer;
+      font-size: 16px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-dup-row:hover { opacity: 0.8; }
+
+    .item-total-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0F172A;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #94A3B8;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .item-total-line b { color: #38BDF8; font-size: 13px; }
     .tab-btn {
       flex: 1;
       padding: 12px 6px;
@@ -438,7 +483,7 @@
       bottom: -103px;            /* Mathematically scaled bottom coordinate */
       width: 379px;              /* Mathematically scaled width */
       height: 541px;             /* Mathematically scaled height */
-      background-image: url('../assets/watermark_vooalto.png'));
+      background-image: url("../assets/watermark_vooalto.png");
       background-size: contain;
       background-repeat: no-repeat;
       background-position: right bottom;
@@ -536,6 +581,17 @@
       z-index: 2;
     }
 
+    .budget-number {
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin: -12px 0 14px 0;
+      z-index: 2;
+    }
     .budget-title {
       font-size: 25px;
       font-weight: 700;
@@ -783,6 +839,8 @@
       .editor-actions,
       .tabs-nav,
       .modal,
+      #orcToast,
+      .orc-running-total,
       .formatting-toolbar,
       .formatting-toolbar.v5-movable,
       .v5-drag-tool,
@@ -864,6 +922,9 @@
       <!-- Editor Title -->
       <div class="editor-header">
         <h1>🛠️ Painel do Orçamento</h1>
+      <!-- Editor Title -->
+      <div class="editor-header">
+        <h1>🛠️ Painel do Orçamento</h1>
         <p>Crie orçamentos multi-páginas e edite clicando na própria folha. O conteúdo é salvo automaticamente neste navegador.</p>
       </div>
       <div style="padding:0 14px 10px;display:flex;flex-direction:column;gap:6px;">
@@ -882,6 +943,7 @@
         <button class="tab-btn" onclick="switchTab('geral')" style="white-space:nowrap;">Geral</button>
         <button class="tab-btn" onclick="switchTab('termos')" style="white-space:nowrap;">Termos</button>
         <button class="tab-btn" onclick="switchTab('assinatura')" style="white-space:nowrap;">Assinatura</button>
+
       </div>
 
       <!-- V7: total geral em tempo real -->
@@ -1002,6 +1064,13 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       <div class="editor-actions">
         <button class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
         <button class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
+        <div style="display:flex;gap:8px;width:100%">
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (nº novo, campos de volta ao padrão)">🗋 Novo Orçamento</button>
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="exportarOrcamentoJSON()" title="Salvar arquivo .json para guardar/enviar">📤 Salvar .json</button>
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="document.getElementById('orcJsonInput').click()" title="Abrir arquivo .json de orçamento">📂 Abrir .json</button>
+        </div>
+        <input type="file" id="orcJsonInput" accept=".json" style="display:none" onchange="importarOrcamentoJSON(event)">
+
       </div>
     </div>
 
@@ -1129,6 +1198,17 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
   </div>
 
 
+  <!-- Settings Modal: Geral + Termos + Assinatura -->
+  <div class="modal" id="budget-settings-modal">
+    <div class="modal-content settings-modal-content" style="width:740px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <h3 style="color:white;font-size:16px;">⚙️ Configurações do Orçamento</h3>
+        <button class="btn btn-danger-outline" style="width:auto;padding:8px 12px;" onclick="closeBudgetSettings()">Fechar</button>
+      </div>
+      <div id="budget-settings-content"></div>
+    </div>
+  </div>
+
   <!-- Drawing Signature Modal -->
   <div class="modal" id="signature-modal">
     <div class="modal-content">
@@ -1167,33 +1247,27 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     // Lock to prevent recursive sync loops
     let isSyncing = false;
 
-        /* ═══════════════ ORCAMENTO V7 — PERSISTÊNCIA ═══════════════ */
+    /* ═══════════════ ORCAMENTO V7 — PERSISTÊNCIA ═══════════════ */
     const ORC_AUTOSAVE_KEY = 'vooalto_orcamento_autosave_v7';
     const ORC_COUNTER_KEY = 'vooalto_orcamento_counter_v7';
     let orcNumero = 0;
     let DEFAULT_ORC_FORM = null;
 
-    function toastOrc(msg){ const t=document.getElementById('orcToast'); if(!t)return; t.textContent=msg; t.style.opacity='1'; t.style.transform='translateY(0)'; clearTimeout(t._tm); t._tm=setTimeout(()=>{t.style.opacity='0'; t.style.transform='translateY(10px)';}, 2600); }
-
-    function orcCounterNext(){ orcNumero = (parseInt(localStorage.getItem(ORC_COUNTER_KEY))||0) + 1; try { localStorage.setItem(ORC_COUNTER_KEY, String(orcNumero)); } catch(e){} return orcNumero; }
+    const ORC_FORM_KEYS = ['phone','cnpj','address','proposal-title','proposal-date','budget-title','client-name','client-doc','client-phone','delivery','payment-title','payment-text','validity','resp-name','watermark'];
 
     function orcCollectState(){
       const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+      const form = {};
+      ORC_FORM_KEYS.forEach(k => form[k] = get('edit-' + k));
       return {
         version: 'vooalto_orcamento_v7',
         numero: orcNumero,
-        form: {
-          phone: get('edit-phone'), cnpj: get('edit-cnpj'), address: get('edit-address'),
-          'proposal-title': get('edit-proposal-title'), 'proposal-date': get('edit-proposal-date'),
-          'budget-title': get('edit-budget-title'),
-          'client-name': get('edit-client-name'), 'client-doc': get('edit-client-doc'),
-          'client-phone': get('edit-client-phone'), delivery: get('edit-delivery'),
-          'payment-title': get('edit-payment-title'), 'payment-text': get('edit-payment-text'),
-          validity: get('edit-validity'), 'resp-name': get('edit-resp-name'),
-          watermark: get('edit-watermark-opacity')
-        },
+        form: form,
         pages: documentPages.map(p => ({ id: p.id, tableItems: p.tableItems })),
-        signature: (currentSignatureBase64 && currentSignatureBase64 !== DEFAULT_SIGNATURE) ? currentSignatureBase64 : ''
+        signature: (typeof currentSignatureBase64 !== 'undefined' && currentSignatureBase64 && currentSignatureBase64 !== DEFAULT_SIGNATURE) ? currentSignatureBase64 : ''
+      };
+    }
+
       };
     }
 
@@ -1222,7 +1296,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       return true;
     }
 
-    function addPageDomOnly(pageId){
+    /* Clona o DOM da página sem mexer em documentPages (usado no restore) */
+    function addDocumentPageSilent(pageId){
+      return addPageDomOnly(pageId);
+    }
       const container = document.getElementById('preview-pages-container');
       const newPageDom = document.createElement('div');
       newPageDom.className = 'page';
@@ -1250,17 +1327,19 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${pageId}`;
       newPageDom.querySelector('.resp-name').id = `preview-resp-name-${pageId}`;
       container.appendChild(newPageDom);
-      setupPageInPlaceListeners(newPageDom, pageId);
+      if (typeof setupPageInPlaceListeners === 'function') setupPageInPlaceListeners(newPageDom, pageId);
       return newPageDom;
     }
 
     function novoOrcamento(){
       if(!confirm('Criar um NOVO orçamento?\n\nO conteúdo atual será substituído.\n(Salve antes como .json, se quiser guardar.)')) return;
-      const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-      ['phone','cnpj','address','proposal-title','budget-title','client-name','client-doc','client-phone','delivery','payment-title','payment-text','validity','resp-name'].forEach(k => {
-        const el = document.getElementById('edit-' + k);
-        if(el && DEFAULT_ORC_FORM && typeof DEFAULT_ORC_FORM[k] === 'string') el.value = DEFAULT_ORC_FORM[k];
-      });
+      if (DEFAULT_ORC_FORM) {
+        const set = (id, v) => { const el = document.getElementById(id); if(el && typeof v === 'string') el.value = v; };
+        ['phone','cnpj','address','proposal-title','proposal-date','budget-title','client-name','client-doc','client-phone','delivery','payment-title','payment-text','validity','resp-name','watermark'].forEach(k => set('edit-' + k, DEFAULT_ORC_FORM[k]));
+        const wm = document.getElementById('edit-watermark-opacity');
+        if (wm && DEFAULT_ORC_FORM['watermark']) wm.value = DEFAULT_ORC_FORM['watermark'];
+      }
+
       const today = new Date();
       const ds = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
       const ed = document.getElementById('edit-proposal-date'); if(ed) ed.value = ds;
@@ -1271,7 +1350,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e){}
       renderItemsEditor();
       updatePreviewFromForm();
-      toastOrc('🗋 Novo orçamento Nº ' + String(orcNumero).padStart(4,'0') + ' pronto!');
+      if (typeof setupPageInPlaceListeners === 'function') { /* listeners da p1 já existem */ }
+      orcToast('🗋 Novo orçamento Nº ' + String(orcNumero).padStart(4,'0') + ' pronto!');
     }
 
     function exportarOrcamentoJSON(){
@@ -1286,7 +1366,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-        toastOrc('📤 Orçamento salvo em arquivo!');
+        orcToast('📤 Orçamento salvo em arquivo!');
       } catch(e) { alert('Erro ao exportar: ' + e.message); }
     }
 
@@ -1300,7 +1380,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
           if(!confirm('Substituir o orçamento atual pelo arquivo "' + file.name + '"?')) return;
           orcRestoreState(data);
           updatePreviewFromForm();
-          toastOrc('✅ Orçamento importado!');
+          orcToast('✅ Orçamento importado!');
         } catch(err) { alert('Erro ao ler o arquivo: ' + err.message); }
       };
       r.readAsText(file);
@@ -1317,15 +1397,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
       // Captura os padrões originais (para o "Novo orçamento")
       const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-      DEFAULT_ORC_FORM = {
-        phone: get('edit-phone'), cnpj: get('edit-cnpj'), address: get('edit-address'),
-        'proposal-title': get('edit-proposal-title'), 'proposal-date': get('edit-proposal-date'),
-        'budget-title': get('edit-budget-title'),
-        'client-name': get('edit-client-name'), 'client-doc': get('edit-client-doc'),
-        'client-phone': get('edit-client-phone'), delivery: get('edit-delivery'),
-        'payment-title': get('edit-payment-title'), 'payment-text': get('edit-payment-text'),
-        validity: get('edit-validity'), 'resp-name': get('edit-resp-name')
-      };
+      DEFAULT_ORC_FORM = {};
+      ORC_FORM_KEYS.forEach(k => DEFAULT_ORC_FORM[k] = get('edit-' + k));
 
       // Restaura orçamento anterior (autosave) se existir
       let restored = false;
@@ -1336,10 +1409,22 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
       if (!restored) orcCounterNext();
 
+      setupBudgetSettingsModal();
       renderItemsEditor();
       updatePreviewFromForm();
       initSignaturePad();
       orcBuildClientSuggestions();
+
+      /* Enter avança entre campos do formulário geral */
+      const tg = document.getElementById('tab-geral');
+      if (tg) tg.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+        e.preventDefault();
+        const inputs = Array.from(tg.querySelectorAll('input'));
+        const i = inputs.indexOf(e.target);
+        if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
+      });
+
       /* Enter avança entre campos da aba Cliente */
       const tc = document.getElementById('tab-cliente');
       if (tc) tc.addEventListener('keydown', e => {
@@ -1349,10 +1434,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         const i = inputs.indexOf(e.target);
         if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
       });
-      if (restored) toastOrc('💾 Orçamento anterior restaurado automaticamente.');
-    });
 
-
+      if (restored) orcToast('💾 Orçamento anterior restaurado automaticamente.');
 
     // Switch between tabs in editor panel
     function switchTab(tabId) {
@@ -1536,7 +1619,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       page.tableItems.splice(idx + 1, 0, JSON.parse(JSON.stringify(page.tableItems[idx])));
       renderItemsEditor();
       updatePreviewFromForm();
-      toastOrc('⧉ Item duplicado — ajuste quantidade/valores.');
+      if (typeof toastOrc === 'function') toastOrc('⧉ Item duplicado — ajuste quantidade/valores.');
     }
 
     function orcUpdateRunningTotal() {
@@ -1685,6 +1768,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       const clientPhoneVal = document.getElementById('edit-client-phone').value;
       const deliveryVal = document.getElementById('edit-delivery').value;
 
+
       documentPages.forEach((pageState, pageIdx) => {
         const pageId = pageState.id;
         
@@ -1760,6 +1844,15 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         document.getElementById(`preview-page-number-${pageId}`).innerText = `Página ${pageId} de ${documentPages.length}`;
       });
 
+      // V7: número do orçamento no A4 (todas as páginas)
+      try {
+        const numStr = 'Orçamento Nº ' + (orcNumero ? String(orcNumero).padStart(4, '0') : '—');
+        documentPages.forEach(p => {
+          const bn = document.getElementById(`preview-budget-number-${p.id}`);
+          if (bn) bn.textContent = numStr;
+        });
+      } catch(e) {}
+
       isSyncing = false;
       orcUpdateRunningTotal();
       scheduleOrcautosave();
@@ -1801,6 +1894,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         document.getElementById('edit-client-phone').value = textContent;
       } else if (fieldId === 'delivery') {
         document.getElementById('edit-delivery').value = textContent;
+
       }
 
       // Propagate change to all pages silently
@@ -2324,6 +2418,7 @@ function printProposal() {
 
 </style>
 
+<div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.92);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;font-family:'Poppins',sans-serif"></div>
 
 <script>
 /* ══ Tema global V7 (shell -> módulo) ══ */
