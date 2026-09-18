@@ -2534,7 +2534,7 @@ function exportarPNG(){
     restAllPx();toast('✅ PNG exportado com sucesso!');
   };
   if(window.html2canvas){doExport();}
-  else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';s.onload=()=>setTimeout(doExport,300);s.onerror=()=>{toast('❌ Erro ao carregar html2canvas','erro');restAllPx();};document.head.appendChild(s);}
+  else{const s=document.createElement('script');s.src='../assets/html2canvas.min.js';s.onload=()=>setTimeout(doExport,300);s.onerror=()=>{toast('❌ Erro ao carregar html2canvas','erro');restAllPx();};document.head.appendChild(s);}
 }
 
 function addTxtLayer(ov){const id=(ov&&ov.id)||uid();const l=Object.assign({type:'txt',txt:'Texto',richHtml:'',font:"'Segoe UI',sans-serif",size:22,color:'#1E2937',bold:false,italic:false,xp:0.15,yp:0.4,wp:0.7,rot:0,z:++zCnt},ov,{id,type:'txt'});layers.push(l);renderTxtLayer(l);updPh();updList();savLayers();}
