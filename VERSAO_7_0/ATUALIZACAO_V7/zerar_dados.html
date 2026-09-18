@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vooalto V7 — Zerar dados</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0b0f17;color:#e5e7eb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#111827;border:1px solid #7f1d1d;border-radius:20px;padding:30px;max-width:600px;width:100%}
+h1{font-size:19px;margin-bottom:6px}
+p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
+.warn{background:#450a0a;border:1px solid #991b1b;color:#fecaca;border-radius:12px;padding:14px;font-size:12.5px;margin-bottom:16px;line-height:1.6}
+.warn b{color:#fff}
+.log{background:#030712;border-radius:12px;padding:12px 14px;font-size:11.5px;font-family:monospace;min-height:110px;max-height:200px;overflow-y:auto;margin-bottom:16px;color:#fca5a5;white-space:pre-wrap}
+.btn{background:#dc2626;color:#fff;border:0;border-radius:999px;padding:12px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn:hover{background:#b91c1c}
+.btn.sec{background:#374151}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>⚠️ Zerar TODOS os dados do V7</h1>
+  <p class="sub">Esta página apaga de vez as informações salvas neste navegador.</p>
+  <div class="warn">
+    <b>Você perderá, sem volta:</b><br>
+    • Catálogo de produção (Catalogação) — fichas, prioridade, histórico<br>
+    • PDFs de fichas técnicas salvos neste dispositivo<br>
+    • Rascunhos e backups da Ficha Técnica<br>
+    • Orçamento em andamento (autosave) e seu número de sequência<br>
+    <br>
+    <b>Antes de zerar, exporte o backup em Catalogação → Exportar backup.</b>
+  </div>
+  <div class="log" id="log">Nada foi apagado. O botão vermelho está desativado até a confirmação dupla.</div>
+  <div class="row">
+    <button class="btn" id="btnZerar" onclick="zerar(1)">Etapa 1/2 — Preparar apagamento</button>
+    <button class="btn" id="btnZerar2" style="display:none;background:#7f1d1d" onclick="zerar(2)">ETAPA 2/2 — APAGAR TUDO DEFINITIVAMENTE</button>
+    <a class="btn sec" style="display:inline-block;text-decoration:none;text-align:center" href="./index.html">Cancelar / voltar</a>
+  </div>
+</div>
+<script>
+function log(m){ const l=document.getElementById('log'); l.textContent += '\n'+m; l.scrollTop=l.scrollHeight; }
+async function zerar(etapa){
+  if(etapa===1){
+    const c1 = confirm('ETAPA 1 de 2 — Preparar apagamento\n\nIsso vai apagar TODOS os dados do V7 neste navegador.\nExporte um backup antes, se precisar.\n\nDeseja continuar?');
+    if(!c1) return;
+    document.getElementById('btnZerar').disabled = true;
+    const b2 = document.getElementById('btnZerar2');
+    b2.style.display = 'inline-block';
+    b2.disabled = false;
+    log('Pronto para a etapa 2. Clique em "APAGAR TUDO" se tiver certeza.');
+    setTimeout(()=>{ b2.style.display='none'; log('Tempo esgotado — nada foi apagado.'); }, 30000);
+    return;
+  }
+  const c2 = confirm('ETAPA 2 de 2 — APAGAR TUDO DEFINITIVAMENTE\n\nEsta ação NÃO tem como desfazer.\n\nClique em OK para apagar agora.');
+  if(!c2) { document.getElementById('btnZerar2').style.display='none'; log('Cancelado na etapa 2 — nada foi apagado.'); return; }
+  let nLS=0;
+  const keys = Object.keys(localStorage);
+  for(const k of keys){
+    if(k.startsWith('vooalto_')){ localStorage.removeItem(k); nLS++; }
+  }
+  log('Chaves localStorage removidas: '+nLS);
+  let nDB=0;
+  try{
+    const dbs = await indexedDB.databases();
+    for(const db of dbs){
+      if(db.name && db.name.startsWith('vooalto_')){
+        await new Promise((res,rej)=>{ const rq=indexedDB.deleteDatabase(db.name); rq.onsuccess=()=>{nDB++;res()}; rq.onerror=()=>rej(rq.error); rq.onblocked=()=>res(); });
+        log('Banco IDB removido: '+db.name);
+      }
+    }
+    if(!nDB) log('Nenhum banco IDB da Vooalto encontrado.');
+  }catch(e){ log('IDB: '+e.message); }
+  if('caches' in window){
+    const keys2 = await caches.keys();
+    for(const k of keys2){ await caches.delete(k); log('Cache removido: '+k); }
+  }
+  log('✔ TUDO APAGADO. Recarregue o V7 para começar do zero.');
+  document.getElementById('btnZerar2').style.display='none';
+}
+</script>
+</body>
+</html>
