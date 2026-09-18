@@ -132,6 +132,7 @@
     }
 
     .item-total-line b { color: #38BDF8; font-size: 13px; }
+
     .tab-btn {
       flex: 1;
       padding: 12px 6px;
@@ -254,57 +255,6 @@
     .btn-delete-row:hover {
       opacity: 0.8;
     }
-
-    .btn-dup-row {
-      position: absolute;
-      top: 12px;
-      right: 38px;
-      background: none;
-      border: none;
-      color: #38BDF8;
-      cursor: pointer;
-      font-size: 16px;
-      transition: opacity 0.2s;
-    }
-
-    .btn-dup-row:hover {
-      opacity: 0.8;
-    }
-
-    .item-total-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #0F172A;
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: #94A3B8;
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .item-total-line b {
-      color: #38BDF8;
-      font-size: 13px;
-    }
-
-    .orc-running-total {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0F172A;
-      border-bottom: 1px solid #1E293B;
-      padding: 9px 16px;
-      font-size: 10.5px;
-      color: #94A3B8;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-    }
-
-    .orc-running-total .ort-values { display: flex; align-items: baseline; gap: 8px; }
-    .orc-running-total b { font-size: 17px; color: #38BDF8; text-transform: none; letter-spacing: 0; }
-    .orc-running-total .ort-items { font-size: 10px; color: #64748B; text-transform: none; }
 
     /* Action Buttons */
     .btn {
@@ -592,6 +542,7 @@
       margin: -12px 0 14px 0;
       z-index: 2;
     }
+
     .budget-title {
       font-size: 25px;
       font-weight: 700;
@@ -649,16 +600,6 @@
     .col-qnt { width: 9%; }
     .col-unit { width: 12%; }
     .col-total { width: 14%; }
-
-    /* Client Data Block */
-    .client-block { margin: 0 0 14px; padding: 9px 16px; background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #0F172A; display: flex; align-items: center; gap: 14px; min-height: 44px; }
-    .client-label { font-size: 9.5px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #64748B; white-space: nowrap; }
-    .client-fields { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .client-name { font-size: 13.5px; font-weight: 600; color: #0F172A; }
-    .client-meta { font-size: 11.5px; color: #475569; display: flex; gap: 12px; flex-wrap: wrap; }
-    .client-meta .client-delivery::before { content: '\23F1 '; font-size: 10px; }
-    .client-name:empty::before, .client-doc:empty::before, .client-phone:empty::before, .client-delivery:empty::before { content: attr(data-ph); color: #CBD5E1; font-weight: 400; }
-    .budget-number { text-align: center; font-size: 10.5px; font-weight: 500; letter-spacing: 2px; color: #64748B; margin-top: -4px; margin-bottom: 12px; text-transform: uppercase; }
 
     /* Total Bar - FLOWING */
     .total-bar {
@@ -912,8 +853,6 @@
 </head>
 <body>
 
-  <div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.92);color:#fff;padding:11px 16px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:99999;font-family:'Poppins',sans-serif;"></div>
-
   <!-- SPA Container -->
   <div class="app-container">
 
@@ -922,28 +861,13 @@
       <!-- Editor Title -->
       <div class="editor-header">
         <h1>🛠️ Painel do Orçamento</h1>
-      <!-- Editor Title -->
-      <div class="editor-header">
-        <h1>🛠️ Painel do Orçamento</h1>
-        <p>Crie orçamentos multi-páginas e edite clicando na própria folha. O conteúdo é salvo automaticamente neste navegador.</p>
-      </div>
-      <div style="padding:0 14px 10px;display:flex;flex-direction:column;gap:6px;">
-        <button class="btn btn-secondary" style="width:100%;" onclick="novoOrcamento()">🗋 Novo orçamento</button>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="exportarOrcamentoJSON()" title="Salvar arquivo .json para guardar/enviar">📤 Salvar .json</button>
-          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="document.getElementById('orcJsonInput').click()" title="Abrir arquivo .json de orçamento">📂 Abrir .json</button>
-        </div>
-        <input type="file" id="orcJsonInput" accept=".json" style="display:none" onchange="importarOrcamentoJSON(event)">
+        <p>Crie orçamentos multi-páginas e edite clicando na própria folha.</p>
       </div>
 
       <!-- Tab Buttons -->
-      <div class="tabs-nav" style="font-size:11px;">
-        <button class="tab-btn active" onclick="switchTab('itens')" style="white-space:nowrap;">Itens</button>
-        <button class="tab-btn" onclick="switchTab('cliente')" style="white-space:nowrap;">Cliente</button>
-        <button class="tab-btn" onclick="switchTab('geral')" style="white-space:nowrap;">Geral</button>
-        <button class="tab-btn" onclick="switchTab('termos')" style="white-space:nowrap;">Termos</button>
-        <button class="tab-btn" onclick="switchTab('assinatura')" style="white-space:nowrap;">Assinatura</button>
-
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('itens')">Itens</button>
+        <button class="tab-btn" style="flex:0 0 56px;font-size:18px;" onclick="openBudgetSettings()" title="Configurações gerais, termos e assinatura">⚙️</button>
       </div>
 
       <!-- V7: total geral em tempo real -->
@@ -981,27 +905,6 @@ dos Buritis, Goiânia - GO, 74370-661</textarea>
           <div class="form-group">
             <label>Título do Orçamento</label>
             <input type="text" id="edit-budget-title" class="form-control" value="Orçamento" oninput="updatePreviewFromForm()">
-          </div>
-        </div>
-
-        <!-- Tab: Cliente -->
-        <div id="tab-cliente" class="tab-content">
-          <div class="form-group">
-            <label>Nome / Razão Social do Cliente</label>
-            <input type="text" id="edit-client-name" class="form-control" placeholder="Ex: Escola Municipal Centro" list="clientDatalist" oninput="updatePreviewFromForm();orcFillClientPhone()">
-          <datalist id="clientDatalist"></datalist>
-          </div>
-          <div class="form-group">
-            <label>CPF / CNPJ</label>
-            <input type="text" id="edit-client-doc" class="form-control" placeholder="00.000.000/0000-00" oninput="updatePreviewFromForm()">
-          </div>
-          <div class="form-group">
-            <label>Telefone</label>
-            <input type="text" id="edit-client-phone" class="form-control" placeholder="(00) 00000-0000" oninput="updatePreviewFromForm()">
-          </div>
-          <div class="form-group">
-            <label>Prazo de Entrega</label>
-            <input type="text" id="edit-delivery" class="form-control" placeholder="Ex: 30 dias após a aprovação" oninput="updatePreviewFromForm()">
           </div>
         </div>
 
@@ -1070,7 +973,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
           <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="document.getElementById('orcJsonInput').click()" title="Abrir arquivo .json de orçamento">📂 Abrir .json</button>
         </div>
         <input type="file" id="orcJsonInput" accept=".json" style="display:none" onchange="importarOrcamentoJSON(event)">
-
       </div>
     </div>
 
@@ -1127,19 +1029,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
             <div class="budget-title" id="preview-budget-title-1" contenteditable="true" oninput="syncPageToForm('budget-title', this)"></div>
           </div>
           <div class="budget-number" id="preview-budget-number-1">Orçamento Nº —</div>
-
-          <!-- Client Data -->
-          <div class="client-block">
-            <div class="client-label">Cliente</div>
-            <div class="client-fields">
-              <div class="client-name" id="preview-client-name-1" contenteditable="true" data-ph="Nome do cliente..." oninput="syncPageToForm('client-name', this)"></div>
-              <div class="client-meta">
-                <span class="client-doc" id="preview-client-doc-1" contenteditable="true" data-ph="CPF/CNPJ" oninput="syncPageToForm('client-doc', this)"></span>
-                <span class="client-phone" id="preview-client-phone-1" contenteditable="true" data-ph="Telefone" oninput="syncPageToForm('client-phone', this)"></span>
-                <span class="client-delivery" id="preview-delivery-1" contenteditable="true" data-ph="Prazo de entrega" oninput="syncPageToForm('delivery', this)"></span>
-              </div>
-            </div>
-          </div>
 
           <!-- Table -->
           <div class="table-container">
@@ -1253,7 +1142,11 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     let orcNumero = 0;
     let DEFAULT_ORC_FORM = null;
 
-    const ORC_FORM_KEYS = ['phone','cnpj','address','proposal-title','proposal-date','budget-title','client-name','client-doc','client-phone','delivery','payment-title','payment-text','validity','resp-name','watermark'];
+    function orcToast(msg){ const t=document.getElementById('orcToast'); if(!t)return; t.textContent=msg; t.style.opacity='1'; t.style.transform='translateY(0)'; clearTimeout(t._tm); t._tm=setTimeout(()=>{t.style.opacity='0'; t.style.transform='translateY(10px)';}, 2600); }
+
+    function orcCounterNext(){ orcNumero = (parseInt(localStorage.getItem(ORC_COUNTER_KEY))||0) + 1; try { localStorage.setItem(ORC_COUNTER_KEY, String(orcNumero)); } catch(e){} return orcNumero; }
+
+    const ORC_FORM_KEYS = ['phone','cnpj','address','proposal-title','proposal-date','budget-title','payment-title','payment-text','validity','resp-name','watermark'];
 
     function orcCollectState(){
       const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
@@ -1268,14 +1161,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       };
     }
 
-      };
-    }
-
     let orcSaveTimer = null;
     function scheduleOrcautosave(){
       clearTimeout(orcSaveTimer);
       orcSaveTimer = setTimeout(() => {
-        orcRememberClient();
         try { localStorage.setItem(ORC_AUTOSAVE_KEY, JSON.stringify(orcCollectState())); } catch(e) { console.warn('Autosave do orçamento falhou', e); }
       }, 700);
     }
@@ -1284,12 +1173,12 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       if(!s || !s.form) return false;
       const set = (id, v) => { const el = document.getElementById(id); if(el && typeof v === 'string') el.value = v; };
       const fm = s.form;
-      ['phone','cnpj','address','proposal-title','proposal-date','budget-title','client-name','client-doc','client-phone','delivery','payment-title','payment-text','validity','resp-name','watermark'].forEach(k => set('edit-' + k, fm[k]));
+      ORC_FORM_KEYS.forEach(k => set('edit-' + k, fm[k]));
       if (Array.isArray(s.pages) && s.pages.length) {
         documentPages = s.pages.map(p => ({ id: p.id, tableItems: Array.isArray(p.tableItems) ? p.tableItems : [] }));
         activeFormPageIndex = 0;
         document.querySelectorAll('#preview-pages-container .page:not(#printable-a4-page-1)').forEach(el => el.remove());
-        for (let i = 1; i < documentPages.length; i++) addPageDomOnly(documentPages[i].id);
+        for (let i = 1; i < documentPages.length; i++) addDocumentPageSilent(documentPages[i].id);
       }
       if (s.signature) currentSignatureBase64 = s.signature;
       orcNumero = s.numero || 0;
@@ -1298,8 +1187,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
     /* Clona o DOM da página sem mexer em documentPages (usado no restore) */
     function addDocumentPageSilent(pageId){
-      return addPageDomOnly(pageId);
-    }
       const container = document.getElementById('preview-pages-container');
       const newPageDom = document.createElement('div');
       newPageDom.className = 'page';
@@ -1313,11 +1200,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       newPageDom.querySelector('.band-red').id = `preview-proposal-title-${pageId}`;
       newPageDom.querySelector('.band-black').id = `preview-proposal-date-${pageId}`;
       newPageDom.querySelector('.budget-title').id = `preview-budget-title-${pageId}`;
-      newPageDom.querySelector('.budget-number').id = `preview-budget-number-${pageId}`;
-      newPageDom.querySelector('.client-name').id = `preview-client-name-${pageId}`;
-      newPageDom.querySelector('.client-doc').id = `preview-client-doc-${pageId}`;
-      newPageDom.querySelector('.client-phone').id = `preview-client-phone-${pageId}`;
-      newPageDom.querySelector('.client-delivery').id = `preview-delivery-${pageId}`;
+      const bn1 = newPageDom.querySelector('.budget-number'); if (bn1) bn1.id = `preview-budget-number-${pageId}`;
       newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${pageId}`;
       newPageDom.querySelector('.total-bar').id = `preview-total-bar-${pageId}`;
       newPageDom.querySelector('.payment-title').id = `preview-payment-title-${pageId}`;
@@ -1335,11 +1218,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       if(!confirm('Criar um NOVO orçamento?\n\nO conteúdo atual será substituído.\n(Salve antes como .json, se quiser guardar.)')) return;
       if (DEFAULT_ORC_FORM) {
         const set = (id, v) => { const el = document.getElementById(id); if(el && typeof v === 'string') el.value = v; };
-        ['phone','cnpj','address','proposal-title','proposal-date','budget-title','client-name','client-doc','client-phone','delivery','payment-title','payment-text','validity','resp-name','watermark'].forEach(k => set('edit-' + k, DEFAULT_ORC_FORM[k]));
+        ['phone','cnpj','address','proposal-title','budget-title','payment-title','payment-text','validity','resp-name'].forEach(k => set('edit-' + k, DEFAULT_ORC_FORM[k]));
         const wm = document.getElementById('edit-watermark-opacity');
         if (wm && DEFAULT_ORC_FORM['watermark']) wm.value = DEFAULT_ORC_FORM['watermark'];
       }
-
       const today = new Date();
       const ds = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
       const ed = document.getElementById('edit-proposal-date'); if(ed) ed.value = ds;
@@ -1357,7 +1239,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     function exportarOrcamentoJSON(){
       try {
         const data = orcCollectState();
-        data._nome = 'Orçamento Nº ' + String(orcNumero).padStart(4,'0');
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -1386,7 +1267,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       r.readAsText(file);
     }
 
-    /* ═══════════════ INIT ═══════════════ */
+
+    // Initialize page
     window.addEventListener('DOMContentLoaded', () => {
       // Data de hoje como padrão (DD/MM/AAAA)
       const today = new Date();
@@ -1413,7 +1295,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       renderItemsEditor();
       updatePreviewFromForm();
       initSignaturePad();
-      orcBuildClientSuggestions();
 
       /* Enter avança entre campos do formulário geral */
       const tg = document.getElementById('tab-geral');
@@ -1425,17 +1306,39 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
       });
 
-      /* Enter avança entre campos da aba Cliente */
-      const tc = document.getElementById('tab-cliente');
-      if (tc) tc.addEventListener('keydown', e => {
-        if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
-        e.preventDefault();
-        const inputs = Array.from(tc.querySelectorAll('input'));
-        const i = inputs.indexOf(e.target);
-        if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
-      });
-
       if (restored) orcToast('💾 Orçamento anterior restaurado automaticamente.');
+    });
+
+
+    function setupBudgetSettingsModal(){
+      const target = document.getElementById('budget-settings-content');
+      if(!target || target.dataset.ready === '1') return;
+      target.dataset.ready = '1';
+      function moveSection(title, tabId){
+        const tab = document.getElementById(tabId);
+        if(!tab) return;
+        const h = document.createElement('div');
+        h.className = 'v5-settings-section';
+        h.textContent = title;
+        target.appendChild(h);
+        Array.from(tab.children).forEach(child => target.appendChild(child));
+        tab.remove();
+      }
+      moveSection('Dados gerais', 'tab-geral');
+      moveSection('Termos e pagamento', 'tab-termos');
+      moveSection('Assinatura, páginas e estilo', 'tab-assinatura');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const itens = document.getElementById('tab-itens');
+      if(itens) itens.classList.add('active');
+    }
+    function openBudgetSettings(){
+      setupBudgetSettingsModal();
+      document.getElementById('budget-settings-modal').style.display = 'flex';
+    }
+    function closeBudgetSettings(){
+      document.getElementById('budget-settings-modal').style.display = 'none';
+      updatePreviewFromForm();
+    }
 
     // Switch between tabs in editor panel
     function switchTab(tabId) {
@@ -1528,8 +1431,36 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       });
       activeFormPageIndex = documentPages.length - 1;
       
-      // Render page DOM in preview (builder compartilhado — usado também no restore)
-      addPageDomOnly(newPageId);
+      // Render page DOM in preview
+      const container = document.getElementById('preview-pages-container');
+      const newPageDom = document.createElement('div');
+      newPageDom.className = 'page';
+      newPageDom.id = `printable-a4-page-${newPageId}`;
+      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
+      
+      // Update individual child IDs to avoid clashing
+      newPageDom.querySelector('.watermark').id = `preview-watermark-${newPageId}`;
+      newPageDom.querySelector('.header-logo').id = `preview-logo-${newPageId}`;
+      newPageDom.querySelector('.phone').id = `preview-phone-${newPageId}`;
+      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${newPageId}`;
+      newPageDom.querySelector('.address').id = `preview-address-${newPageId}`;
+      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
+      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
+      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
+      const bn = newPageDom.querySelector('.budget-number'); if (bn) bn.id = `preview-budget-number-${newPageId}`;
+      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
+      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
+      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
+      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${newPageId}`;
+      newPageDom.querySelector('.signature-image').id = `preview-signature-${newPageId}`;
+      newPageDom.querySelector('.validity-days').id = `preview-validity-${newPageId}`;
+      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${newPageId}`;
+      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${newPageId}`;
+
+      container.appendChild(newPageDom);
+
+      // Re-apply listeners
+      setupPageInPlaceListeners(newPageDom, newPageId);
 
       renderItemsEditor();
       updatePreviewFromForm();
@@ -1652,54 +1583,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       }
     }
 
-    /* ══ V7 UX: sugestão de clientes (catálogo + orçamentos anteriores) ══ */
-    function orcClientPool() {
-      const map = {};
-      try {
-        const cat = JSON.parse(localStorage.getItem('vooalto_main_catalog_v2') || 'null');
-        (cat && cat.orders || []).forEach(o => {
-          if (o.name) map[o.name.trim()] = o.clientPhone || '';
-        });
-      } catch (e) {}
-      try {
-        const rec = JSON.parse(localStorage.getItem('vooalto_orc_clientes_v7') || '{}');
-        Object.keys(rec).forEach(k => { if (!map[k]) map[k] = rec[k]; });
-      } catch (e) {}
-      return map;
-    }
-
-    function orcBuildClientSuggestions() {
-      const dl = document.getElementById('clientDatalist');
-      if (!dl) return;
-      const map = orcClientPool();
-      dl.innerHTML = Object.keys(map).slice(0, 40).map(n =>
-        '<option value="' + n.replace(/"/g, '&quot;') + '">' + (map[n] ? map[n].replace(/"/g, '&quot;') : '') + '</option>'
-      ).join('');
-    }
-
-    function orcFillClientPhone() {
-      const nameEl = document.getElementById('edit-client-name');
-      const phoneEl = document.getElementById('edit-client-phone');
-      if (!nameEl || !phoneEl || phoneEl.value.trim()) return;
-      const map = orcClientPool();
-      const n = nameEl.value.trim();
-      if (n && map[n] && map[n]) phoneEl.value = map[n];
-    }
-
-    function orcRememberClient() {
-      try {
-        const nameEl = document.getElementById('edit-client-name');
-        const phoneEl = document.getElementById('edit-client-phone');
-        if (!nameEl) return;
-        const n = nameEl.value.trim();
-        if (!n) return;
-        const rec = JSON.parse(localStorage.getItem('vooalto_orc_clientes_v7') || '{}');
-        if (phoneEl && phoneEl.value.trim()) rec[n] = phoneEl.value.trim();
-        else if (!rec[n]) rec[n] = '';
-        localStorage.setItem('vooalto_orc_clientes_v7', JSON.stringify(rec));
-      } catch (e) {}
-    }
-
     // Helper to format currency
     function formatCurrency(val) {
       return "R$ " + val.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -1763,11 +1646,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       const validityVal = document.getElementById('edit-validity').value;
       const respNameVal = document.getElementById('edit-resp-name').value;
       const watermarkOpacity = document.getElementById('edit-watermark-opacity').value;
-      const clientNameVal = document.getElementById('edit-client-name').value;
-      const clientDocVal = document.getElementById('edit-client-doc').value;
-      const clientPhoneVal = document.getElementById('edit-client-phone').value;
-      const deliveryVal = document.getElementById('edit-delivery').value;
-
 
       documentPages.forEach((pageState, pageIdx) => {
         const pageId = pageState.id;
@@ -1786,15 +1664,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
         // Budget Title
         document.getElementById(`preview-budget-title-${pageId}`).innerHTML = budgetTitleVal;
-
-        // Budget Number
-        document.getElementById(`preview-budget-number-${pageId}`).innerHTML = 'Orçamento Nº ' + String(orcNumero || 0).padStart(4, '0');
-
-        // Client Data
-        document.getElementById(`preview-client-name-${pageId}`).innerHTML = clientNameVal;
-        document.getElementById(`preview-client-doc-${pageId}`).innerHTML = clientDocVal;
-        document.getElementById(`preview-client-phone-${pageId}`).innerHTML = clientPhoneVal;
-        document.getElementById(`preview-delivery-${pageId}`).innerHTML = deliveryVal;
 
         // Render items table for this specific page
         const previewTableBody = document.getElementById(`preview-table-body-${pageId}`);
@@ -1886,15 +1755,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         document.getElementById('edit-validity').value = textContent;
       } else if (fieldId === 'resp-name') {
         document.getElementById('edit-resp-name').value = textContent;
-      } else if (fieldId === 'client-name') {
-        document.getElementById('edit-client-name').value = textContent;
-      } else if (fieldId === 'client-doc') {
-        document.getElementById('edit-client-doc').value = textContent;
-      } else if (fieldId === 'client-phone') {
-        document.getElementById('edit-client-phone').value = textContent;
-      } else if (fieldId === 'delivery') {
-        document.getElementById('edit-delivery').value = textContent;
-
       }
 
       // Propagate change to all pages silently
@@ -2419,7 +2279,6 @@ function printProposal() {
 </style>
 
 <div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.92);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;font-family:'Poppins',sans-serif"></div>
-
 <script>
 /* ══ Tema global V7 (shell -> módulo) ══ */
 function applyGlobalTheme(t){ t=t||'neo'; document.documentElement.dataset.theme=(t==='neo')?'':t; }
