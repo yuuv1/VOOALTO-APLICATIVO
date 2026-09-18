@@ -60,24 +60,24 @@
     }
 
     .editor-header {
-      padding: 20px 24px;
+      padding: 12px 16px;
       background-color: #0F172A;
       border-bottom: 1px solid #334155;
     }
 
     .editor-header h1 {
-      font-size: 18px;
+      font-size: 15px;
       font-weight: 700;
       color: #F8FAFC;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .editor-header p {
-      font-size: 12px;
+      font-size: 11px;
       color: #94A3B8;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     /* Tabs Navigation inside sidebar */
@@ -93,16 +93,16 @@
       justify-content: space-between;
       background: #0F172A;
       border-bottom: 1px solid #1E293B;
-      padding: 9px 16px;
-      font-size: 10.5px;
+      padding: 6px 14px;
+      font-size: 10px;
       color: #94A3B8;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .6px;
+      letter-spacing: .5px;
     }
 
     .orc-running-total .ort-values { display: flex; align-items: baseline; gap: 8px; }
-    .orc-running-total b { font-size: 17px; color: #38BDF8; text-transform: none; letter-spacing: 0; }
+    .orc-running-total b { font-size: 16px; color: #38BDF8; text-transform: none; letter-spacing: 0; }
     .orc-running-total .ort-items { font-size: 10px; color: #64748B; text-transform: none; }
 
     .btn-dup-row {
@@ -164,7 +164,7 @@
     .editor-content {
       flex: 1;
       overflow-y: auto;
-      padding: 24px;
+      padding: 10px 10px;
     }
 
     .tab-content {
@@ -222,38 +222,231 @@
       gap: 12px;
     }
 
-    /* Dynamic Table Row Editor */
+    /* Dynamic Table Row Editor — Compact V7 */
     .item-row-card {
       background-color: #0F172A;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 14px;
+      border: 1px solid #283548;
+      border-radius: 7px;
+      padding: 8px 10px;
+      margin-bottom: 7px;
       position: relative;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .item-row-card:hover {
+      border-color: #38BDF8;
     }
 
-    .item-row-card h4 {
+    .orc-item-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #1E293B;
+    }
+
+    .orc-item-badge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .orc-item-num {
       font-size: 11px;
+      font-weight: 800;
       color: #F59E0B;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      background: rgba(245, 158, 11, 0.14);
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .orc-item-pag-tag {
+      font-size: 9.5px;
+      color: #64748B;
+      font-weight: 600;
+    }
+
+    .orc-item-top-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .orc-item-inline-total {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.2px;
+    }
+
+    .btn-dup-row,
+    .btn-delete-row {
+      position: static !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      line-height: 1;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-dup-row {
+      color: #38BDF8;
+    }
+    .btn-dup-row:hover {
+      background: rgba(56, 189, 248, 0.22);
+      color: #FFFFFF;
     }
 
     .btn-delete-row {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: none;
-      border: none;
       color: #EF4444;
-      cursor: pointer;
-      font-size: 18px;
-      transition: opacity 0.2s;
+    }
+    .btn-delete-row:hover {
+      background: rgba(239, 68, 68, 0.22);
+      color: #FFFFFF;
     }
 
-    .btn-delete-row:hover {
+    .orc-mini-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .orc-mini-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+
+    .orc-input-compact {
+      padding: 5px 8px !important;
+      font-size: 12px !important;
+      height: 28px !important;
+      border-radius: 5px !important;
+      background-color: #090E17 !important;
+      border: 1px solid #1E293B !important;
+    }
+
+    .orc-input-compact:focus {
+      border-color: #38BDF8 !important;
+      background-color: #0F172A !important;
+    }
+
+    .orc-mini-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    /* Page Navigation Bar inside Itens tab */
+    .orc-page-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: #0B1120;
+      border: 1px solid #1E293B;
+      border-radius: 8px;
+      padding: 5px 8px;
+      margin-bottom: 8px;
+    }
+
+    .orc-page-pill-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .orc-page-pill {
+      border: 1px solid #334155;
+      background: #0F172A;
+      color: #94A3B8;
+      font-size: 10.5px;
+      font-weight: 700;
+      border-radius: 5px;
+      padding: 3px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .orc-page-pill:hover {
+      color: #F8FAFC;
+      border-color: #38BDF8;
+    }
+
+    .orc-page-pill.active {
+      background: #0284C7;
+      border-color: #38BDF8;
+      color: #FFFFFF;
+    }
+
+    .orc-page-count {
+      font-size: 8.5px;
       opacity: 0.8;
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 0 4px;
+    }
+
+    .orc-page-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-orc-tool {
+      border: 1px solid #334155;
+      background: rgba(255,255,255,0.06);
+      color: #E2E8F0;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 5px;
+      padding: 4px 7px;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+
+    .btn-orc-tool:hover {
+      background: rgba(255,255,255,0.14);
+    }
+
+    .btn-orc-tool.accent {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-orc-tool.accent:hover {
+      background: rgba(56, 189, 248, 0.28);
+    }
+
+    .btn-orc-tool.danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #EF4444;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-orc-tool.danger:hover {
+      background: rgba(239, 68, 68, 0.3);
     }
 
     /* Action Buttons */
@@ -913,7 +1106,10 @@ dos Buritis, Goiânia - GO, 74370-661</textarea>
           <div id="items-editor-list">
             <!-- Dynamic rows will be inserted here -->
           </div>
-          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addTableRow()" title="Dica: Enter no último campo de um item já cria o próximo">➕ Adicionar Item <small style="opacity:.6">(ou Enter)</small></button>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button class="btn btn-secondary" style="flex:2;" onclick="addTableRow()" title="Dica: Enter no último campo de um item já cria o próximo">➕ Adicionar Item <small style="opacity:.6">(ou Enter)</small></button>
+            <button class="btn btn-secondary" style="flex:1;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
+          </div>
         </div>
 
         <!-- Tab 3: Termos -->
@@ -937,9 +1133,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         <div id="tab-assinatura" class="tab-content">
           <div class="form-group">
             <label>Gerenciamento de Páginas</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px;">
-              <button class="btn btn-primary" onclick="addDocumentPage()">➕ Add Página</button>
-              <button class="btn btn-danger-outline" onclick="removeLastDocumentPage()">❌ Rem. Página</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 18px;">
+              <button class="btn btn-primary" onclick="addDocumentPage()" style="padding:9px 6px;font-size:11.5px;">➕ Add Página</button>
+              <button class="btn btn-secondary" onclick="duplicateDocumentPage()" style="padding:9px 6px;font-size:11.5px;">⧉ Duplicar</button>
+              <button class="btn btn-danger-outline" onclick="removeLastDocumentPage()" style="padding:9px 6px;font-size:11.5px;">❌ Rem. Página</button>
             </div>
           </div>
           <div class="form-group">
@@ -967,8 +1164,12 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       <div class="editor-actions">
         <button class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
         <button class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
-        <div style="display:flex;gap:8px;width:100%">
-          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (nº novo, campos de volta ao padrão)">🗋 Novo Orçamento</button>
+        <div style="display:flex;gap:6px;width:100%">
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (nº novo, campos de volta ao padrão)">🗋 Novo</button>
+          <button class="btn btn-secondary" style="flex:1.2;padding:7px 6px;font-size:11px;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
+          <button class="btn btn-secondary" style="flex:1.1;padding:7px 6px;font-size:11px;" onclick="abrirOrcDraftsModal()" title="Ver e abrir rascunhos salvos" id="btnOrcDrafts">📂 Rascunhos (<span id="orcDraftsCount">0</span>)</button>
+        </div>
+        <div style="display:flex;gap:6px;width:100%;margin-top:6px;">
           <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="exportarOrcamentoJSON()" title="Salvar arquivo .json para guardar/enviar">📤 Salvar .json</button>
           <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="document.getElementById('orcJsonInput').click()" title="Abrir arquivo .json de orçamento">📂 Abrir .json</button>
         </div>
@@ -1095,6 +1296,24 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         <button class="btn btn-danger-outline" style="width:auto;padding:8px 12px;" onclick="closeBudgetSettings()">Fechar</button>
       </div>
       <div id="budget-settings-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Rascunhos de Orçamento -->
+  <div class="modal" id="orcDraftsModal" style="display:none;">
+    <div class="modal-content settings-modal-content" style="width:580px;background:#0F172A;border:1px solid #334155;border-radius:12px;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1E293B;padding-bottom:12px;margin-bottom:14px;">
+        <h3 style="margin:0;color:#F8FAFC;font-size:16px;display:flex;align-items:center;gap:8px;">📁 Rascunhos de Orçamentos</h3>
+        <button class="btn btn-danger-outline" style="width:auto;padding:6px 12px;font-size:12px;" onclick="fecharOrcDraftsModal()">Fechar</button>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-top:0;margin-bottom:12px;">Orçamentos guardados no seu navegador. Você pode abrir qualquer rascunho salvo para continuar a edição.</p>
+      <div id="orcDraftsList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;">
+        <!-- Draft cards rendered here -->
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid #1E293B;padding-top:12px;">
+        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="salvarRascunhoOrcamento()">💾 Salvar Atual Como Rascunho</button>
+        <button class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="fecharOrcDraftsModal()">Fechar</button>
+      </div>
     </div>
   </div>
 
@@ -1307,6 +1526,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       });
 
       if (restored) orcToast('💾 Orçamento anterior restaurado automaticamente.');
+      orcUpdateDraftsBadge();
     });
 
 
@@ -1355,63 +1575,78 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       document.execCommand(command, false, value);
     }
 
-    // Render the rows in the editor sidebar panel (for the active page)
+    // Render sidebar input fields dynamically based on active page's table items — Compact V7
     function renderItemsEditor() {
       if (isSyncing) return;
       const container = document.getElementById('items-editor-list');
+      if (!container) return;
       container.innerHTML = '';
 
-      // Add a header for active page selection if multi-page
-      if (documentPages.length > 1) {
-        const selectorGroup = document.createElement('div');
-        selectorGroup.className = 'form-group';
-        selectorGroup.innerHTML = `
-          <label>Editar Itens da Página:</label>
-          <select class="form-control" onchange="changeActiveFormPage(this.value)">
-            ${documentPages.map((p, idx) => `<option value="${idx}" ${idx === activeFormPageIndex ? 'selected' : ''}>Página ${idx + 1}</option>`).join('')}
-          </select>
-        `;
-        container.appendChild(selectorGroup);
-      }
+      // Page Navigation & Actions Bar
+      const navBar = document.createElement('div');
+      navBar.className = 'orc-page-nav-bar';
+      navBar.innerHTML = `
+        <div class="orc-page-pill-wrap">
+          ${documentPages.map((p, idx) => `
+            <button type="button" class="orc-page-pill ${idx === activeFormPageIndex ? 'active' : ''}" onclick="changeActiveFormPage(${idx})" title="Ir para Página ${idx + 1}">
+              Pág. ${idx + 1}
+              <span class="orc-page-count">${(p.tableItems || []).length}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="orc-page-btn-group">
+          <button type="button" class="btn-orc-tool" onclick="addDocumentPage()" title="Adicionar nova página vazia">➕ Pág</button>
+          <button type="button" class="btn-orc-tool accent" onclick="duplicateDocumentPage()" title="Duplicar página ativa com todos os seus itens">⧉ Duplicar</button>
+          ${documentPages.length > 1 ? `<button type="button" class="btn-orc-tool danger" onclick="removeActiveDocumentPage()" title="Excluir página ativa">✕</button>` : ''}
+        </div>
+      `;
+      container.appendChild(navBar);
 
-      const activePage = documentPages[activeFormPageIndex];
+      const activePage = documentPages[activeFormPageIndex] || documentPages[0];
+      if (!activePage) return;
 
       activePage.tableItems.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'item-row-card';
         card.innerHTML = `
-          <h4>📦 Item ${index + 1} (Pág. ${activeFormPageIndex + 1})</h4>
-          <button class="btn-dup-row" onclick="duplicateTableRow(${index})" title="Duplicar este item">⧉</button>
-          <button class="btn-delete-row" onclick="deleteTableRow(${index})" title="Remover item">✕</button>
-          
-          <div class="form-group">
-            <label>Modelo (Use \\n para quebra de linha)</label>
-            <input type="text" class="form-control" id="form-item-modelo-${index}" value="${escapeHtml(item.modelo)}" oninput="updateItemField(${index}, 'modelo', this.value)" onkeydown="itemKeydown(event,${index},'modelo')" placeholder="Ex: Camiseta gola polo">
+          <div class="orc-item-topbar">
+            <div class="orc-item-badge-wrap">
+              <span class="orc-item-num">#${index + 1}</span>
+              <span class="orc-item-pag-tag">Pág. ${activeFormPageIndex + 1}</span>
+            </div>
+            <div class="orc-item-top-right">
+              <span class="orc-item-inline-total" id="form-item-total-${index}">R$ ${((item.qnt||0)*(item.unit||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+              <button type="button" class="btn-dup-row" onclick="duplicateTableRow(${index})" title="Duplicar este item">⧉</button>
+              <button type="button" class="btn-delete-row" onclick="deleteTableRow(${index})" title="Remover item">✕</button>
+            </div>
           </div>
           
-          <div class="row-cols-2">
-            <div class="form-group">
-              <label>Tecido</label>
-              <input type="text" class="form-control" id="form-item-tecido-${index}" value="${escapeHtml(item.tecido)}" oninput="updateItemField(${index}, 'tecido', this.value)" onkeydown="itemKeydown(event,${index},'tecido')" placeholder="Ex: Piquet PA">
+          <div class="orc-mini-group" style="margin-bottom:4px;">
+            <label class="orc-mini-lbl">Modelo</label>
+            <input type="text" class="form-control orc-input-compact" id="form-item-modelo-${index}" value="${escapeHtml(item.modelo)}" oninput="updateItemField(${index}, 'modelo', this.value)" onkeydown="itemKeydown(event,${index},'modelo')" placeholder="Ex: Camiseta polo">
+          </div>
+          
+          <div class="orc-mini-row-2" style="margin-bottom:4px;">
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Tecido</label>
+              <input type="text" class="form-control orc-input-compact" id="form-item-tecido-${index}" value="${escapeHtml(item.tecido)}" oninput="updateItemField(${index}, 'tecido', this.value)" onkeydown="itemKeydown(event,${index},'tecido')" placeholder="Ex: Piquet">
             </div>
-            <div class="form-group">
-              <label>Descrição</label>
-              <input type="text" class="form-control" id="form-item-descricao-${index}" value="${escapeHtml(item.descricao)}" oninput="updateItemField(${index}, 'descricao', this.value)" onkeydown="itemKeydown(event,${index},'descricao')" placeholder="Detalhes opcionais">
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Descrição</label>
+              <input type="text" class="form-control orc-input-compact" id="form-item-descricao-${index}" value="${escapeHtml(item.descricao)}" oninput="updateItemField(${index}, 'descricao', this.value)" onkeydown="itemKeydown(event,${index},'descricao')" placeholder="Detalhes opcionais">
             </div>
           </div>
 
-          <div class="row-cols-2">
-            <div class="form-group">
-              <label>Quantidade</label>
-              <input type="number" class="form-control" id="form-item-qnt-${index}" value="${item.qnt}" min="0" oninput="updateItemField(${index}, 'qnt', parseInt(this.value) || 0)" onkeydown="itemKeydown(event,${index},'qnt')" placeholder="0">
+          <div class="orc-mini-row-2">
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Quantidade</label>
+              <input type="number" class="form-control orc-input-compact" id="form-item-qnt-${index}" value="${item.qnt}" min="0" oninput="updateItemField(${index}, 'qnt', parseInt(this.value) || 0)" onkeydown="itemKeydown(event,${index},'qnt')" placeholder="0">
             </div>
-            <div class="form-group">
-              <label>Valor Unitário (R$)</label>
-              <input type="number" class="form-control" id="form-item-unit-${index}" step="0.01" value="${item.unit}" min="0" oninput="updateItemField(${index}, 'unit', parseFloat(this.value) || 0)" onkeydown="itemKeydown(event,${index},'unit')">
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Valor Unitário (R$)</label>
+              <input type="number" class="form-control orc-input-compact" id="form-item-unit-${index}" step="0.01" value="${item.unit}" min="0" oninput="updateItemField(${index}, 'unit', parseFloat(this.value) || 0)" onkeydown="itemKeydown(event,${index},'unit')">
             </div>
           </div>
-
-          <div class="item-total-line"><span>Total do item</span><b id="form-item-total-${index}">R$ ${((item.qnt||0)*(item.unit||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</b></div>
         `;
         container.appendChild(card);
       });
@@ -1465,6 +1700,232 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       renderItemsEditor();
       updatePreviewFromForm();
     }
+
+
+    // Duplicate document page with all its items
+    function duplicateDocumentPage(pageIdx) {
+      if (typeof pageIdx !== 'number') pageIdx = activeFormPageIndex;
+      const sourcePage = documentPages[pageIdx];
+      if (!sourcePage) return;
+      const newPageId = Math.max(0, ...documentPages.map(p => p.id || 0)) + 1;
+      const clonedItems = JSON.parse(JSON.stringify(sourcePage.tableItems || []));
+      documentPages.push({
+        id: newPageId,
+        tableItems: clonedItems
+      });
+      activeFormPageIndex = documentPages.length - 1;
+
+      // Render page DOM in preview
+      const container = document.getElementById('preview-pages-container');
+      const newPageDom = document.createElement('div');
+      newPageDom.className = 'page';
+      newPageDom.id = `printable-a4-page-${newPageId}`;
+      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
+
+      // Update individual child IDs
+      newPageDom.querySelector('.watermark').id = `preview-watermark-${newPageId}`;
+      newPageDom.querySelector('.header-logo').id = `preview-logo-${newPageId}`;
+      newPageDom.querySelector('.phone').id = `preview-phone-${newPageId}`;
+      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${newPageId}`;
+      newPageDom.querySelector('.address').id = `preview-address-${newPageId}`;
+      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
+      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
+      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
+      const bn = newPageDom.querySelector('.budget-number'); if (bn) bn.id = `preview-budget-number-${newPageId}`;
+      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
+      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
+      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
+      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${newPageId}`;
+      newPageDom.querySelector('.signature-image').id = `preview-signature-${newPageId}`;
+      newPageDom.querySelector('.validity-days').id = `preview-validity-${newPageId}`;
+      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${newPageId}`;
+      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${newPageId}`;
+
+      container.appendChild(newPageDom);
+
+      // Re-apply listeners
+      setupPageInPlaceListeners(newPageDom, newPageId);
+
+      renderItemsEditor();
+      updatePreviewFromForm();
+      if (typeof toastOrc === 'function') toastOrc(`⧉ Página ${pageIdx + 1} duplicada com sucesso! (${clonedItems.length} itens)`);
+      else orcToast(`⧉ Página ${pageIdx + 1} duplicada!`);
+    }
+    window.duplicateDocumentPage = duplicateDocumentPage;
+
+    function removeActiveDocumentPage(pageIdx) {
+      if (typeof pageIdx !== 'number') pageIdx = activeFormPageIndex;
+      if (documentPages.length <= 1) {
+        alert("O documento deve conter ao menos 1 página.");
+        return;
+      }
+      if (!confirm(`Remover a Página ${pageIdx + 1}? Os itens desta página serão excluídos.`)) return;
+      const pageToRemove = documentPages[pageIdx];
+      const pageId = pageToRemove.id;
+
+      if (pageIdx === documentPages.length - 1) {
+        removeLastDocumentPage();
+        return;
+      }
+
+      documentPages.splice(pageIdx, 1);
+      const domPage = document.getElementById(`printable-a4-page-${pageId}`);
+      if (domPage && pageId !== 1) {
+        domPage.remove();
+      }
+
+      if (activeFormPageIndex >= documentPages.length) {
+        activeFormPageIndex = documentPages.length - 1;
+      }
+
+      renderItemsEditor();
+      updatePreviewFromForm();
+      if (typeof toastOrc === 'function') toastOrc('Página removida.');
+      else orcToast('Página removida.');
+    }
+    window.removeActiveDocumentPage = removeActiveDocumentPage;
+
+    /* ═══ V7 RASCUNHOS DE ORÇAMENTO ═══ */
+    const ORC_DRAFTS_KEY = 'vooalto_orcamento_rascunhos_v7';
+
+    function orcGetDrafts() {
+      try {
+        const raw = localStorage.getItem(ORC_DRAFTS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function orcUpdateDraftsBadge() {
+      const drafts = orcGetDrafts();
+      const el = document.getElementById('orcDraftsCount');
+      if (el) el.textContent = drafts.length;
+    }
+
+    function salvarRascunhoOrcamento() {
+      const state = orcCollectState();
+      const num = orcNumero ? String(orcNumero).padStart(4, '0') : '0001';
+      const tit = (document.getElementById('edit-proposal-title')?.value || 'Orçamento').trim();
+      const firstItem = (documentPages[0] && documentPages[0].tableItems[0] && documentPages[0].tableItems[0].modelo) ? documentPages[0].tableItems[0].modelo.trim() : '';
+      const sugestao = `${tit} Nº ${num}` + (firstItem ? ` - ${firstItem}` : '');
+      const nome = prompt('Nome do rascunho:', sugestao);
+      if (!nome) return;
+
+      const total = document.getElementById('orcRunningTotal')?.textContent || 'R$ 0,00';
+      const itens = documentPages.reduce((acc, p) => acc + (p.tableItems || []).length, 0);
+      const pages = documentPages.length;
+
+      const draft = {
+        id: 'orc_draft_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        name: nome.trim(),
+        date: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        timestamp: Date.now(),
+        total: total,
+        itemsCount: itens,
+        pagesCount: pages,
+        state: state
+      };
+
+      const drafts = orcGetDrafts();
+      drafts.unshift(draft);
+      if (drafts.length > 30) drafts.pop();
+      try {
+        localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
+      } catch(e) {
+        console.warn('Falha ao salvar rascunho', e);
+      }
+
+      orcUpdateDraftsBadge();
+      renderOrcDraftsList();
+      if (typeof toastOrc === 'function') toastOrc(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
+      else orcToast(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
+    }
+    window.salvarRascunhoOrcamento = salvarRascunhoOrcamento;
+    window.orcSalvarRascunho = salvarRascunhoOrcamento;
+
+    function orcCarregarRascunho(draftId) {
+      const drafts = orcGetDrafts();
+      const draft = drafts.find(d => d.id === draftId);
+      if (!draft || !draft.state) {
+        alert('Rascunho não encontrado.');
+        return;
+      }
+      const ok = orcRestoreState(draft.state);
+      if (ok) {
+        renderItemsEditor();
+        updatePreviewFromForm();
+        orcUpdateRunningTotal();
+        fecharOrcDraftsModal();
+        if (typeof toastOrc === 'function') toastOrc(`📋 Rascunho "${draft.name}" carregado com sucesso!`);
+        else orcToast(`📋 Rascunho "${draft.name}" carregado com sucesso!`);
+      } else {
+        alert('Erro ao restaurar rascunho.');
+      }
+    }
+    window.orcCarregarRascunho = orcCarregarRascunho;
+
+    function orcExcluirRascunho(draftId) {
+      if (!confirm('Deseja realmente excluir este rascunho?')) return;
+      let drafts = orcGetDrafts();
+      drafts = drafts.filter(d => d.id !== draftId);
+      try {
+        localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
+      } catch(e) {}
+      orcUpdateDraftsBadge();
+      renderOrcDraftsList();
+      if (typeof toastOrc === 'function') toastOrc('🗑 Rascunho excluído.');
+      else orcToast('🗑 Rascunho excluído.');
+    }
+    window.orcExcluirRascunho = orcExcluirRascunho;
+
+    function renderOrcDraftsList() {
+      const list = document.getElementById('orcDraftsList');
+      if (!list) return;
+      const drafts = orcGetDrafts();
+      if (!drafts.length) {
+        list.innerHTML = `
+          <div style="padding: 24px 16px; text-align: center; color: #64748B; background: #0B1120; border: 1px dashed #334155; border-radius: 8px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">📂</div>
+            <b style="color: #94A3B8; font-size: 13px;">Nenhum rascunho salvo ainda</b>
+            <p style="font-size: 11px; margin-top: 4px; margin-bottom: 0;">Clique em "Salvar Rascunho" para guardar seu orçamento atual e continuar editando depois.</p>
+          </div>
+        `;
+        return;
+      }
+      list.innerHTML = drafts.map(d => `
+        <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div style="min-width:0; flex:1;">
+            <div style="font-weight:700; font-size:12.5px; color:#F8FAFC; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.name)}</div>
+            <div style="font-size:10px; color:#94A3B8; margin-top:2px; display:flex; flex-wrap:wrap; gap:8px;">
+              <span>📅 ${escapeHtml(d.date || '')}</span>
+              <span style="color:#38BDF8; font-weight:700;">${escapeHtml(d.total || '')}</span>
+              <span>${d.itemsCount || 0} ${(d.itemsCount===1?'item':'itens')}</span>
+              <span>${d.pagesCount || 1} ${(d.pagesCount===1?'pág':'págs')}</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            <button type="button" class="btn btn-primary" style="padding:6px 11px; font-size:11px; width:auto;" onclick="orcCarregarRascunho('${d.id}')">Abrir</button>
+            <button type="button" class="btn btn-danger-outline" style="padding:6px 9px; font-size:11px; width:auto; color:#EF4444; border-color:rgba(239,68,68,0.4);" onclick="orcExcluirRascunho('${d.id}')" title="Excluir rascunho">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function abrirOrcDraftsModal() {
+      const m = document.getElementById('orcDraftsModal');
+      if (m) {
+        renderOrcDraftsList();
+        m.style.display = 'flex';
+      }
+    }
+    window.abrirOrcDraftsModal = abrirOrcDraftsModal;
+
+    function fecharOrcDraftsModal() {
+      const m = document.getElementById('orcDraftsModal');
+      if (m) m.style.display = 'none';
+    }
+    window.fecharOrcDraftsModal = fecharOrcDraftsModal;
 
     // Remove the very last A4 page
     function removeLastDocumentPage() {
@@ -2031,7 +2492,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
         '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-        '.v5-highlight-group','#budget-settings-modal','#signature-modal'];
+        '.v5-highlight-group','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
       const saved = [];
       hideSelectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => {
@@ -2080,7 +2541,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
    Uses a flag to prevent double-hiding (printProposal + beforeprint both trigger). */
 const _printHideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
   '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-  '.v5-highlight-group','#budget-settings-modal','#signature-modal'];
+  '.v5-highlight-group','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
 let _printSavedStyles = null; /* null = not hidden; array = hidden, originals saved */
 
 function _beforePrintHide() {
