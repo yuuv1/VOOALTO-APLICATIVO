@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vooalto V7 — Limpar cache</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0b0f17;color:#e5e7eb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#111827;border:1px solid #1f2937;border-radius:20px;padding:30px;max-width:560px;width:100%}
+h1{font-size:19px;margin-bottom:6px}
+p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
+.note{background:#052e1b;border:1px solid #14532d;color:#bbf7d0;border-radius:12px;padding:12px 14px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.warn{background:#451a03;border:1px solid #7c2d12;color:#fed7aa;border-radius:12px;padding:12px 14px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.log{background:#030712;border-radius:12px;padding:12px 14px;font-size:11.5px;font-family:monospace;min-height:90px;max-height:180px;overflow-y:auto;margin-bottom:16px;color:#a5f3fc;white-space:pre-wrap}
+.btn{background:#0284c7;color:#fff;border:0;border-radius:999px;padding:12px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn:hover{background:#0369a1}
+.btn.sec{background:#374151}
+.row{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🧹 Limpar cache do Vooalto V7</h1>
+  <p class="sub">Remove o cache do Service Worker (versões antigas do app) para atualizar depois de uma nova instalação.</p>
+  <div class="note">✅ <b>Seguro:</b> esta página <b>não apaga seus dados</b> (fichas, catálogo, orçamentos e PDFs continuam intactos). Só limpa o cache do navegador usado pelo aplicativo.</div>
+  <div class="log" id="log">Aguardando ação...</div>
+  <div class="row">
+    <button class="btn" onclick="limparCache()">Limpar cache agora</button>
+    <a class="btn sec" style="display:inline-block;text-decoration:none;text-align:center" href="./index.html">Voltar ao V7</a>
+  </div>
+</div>
+<script>
+function log(m){ const l=document.getElementById('log'); l.textContent += m+'\n'; l.scrollTop=l.scrollHeight; }
+async function limparCache(){
+  log('Iniciando limpeza segura...');
+  let nReg=0, nCache=0;
+  if('serviceWorker' in navigator){
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for(const r of regs){
+      await r.unregister(); nReg++;
+    }
+    log('Service Workers desregistrados: '+nReg);
+  } else {
+    log('Service Worker não suportado aqui.');
+  }
+  if('caches' in window){
+    const keys = await caches.keys();
+    for(const k of keys){
+      await caches.delete(k); nCache++;
+      log('Cache removido: '+k);
+    }
+    if(!nCache) log('Nenhum cache encontrado (tudo limpo).');
+  }
+  log('✔ Concluído. Seu cadastro NÃO foi tocado.');
+  log('Dica: recarregue a página (F5) para usar a versão nova.');
+}
+</script>
+</body>
+</html>
