@@ -27,7 +27,7 @@ p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
   <div class="log" id="log">Aguardando ação...</div>
   <div class="row">
     <button class="btn" onclick="limparCache()">Limpar cache agora</button>
-    <a class="btn sec" style="display:inline-block;text-decoration:none;text-align:center" href="./index.html">Voltar ao V7</a>
+    <a class="btn sec" id="btnVoltar" style="display:inline-block;text-decoration:none;text-align:center" href="./index.html">Voltar ao V7</a>
   </div>
 </div>
 <script>
@@ -52,8 +52,10 @@ async function limparCache(){
     }
     if(!nCache) log('Nenhum cache encontrado (tudo limpo).');
   }
+  const btn = document.getElementById('btnVoltar');
+  if(btn) btn.href = './index.html?t=' + Date.now();
   log('✔ Concluído. Seu cadastro NÃO foi tocado.');
-  log('Dica: recarregue a página (F5) para usar a versão nova.');
+  log('Clique em "Voltar ao V7" para abrir a versão atualizada.');
 }
 </script>
 </body>

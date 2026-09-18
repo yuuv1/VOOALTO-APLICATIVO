@@ -486,6 +486,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .main{padding:10px 14px!important}.toolbar{margin-bottom:10px!important;gap:8px!important}.toolbar-left,.toolbar-right{gap:8px!important}.btn{padding:9px 13px!important}.search{height:40px!important;padding:9px 12px!important}.drop-hint{padding:8px 11px!important}.settings{padding:6px!important;gap:6px!important}.setting input{padding:7px 4px!important;width:54px!important}
 .columns{height:calc(100vh - 132px)!important}.columns.expanded{height:calc(100vh - 132px)!important}.column{border-radius:20px!important}.col-head{padding:12px 14px 6px!important}.col-desc{padding:0 14px 9px!important}.dropzone{padding:10px!important}
 #dashboard.view.active{height:calc(100vh - 74px)!important}.kpis{margin-bottom:10px!important}.neoHero{margin-bottom:8px!important}.neoHero h2{font-size:22px!important}.neoHero p{font-size:11px!important}
+#dashboard:not(.active){display:none!important}
+#catalogo.active{display:block!important}
 
 
 /* TEMAS V5 EXTRAS */
@@ -564,8 +566,8 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
         <option value="violet">Violet</option>
       </select></header>
 <main class="main" id="mainArea" ondragover="pageDragOver(event)" ondragleave="pageDragLeave(event)" ondrop="pageDrop(event)">
-<section id="dashboard" class="view"><div class="toolbar"><div><h2>Dashboard</h2><p>Métricas principais da produção — fichas por prioridade e tempo de espera</p></div><button class="btn" onclick="renderAll()">↻ Atualizar</button></div><div class="kpis" id="kpis"></div><div class="dash-grid"><div class="panel"><h3>Fichas por semana</h3><div class="chart" id="weeklyChart"></div></div><div class="panel"><h3>Divisão por prioridade</h3><div class="pie-wrap"><div class="pie" id="priorityPie"></div><div class="legend" id="priorityLegend"></div></div></div><div class="panel"><h3>Idade dos pedidos</h3><div id="ageBars"></div></div><div class="panel wide"><h3>Mais urgentes</h3><div class="urgent-list" id="urgentList"></div></div><div class="panel"><h3>Clientes frequentes</h3><div id="clientList"></div></div></div></section>
 <section id="catalogo" class="view active"><div class="toolbar"><div class="toolbar-left"><button class="btn primary" onclick="openOrderModal()">＋ Nova ficha</button><input class="search" id="search" placeholder="Pesquisar por nome, nota ou telefone..." oninput="renderCatalog()"><span class="drop-hint">Arraste um PDF para adicionar</span></div><div class="toolbar-right"><div class="settings"><span class="setting" title="A partir de quantos dias a ficha vira prioridade MÉDIA">Média <input id="thMed" type="number" value="15"> dias</span><span class="setting" title="A partir de quantos dias a ficha vira prioridade ALTA">Alta <input id="thHigh" type="number" value="22"> dias</span><button class="btn blue" onclick="saveThresholds();autoClassifyAll()">Reclassificar</button></div><button class="btn" onclick="exportData()">Exportar backup</button><button class="btn" onclick="document.getElementById('importInput').click()">Importar</button><input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)"></div></div><div class="prio-chips" id="prioChips"></div><div class="columns" id="columns"></div></section>
+<section id="dashboard" class="view"><div class="toolbar"><div><h2>Dashboard</h2><p>Métricas principais da produção — fichas por prioridade e tempo de espera</p></div><button class="btn" onclick="renderAll()">↻ Atualizar</button></div><div class="kpis" id="kpis"></div><div class="dash-grid"><div class="panel"><h3>Fichas por semana</h3><div class="chart" id="weeklyChart"></div></div><div class="panel"><h3>Divisão por prioridade</h3><div class="pie-wrap"><div class="pie" id="priorityPie"></div><div class="legend" id="priorityLegend"></div></div></div><div class="panel"><h3>Idade dos pedidos</h3><div id="ageBars"></div></div><div class="panel wide"><h3>Mais urgentes</h3><div class="urgent-list" id="urgentList"></div></div><div class="panel"><h3>Clientes frequentes</h3><div id="clientList"></div></div></div></section>
 </main></div>
 <div class="modal" id="orderModal"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Adicionar Ficha Técnica</h3><button class="btn" onclick="closeOrderModal()">✕</button></div><div class="modal-body"><input type="hidden" id="editId"><div class="form-grid"><div class="form-group"><label>Nome da ficha técnica</label><input class="form-control" id="orderName"></div><div class="form-group"><label>Número / WhatsApp do cliente (opcional)</label><input class="form-control" id="orderClientPhone"></div><div class="form-group"><label>Data de entrada</label><input type="date" class="form-control" id="orderDate"></div><div class="form-group"><label>Anexar PDF</label><input type="file" class="form-control" id="orderPdf" accept="application/pdf,.pdf"><div id="currentPdf" style="font-size:11px;color:var(--muted);margin-top:5px"></div></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ média (opcional)</label><input type="number" class="form-control" id="orderMedDays" value="15"></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ alta (opcional)</label><input type="number" class="form-control" id="orderHighDays" value="22"></div></div><div class="form-group"><label>Nota / alteração</label><textarea class="form-control" id="orderNote"></textarea></div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" onclick="closeOrderModal()">Cancelar</button><button class="btn primary" onclick="saveOrder()">Salvar</button></div></div></div></div>
 <div class="modal" id="pdfModal"><div class="pdf-viewer"><div class="modal-head"><h3 id="pdfTitle">Visualizar PDF</h3><button class="btn" onclick="closePdf()">Fechar</button></div><iframe class="pdf-frame" id="pdfFrame"></iframe></div></div><div class="toast" id="toast"></div>
@@ -847,9 +849,20 @@ window.addEventListener('message',function(e){
       toast('✅ Ficha técnica atualizada!');
     }
   }
+  if(e.data && e.data.type==='vooalto-switch-view' && e.data.view){
+    switchView(e.data.view);
+  }
 });
 
-load();loadTheme();renderAll();migratePdfsToDB().then(renderAll);
+function initCatalogView(){
+  try{
+    switchView('catalogo');
+  }catch(e){}
+}
+
+load();loadTheme();initCatalogView();migratePdfsToDB().then(renderAll);
+window.addEventListener('DOMContentLoaded',initCatalogView);
+window.addEventListener('load',initCatalogView);
 setInterval(checkPendingFicha,2000);
 setInterval(checkPendingFichaUpdate,2000);
 </script></body></html>

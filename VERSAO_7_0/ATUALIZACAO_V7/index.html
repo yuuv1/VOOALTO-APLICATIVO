@@ -289,14 +289,30 @@ async function installPWA(){
 
 function initVooalto(){
   try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'neo')}catch(e){}
-  /* esconde o loading quando o primeiro iframe carregar */
+  /* esconde o loading quando o primeiro iframe carregar e garante tela de catalogacao */
   const fr=document.getElementById('frame-principal');
-  const hide=()=>{const l=document.getElementById('loading');if(l)l.style.display='none'};
-  fr.addEventListener('load',hide);
-  setTimeout(hide,4000);
+  const ensureCatalog=()=>{
+    const l=document.getElementById('loading');
+    if(l)l.style.display='none';
+    try{
+      if(fr.contentWindow && typeof fr.contentWindow.switchView==='function'){
+        fr.contentWindow.switchView('catalogo');
+      }
+      fr.contentWindow.postMessage({type:'vooalto-switch-view',view:'catalogo'},'*');
+    }catch(e){}
+  };
+  fr.addEventListener('load',ensureCatalog);
+  setTimeout(ensureCatalog,1200);
+  setTimeout(ensureCatalog,3500);
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initVooalto)}else{initVooalto()}
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      reg.update().catch(()=>{});
+    }).catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>

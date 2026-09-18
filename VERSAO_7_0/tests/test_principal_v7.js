@@ -19,6 +19,8 @@ const { BASE } = require('./_base');
   t('title V7', `document.title`);
   t('aba catalogo ativa por padrao', `document.querySelector('.tab.active').textContent.includes('Catalogação')`);
   t('view catalogo ativa por padrao', `document.getElementById('catalogo').classList.contains('active') && !document.getElementById('dashboard').classList.contains('active')`);
+  t('section catalogo vem antes no DOM', `!!(document.getElementById('catalogo').compareDocumentPosition(document.getElementById('dashboard')) & Node.DOCUMENT_POSITION_FOLLOWING)`);
+  t('initCatalogView fn', `typeof initCatalogView`);
   t('h2 Dashboard', `Array.from(document.querySelectorAll('h2')).find(h=>h.textContent.includes('Dashboard')).textContent`);
   t('state', `!!state && typeof state.orders`);
   t('seed', `state.orders.push({id:'t1',name:'Ficha Teste Azul',clientPhone:'62 99999-0001',createdAt:'15/09/2026',createdTs:Date.now(),status:'baixa',note:'',medDays:15,highDays:22,fichaData:'DADOS_TESTE',fichaNum:'',pdfStored:false}); save(); renderAll(); 'ok'`);
