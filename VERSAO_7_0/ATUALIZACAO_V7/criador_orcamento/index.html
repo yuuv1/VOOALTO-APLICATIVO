@@ -1,0 +1,2750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROPOSTA DE VENDA</title>
+  <!-- Google Font: Poppins -->
+  <style>
+@font-face{font-family:'Poppins';font-style:normal;font-weight:300;font-display:swap;src:url('../assets/fonts/poppins-latin-300-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/poppins-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/poppins-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/poppins-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url('../assets/fonts/poppins-latin-700-normal.woff2') format('woff2')}
+</style>
+  
+  <!-- External Libraries for Export (PNG & PDF) -->
+  <script src="../assets/html2canvas.min.js"></script>
+
+  <style>
+    /* Force exactly A4 printing page bounds to avoid browser-induced margins or trailing empty sheets */
+    @page {
+      size: A4;
+      margin: 0 !important;
+    }
+
+    /* Reset and layout */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #0F172A; /* Modern dark dashboard background */
+      color: #E2E8F0;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout structure: Left Sidebar for Editing, Right side for Live A4 preview */
+    .app-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Sidebar Editor Panel */
+    .editor-sidebar {
+      width: 440px;
+      height: 100vh;
+      background-color: #1E293B;
+      border-right: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 100;
+      box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .editor-header {
+      padding: 12px 16px;
+      background-color: #0F172A;
+      border-bottom: 1px solid #334155;
+    }
+
+    .editor-header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #F8FAFC;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .editor-header p {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 2px;
+    }
+
+    /* Tabs Navigation inside sidebar */
+    .tabs-nav {
+      display: flex;
+      background-color: #111827;
+      border-bottom: 1px solid #334155;
+    }
+
+    .orc-running-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0F172A;
+      border-bottom: 1px solid #1E293B;
+      padding: 6px 14px;
+      font-size: 10px;
+      color: #94A3B8;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .orc-running-total .ort-values { display: flex; align-items: baseline; gap: 8px; }
+    .orc-running-total b { font-size: 16px; color: #38BDF8; text-transform: none; letter-spacing: 0; }
+    .orc-running-total .ort-items { font-size: 10px; color: #64748B; text-transform: none; }
+
+    .btn-dup-row {
+      position: absolute;
+      top: 12px;
+      right: 38px;
+      background: none;
+      border: none;
+      color: #38BDF8;
+      cursor: pointer;
+      font-size: 16px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-dup-row:hover { opacity: 0.8; }
+
+    .item-total-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0F172A;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #94A3B8;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .item-total-line b { color: #38BDF8; font-size: 13px; }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 6px;
+      background: none;
+      border: none;
+      color: #94A3B8;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+      text-align: center;
+    }
+
+    .tab-btn:hover {
+      color: #E2E8F0;
+      background-color: #1E293B;
+    }
+
+    .tab-btn.active {
+      color: #38BDF8; /* Accent color */
+      border-bottom: 2px solid #38BDF8;
+      background-color: #1E293B;
+    }
+
+    /* Tabs Content Area */
+    .editor-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 10px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+
+    .settings-modal-content{ text-align:left; max-height:90vh; overflow:auto; }
+    .v5-settings-section{font-size:12px;font-weight:900;color:#F8FAFC;margin:18px 0 12px;padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#0F172A,#1E293B);border:1px solid #334155;letter-spacing:.7px;text-transform:uppercase}
+
+    /* Form Fields and Inputs */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #38BDF8;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: #0F172A;
+      border: 1px solid #334155;
+      color: #F8FAFC;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #38BDF8;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .row-cols-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Dynamic Table Row Editor — Compact V7 */
+    .item-row-card {
+      background-color: #0F172A;
+      border: 1px solid #283548;
+      border-radius: 7px;
+      padding: 8px 10px;
+      margin-bottom: 7px;
+      position: relative;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .item-row-card:hover {
+      border-color: #38BDF8;
+    }
+
+    .orc-item-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #1E293B;
+    }
+
+    .orc-item-badge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .orc-item-num {
+      font-size: 11px;
+      font-weight: 800;
+      color: #F59E0B;
+      background: rgba(245, 158, 11, 0.14);
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .orc-item-pag-tag {
+      font-size: 9.5px;
+      color: #64748B;
+      font-weight: 600;
+    }
+
+    .orc-item-top-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .orc-item-inline-total {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.2px;
+    }
+
+    .btn-dup-row,
+    .btn-delete-row {
+      position: static !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      line-height: 1;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-dup-row {
+      color: #38BDF8;
+    }
+    .btn-dup-row:hover {
+      background: rgba(56, 189, 248, 0.22);
+      color: #FFFFFF;
+    }
+
+    .btn-delete-row {
+      color: #EF4444;
+    }
+    .btn-delete-row:hover {
+      background: rgba(239, 68, 68, 0.22);
+      color: #FFFFFF;
+    }
+
+    .orc-mini-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .orc-mini-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+
+    .orc-input-compact {
+      padding: 5px 8px !important;
+      font-size: 12px !important;
+      height: 28px !important;
+      border-radius: 5px !important;
+      background-color: #090E17 !important;
+      border: 1px solid #1E293B !important;
+    }
+
+    .orc-input-compact:focus {
+      border-color: #38BDF8 !important;
+      background-color: #0F172A !important;
+    }
+
+    .orc-mini-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    /* Page Navigation Bar inside Itens tab */
+    .orc-page-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: #0B1120;
+      border: 1px solid #1E293B;
+      border-radius: 8px;
+      padding: 5px 8px;
+      margin-bottom: 8px;
+    }
+
+    .orc-page-pill-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .orc-page-pill {
+      border: 1px solid #334155;
+      background: #0F172A;
+      color: #94A3B8;
+      font-size: 10.5px;
+      font-weight: 700;
+      border-radius: 5px;
+      padding: 3px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .orc-page-pill:hover {
+      color: #F8FAFC;
+      border-color: #38BDF8;
+    }
+
+    .orc-page-pill.active {
+      background: #0284C7;
+      border-color: #38BDF8;
+      color: #FFFFFF;
+    }
+
+    .orc-page-count {
+      font-size: 8.5px;
+      opacity: 0.8;
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 0 4px;
+    }
+
+    .orc-page-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-orc-tool {
+      border: 1px solid #334155;
+      background: rgba(255,255,255,0.06);
+      color: #E2E8F0;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 5px;
+      padding: 4px 7px;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+
+    .btn-orc-tool:hover {
+      background: rgba(255,255,255,0.14);
+    }
+
+    .btn-orc-tool.accent {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-orc-tool.accent:hover {
+      background: rgba(56, 189, 248, 0.28);
+    }
+
+    .btn-orc-tool.danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #EF4444;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-orc-tool.danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Action Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 16px;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: #0284C7;
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background-color: #0369A1;
+    }
+
+    .btn-success {
+      background-color: #059669;
+      color: #FFFFFF;
+    }
+
+    .btn-success:hover {
+      background-color: #047857;
+    }
+
+    .btn-secondary {
+      background-color: #475569;
+      color: #FFFFFF;
+    }
+
+    .btn-secondary:hover {
+      background-color: #334155;
+    }
+
+    .btn-danger-outline {
+      background: none;
+      border: 1px solid #EF4444;
+      color: #EF4444;
+    }
+
+    .btn-danger-outline:hover {
+      background-color: #EF4444;
+      color: #FFFFFF;
+    }
+
+    /* Action Panel at Bottom of Sidebar */
+    .editor-actions {
+      padding: 20px 24px;
+      background-color: #0F172A;
+      border-top: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Live Preview Pane */
+    .preview-pane {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 30px;
+      background-color: #0F172A;
+    }
+
+    /* Container holding all preview pages vertically - Font Size 0 eliminates empty whitespace nodes completely */
+    .pages-preview-container {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      align-items: center;
+      width: 100%;
+      font-size: 0;
+    }
+
+    /* --- SLEEK RICH-TEXT FORMATTING TOOLBAR --- */
+    .formatting-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #1E293B;
+      border: 1px solid #334155;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+      z-index: 50;
+      position: sticky;
+      top: 0;
+    }
+
+    .tool-btn {
+      background: none;
+      border: none;
+      color: #F8FAFC;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:hover {
+      background-color: #334155;
+      color: #38BDF8;
+    }
+
+    .tool-separator {
+      color: #334155;
+      margin: 0 4px;
+    }
+
+    /* --- THE EXACT RECONSTRUCTED A4 PAGE (DYNAMIC DENSITY HYBRID FLOW) --- */
+    .page {
+      /* Dynamic Layout Variables (Adjusted via JavaScript) */
+      --cell-padding: 23px 8px;
+      --table-top-margin: 25px;
+      --total-top-margin: 20px;
+      --payment-top-margin: 35px;
+      --font-scale: 13.5px;
+
+      background-color: #F3F0E7; /* Exact cream/beige background of original PDF */
+      width: 794px;              /* Exact A4 width at 96 DPI */
+      
+      /* HEIGHT CALIBRATION: Setting strictly to 1120px (840pt) guarantees NO overlap with A4 bounds (841.89pt) */
+      /* This mathematical clearance completely eliminates any browser-triggered trailing blank pages! */
+      height: 1120px;
+      
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); /* Elegant paper drop shadow */
+      position: relative;
+      overflow: hidden;          /* Clip absolute assets extending outside */
+      flex-shrink: 0;
+      padding: 40px 48px;        /* Safe outer margins */
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;           /* Restore font size for elements inside card */
+    }
+
+    /* Highlight contenteditable on hover to show editability */
+    [contenteditable="true"] {
+      outline: none;
+      transition: background-color 0.2s;
+    }
+
+    [contenteditable="true"]:hover {
+      background-color: rgba(56, 189, 248, 0.08); /* Soft blue overlay */
+      border-radius: 4px;
+      cursor: text;
+    }
+
+    [contenteditable="true"]:focus {
+      background-color: rgba(56, 189, 248, 0.12);
+      border-radius: 4px;
+      box-shadow: 0 0 0 1.5px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Watermark - VA Logo behind signature */
+    .watermark {
+      position: absolute;
+      right: 0px;
+      bottom: -103px;            /* Mathematically scaled bottom coordinate */
+      width: 379px;              /* Mathematically scaled width */
+      height: 541px;             /* Mathematically scaled height */
+      background-image: url("../assets/watermark_vooalto.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: right bottom;
+      pointer-events: none;
+      opacity: 0.12;             /* Perfect subtle background blending */
+      z-index: 1;                /* Sits behind text and signature */
+      transition: opacity 0.2s;
+    }
+
+    /* Header Containers */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      height: 90px;
+      margin-bottom: 20px;
+      z-index: 2;
+    }
+
+    /* Header Top Left Logo */
+    .header-logo {
+      width: 300px;              /* Exact scaled layout width */
+      height: auto;
+    }
+
+    /* Header Top Right Contact Info */
+    .header-contact {
+      text-align: right;
+      color: #000000;
+      font-size: 13.5px;
+      line-height: 1.45;
+      font-weight: 400;
+      max-width: 400px;
+    }
+
+    .header-contact .phone {
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .header-contact .cnpj {
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .header-contact .address {
+      margin-top: 2px;
+      font-size: 11.5px;
+    }
+
+    /* Red and Black Diagonal Band */
+    .header-band {
+      width: 100%;
+      height: 84px;              /* Exact scaled height */
+      display: flex;
+      background-color: transparent;
+      margin-bottom: var(--table-top-margin);
+      z-index: 2;
+    }
+
+    .band-red {
+      flex: 60;
+      background-color: #D46460; /* Exact coral color of original PDF */
+      display: flex;
+      align-items: center;
+      padding-left: 25px;
+      color: #FFFFFF;
+      font-size: 24.5px;
+      font-weight: 400;          /* Regular weight in Poppins */
+      clip-path: polygon(0 0, 100% 0, calc(100% - 35px) 100%, 0 100%);
+      z-index: 3;
+    }
+
+    .band-black {
+      flex: 40;
+      background-color: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 30px;
+      color: #FFFFFF;
+      font-size: 24.5px;
+      font-weight: 700;          /* Bold weight in Poppins */
+      clip-path: polygon(35px 0, 100% 0, 100% 100%, 0% 100%);
+      margin-left: -25px;        /* Creates the perfect slanted white gap */
+      z-index: 2;
+    }
+
+    /* Title "ORÇAMENTO" */
+    .budget-title-container {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 2;
+    }
+
+    .budget-number {
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin: -12px 0 14px 0;
+      z-index: 2;
+    }
+
+    .budget-title {
+      font-size: 25px;
+      font-weight: 700;
+      color: #000000;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: inline-block;
+      border-bottom: 2.2px solid #000000; /* Replicating the solid line drawn below title */
+      padding-bottom: 4px;
+    }
+
+    /* Table Container - FLOWING */
+    .table-container {
+      width: 100%;
+      z-index: 2;
+    }
+
+    .budget-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000000;
+    }
+
+    .budget-table th {
+      background-color: #000000;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 13.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 18px 8px;
+      border: 1.5px solid #000000;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .budget-table td {
+      padding: var(--cell-padding); /* Dynamically adjusted padding for density */
+      border: 1.5px solid #000000;
+      text-align: center;
+      vertical-align: middle;
+      font-size: var(--font-scale); /* Automatically scaled font-size */
+      color: #000000;
+      font-weight: 400;
+      line-height: 1.45;
+      word-wrap: break-word;        /* Wrap extremely long single words */
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Column Width Percentages mapped precisely from PDF coordinates */
+    .col-modelo { width: 18%; }
+    .col-tecido { width: 17%; }
+    .col-descricao { width: 30%; }
+    .col-qnt { width: 9%; }
+    .col-unit { width: 12%; }
+    .col-total { width: 14%; }
+
+    /* Total Bar - FLOWING */
+    .total-bar {
+      width: 100%;
+      height: 46px;              /* Exact scaled height */
+      background-color: #000000;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 30px;
+      font-size: 18.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-top: var(--total-top-margin); /* Dynamic margin */
+      z-index: 2;
+    }
+
+    /* Payment Terms Section - FLOWING */
+    .payment-terms {
+      width: 100%;
+      text-align: center;
+      margin-top: var(--payment-top-margin); /* Dynamic margin */
+      z-index: 2;
+    }
+
+    .payment-title {
+      font-size: 19.5px;
+      font-weight: 700;
+      color: #000000;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .payment-text {
+      font-size: 14.5px;
+      color: #000000;
+      line-height: 1.65;
+      font-weight: 400;
+    }
+
+    /* Signature Pinned at Bottom Over Watermark */
+    .signature-container {
+      position: absolute;
+      left: 545px;               /* Scaled coordinate x0 = 408.73 pt */
+      bottom: 107px;             /* Pinned relative to bottom footer line */
+      width: 184px;              /* Exact scaled width */
+      height: 52px;              /* Exact scaled height */
+      z-index: 10;               /* Displays above the watermark */
+      pointer-events: none;
+    }
+
+    .signature-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Footer Container - PINNED TO BOTTOM OF A4 */
+    .footer-line {
+      position: absolute;
+      left: 48px;
+      right: 48px;
+      bottom: 107px;             /* Pinned bottom coordinate */
+      border-top: 1.5px solid #000000;
+      z-index: 2;
+    }
+
+    .validity-title {
+      position: absolute;
+      left: 48px;
+      bottom: 84px;              /* Pinned coordinate */
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #000000;
+      z-index: 2;
+    }
+
+    .validity-days {
+      position: absolute;
+      left: 48px;
+      bottom: 60px;              /* Pinned coordinate */
+      font-size: 13.5px;
+      font-weight: 400;
+      color: #000000;
+      z-index: 2;
+    }
+
+    /* Page number indicator in the bottom center */
+    .page-number-indicator {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 24px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #555555;
+      z-index: 2;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-right {
+      position: absolute;
+      right: 48px;
+      bottom: 60px;              /* Pinned coordinate */
+      font-size: 13.5px;
+      color: #000000;
+      z-index: 2;
+    }
+
+    .footer-right .resp-title {
+      font-weight: 700;
+    }
+
+    .footer-right .resp-name {
+      font-weight: 400;
+    }
+
+    /* Interactive Canvas Drawing Pad inside modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #1E293B;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      width: 550px;
+      text-align: center;
+    }
+
+    .signature-pad-container {
+      background-color: #FFFFFF;
+      border-radius: 6px;
+      margin: 15px 0;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+
+    #signature-pad {
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Print styles to force single page per sheet without any trailing empty pages */
+    @media print {
+      html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background-color: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      /* Hide ALL editor / UI chrome — only the A4 pages should print */
+      .editor-sidebar,
+      .editor-header,
+      .editor-content,
+      .editor-actions,
+      .tabs-nav,
+      .modal,
+      #orcToast,
+      .orc-running-total,
+      .formatting-toolbar,
+      .formatting-toolbar.v5-movable,
+      .v5-drag-tool,
+      .v5-tool-select,
+      .v5-tool-input,
+      .v5-highlight-group,
+      .v5-hl,
+      #budget-settings-modal,
+      #signature-modal {
+        display: none !important;
+      }
+      .preview-pane {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+        background-color: transparent !important;
+        width: 100% !important;
+      }
+      .pages-preview-container {
+        gap: 0 !important;
+      }
+      .page {
+        box-shadow: none !important;
+        width: 100% !important;
+        height: 1120px !important;
+        max-width: none !important;
+        max-height: none !important;
+        page-break-inside: avoid !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        margin: 0 !important;
+        border: none !important;
+      }
+      /* Prevent blank page after the absolute final page of the PDF */
+      .page:last-child {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+    }
+  
+/* TEMAS ANTIGOS */
+[data-theme="dark"]{--bg:#0b0f17;--panel:rgba(28,32,42,.82);--card:#171b24;--text:#f8fafc;--muted:#9ca3af;--line:rgba(255,255,255,.10);--black:#050505;--green:#34c759;--yellow:#ffb020;--red:#ff3b64;--blue:#2563eb;--gray:#8e8e93}
+[data-theme="crimson"]{--bg:#02060e;--panel:rgba(197,3,55,.20);--card:#07101b;--text:#fff2f5;--muted:#e28aa0;--line:rgba(197,3,55,.24);--blue:#384358;--red:#c50337}
+[data-theme="ocean"]{--bg:#021024;--panel:rgba(5,38,89,.76);--card:#052659;--text:#eaf8ff;--muted:#c1e8ff;--line:rgba(193,232,255,.16);--blue:#5483b3;--green:#7bcfaa}
+[data-theme="wine"]{--bg:#f5ebd0;--panel:rgba(255,250,239,.80);--card:#fff7e5;--text:#7f011f;--muted:#8a4b5a;--line:rgba(127,1,31,.14)}
+[data-theme="pastel"]{--bg:#f8f7ff;--panel:rgba(255,255,255,.78);--card:#fff;--text:#242038;--muted:#8b86a3;--line:rgba(36,32,56,.10);--blue:#8ab6ff;--red:#ff8fc4}
+[data-theme="oxford"]{--bg:#002147;--panel:rgba(210,180,140,.16);--card:#062a55;--text:#f6e7ca;--muted:#d2b48c;--line:rgba(210,180,140,.24);--black:#001221}
+[data-theme="cherry"]{--bg:#efe6de;--panel:rgba(154,0,2,.13);--card:#fff7f0;--text:#9a0002;--muted:#8e514f;--line:rgba(154,0,2,.18);--black:#160001}
+[data-theme="butter"]{--bg:#ffefb3;--panel:rgba(1,62,55,.16);--card:#fff8d0;--text:#013e37;--muted:#236f63;--line:rgba(1,62,55,.18);--black:#01232f}
+[data-theme="vanilla"]{--bg:#fff7e6;--panel:rgba(10,18,42,.80);--card:#fff8ee;--text:#0a122a;--muted:#8b5e3c;--line:rgba(10,18,42,.12)}
+[data-theme="coffee"]{--bg:#f7f1e8;--panel:rgba(139,94,60,.80);--card:#fff8ee;--text:#2b2118;--muted:#8b5e3c;--line:rgba(43,33,24,.12)}
+[data-theme="yellowblack"]{--bg:#f9d344;--panel:rgba(46,45,41,.80);--card:#f9d344;--text:#111;--muted:#7d7a6f;--line:rgba(46,45,41,.14)}
+[data-theme="sunset"]{--bg:#242f49;--panel:rgba(229,26,43,.20);--card:#2d3748;--text:#fff;--muted:#ffa586;--line:rgba(229,26,43,.24)}
+[data-theme="burgundy"]{--bg:#151515;--panel:rgba(147,3,46,.20);--card:#1f1f1f;--text:#fff;--muted:#e28aa0;--line:rgba(147,3,46,.24)}
+[data-theme="asphalt"]{--bg:#10002b;--panel:rgba(131,56,236,.16);--card:#1a003d;--text:#fff;--muted:#8338ec;--line:rgba(131,56,236,.24)}
+/* NOVOS TEMAS SOLIDOS */
+[data-theme="givry"]{--bg:#F5E4CF;--panel:rgba(39,92,204,0.15);--card:#F5E4CF;--text:#275CCC;--muted:#7B9AD4;--line:rgba(39,92,204,0.20);--black:#1a3a7a;--green:#2E7D32;--yellow:#F9A825;--red:#C62828;--blue:#275CCC;--gray:#90A4AE}
+[data-theme="neon"]{--bg:#000000;--panel:rgba(253,64,18,0.20);--card:#111111;--text:#FD4012;--muted:#FF8A65;--line:rgba(253,64,18,0.30);--black:#ffffff;--green:#4CAF50;--yellow:#FFEB3B;--red:#FF5252;--blue:#2196F3;--gray:#757575}
+[data-theme="stratos"]{--bg:#011936;--panel:rgba(237,37,78,0.20);--card:#011936;--text:#ED254E;--muted:#EF9A9A;--line:rgba(237,37,78,0.25);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF1744;--blue:#448AFF;--gray:#78909C}
+[data-theme="kiwi"]{--bg:#222222;--panel:rgba(137,233,0,0.20);--card:#2A2A2A;--text:#89E900;--muted:#C5E1A5;--line:rgba(137,233,0,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFEB3B;--red:#FF5252;--blue:#448AFF;--gray:#9E9E9E}
+[data-theme="asphaltsolid"]{--bg:#10002B;--panel:rgba(131,56,236,0.25);--card:#10002B;--text:#8338EC;--muted:#CE93D8;--line:rgba(131,56,236,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#78909C}
+[data-theme="tech"]{--bg:#0A1929;--panel:rgba(100,255,218,0.15);--card:#0D2137;--text:#64FFDA;--muted:#80CBC4;--line:rgba(100,255,218,0.20);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#607D8B}
+[data-theme="coral"]{--bg:#1A0A0A;--panel:rgba(255,107,107,0.20);--card:#1F0F0F;--text:#FF6B6B;--muted:#FFAB91;--line:rgba(255,107,107,0.25);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF6B6B;--blue:#64FFDA;--gray:#78909C}
+[data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
+[data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
+
+</style>
+</head>
+<body>
+
+  <!-- SPA Container -->
+  <div class="app-container">
+
+    <!-- Sidebar Editor Panel -->
+    <div class="editor-sidebar">
+      <!-- Editor Title -->
+      <div class="editor-header">
+        <h1>🛠️ Painel do Orçamento</h1>
+        <p>Crie orçamentos multi-páginas e edite clicando na própria folha.</p>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('itens')">Itens</button>
+        <button class="tab-btn" style="flex:0 0 56px;font-size:18px;" onclick="openBudgetSettings()" title="Configurações gerais, termos e assinatura">⚙️</button>
+      </div>
+
+      <!-- V7: total geral em tempo real -->
+      <div class="orc-running-total" title="Total de todos os itens, em todas as páginas">
+        <span>Total geral</span>
+        <div class="ort-values"><b id="orcRunningTotal">R$ 0,00</b><span class="ort-items" id="orcRunningItems">0 itens</span></div>
+      </div>
+
+      <!-- Editor Content -->
+      <div class="editor-content">
+        
+        <!-- Tab 1: Geral -->
+        <div id="tab-geral" class="tab-content">
+          <div class="form-group">
+            <label>Telefone do Cabeçalho</label>
+            <input type="text" id="edit-phone" class="form-control" value="(62) 98135-6948" oninput="updatePreviewFromForm()">
+          </div>
+          <div class="form-group">
+            <label>CNPJ do Cabeçalho</label>
+            <input type="text" id="edit-cnpj" class="form-control" value="51.919.138/0001-20" oninput="updatePreviewFromForm()">
+          </div>
+          <div class="form-group">
+            <label>Endereço do Cabeçalho</label>
+            <textarea id="edit-address" class="form-control" oninput="updatePreviewFromForm()">Av. Jacinto Alves de Abreu, 212 - Res. Vereda
+dos Buritis, Goiânia - GO, 74370-661</textarea>
+          </div>
+          <div class="form-group">
+            <label>Título da Proposta (Faixa)</label>
+            <input type="text" id="edit-proposal-title" class="form-control" value="Proposta de compra de uniformes" oninput="updatePreviewFromForm()">
+          </div>
+          <div class="form-group">
+            <label>Data da Proposta</label>
+            <input type="text" id="edit-proposal-date" class="form-control" value="30/06/2025" oninput="updatePreviewFromForm()">
+          </div>
+          <div class="form-group">
+            <label>Título do Orçamento</label>
+            <input type="text" id="edit-budget-title" class="form-control" value="Orçamento" oninput="updatePreviewFromForm()">
+          </div>
+        </div>
+
+        <!-- Tab 2: Itens -->
+        <div id="tab-itens" class="tab-content active">
+          <div id="items-editor-list">
+            <!-- Dynamic rows will be inserted here -->
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button class="btn btn-secondary" style="flex:2;" onclick="addTableRow()" title="Dica: Enter no último campo de um item já cria o próximo">➕ Adicionar Item <small style="opacity:.6">(ou Enter)</small></button>
+            <button class="btn btn-secondary" style="flex:1;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
+          </div>
+        </div>
+
+        <!-- Tab 3: Termos -->
+        <div id="tab-termos" class="tab-content">
+          <div class="form-group">
+            <label>Título Forma de Pagamento</label>
+            <input type="text" id="edit-payment-title" class="form-control" value="Forma de Pagamento" oninput="updatePreviewFromForm()">
+          </div>
+          <div class="form-group">
+            <label>Texto das Condições</label>
+            <textarea id="edit-payment-text" class="form-control" style="min-height: 120px;" oninput="updatePreviewFromForm()">Pagamento: 50% antecipado, 50% na entrega final.
+Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
+          </div>
+          <div class="form-group">
+            <label>Validade do Orçamento</label>
+            <input type="text" id="edit-validity" class="form-control" value="30 dias a partir da data de emissão." oninput="updatePreviewFromForm()">
+          </div>
+        </div>
+
+        <!-- Tab 4: Assinatura & Estilo -->
+        <div id="tab-assinatura" class="tab-content">
+          <div class="form-group">
+            <label>Gerenciamento de Páginas</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 18px;">
+              <button class="btn btn-primary" onclick="addDocumentPage()" style="padding:9px 6px;font-size:11.5px;">➕ Add Página</button>
+              <button class="btn btn-secondary" onclick="duplicateDocumentPage()" style="padding:9px 6px;font-size:11.5px;">⧉ Duplicar</button>
+              <button class="btn btn-danger-outline" onclick="removeLastDocumentPage()" style="padding:9px 6px;font-size:11.5px;">❌ Rem. Página</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Nome do Responsável</label>
+            <input type="text" id="edit-resp-name" class="form-control" value="Esio Andrade - Financeiro" oninput="updatePreviewFromForm()">
+          </div>
+          <div class="form-group">
+            <label>Assinatura Digital</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-secondary" onclick="openSignaturePad()">✍️ Desenhar Assinatura</button>
+              <button class="btn btn-secondary" onclick="triggerSignatureUpload()">📤 Upload Imagem</button>
+              <input type="file" id="signature-upload-input" accept="image/*" style="display: none;" onchange="handleSignatureUpload(event)">
+              <button class="btn btn-danger-outline" onclick="restoreDefaultSignature()">🔄 Restaurar Padrão original</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 25px;">
+            <label>Opacidade da Marca d'Água (VA)</label>
+            <input type="range" id="edit-watermark-opacity" min="0" max="1" step="0.02" value="0.12" style="width: 100%;" oninput="updateWatermarkOpacity(this.value)">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons Panel (Only native high-fidelity printing is left) -->
+      <div class="editor-actions">
+        <button class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
+        <button class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
+        <div style="display:flex;gap:6px;width:100%">
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (nº novo, campos de volta ao padrão)">🗋 Novo</button>
+          <button class="btn btn-secondary" style="flex:1.2;padding:7px 6px;font-size:11px;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
+          <button class="btn btn-secondary" style="flex:1.1;padding:7px 6px;font-size:11px;" onclick="abrirOrcDraftsModal()" title="Ver e abrir rascunhos salvos" id="btnOrcDrafts">📂 Rascunhos (<span id="orcDraftsCount">0</span>)</button>
+        </div>
+        <div style="display:flex;gap:6px;width:100%;margin-top:6px;">
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="exportarOrcamentoJSON()" title="Salvar arquivo .json para guardar/enviar">📤 Salvar .json</button>
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="document.getElementById('orcJsonInput').click()" title="Abrir arquivo .json de orçamento">📂 Abrir .json</button>
+        </div>
+        <input type="file" id="orcJsonInput" accept=".json" style="display:none" onchange="importarOrcamentoJSON(event)">
+      </div>
+    </div>
+
+    <!-- Live Preview Pane -->
+    <div class="preview-pane">
+      
+      <!-- Sleek Text Formatting Toolbar -->
+      <div class="formatting-toolbar">
+        <button class="tool-btn" onclick="formatText('bold')" title="Negrito (Ctrl+B)"><b>B</b></button>
+        <button class="tool-btn" onclick="formatText('italic')" title="Itálico (Ctrl+I)"><i>I</i></button>
+        <button class="tool-btn" onclick="formatText('underline')" title="Sublinhado (Ctrl+U)"><u>U</u></button>
+        <span class="tool-separator">|</span>
+        <button class="tool-btn" onclick="formatText('backColor', '#FDE047')" title="Marca-Texto Amarelo" style="background-color: #FDE047; color: black; border-radius: 4px; padding: 2px 6px;">🖍️</button>
+        <button class="tool-btn" onclick="formatText('backColor', '#86EFAC')" title="Marca-Texto Verde" style="background-color: #86EFAC; color: black; border-radius: 4px; padding: 2px 6px;">🖍️</button>
+        <button class="tool-btn" onclick="formatText('backColor', '#93C5FD')" title="Marca-Texto Azul" style="background-color: #93C5FD; color: black; border-radius: 4px; padding: 2px 6px;">🖍️</button>
+        <button class="tool-btn" onclick="formatText('backColor', 'transparent')" title="Remover Marca-Texto">❌</button>
+        <span class="tool-separator">|</span>
+        <button class="tool-btn" onclick="formatText('foreColor', '#EF4444')" title="Texto Vermelho" style="color: #EF4444;">A</button>
+        <button class="tool-btn" onclick="formatText('foreColor', '#000000')" title="Texto Preto" style="color: black; font-weight: bold;">A</button>
+        <span class="tool-separator">|</span>
+        <button class="tool-btn" onclick="formatText('removeFormat')" title="Limpar Formatação">🧹 Limpar</button>
+      </div>
+
+      <!-- Container that holds all sheets/pages -->
+      <div class="pages-preview-container" id="preview-pages-container">
+        
+        <!-- A4 Page 1 (Template) -->
+        <div class="page" id="printable-a4-page-1">
+          
+          <!-- Large Background VA Watermark -->
+          <div class="watermark" id="preview-watermark-1"></div>
+
+          <!-- Header -->
+          <div class="header-container">
+            <!-- Header Logo (Tightly Cropped) -->
+            <img class="header-logo" id="preview-logo-1" src="../assets/logo_orcamento.png" alt="Vooalto Uniformes Logo">
+            
+            <!-- Header Contact and info (Top Right) -->
+            <div class="header-contact">
+              <div class="phone" id="preview-phone-1" contenteditable="true" oninput="syncPageToForm('phone', this)"></div>
+              <div class="cnpj" id="preview-cnpj-1" contenteditable="true" oninput="syncPageToForm('cnpj', this)"></div>
+              <div class="address" id="preview-address-1" contenteditable="true" oninput="syncPageToForm('address', this)"></div>
+            </div>
+          </div>
+
+          <!-- Red/Black Diagonal Band -->
+          <div class="header-band">
+            <div class="band-red" id="preview-proposal-title-1" contenteditable="true" oninput="syncPageToForm('proposal-title', this)"></div>
+            <div class="band-black" id="preview-proposal-date-1" contenteditable="true" oninput="syncPageToForm('proposal-date', this)"></div>
+          </div>
+
+          <!-- Title "ORÇAMENTO" -->
+          <div class="budget-title-container">
+            <div class="budget-title" id="preview-budget-title-1" contenteditable="true" oninput="syncPageToForm('budget-title', this)"></div>
+          </div>
+          <div class="budget-number" id="preview-budget-number-1">Orçamento Nº —</div>
+
+          <!-- Table -->
+          <div class="table-container">
+            <table class="budget-table">
+              <thead>
+                <tr>
+                  <th class="col-modelo">Modelo</th>
+                  <th class="col-tecido">Tecido</th>
+                  <th class="col-descricao">Descrição</th>
+                  <th class="col-qnt">Qnt.</th>
+                  <th class="col-unit">Unit.</th>
+                  <th class="col-total">Total</th>
+                </tr>
+              </thead>
+              <tbody id="preview-table-body-1">
+                <!-- Dynamically rendered table items will go here -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Total Bar -->
+          <div class="total-bar" id="preview-total-bar-1">
+            TOTAL: R$ 0,00
+          </div>
+
+          <!-- Payment Terms -->
+          <div class="payment-terms">
+            <div class="payment-title" id="preview-payment-title-1" contenteditable="true" oninput="syncPageToForm('payment-title', this)"></div>
+            <div class="payment-text" id="preview-payment-text-1" contenteditable="true" oninput="syncPageToForm('payment-text', this)"></div>
+          </div>
+
+          <!-- Isolated Signature overlaid on watermark -->
+          <div class="signature-container">
+            <img class="signature-image" id="preview-signature-1" src="data:image/png;base64,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" alt="Assinatura">
+          </div>
+
+          <!-- Footer -->
+          <div class="footer-line"></div>
+          <div class="validity-title">Validade do orçamento:</div>
+          <div class="validity-days" id="preview-validity-1" contenteditable="true" oninput="syncPageToForm('validity', this)"></div>
+          
+          <!-- Dynamic Page Number Indicator -->
+          <div class="page-number-indicator" id="preview-page-number-1">Página 1 de 1</div>
+
+          <div class="footer-right">
+            <span class="resp-title">Responsável:</span>
+            <span class="resp-name" id="preview-resp-name-1" contenteditable="true" oninput="syncPageToForm('resp-name', this)"></span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Settings Modal: Geral + Termos + Assinatura -->
+  <div class="modal" id="budget-settings-modal">
+    <div class="modal-content settings-modal-content" style="width:740px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+        <h3 style="color:white;font-size:16px;">⚙️ Configurações do Orçamento</h3>
+        <button class="btn btn-danger-outline" style="width:auto;padding:8px 12px;" onclick="closeBudgetSettings()">Fechar</button>
+      </div>
+      <div id="budget-settings-content"></div>
+    </div>
+  </div>
+
+  <!-- Modal: Rascunhos de Orçamento -->
+  <div class="modal" id="orcDraftsModal" style="display:none;">
+    <div class="modal-content settings-modal-content" style="width:580px;background:#0F172A;border:1px solid #334155;border-radius:12px;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1E293B;padding-bottom:12px;margin-bottom:14px;">
+        <h3 style="margin:0;color:#F8FAFC;font-size:16px;display:flex;align-items:center;gap:8px;">📁 Rascunhos de Orçamentos</h3>
+        <button class="btn btn-danger-outline" style="width:auto;padding:6px 12px;font-size:12px;" onclick="fecharOrcDraftsModal()">Fechar</button>
+      </div>
+      <p style="font-size:12px;color:#94A3B8;margin-top:0;margin-bottom:12px;">Orçamentos guardados no seu navegador. Você pode abrir qualquer rascunho salvo para continuar a edição.</p>
+      <div id="orcDraftsList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;">
+        <!-- Draft cards rendered here -->
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid #1E293B;padding-top:12px;">
+        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="salvarRascunhoOrcamento()">💾 Salvar Atual Como Rascunho</button>
+        <button class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="fecharOrcDraftsModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawing Signature Modal -->
+  <div class="modal" id="signature-modal">
+    <div class="modal-content">
+      <h3 style="color: white; font-size: 16px; margin-bottom: 8px;">Desenhar Assinatura</h3>
+      <p style="color: #94A3B8; font-size: 12px; margin-bottom: 12px;">Use o mouse ou o dedo dentro da caixa para assinar</p>
+      
+      <div class="signature-pad-container">
+        <canvas id="signature-pad" width="500" height="150"></canvas>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="clearSignaturePad()">🗑️ Limpar</button>
+        <button class="btn btn-primary" onclick="saveSignaturePad()">💾 Aplicar</button>
+        <button class="btn btn-danger-outline" style="border: none;" onclick="closeSignaturePad()">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript logic to drive the live editor and export functionalities -->
+  <script>
+    // Embedded default assets
+    const DEFAULT_SIGNATURE = "data:image/png;base64,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";
+    let currentSignatureBase64 = DEFAULT_SIGNATURE;
+
+    // Initial state: Multiple pages structure, each page has its own items list
+    let documentPages = [
+      {
+        id: 1,
+        tableItems: []
+      }
+    ];
+
+    // Current active editing page index (for sidebar form items)
+    let activeFormPageIndex = 0;
+
+    // Lock to prevent recursive sync loops
+    let isSyncing = false;
+
+    /* ═══════════════ ORCAMENTO V7 — PERSISTÊNCIA ═══════════════ */
+    const ORC_AUTOSAVE_KEY = 'vooalto_orcamento_autosave_v7';
+    const ORC_COUNTER_KEY = 'vooalto_orcamento_counter_v7';
+    let orcNumero = 0;
+    let DEFAULT_ORC_FORM = null;
+
+    function orcToast(msg){ const t=document.getElementById('orcToast'); if(!t)return; t.textContent=msg; t.style.opacity='1'; t.style.transform='translateY(0)'; clearTimeout(t._tm); t._tm=setTimeout(()=>{t.style.opacity='0'; t.style.transform='translateY(10px)';}, 2600); }
+
+    function orcCounterNext(){ orcNumero = (parseInt(localStorage.getItem(ORC_COUNTER_KEY))||0) + 1; try { localStorage.setItem(ORC_COUNTER_KEY, String(orcNumero)); } catch(e){} return orcNumero; }
+
+    const ORC_FORM_KEYS = ['phone','cnpj','address','proposal-title','proposal-date','budget-title','payment-title','payment-text','validity','resp-name','watermark'];
+
+    function orcCollectState(){
+      const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+      const form = {};
+      ORC_FORM_KEYS.forEach(k => form[k] = get('edit-' + k));
+      return {
+        version: 'vooalto_orcamento_v7',
+        numero: orcNumero,
+        form: form,
+        pages: documentPages.map(p => ({ id: p.id, tableItems: p.tableItems })),
+        signature: (typeof currentSignatureBase64 !== 'undefined' && currentSignatureBase64 && currentSignatureBase64 !== DEFAULT_SIGNATURE) ? currentSignatureBase64 : ''
+      };
+    }
+
+    let orcSaveTimer = null;
+    function scheduleOrcautosave(){
+      clearTimeout(orcSaveTimer);
+      orcSaveTimer = setTimeout(() => {
+        try { localStorage.setItem(ORC_AUTOSAVE_KEY, JSON.stringify(orcCollectState())); } catch(e) { console.warn('Autosave do orçamento falhou', e); }
+      }, 700);
+    }
+
+    function orcRestoreState(s){
+      if(!s || !s.form) return false;
+      const set = (id, v) => { const el = document.getElementById(id); if(el && typeof v === 'string') el.value = v; };
+      const fm = s.form;
+      ORC_FORM_KEYS.forEach(k => set('edit-' + k, fm[k]));
+      if (Array.isArray(s.pages) && s.pages.length) {
+        documentPages = s.pages.map(p => ({ id: p.id, tableItems: Array.isArray(p.tableItems) ? p.tableItems : [] }));
+        activeFormPageIndex = 0;
+        document.querySelectorAll('#preview-pages-container .page:not(#printable-a4-page-1)').forEach(el => el.remove());
+        for (let i = 1; i < documentPages.length; i++) addDocumentPageSilent(documentPages[i].id);
+      }
+      if (s.signature) currentSignatureBase64 = s.signature;
+      orcNumero = s.numero || 0;
+      return true;
+    }
+
+    /* Clona o DOM da página sem mexer em documentPages (usado no restore) */
+    function addDocumentPageSilent(pageId){
+      const container = document.getElementById('preview-pages-container');
+      const newPageDom = document.createElement('div');
+      newPageDom.className = 'page';
+      newPageDom.id = `printable-a4-page-${pageId}`;
+      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
+      newPageDom.querySelector('.watermark').id = `preview-watermark-${pageId}`;
+      newPageDom.querySelector('.header-logo').id = `preview-logo-${pageId}`;
+      newPageDom.querySelector('.phone').id = `preview-phone-${pageId}`;
+      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${pageId}`;
+      newPageDom.querySelector('.address').id = `preview-address-${pageId}`;
+      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${pageId}`;
+      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${pageId}`;
+      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${pageId}`;
+      const bn1 = newPageDom.querySelector('.budget-number'); if (bn1) bn1.id = `preview-budget-number-${pageId}`;
+      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${pageId}`;
+      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${pageId}`;
+      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${pageId}`;
+      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${pageId}`;
+      newPageDom.querySelector('.signature-image').id = `preview-signature-${pageId}`;
+      newPageDom.querySelector('.validity-days').id = `preview-validity-${pageId}`;
+      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${pageId}`;
+      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${pageId}`;
+      container.appendChild(newPageDom);
+      if (typeof setupPageInPlaceListeners === 'function') setupPageInPlaceListeners(newPageDom, pageId);
+      return newPageDom;
+    }
+
+    function novoOrcamento(){
+      if(!confirm('Criar um NOVO orçamento?\n\nO conteúdo atual será substituído.\n(Salve antes como .json, se quiser guardar.)')) return;
+      if (DEFAULT_ORC_FORM) {
+        const set = (id, v) => { const el = document.getElementById(id); if(el && typeof v === 'string') el.value = v; };
+        ['phone','cnpj','address','proposal-title','budget-title','payment-title','payment-text','validity','resp-name'].forEach(k => set('edit-' + k, DEFAULT_ORC_FORM[k]));
+        const wm = document.getElementById('edit-watermark-opacity');
+        if (wm && DEFAULT_ORC_FORM['watermark']) wm.value = DEFAULT_ORC_FORM['watermark'];
+      }
+      const today = new Date();
+      const ds = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+      const ed = document.getElementById('edit-proposal-date'); if(ed) ed.value = ds;
+      documentPages.forEach((p, i) => { if(i > 0) { const el = document.getElementById('printable-a4-page-' + p.id); if(el) el.remove(); } });
+      documentPages = [{ id: 1, tableItems: [] }];
+      activeFormPageIndex = 0;
+      orcCounterNext();
+      try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e){}
+      renderItemsEditor();
+      updatePreviewFromForm();
+      if (typeof setupPageInPlaceListeners === 'function') { /* listeners da p1 já existem */ }
+      orcToast('🗋 Novo orçamento Nº ' + String(orcNumero).padStart(4,'0') + ' pronto!');
+    }
+
+    function exportarOrcamentoJSON(){
+      try {
+        const data = orcCollectState();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'orcamento_vooalto_' + String(orcNumero).padStart(4,'0') + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        orcToast('📤 Orçamento salvo em arquivo!');
+      } catch(e) { alert('Erro ao exportar: ' + e.message); }
+    }
+
+    function importarOrcamentoJSON(e){
+      const file = e.target.files[0]; if(!file) return; e.target.value = '';
+      const r = new FileReader();
+      r.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if(!data || data.version !== 'vooalto_orcamento_v7') { alert('Este arquivo não é um orçamento Vooalto V7 válido.'); return; }
+          if(!confirm('Substituir o orçamento atual pelo arquivo "' + file.name + '"?')) return;
+          orcRestoreState(data);
+          updatePreviewFromForm();
+          orcToast('✅ Orçamento importado!');
+        } catch(err) { alert('Erro ao ler o arquivo: ' + err.message); }
+      };
+      r.readAsText(file);
+    }
+
+
+    // Initialize page
+    window.addEventListener('DOMContentLoaded', () => {
+      // Data de hoje como padrão (DD/MM/AAAA)
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      document.getElementById('edit-proposal-date').value = `${dd}/${mm}/${yyyy}`;
+
+      // Captura os padrões originais (para o "Novo orçamento")
+      const get = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+      DEFAULT_ORC_FORM = {};
+      ORC_FORM_KEYS.forEach(k => DEFAULT_ORC_FORM[k] = get('edit-' + k));
+
+      // Restaura orçamento anterior (autosave) se existir
+      let restored = false;
+      try {
+        const raw = localStorage.getItem(ORC_AUTOSAVE_KEY);
+        if (raw) restored = orcRestoreState(JSON.parse(raw));
+      } catch(e) { console.warn('Falha ao restaurar autosave', e); }
+
+      if (!restored) orcCounterNext();
+
+      setupBudgetSettingsModal();
+      renderItemsEditor();
+      updatePreviewFromForm();
+      initSignaturePad();
+
+      /* Enter avança entre campos do formulário geral */
+      const tg = document.getElementById('tab-geral');
+      if (tg) tg.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+        e.preventDefault();
+        const inputs = Array.from(tg.querySelectorAll('input'));
+        const i = inputs.indexOf(e.target);
+        if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
+      });
+
+      if (restored) orcToast('💾 Orçamento anterior restaurado automaticamente.');
+      orcUpdateDraftsBadge();
+    });
+
+
+    function setupBudgetSettingsModal(){
+      const target = document.getElementById('budget-settings-content');
+      if(!target || target.dataset.ready === '1') return;
+      target.dataset.ready = '1';
+      function moveSection(title, tabId){
+        const tab = document.getElementById(tabId);
+        if(!tab) return;
+        const h = document.createElement('div');
+        h.className = 'v5-settings-section';
+        h.textContent = title;
+        target.appendChild(h);
+        Array.from(tab.children).forEach(child => target.appendChild(child));
+        tab.remove();
+      }
+      moveSection('Dados gerais', 'tab-geral');
+      moveSection('Termos e pagamento', 'tab-termos');
+      moveSection('Assinatura, páginas e estilo', 'tab-assinatura');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const itens = document.getElementById('tab-itens');
+      if(itens) itens.classList.add('active');
+    }
+    function openBudgetSettings(){
+      setupBudgetSettingsModal();
+      document.getElementById('budget-settings-modal').style.display = 'flex';
+    }
+    function closeBudgetSettings(){
+      document.getElementById('budget-settings-modal').style.display = 'none';
+      updatePreviewFromForm();
+    }
+
+    // Switch between tabs in editor panel
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      const btn = (typeof event !== 'undefined' && event && event.target) ? event.target : document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      if(btn) btn.classList.add('active');
+      const tab = document.getElementById('tab-' + tabId);
+      if(tab) tab.classList.add('active');
+    }
+
+    // Apply native formatting commands to text selection (Word-like WYSIWYG)
+    function formatText(command, value = null) {
+      document.execCommand(command, false, value);
+    }
+
+    // Render sidebar input fields dynamically based on active page's table items — Compact V7
+    function renderItemsEditor() {
+      if (isSyncing) return;
+      const container = document.getElementById('items-editor-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Page Navigation & Actions Bar
+      const navBar = document.createElement('div');
+      navBar.className = 'orc-page-nav-bar';
+      navBar.innerHTML = `
+        <div class="orc-page-pill-wrap">
+          ${documentPages.map((p, idx) => `
+            <button type="button" class="orc-page-pill ${idx === activeFormPageIndex ? 'active' : ''}" onclick="changeActiveFormPage(${idx})" title="Ir para Página ${idx + 1}">
+              Pág. ${idx + 1}
+              <span class="orc-page-count">${(p.tableItems || []).length}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="orc-page-btn-group">
+          <button type="button" class="btn-orc-tool" onclick="addDocumentPage()" title="Adicionar nova página vazia">➕ Pág</button>
+          <button type="button" class="btn-orc-tool accent" onclick="duplicateDocumentPage()" title="Duplicar página ativa com todos os seus itens">⧉ Duplicar</button>
+          ${documentPages.length > 1 ? `<button type="button" class="btn-orc-tool danger" onclick="removeActiveDocumentPage()" title="Excluir página ativa">✕</button>` : ''}
+        </div>
+      `;
+      container.appendChild(navBar);
+
+      const activePage = documentPages[activeFormPageIndex] || documentPages[0];
+      if (!activePage) return;
+
+      activePage.tableItems.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'item-row-card';
+        card.innerHTML = `
+          <div class="orc-item-topbar">
+            <div class="orc-item-badge-wrap">
+              <span class="orc-item-num">#${index + 1}</span>
+              <span class="orc-item-pag-tag">Pág. ${activeFormPageIndex + 1}</span>
+            </div>
+            <div class="orc-item-top-right">
+              <span class="orc-item-inline-total" id="form-item-total-${index}">R$ ${((item.qnt||0)*(item.unit||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+              <button type="button" class="btn-dup-row" onclick="duplicateTableRow(${index})" title="Duplicar este item">⧉</button>
+              <button type="button" class="btn-delete-row" onclick="deleteTableRow(${index})" title="Remover item">✕</button>
+            </div>
+          </div>
+          
+          <div class="orc-mini-group" style="margin-bottom:4px;">
+            <label class="orc-mini-lbl">Modelo</label>
+            <input type="text" class="form-control orc-input-compact" id="form-item-modelo-${index}" value="${escapeHtml(item.modelo)}" oninput="updateItemField(${index}, 'modelo', this.value)" onkeydown="itemKeydown(event,${index},'modelo')" placeholder="Ex: Camiseta polo">
+          </div>
+          
+          <div class="orc-mini-row-2" style="margin-bottom:4px;">
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Tecido</label>
+              <input type="text" class="form-control orc-input-compact" id="form-item-tecido-${index}" value="${escapeHtml(item.tecido)}" oninput="updateItemField(${index}, 'tecido', this.value)" onkeydown="itemKeydown(event,${index},'tecido')" placeholder="Ex: Piquet">
+            </div>
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Descrição</label>
+              <input type="text" class="form-control orc-input-compact" id="form-item-descricao-${index}" value="${escapeHtml(item.descricao)}" oninput="updateItemField(${index}, 'descricao', this.value)" onkeydown="itemKeydown(event,${index},'descricao')" placeholder="Detalhes opcionais">
+            </div>
+          </div>
+
+          <div class="orc-mini-row-2">
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Quantidade</label>
+              <input type="number" class="form-control orc-input-compact" id="form-item-qnt-${index}" value="${item.qnt}" min="0" oninput="updateItemField(${index}, 'qnt', parseInt(this.value) || 0)" onkeydown="itemKeydown(event,${index},'qnt')" placeholder="0">
+            </div>
+            <div class="orc-mini-group">
+              <label class="orc-mini-lbl">Valor Unitário (R$)</label>
+              <input type="number" class="form-control orc-input-compact" id="form-item-unit-${index}" step="0.01" value="${item.unit}" min="0" oninput="updateItemField(${index}, 'unit', parseFloat(this.value) || 0)" onkeydown="itemKeydown(event,${index},'unit')">
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function changeActiveFormPage(idx) {
+      activeFormPageIndex = parseInt(idx);
+      renderItemsEditor();
+    }
+
+    // Add a new document page
+    function addDocumentPage() {
+      const newPageId = documentPages.length + 1;
+      documentPages.push({
+        id: newPageId,
+        tableItems: []
+      });
+      activeFormPageIndex = documentPages.length - 1;
+      
+      // Render page DOM in preview
+      const container = document.getElementById('preview-pages-container');
+      const newPageDom = document.createElement('div');
+      newPageDom.className = 'page';
+      newPageDom.id = `printable-a4-page-${newPageId}`;
+      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
+      
+      // Update individual child IDs to avoid clashing
+      newPageDom.querySelector('.watermark').id = `preview-watermark-${newPageId}`;
+      newPageDom.querySelector('.header-logo').id = `preview-logo-${newPageId}`;
+      newPageDom.querySelector('.phone').id = `preview-phone-${newPageId}`;
+      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${newPageId}`;
+      newPageDom.querySelector('.address').id = `preview-address-${newPageId}`;
+      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
+      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
+      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
+      const bn = newPageDom.querySelector('.budget-number'); if (bn) bn.id = `preview-budget-number-${newPageId}`;
+      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
+      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
+      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
+      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${newPageId}`;
+      newPageDom.querySelector('.signature-image').id = `preview-signature-${newPageId}`;
+      newPageDom.querySelector('.validity-days').id = `preview-validity-${newPageId}`;
+      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${newPageId}`;
+      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${newPageId}`;
+
+      container.appendChild(newPageDom);
+
+      // Re-apply listeners
+      setupPageInPlaceListeners(newPageDom, newPageId);
+
+      renderItemsEditor();
+      updatePreviewFromForm();
+    }
+
+
+    // Duplicate document page with all its items
+    function duplicateDocumentPage(pageIdx) {
+      if (typeof pageIdx !== 'number') pageIdx = activeFormPageIndex;
+      const sourcePage = documentPages[pageIdx];
+      if (!sourcePage) return;
+      const newPageId = Math.max(0, ...documentPages.map(p => p.id || 0)) + 1;
+      const clonedItems = JSON.parse(JSON.stringify(sourcePage.tableItems || []));
+      documentPages.push({
+        id: newPageId,
+        tableItems: clonedItems
+      });
+      activeFormPageIndex = documentPages.length - 1;
+
+      // Render page DOM in preview
+      const container = document.getElementById('preview-pages-container');
+      const newPageDom = document.createElement('div');
+      newPageDom.className = 'page';
+      newPageDom.id = `printable-a4-page-${newPageId}`;
+      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
+
+      // Update individual child IDs
+      newPageDom.querySelector('.watermark').id = `preview-watermark-${newPageId}`;
+      newPageDom.querySelector('.header-logo').id = `preview-logo-${newPageId}`;
+      newPageDom.querySelector('.phone').id = `preview-phone-${newPageId}`;
+      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${newPageId}`;
+      newPageDom.querySelector('.address').id = `preview-address-${newPageId}`;
+      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
+      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
+      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
+      const bn = newPageDom.querySelector('.budget-number'); if (bn) bn.id = `preview-budget-number-${newPageId}`;
+      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
+      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
+      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
+      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${newPageId}`;
+      newPageDom.querySelector('.signature-image').id = `preview-signature-${newPageId}`;
+      newPageDom.querySelector('.validity-days').id = `preview-validity-${newPageId}`;
+      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${newPageId}`;
+      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${newPageId}`;
+
+      container.appendChild(newPageDom);
+
+      // Re-apply listeners
+      setupPageInPlaceListeners(newPageDom, newPageId);
+
+      renderItemsEditor();
+      updatePreviewFromForm();
+      if (typeof toastOrc === 'function') toastOrc(`⧉ Página ${pageIdx + 1} duplicada com sucesso! (${clonedItems.length} itens)`);
+      else orcToast(`⧉ Página ${pageIdx + 1} duplicada!`);
+    }
+    window.duplicateDocumentPage = duplicateDocumentPage;
+
+    function removeActiveDocumentPage(pageIdx) {
+      if (typeof pageIdx !== 'number') pageIdx = activeFormPageIndex;
+      if (documentPages.length <= 1) {
+        alert("O documento deve conter ao menos 1 página.");
+        return;
+      }
+      if (!confirm(`Remover a Página ${pageIdx + 1}? Os itens desta página serão excluídos.`)) return;
+      const pageToRemove = documentPages[pageIdx];
+      const pageId = pageToRemove.id;
+
+      if (pageIdx === documentPages.length - 1) {
+        removeLastDocumentPage();
+        return;
+      }
+
+      documentPages.splice(pageIdx, 1);
+      const domPage = document.getElementById(`printable-a4-page-${pageId}`);
+      if (domPage && pageId !== 1) {
+        domPage.remove();
+      }
+
+      if (activeFormPageIndex >= documentPages.length) {
+        activeFormPageIndex = documentPages.length - 1;
+      }
+
+      renderItemsEditor();
+      updatePreviewFromForm();
+      if (typeof toastOrc === 'function') toastOrc('Página removida.');
+      else orcToast('Página removida.');
+    }
+    window.removeActiveDocumentPage = removeActiveDocumentPage;
+
+    /* ═══ V7 RASCUNHOS DE ORÇAMENTO ═══ */
+    const ORC_DRAFTS_KEY = 'vooalto_orcamento_rascunhos_v7';
+
+    function orcGetDrafts() {
+      try {
+        const raw = localStorage.getItem(ORC_DRAFTS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function orcUpdateDraftsBadge() {
+      const drafts = orcGetDrafts();
+      const el = document.getElementById('orcDraftsCount');
+      if (el) el.textContent = drafts.length;
+    }
+
+    function salvarRascunhoOrcamento() {
+      const state = orcCollectState();
+      const num = orcNumero ? String(orcNumero).padStart(4, '0') : '0001';
+      const tit = (document.getElementById('edit-proposal-title')?.value || 'Orçamento').trim();
+      const firstItem = (documentPages[0] && documentPages[0].tableItems[0] && documentPages[0].tableItems[0].modelo) ? documentPages[0].tableItems[0].modelo.trim() : '';
+      const sugestao = `${tit} Nº ${num}` + (firstItem ? ` - ${firstItem}` : '');
+      const nome = prompt('Nome do rascunho:', sugestao);
+      if (!nome) return;
+
+      const total = document.getElementById('orcRunningTotal')?.textContent || 'R$ 0,00';
+      const itens = documentPages.reduce((acc, p) => acc + (p.tableItems || []).length, 0);
+      const pages = documentPages.length;
+
+      const draft = {
+        id: 'orc_draft_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        name: nome.trim(),
+        date: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+        timestamp: Date.now(),
+        total: total,
+        itemsCount: itens,
+        pagesCount: pages,
+        state: state
+      };
+
+      const drafts = orcGetDrafts();
+      drafts.unshift(draft);
+      if (drafts.length > 30) drafts.pop();
+      try {
+        localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
+      } catch(e) {
+        console.warn('Falha ao salvar rascunho', e);
+      }
+
+      orcUpdateDraftsBadge();
+      renderOrcDraftsList();
+      if (typeof toastOrc === 'function') toastOrc(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
+      else orcToast(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
+    }
+    window.salvarRascunhoOrcamento = salvarRascunhoOrcamento;
+    window.orcSalvarRascunho = salvarRascunhoOrcamento;
+
+    function orcCarregarRascunho(draftId) {
+      const drafts = orcGetDrafts();
+      const draft = drafts.find(d => d.id === draftId);
+      if (!draft || !draft.state) {
+        alert('Rascunho não encontrado.');
+        return;
+      }
+      const ok = orcRestoreState(draft.state);
+      if (ok) {
+        renderItemsEditor();
+        updatePreviewFromForm();
+        orcUpdateRunningTotal();
+        fecharOrcDraftsModal();
+        if (typeof toastOrc === 'function') toastOrc(`📋 Rascunho "${draft.name}" carregado com sucesso!`);
+        else orcToast(`📋 Rascunho "${draft.name}" carregado com sucesso!`);
+      } else {
+        alert('Erro ao restaurar rascunho.');
+      }
+    }
+    window.orcCarregarRascunho = orcCarregarRascunho;
+
+    function orcExcluirRascunho(draftId) {
+      if (!confirm('Deseja realmente excluir este rascunho?')) return;
+      let drafts = orcGetDrafts();
+      drafts = drafts.filter(d => d.id !== draftId);
+      try {
+        localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
+      } catch(e) {}
+      orcUpdateDraftsBadge();
+      renderOrcDraftsList();
+      if (typeof toastOrc === 'function') toastOrc('🗑 Rascunho excluído.');
+      else orcToast('🗑 Rascunho excluído.');
+    }
+    window.orcExcluirRascunho = orcExcluirRascunho;
+
+    function renderOrcDraftsList() {
+      const list = document.getElementById('orcDraftsList');
+      if (!list) return;
+      const drafts = orcGetDrafts();
+      if (!drafts.length) {
+        list.innerHTML = `
+          <div style="padding: 24px 16px; text-align: center; color: #64748B; background: #0B1120; border: 1px dashed #334155; border-radius: 8px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">📂</div>
+            <b style="color: #94A3B8; font-size: 13px;">Nenhum rascunho salvo ainda</b>
+            <p style="font-size: 11px; margin-top: 4px; margin-bottom: 0;">Clique em "Salvar Rascunho" para guardar seu orçamento atual e continuar editando depois.</p>
+          </div>
+        `;
+        return;
+      }
+      list.innerHTML = drafts.map(d => `
+        <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div style="min-width:0; flex:1;">
+            <div style="font-weight:700; font-size:12.5px; color:#F8FAFC; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.name)}</div>
+            <div style="font-size:10px; color:#94A3B8; margin-top:2px; display:flex; flex-wrap:wrap; gap:8px;">
+              <span>📅 ${escapeHtml(d.date || '')}</span>
+              <span style="color:#38BDF8; font-weight:700;">${escapeHtml(d.total || '')}</span>
+              <span>${d.itemsCount || 0} ${(d.itemsCount===1?'item':'itens')}</span>
+              <span>${d.pagesCount || 1} ${(d.pagesCount===1?'pág':'págs')}</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            <button type="button" class="btn btn-primary" style="padding:6px 11px; font-size:11px; width:auto;" onclick="orcCarregarRascunho('${d.id}')">Abrir</button>
+            <button type="button" class="btn btn-danger-outline" style="padding:6px 9px; font-size:11px; width:auto; color:#EF4444; border-color:rgba(239,68,68,0.4);" onclick="orcExcluirRascunho('${d.id}')" title="Excluir rascunho">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function abrirOrcDraftsModal() {
+      const m = document.getElementById('orcDraftsModal');
+      if (m) {
+        renderOrcDraftsList();
+        m.style.display = 'flex';
+      }
+    }
+    window.abrirOrcDraftsModal = abrirOrcDraftsModal;
+
+    function fecharOrcDraftsModal() {
+      const m = document.getElementById('orcDraftsModal');
+      if (m) m.style.display = 'none';
+    }
+    window.fecharOrcDraftsModal = fecharOrcDraftsModal;
+
+    // Remove the very last A4 page
+    function removeLastDocumentPage() {
+      if (documentPages.length <= 1) {
+        alert("O documento deve conter ao menos 1 página.");
+        return;
+      }
+      const pageId = documentPages.length;
+      documentPages.pop();
+      if (activeFormPageIndex >= documentPages.length) {
+        activeFormPageIndex = documentPages.length - 1;
+      }
+
+      // Remove from preview DOM
+      const domPage = document.getElementById(`printable-a4-page-${pageId}`);
+      if (domPage) domPage.remove();
+
+      renderItemsEditor();
+      updatePreviewFromForm();
+    }
+
+    // Set up text editing listeners on a newly appended page
+    function setupPageInPlaceListeners(pageDom, pageId) {
+      pageDom.querySelector('.phone').addEventListener('input', function() { syncPageToForm('phone', this); });
+      pageDom.querySelector('.cnpj').addEventListener('input', function() { syncPageToForm('cnpj', this); });
+      pageDom.querySelector('.address').addEventListener('input', function() { syncPageToForm('address', this); });
+      pageDom.querySelector('.band-red').addEventListener('input', function() { syncPageToForm('proposal-title', this); });
+      pageDom.querySelector('.band-black').addEventListener('input', function() { syncPageToForm('proposal-date', this); });
+      pageDom.querySelector('.budget-title').addEventListener('input', function() { syncPageToForm('budget-title', this); });
+      pageDom.querySelector('.payment-title').addEventListener('input', function() { syncPageToForm('payment-title', this); });
+      pageDom.querySelector('.payment-text').addEventListener('input', function() { syncPageToForm('payment-text', this); });
+      pageDom.querySelector('.validity-days').addEventListener('input', function() { syncPageToForm('validity', this); });
+      pageDom.querySelector('.resp-name').addEventListener('input', function() { syncPageToForm('resp-name', this); });
+    }
+
+    // Add a new row to the active table
+    function addTableRow() {
+      const activePage = documentPages[activeFormPageIndex];
+      activePage.tableItems.push({
+        modelo: "",
+        tecido: "",
+        descricao: "",
+        qnt: 0,
+        unit: 0
+      });
+      renderItemsEditor();
+      updatePreviewFromForm();
+    }
+
+    // Remove a row from the active table
+    function deleteTableRow(index) {
+      const activePage = documentPages[activeFormPageIndex];
+      if (activePage.tableItems.length <= 1) {
+        alert("A tabela deve conter ao menos 1 item.");
+        return;
+      }
+      activePage.tableItems.splice(index, 1);
+      renderItemsEditor();
+      updatePreviewFromForm();
+    }
+
+    // Update single field of item from form
+    function updateItemField(index, field, value) {
+      const activePage = documentPages[activeFormPageIndex];
+      activePage.tableItems[index][field] = value;
+      updatePreviewFromForm();
+      orcUpdateItemTotal(index);
+    }
+
+    /* ══ V7 UX: duplicar item / totals / Enter avança ══ */
+    function orcFmt(v) { return 'R$ ' + (+v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function orcUpdateItemTotal(idx) {
+      const page = documentPages[activeFormPageIndex];
+      const it = page && page.tableItems[idx];
+      const el = document.getElementById('form-item-total-' + idx);
+      if (el && it) el.textContent = orcFmt((it.qnt || 0) * (it.unit || 0));
+    }
+
+    function duplicateTableRow(idx) {
+      const page = documentPages[activeFormPageIndex];
+      if (!page || !page.tableItems[idx]) return;
+      page.tableItems.splice(idx + 1, 0, JSON.parse(JSON.stringify(page.tableItems[idx])));
+      renderItemsEditor();
+      updatePreviewFromForm();
+      if (typeof toastOrc === 'function') toastOrc('⧉ Item duplicado — ajuste quantidade/valores.');
+    }
+
+    function orcUpdateRunningTotal() {
+      let tot = 0, itens = 0, qtd = 0;
+      documentPages.forEach(p => p.tableItems.forEach(it => {
+        tot += (it.qnt || 0) * (it.unit || 0);
+        itens++;
+        qtd += (it.qnt || 0);
+      }));
+      const rt = document.getElementById('orcRunningTotal');
+      if (rt) rt.textContent = orcFmt(tot);
+      const ri = document.getElementById('orcRunningItems');
+      if (ri) ri.textContent = itens + (itens === 1 ? ' item' : ' itens') + (qtd ? ' · ' + qtd + ' pçs' : '');
+    }
+
+    function itemKeydown(e, idx, field) {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const order = ['modelo', 'tecido', 'descricao', 'qnt', 'unit'];
+      const next = order[order.indexOf(field) + 1];
+      if (next) {
+        const n = document.getElementById('form-item-' + next + '-' + idx);
+        if (n) { n.focus(); if (n.select) n.select(); return; }
+      }
+      const page = documentPages[activeFormPageIndex];
+      if (page && idx === page.tableItems.length - 1) {
+        addTableRow();
+        const m = document.getElementById('form-item-modelo-' + (idx + 1));
+        if (m) m.focus();
+      }
+    }
+
+    // Helper to format currency
+    function formatCurrency(val) {
+      return "R$ " + val.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    // Safe HTML Escape
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Dynamic density optimizer per page
+    function adjustLayoutDensityForPage(pageId, itemsCount) {
+      const page = document.getElementById(`printable-a4-page-${pageId}`);
+      if (!page) return;
+      
+      if (itemsCount <= 1) {
+        page.style.setProperty('--cell-padding', '23px 8px');
+        page.style.setProperty('--font-scale', '13.5px');
+        page.style.setProperty('--table-top-margin', '25px');
+        page.style.setProperty('--total-top-margin', '20px');
+        page.style.setProperty('--payment-top-margin', '35px');
+      } else if (itemsCount === 2) {
+        page.style.setProperty('--cell-padding', '16px 8px');
+        page.style.setProperty('--font-scale', '13px');
+        page.style.setProperty('--table-top-margin', '20px');
+        page.style.setProperty('--total-top-margin', '15px');
+        page.style.setProperty('--payment-top-margin', '25px');
+      } else if (itemsCount === 3) {
+        page.style.setProperty('--cell-padding', '12px 8px');
+        page.style.setProperty('--font-scale', '12.5px');
+        page.style.setProperty('--table-top-margin', '15px');
+        page.style.setProperty('--total-top-margin', '12px');
+        page.style.setProperty('--payment-top-margin', '18px');
+      } else { // 4 or more items
+        page.style.setProperty('--cell-padding', '8px 6px');
+        page.style.setProperty('--font-scale', '11.5px');
+        page.style.setProperty('--table-top-margin', '10px');
+        page.style.setProperty('--total-top-margin', '8px');
+        page.style.setProperty('--payment-top-margin', '12px');
+      }
+    }
+
+    // Redraw and render the live A4 preview pages
+    function updatePreviewFromForm() {
+      if (isSyncing) return;
+      isSyncing = true;
+
+      const phoneVal = document.getElementById('edit-phone').value;
+      const cnpjVal = document.getElementById('edit-cnpj').value;
+      const addressVal = escapeHtml(document.getElementById('edit-address').value).replace(/\n/g, '<br>');
+      const bandTitleVal = document.getElementById('edit-proposal-title').value;
+      const bandDateVal = document.getElementById('edit-proposal-date').value;
+      const budgetTitleVal = document.getElementById('edit-budget-title').value;
+      const paymentTitleVal = document.getElementById('edit-payment-title').value;
+      const paymentTextVal = escapeHtml(document.getElementById('edit-payment-text').value).replace(/\n/g, '<br>');
+      const validityVal = document.getElementById('edit-validity').value;
+      const respNameVal = document.getElementById('edit-resp-name').value;
+      const watermarkOpacity = document.getElementById('edit-watermark-opacity').value;
+
+      documentPages.forEach((pageState, pageIdx) => {
+        const pageId = pageState.id;
+        
+        // 1. Optimize density specifically based on that page's item count
+        adjustLayoutDensityForPage(pageId, pageState.tableItems.length);
+
+        // Update header details
+        document.getElementById(`preview-phone-${pageId}`).innerHTML = phoneVal;
+        document.getElementById(`preview-cnpj-${pageId}`).innerHTML = cnpjVal;
+        document.getElementById(`preview-address-${pageId}`).innerHTML = addressVal;
+
+        // Diagonal Band Text
+        document.getElementById(`preview-proposal-title-${pageId}`).innerHTML = bandTitleVal;
+        document.getElementById(`preview-proposal-date-${pageId}`).innerHTML = bandDateVal;
+
+        // Budget Title
+        document.getElementById(`preview-budget-title-${pageId}`).innerHTML = budgetTitleVal;
+
+        // Render items table for this specific page
+        const previewTableBody = document.getElementById(`preview-table-body-${pageId}`);
+        previewTableBody.innerHTML = '';
+        
+        let pageTotal = 0;
+
+        pageState.tableItems.forEach((item, index) => {
+          const total = item.qnt * item.unit;
+          pageTotal += total;
+
+          const row = document.createElement('tr');
+          
+          let modeloHtml = item.modelo.includes('<') ? item.modelo : escapeHtml(item.modelo).replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+          let tecidoHtml = item.tecido.includes('<') ? item.tecido : escapeHtml(item.tecido);
+          let descricaoHtml = item.descricao.includes('<') ? item.descricao : escapeHtml(item.descricao);
+
+          row.innerHTML = `
+            <td contenteditable="true" class="col-modelo" oninput="syncCell(${pageIdx}, ${index}, 'modelo', this)" onblur="updatePreviewFromForm()">${modeloHtml}</td>
+            <td contenteditable="true" class="col-tecido" oninput="syncCell(${pageIdx}, ${index}, 'tecido', this)" onblur="updatePreviewFromForm()">${tecidoHtml}</td>
+            <td contenteditable="true" class="col-descricao" oninput="syncCell(${pageIdx}, ${index}, 'descricao', this)" onblur="updatePreviewFromForm()">${descricaoHtml}</td>
+            <td contenteditable="true" class="col-qnt" oninput="syncCell(${pageIdx}, ${index}, 'qnt', this)">${item.qnt}</td>
+            <td contenteditable="true" class="col-unit" oninput="syncCell(${pageIdx}, ${index}, 'unit', this)">${formatCurrency(item.unit)}</td>
+            <td class="col-total" id="preview-item-total-${pageId}-${index}">${formatCurrency(total)}</td>
+          `;
+          previewTableBody.appendChild(row);
+        });
+
+        // Update grand total bar for this specific page
+        document.getElementById(`preview-total-bar-${pageId}`).innerText = "TOTAL: " + formatCurrency(pageTotal);
+
+        // Payment terms text
+        document.getElementById(`preview-payment-title-${pageId}`).innerHTML = paymentTitleVal;
+        document.getElementById(`preview-payment-text-${pageId}`).innerHTML = paymentTextVal;
+
+        // Signature image
+        document.getElementById(`preview-signature-${pageId}`).src = currentSignatureBase64;
+
+        // Watermark opacity
+        document.getElementById(`preview-watermark-${pageId}`).style.opacity = watermarkOpacity;
+
+        // Footer
+        document.getElementById(`preview-validity-${pageId}`).innerHTML = validityVal;
+        document.getElementById(`preview-resp-name-${pageId}`).innerHTML = respNameVal;
+
+        // Dynamic page numbering (Página X de Y)
+        document.getElementById(`preview-page-number-${pageId}`).innerText = `Página ${pageId} de ${documentPages.length}`;
+      });
+
+      // V7: número do orçamento no A4 (todas as páginas)
+      try {
+        const numStr = 'Orçamento Nº ' + (orcNumero ? String(orcNumero).padStart(4, '0') : '—');
+        documentPages.forEach(p => {
+          const bn = document.getElementById(`preview-budget-number-${p.id}`);
+          if (bn) bn.textContent = numStr;
+        });
+      } catch(e) {}
+
+      isSyncing = false;
+      orcUpdateRunningTotal();
+      scheduleOrcautosave();
+    }
+
+    // Bidirectional sync: When user types directly on the A4 page, update form inputs
+    function syncPageToForm(fieldId, element) {
+      if (isSyncing) return;
+      isSyncing = true;
+
+      const htmlContent = element.innerHTML;
+      const textContent = element.innerText;
+
+      if (fieldId === 'phone') {
+        document.getElementById('edit-phone').value = textContent;
+      } else if (fieldId === 'cnpj') {
+        document.getElementById('edit-cnpj').value = textContent;
+      } else if (fieldId === 'address') {
+        document.getElementById('edit-address').value = htmlContent.replace(/<br>/g, '\n');
+      } else if (fieldId === 'proposal-title') {
+        document.getElementById('edit-proposal-title').value = textContent;
+      } else if (fieldId === 'proposal-date') {
+        document.getElementById('edit-proposal-date').value = textContent;
+      } else if (fieldId === 'budget-title') {
+        document.getElementById('edit-budget-title').value = textContent;
+      } else if (fieldId === 'payment-title') {
+        document.getElementById('edit-payment-title').value = textContent;
+      } else if (fieldId === 'payment-text') {
+        document.getElementById('edit-payment-text').value = htmlContent.replace(/<br>/g, '\n');
+      } else if (fieldId === 'validity') {
+        document.getElementById('edit-validity').value = textContent;
+      } else if (fieldId === 'resp-name') {
+        document.getElementById('edit-resp-name').value = textContent;
+      }
+
+      // Propagate change to all pages silently
+      documentPages.forEach(p => {
+        if (p.id > 1) {
+          const phoneDom = document.getElementById(`preview-phone-${p.id}`);
+          if (phoneDom) phoneDom.innerHTML = document.getElementById('preview-phone-1').innerHTML;
+          
+          const cnpjDom = document.getElementById(`preview-cnpj-${p.id}`);
+          if (cnpjDom) cnpjDom.innerHTML = document.getElementById('preview-cnpj-1').innerHTML;
+
+          const addrDom = document.getElementById(`preview-address-${p.id}`);
+          if (addrDom) addrDom.innerHTML = document.getElementById('preview-address-1').innerHTML;
+
+          const bandTitleDom = document.getElementById(`preview-proposal-title-${p.id}`);
+          if (bandTitleDom) bandTitleDom.innerHTML = document.getElementById('preview-proposal-title-1').innerHTML;
+
+          const bandDateDom = document.getElementById(`preview-proposal-date-${p.id}`);
+          if (bandDateDom) bandDateDom.innerHTML = document.getElementById('preview-proposal-date-1').innerHTML;
+
+          const budgetTitleDom = document.getElementById(`preview-budget-title-${p.id}`);
+          if (budgetTitleDom) budgetTitleDom.innerHTML = document.getElementById('preview-budget-title-1').innerHTML;
+
+          const payTitleDom = document.getElementById(`preview-payment-title-${p.id}`);
+          if (payTitleDom) payTitleDom.innerHTML = document.getElementById('preview-payment-title-1').innerHTML;
+
+          const payTextDom = document.getElementById(`preview-payment-text-${p.id}`);
+          if (payTextDom) payTextDom.innerHTML = document.getElementById('preview-payment-text-1').innerHTML;
+
+          const valDom = document.getElementById(`preview-validity-${p.id}`);
+          if (valDom) valDom.innerHTML = document.getElementById('preview-validity-1').innerHTML;
+
+          const respDom = document.getElementById(`preview-resp-name-${p.id}`);
+          if (respDom) respDom.innerHTML = document.getElementById('preview-resp-name-1').innerHTML;
+        }
+      });
+
+      isSyncing = false;
+    }
+
+    // Bidirectional sync: When table cells are edited in-place in A4 page, update state and recalculate totals
+    function syncCell(pageIdx, itemIdx, field, element) {
+      if (isSyncing) return;
+      
+      let rawText = element.innerText.trim();
+      let html = element.innerHTML;
+
+      const pageState = documentPages[pageIdx];
+      const pageId = pageState.id;
+
+      if (field === 'qnt') {
+        pageState.tableItems[itemIdx].qnt = parseInt(rawText) || 0;
+        recalculateTotalsFromTable(pageIdx);
+      } else if (field === 'unit') {
+        let clean = rawText.replace(/R\$/gi, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+        pageState.tableItems[itemIdx].unit = parseFloat(clean) || 0;
+        recalculateTotalsFromTable(pageIdx);
+      } else {
+        pageState.tableItems[itemIdx][field] = html;
+        // If editing active sidebar page, sync silently
+        if (pageIdx === activeFormPageIndex) {
+          const formInput = document.getElementById(`form-item-${field}-${itemIdx}`);
+          if (formInput) formInput.value = rawText;
+        }
+      }
+    }
+
+    // Recalculates line totals and grand total for a specific page directly
+    function recalculateTotalsFromTable(pageIdx) {
+      let pageTotal = 0;
+      const pageState = documentPages[pageIdx];
+      const pageId = pageState.id;
+
+      pageState.tableItems.forEach((item, index) => {
+        const total = item.qnt * item.unit;
+        pageTotal += total;
+
+        // Update row total cell
+        const totalCell = document.getElementById(`preview-item-total-${pageId}-${index}`);
+        if (totalCell) {
+          totalCell.innerText = formatCurrency(total);
+        }
+
+        // Sync with active page form inputs silently
+        if (pageIdx === activeFormPageIndex) {
+          const qntInput = document.getElementById(`form-item-qnt-${index}`);
+          if (qntInput) qntInput.value = item.qnt;
+          
+          const unitInput = document.getElementById(`form-item-unit-${index}`);
+          if (unitInput) unitInput.value = item.unit;
+        }
+      });
+
+      // Update grand total bar for this specific page
+      document.getElementById(`preview-total-bar-${pageId}`).innerText = "TOTAL: " + formatCurrency(pageTotal);
+    }
+
+    // Adjust watermark opacity
+    function updateWatermarkOpacity(val) {
+      documentPages.forEach(p => {
+        const wm = document.getElementById(`preview-watermark-${p.id}`);
+        if (wm) wm.style.opacity = val;
+      });
+    }
+
+    /* --- CANVAS DRAWING SIGNATURE PAD LOGIC --- */
+    let canvas, ctx;
+    let drawing = false;
+
+    function initSignaturePad() {
+      canvas = document.getElementById('signature-pad');
+      ctx = canvas.getContext('2d');
+      
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }, { passive: true });
+
+      canvas.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        e.preventDefault();
+        const mouseEvent = new MouseEvent('mousemove', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }, { passive: false });
+
+      canvas.addEventListener('touchend', () => {
+        const mouseEvent = new MouseEvent('mouseup', {});
+        canvas.dispatchEvent(mouseEvent);
+      });
+    }
+
+    function startDrawing(e) {
+      drawing = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      drawing = false;
+    }
+
+    function openSignaturePad() {
+      document.getElementById('signature-modal').style.display = 'flex';
+      clearSignaturePad();
+    }
+
+    function closeSignaturePad() {
+      document.getElementById('signature-modal').style.display = 'none';
+    }
+
+    function clearSignaturePad() {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Apply drawn signature to all pages
+    function saveSignaturePad() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
+
+      const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      const data = imgData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i+1];
+        const b = data[i+2];
+        const gray = 0.299*r + 0.587*g + 0.114*b;
+        if (gray > 220) {
+          data[i+3] = 0; // Transparent
+        }
+      }
+      tempCtx.putImageData(imgData, 0, 0);
+
+      currentSignatureBase64 = tempCanvas.toDataURL('image/png');
+      documentPages.forEach(p => {
+        const sigDom = document.getElementById(`preview-signature-${p.id}`);
+        if (sigDom) sigDom.src = currentSignatureBase64;
+      });
+      
+      closeSignaturePad();
+    }
+
+    // Trigger file dialog
+    function triggerSignatureUpload() {
+      document.getElementById('signature-upload-input').click();
+    }
+
+    // Handle uploaded image
+    function handleSignatureUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          const tempCtx = tempCanvas.getContext('2d');
+          tempCtx.drawImage(img, 0, 0);
+
+          const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+          const data = imgData.data;
+
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i+1];
+            const b = data[i+2];
+            const gray = 0.299*r + 0.587*g + 0.114*b;
+            if (gray > 225) {
+              data[i+3] = 0;
+            }
+          }
+          tempCtx.putImageData(imgData, 0, 0);
+          
+          currentSignatureBase64 = tempCanvas.toDataURL('image/png');
+          documentPages.forEach(p => {
+            const sigDom = document.getElementById(`preview-signature-${p.id}`);
+            if (sigDom) sigDom.src = currentSignatureBase64;
+          });
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function restoreDefaultSignature() {
+      currentSignatureBase64 = DEFAULT_SIGNATURE;
+      documentPages.forEach(p => {
+        const sigDom = document.getElementById(`preview-signature-${p.id}`);
+        if (sigDom) sigDom.src = currentSignatureBase64;
+      });
+    }
+
+    /* --- EXPORT HIGH QUALITY MULTI-PAGE ASSETS --- */
+    
+    // Export PNG captures all pages one by one as dynamic downloads
+    function exportPNG() {
+      /* Hide ALL editor UI elements before capturing — must stay hidden
+         until every async html2canvas call finishes */
+      const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
+        '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
+        '.v5-highlight-group','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
+      const saved = [];
+      hideSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          saved.push({el, prevDisplay: el.style.display, prevVisibility: el.style.visibility});
+          el.style.display = 'none';
+        });
+      });
+
+      /* Capture every page, collecting promises so we restore UI only AFTER
+         all renders complete */
+      const promises = documentPages.map(pState => {
+        const page = document.getElementById(`printable-a4-page-${pState.id}`);
+        const prevShadow = page.style.boxShadow;
+        page.style.boxShadow = 'none';
+
+        return html2canvas(page, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#F3F0E7'
+        }).then(canvas => {
+          page.style.boxShadow = prevShadow || '0 15px 35px rgba(0, 0, 0, 0.4)';
+          const link = document.createElement('a');
+          link.download = `PROPOSTA DE VENDA - Pagina ${pState.id} - ${Date.now()}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }).catch(err => {
+          page.style.boxShadow = prevShadow || '0 15px 35px rgba(0, 0, 0, 0.4)';
+          console.error('html2canvas error:', err);
+        });
+      });
+
+      /* Restore editor UI only after ALL captures finish */
+      Promise.all(promises).finally(() => {
+        saved.forEach(({el, prevDisplay, prevVisibility}) => {
+          el.style.display = prevDisplay || '';
+          el.style.visibility = prevVisibility || '';
+        });
+      });
+    }
+  </script>
+
+
+<script>
+/* V6 — beforeprint / afterprint: hide editor elements during actual print
+   so the sidebar and toolbar NEVER appear in the PDF output.
+   Uses a flag to prevent double-hiding (printProposal + beforeprint both trigger). */
+const _printHideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
+  '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
+  '.v5-highlight-group','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
+let _printSavedStyles = null; /* null = not hidden; array = hidden, originals saved */
+
+function _beforePrintHide() {
+  /* Only hide if not already hidden — prevents double-call bug */
+  if (_printSavedStyles !== null) return;
+  _printSavedStyles = [];
+  _printHideSelectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      _printSavedStyles.push({el, prev: el.style.display});
+      el.style.display = 'none';
+    });
+  });
+  document.title = 'PROPOSTA DE VENDA';
+  try { if (window.parent && window.parent.document) window.parent.document.title = 'PROPOSTA DE VENDA'; } catch(e) {}
+}
+
+function _afterPrintRestore() {
+  /* Only restore if we actually hid something */
+  if (_printSavedStyles === null) return;
+  _printSavedStyles.forEach(({el, prev}) => { el.style.display = prev || ''; });
+  _printSavedStyles = null;
+}
+
+window.addEventListener('beforeprint', _beforePrintHide);
+window.addEventListener('afterprint', _afterPrintRestore);
+window.addEventListener('DOMContentLoaded', () => { document.title = 'PROPOSTA DE VENDA'; });
+
+function printProposal() {
+  /* Don't call _beforePrintHide here — beforeprint event will fire
+     when window.print() runs and handle hiding automatically.
+     Just trigger print; afterprint will restore everything. */
+  document.title = 'PROPOSTA DE VENDA';
+  try { if (window.parent && window.parent.document) window.parent.document.title = 'PROPOSTA DE VENDA'; } catch(e) {}
+  window.print();
+}
+</script>
+<style id="v5-orcamento-text-tools-css">
+/* V5 - Ferramentas de texto avançadas no orçamento */
+.formatting-toolbar{
+  flex-wrap:wrap!important;
+  gap:7px!important;
+  cursor:default!important;
+}
+.formatting-toolbar.v5-movable{
+  position:fixed!important;
+  left:460px!important;
+  top:74px!important;
+  right:18px!important;
+  max-width:calc(100vw - 480px)!important;
+  z-index:99990!important;
+}
+.v5-drag-tool{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;background:#0F172A;color:#fff;font-size:10px;font-weight:900;cursor:grab;user-select:none}.v5-drag-tool:active{cursor:grabbing}
+.v5-tool-select,.v5-tool-input{background:#0F172A;color:#fff;border:1px solid #334155;border-radius:6px;padding:5px 7px;font-size:11px;font-family:inherit;outline:none}.v5-tool-input{width:58px;font-family:monospace}.v5-highlight-group{display:flex;gap:4px;align-items:center}.v5-hl{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:5px 8px;font-size:10px;font-weight:900;cursor:pointer}.v5-hl.yellow{background:#FFE066;color:#111}.v5-hl.red{background:#FF6B6B;color:#fff}.v5-hl.blue{background:#74C0FC;color:#082f49}
+@media(max-width:900px){.formatting-toolbar.v5-movable{left:10px!important;right:10px!important;top:62px!important;max-width:calc(100vw - 20px)!important}}
+/* V6 - print hide consolidated in @media print block above */
+
+/* TEMAS ANTIGOS */
+[data-theme="dark"]{--bg:#0b0f17;--panel:rgba(28,32,42,.82);--card:#171b24;--text:#f8fafc;--muted:#9ca3af;--line:rgba(255,255,255,.10);--black:#050505;--green:#34c759;--yellow:#ffb020;--red:#ff3b64;--blue:#2563eb;--gray:#8e8e93}
+[data-theme="crimson"]{--bg:#02060e;--panel:rgba(197,3,55,.20);--card:#07101b;--text:#fff2f5;--muted:#e28aa0;--line:rgba(197,3,55,.24);--blue:#384358;--red:#c50337}
+[data-theme="ocean"]{--bg:#021024;--panel:rgba(5,38,89,.76);--card:#052659;--text:#eaf8ff;--muted:#c1e8ff;--line:rgba(193,232,255,.16);--blue:#5483b3;--green:#7bcfaa}
+[data-theme="wine"]{--bg:#f5ebd0;--panel:rgba(255,250,239,.80);--card:#fff7e5;--text:#7f011f;--muted:#8a4b5a;--line:rgba(127,1,31,.14)}
+[data-theme="pastel"]{--bg:#f8f7ff;--panel:rgba(255,255,255,.78);--card:#fff;--text:#242038;--muted:#8b86a3;--line:rgba(36,32,56,.10);--blue:#8ab6ff;--red:#ff8fc4}
+[data-theme="oxford"]{--bg:#002147;--panel:rgba(210,180,140,.16);--card:#062a55;--text:#f6e7ca;--muted:#d2b48c;--line:rgba(210,180,140,.24);--black:#001221}
+[data-theme="cherry"]{--bg:#efe6de;--panel:rgba(154,0,2,.13);--card:#fff7f0;--text:#9a0002;--muted:#8e514f;--line:rgba(154,0,2,.18);--black:#160001}
+[data-theme="butter"]{--bg:#ffefb3;--panel:rgba(1,62,55,.16);--card:#fff8d0;--text:#013e37;--muted:#236f63;--line:rgba(1,62,55,.18);--black:#01232f}
+[data-theme="vanilla"]{--bg:#fff7e6;--panel:rgba(10,18,42,.80);--card:#fff8ee;--text:#0a122a;--muted:#8b5e3c;--line:rgba(10,18,42,.12)}
+[data-theme="coffee"]{--bg:#f7f1e8;--panel:rgba(139,94,60,.80);--card:#fff8ee;--text:#2b2118;--muted:#8b5e3c;--line:rgba(43,33,24,.12)}
+[data-theme="yellowblack"]{--bg:#f9d344;--panel:rgba(46,45,41,.80);--card:#f9d344;--text:#111;--muted:#7d7a6f;--line:rgba(46,45,41,.14)}
+[data-theme="sunset"]{--bg:#242f49;--panel:rgba(229,26,43,.20);--card:#2d3748;--text:#fff;--muted:#ffa586;--line:rgba(229,26,43,.24)}
+[data-theme="burgundy"]{--bg:#151515;--panel:rgba(147,3,46,.20);--card:#1f1f1f;--text:#fff;--muted:#e28aa0;--line:rgba(147,3,46,.24)}
+[data-theme="asphalt"]{--bg:#10002b;--panel:rgba(131,56,236,.16);--card:#1a003d;--text:#fff;--muted:#8338ec;--line:rgba(131,56,236,.24)}
+/* NOVOS TEMAS SOLIDOS */
+[data-theme="givry"]{--bg:#F5E4CF;--panel:rgba(39,92,204,0.15);--card:#F5E4CF;--text:#275CCC;--muted:#7B9AD4;--line:rgba(39,92,204,0.20);--black:#1a3a7a;--green:#2E7D32;--yellow:#F9A825;--red:#C62828;--blue:#275CCC;--gray:#90A4AE}
+[data-theme="neon"]{--bg:#000000;--panel:rgba(253,64,18,0.20);--card:#111111;--text:#FD4012;--muted:#FF8A65;--line:rgba(253,64,18,0.30);--black:#ffffff;--green:#4CAF50;--yellow:#FFEB3B;--red:#FF5252;--blue:#2196F3;--gray:#757575}
+[data-theme="stratos"]{--bg:#011936;--panel:rgba(237,37,78,0.20);--card:#011936;--text:#ED254E;--muted:#EF9A9A;--line:rgba(237,37,78,0.25);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF1744;--blue:#448AFF;--gray:#78909C}
+[data-theme="kiwi"]{--bg:#222222;--panel:rgba(137,233,0,0.20);--card:#2A2A2A;--text:#89E900;--muted:#C5E1A5;--line:rgba(137,233,0,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFEB3B;--red:#FF5252;--blue:#448AFF;--gray:#9E9E9E}
+[data-theme="asphaltsolid"]{--bg:#10002B;--panel:rgba(131,56,236,0.25);--card:#10002B;--text:#8338EC;--muted:#CE93D8;--line:rgba(131,56,236,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#78909C}
+[data-theme="tech"]{--bg:#0A1929;--panel:rgba(100,255,218,0.15);--card:#0D2137;--text:#64FFDA;--muted:#80CBC4;--line:rgba(100,255,218,0.20);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#607D8B}
+[data-theme="coral"]{--bg:#1A0A0A;--panel:rgba(255,107,107,0.20);--card:#1F0F0F;--text:#FF6B6B;--muted:#FFAB91;--line:rgba(255,107,107,0.25);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF6B6B;--blue:#64FFDA;--gray:#78909C}
+[data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
+[data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
+
+</style>
+<script id="v5-orcamento-text-tools-js">
+(function(){
+  let savedRange=null;
+  let lastEditable=null;
+  const TOOL_POS_KEY='v5_orcamento_toolbar_pos';
+  function editableFromNode(node){const el=node&&(node.nodeType===1?node:node.parentElement);return el&&el.closest?el.closest('[contenteditable="true"]'):null;}
+  function saveSelection(){const sel=window.getSelection();if(sel&&sel.rangeCount){const ed=editableFromNode(sel.anchorNode);if(ed){lastEditable=ed;savedRange=sel.getRangeAt(0).cloneRange();}}}
+  function restoreSelectionOrWhole(){
+    const sel=window.getSelection();sel.removeAllRanges();
+    if(savedRange){sel.addRange(savedRange);return {sel,whole:false};}
+    if(lastEditable){const r=document.createRange();r.selectNodeContents(lastEditable);sel.addRange(r);return {sel,whole:true};}
+    return {sel:null,whole:false};
+  }
+  function saveBack(){saveSelection();}
+  document.addEventListener('selectionchange',saveSelection);
+  document.addEventListener('mouseup',saveSelection);
+  document.addEventListener('keyup',saveSelection);
+  document.addEventListener('focusin',e=>{const ed=e.target.closest&&e.target.closest('[contenteditable="true"]');if(ed)lastEditable=ed;});
+  function execCmd(cmd,val=null){const r=restoreSelectionOrWhole();if(!r.sel)return;try{document.execCommand(cmd,false,val);}catch(e){console.warn(e)}saveBack();}
+  window.formatText=function(command,value=null){execCmd(command,value);};
+  window.applyFontSize=function(size){size=parseInt(size)||14;const r=restoreSelectionOrWhole();if(!r.sel)return;try{document.execCommand('fontSize',false,'7');document.querySelectorAll('font[size="7"]').forEach(el=>{el.removeAttribute('size');el.style.fontSize=size+'px';});}catch(e){}saveBack();};
+  window.v5OrcFont=function(font){execCmd('fontName',font);};
+  window.v5OrcBold=function(){execCmd('bold');};
+  window.v5OrcHighlight=function(hex){execCmd('hiliteColor',hex);};
+  function enhanceToolbar(){const tb=document.querySelector('.formatting-toolbar');if(!tb||tb.dataset.v5Ready)return;tb.dataset.v5Ready='1';tb.addEventListener('mousedown',e=>e.preventDefault());tb.classList.add('v5-movable');
+    const drag=document.createElement('div');drag.className='v5-drag-tool';drag.textContent='☰ mover';tb.prepend(drag);makeDraggable(tb,drag);
+    const font=document.createElement('select');font.className='v5-tool-select';font.innerHTML='<option value="Arial,sans-serif">Arial</option><option value="Poppins,Arial,sans-serif">Poppins</option><option value="Montserrat,Arial,sans-serif">Montserrat</option><option value="Georgia,serif">Georgia</option><option value="Arial Black,Arial,sans-serif">Arial Black</option><option value="Impact,sans-serif">Impact</option>';font.onchange=()=>v5OrcFont(font.value);tb.appendChild(font);
+    const size=document.createElement('input');size.className='v5-tool-input';size.value='14';size.type='number';size.min='6';size.max='80';size.onchange=()=>applyFontSize(size.value);tb.appendChild(size);
+    const grp=document.createElement('div');grp.className='v5-highlight-group';grp.innerHTML='<button class="v5-hl yellow" onclick="v5OrcHighlight(\'#FFE066\')">Amarelo</button><button class="v5-hl red" onclick="v5OrcHighlight(\'#FF6B6B\')">Vermelho</button><button class="v5-hl blue" onclick="v5OrcHighlight(\'#74C0FC\')">Azul</button>';tb.appendChild(grp);
+    restoreToolbarPos(tb);
+  }
+  function restoreToolbarPos(tb){try{const p=JSON.parse(localStorage.getItem(TOOL_POS_KEY)||'null');if(p){tb.style.left=p.left+'px';tb.style.top=p.top+'px';tb.style.right='auto';tb.style.maxWidth='calc(100vw - 20px)';}}catch(e){}}
+  function makeDraggable(tb,handle){handle.addEventListener('mousedown',e=>{const rect=tb.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ol=rect.left,ot=rect.top;tb.style.right='auto';function move(ev){let l=ol+ev.clientX-sx,t=ot+ev.clientY-sy;l=Math.max(6,Math.min(l,innerWidth-tb.offsetWidth-6));t=Math.max(6,Math.min(t,innerHeight-tb.offsetHeight-6));tb.style.left=l+'px';tb.style.top=t+'px';}function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);localStorage.setItem(TOOL_POS_KEY,JSON.stringify({left:parseFloat(tb.style.left)||rect.left,top:parseFloat(tb.style.top)||rect.top}));}document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);e.preventDefault();});}
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(enhanceToolbar,300));setTimeout(enhanceToolbar,800);
+})();
+</script>
+
+<style id="v5-orcamento-toolbar-vertical-css">
+/* V5.1 - Toolbar do orçamento em menu lateral vertical */
+.formatting-toolbar,
+.formatting-toolbar.v5-movable{
+  position:fixed!important;
+  top:86px!important;
+  right:18px!important;
+  left:auto!important;
+  bottom:18px!important;
+  width:118px!important;
+  max-width:118px!important;
+  height:auto!important;
+  max-height:calc(100vh - 104px)!important;
+  transform:none!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding:10px!important;
+  border-radius:18px!important;
+  background:rgba(15,23,42,.94)!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  box-shadow:0 18px 50px rgba(0,0,0,.35)!important;
+  z-index:99990!important;
+}
+.formatting-toolbar::before{content:'Texto';color:#fff;font-size:11px;font-weight:900;text-align:center;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.formatting-toolbar .tool-separator{display:none!important}
+.formatting-toolbar .tool-btn,
+.formatting-toolbar .v5-hl,
+.formatting-toolbar .v5-tool-select,
+.formatting-toolbar .v5-tool-input{
+  width:100%!important;
+  min-height:32px!important;
+  text-align:center!important;
+  justify-content:center!important;
+  padding:7px 6px!important;
+  font-size:11px!important;
+  border-radius:10px!important;
+}
+.formatting-toolbar .v5-highlight-group{display:flex!important;flex-direction:column!important;gap:5px!important;border-left:none!important;padding-left:0!important;width:100%!important}
+.formatting-toolbar .v5-drag-tool{display:none!important}
+.formatting-toolbar span[style*="Tamanho"]{color:#CBD5E1!important;text-align:center!important;font-size:10px!important;}
+#text-size-tool{width:100%!important;}
+@media(max-width:900px){.formatting-toolbar,.formatting-toolbar.v5-movable{right:8px!important;top:72px!important;width:104px!important;max-width:104px!important;}}
+@media print{.editor-sidebar,.editor-actions,.editor-header,.editor-content,.tabs-nav,.modal,.formatting-toolbar,.formatting-toolbar.v5-movable,.v5-drag-tool,.v5-tool-select,.v5-tool-input,.v5-highlight-group,.v5-hl,#budget-settings-modal,#signature-modal{display:none!important}}
+
+/* TEMAS ANTIGOS */
+[data-theme="dark"]{--bg:#0b0f17;--panel:rgba(28,32,42,.82);--card:#171b24;--text:#f8fafc;--muted:#9ca3af;--line:rgba(255,255,255,.10);--black:#050505;--green:#34c759;--yellow:#ffb020;--red:#ff3b64;--blue:#2563eb;--gray:#8e8e93}
+[data-theme="crimson"]{--bg:#02060e;--panel:rgba(197,3,55,.20);--card:#07101b;--text:#fff2f5;--muted:#e28aa0;--line:rgba(197,3,55,.24);--blue:#384358;--red:#c50337}
+[data-theme="ocean"]{--bg:#021024;--panel:rgba(5,38,89,.76);--card:#052659;--text:#eaf8ff;--muted:#c1e8ff;--line:rgba(193,232,255,.16);--blue:#5483b3;--green:#7bcfaa}
+[data-theme="wine"]{--bg:#f5ebd0;--panel:rgba(255,250,239,.80);--card:#fff7e5;--text:#7f011f;--muted:#8a4b5a;--line:rgba(127,1,31,.14)}
+[data-theme="pastel"]{--bg:#f8f7ff;--panel:rgba(255,255,255,.78);--card:#fff;--text:#242038;--muted:#8b86a3;--line:rgba(36,32,56,.10);--blue:#8ab6ff;--red:#ff8fc4}
+[data-theme="oxford"]{--bg:#002147;--panel:rgba(210,180,140,.16);--card:#062a55;--text:#f6e7ca;--muted:#d2b48c;--line:rgba(210,180,140,.24);--black:#001221}
+[data-theme="cherry"]{--bg:#efe6de;--panel:rgba(154,0,2,.13);--card:#fff7f0;--text:#9a0002;--muted:#8e514f;--line:rgba(154,0,2,.18);--black:#160001}
+[data-theme="butter"]{--bg:#ffefb3;--panel:rgba(1,62,55,.16);--card:#fff8d0;--text:#013e37;--muted:#236f63;--line:rgba(1,62,55,.18);--black:#01232f}
+[data-theme="vanilla"]{--bg:#fff7e6;--panel:rgba(10,18,42,.80);--card:#fff8ee;--text:#0a122a;--muted:#8b5e3c;--line:rgba(10,18,42,.12)}
+[data-theme="coffee"]{--bg:#f7f1e8;--panel:rgba(139,94,60,.80);--card:#fff8ee;--text:#2b2118;--muted:#8b5e3c;--line:rgba(43,33,24,.12)}
+[data-theme="yellowblack"]{--bg:#f9d344;--panel:rgba(46,45,41,.80);--card:#f9d344;--text:#111;--muted:#7d7a6f;--line:rgba(46,45,41,.14)}
+[data-theme="sunset"]{--bg:#242f49;--panel:rgba(229,26,43,.20);--card:#2d3748;--text:#fff;--muted:#ffa586;--line:rgba(229,26,43,.24)}
+[data-theme="burgundy"]{--bg:#151515;--panel:rgba(147,3,46,.20);--card:#1f1f1f;--text:#fff;--muted:#e28aa0;--line:rgba(147,3,46,.24)}
+[data-theme="asphalt"]{--bg:#10002b;--panel:rgba(131,56,236,.16);--card:#1a003d;--text:#fff;--muted:#8338ec;--line:rgba(131,56,236,.24)}
+/* NOVOS TEMAS SOLIDOS */
+[data-theme="givry"]{--bg:#F5E4CF;--panel:rgba(39,92,204,0.15);--card:#F5E4CF;--text:#275CCC;--muted:#7B9AD4;--line:rgba(39,92,204,0.20);--black:#1a3a7a;--green:#2E7D32;--yellow:#F9A825;--red:#C62828;--blue:#275CCC;--gray:#90A4AE}
+[data-theme="neon"]{--bg:#000000;--panel:rgba(253,64,18,0.20);--card:#111111;--text:#FD4012;--muted:#FF8A65;--line:rgba(253,64,18,0.30);--black:#ffffff;--green:#4CAF50;--yellow:#FFEB3B;--red:#FF5252;--blue:#2196F3;--gray:#757575}
+[data-theme="stratos"]{--bg:#011936;--panel:rgba(237,37,78,0.20);--card:#011936;--text:#ED254E;--muted:#EF9A9A;--line:rgba(237,37,78,0.25);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF1744;--blue:#448AFF;--gray:#78909C}
+[data-theme="kiwi"]{--bg:#222222;--panel:rgba(137,233,0,0.20);--card:#2A2A2A;--text:#89E900;--muted:#C5E1A5;--line:rgba(137,233,0,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFEB3B;--red:#FF5252;--blue:#448AFF;--gray:#9E9E9E}
+[data-theme="asphaltsolid"]{--bg:#10002B;--panel:rgba(131,56,236,0.25);--card:#10002B;--text:#8338EC;--muted:#CE93D8;--line:rgba(131,56,236,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#78909C}
+[data-theme="tech"]{--bg:#0A1929;--panel:rgba(100,255,218,0.15);--card:#0D2137;--text:#64FFDA;--muted:#80CBC4;--line:rgba(100,255,218,0.20);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#607D8B}
+[data-theme="coral"]{--bg:#1A0A0A;--panel:rgba(255,107,107,0.20);--card:#1F0F0F;--text:#FF6B6B;--muted:#FFAB91;--line:rgba(255,107,107,0.25);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF6B6B;--blue:#64FFDA;--gray:#78909C}
+[data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
+[data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
+
+</style>
+
+<div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.92);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;font-family:'Poppins',sans-serif"></div>
+<script>
+/* ══ Tema global V7 (shell -> módulo) ══ */
+function applyGlobalTheme(t){ t=t||'neo'; document.documentElement.dataset.theme=(t==='neo')?'':t; }
+window.addEventListener('message', e=>{ if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme); });
+window.addEventListener('DOMContentLoaded', ()=>{ try{ applyGlobalTheme(localStorage.getItem('vooalto_theme_v5')||'neo'); }catch(e){} });
+</script>
+</body>
+</html>
