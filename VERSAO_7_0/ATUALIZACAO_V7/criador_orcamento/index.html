@@ -724,18 +724,6 @@
       z-index: 2;
     }
 
-    .budget-number {
-      width: 100%;
-      text-align: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: #475569;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin: -12px 0 14px 0;
-      z-index: 2;
-    }
-
     .budget-title {
       font-size: 25px;
       font-weight: 700;
@@ -1165,7 +1153,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         <button class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
         <button class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
         <div style="display:flex;gap:6px;width:100%">
-          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (nº novo, campos de volta ao padrão)">🗋 Novo</button>
+          <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (campos de volta ao padrão)">🗋 Novo</button>
           <button class="btn btn-secondary" style="flex:1.2;padding:7px 6px;font-size:11px;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
           <button class="btn btn-secondary" style="flex:1.1;padding:7px 6px;font-size:11px;" onclick="abrirOrcDraftsModal()" title="Ver e abrir rascunhos salvos" id="btnOrcDrafts">📂 Rascunhos (<span id="orcDraftsCount">0</span>)</button>
         </div>
@@ -1229,7 +1217,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
           <div class="budget-title-container">
             <div class="budget-title" id="preview-budget-title-1" contenteditable="true" oninput="syncPageToForm('budget-title', this)"></div>
           </div>
-          <div class="budget-number" id="preview-budget-number-1">Orçamento Nº —</div>
 
           <!-- Table -->
           <div class="table-container">
@@ -1357,13 +1344,9 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
     /* ═══════════════ ORCAMENTO V7 — PERSISTÊNCIA ═══════════════ */
     const ORC_AUTOSAVE_KEY = 'vooalto_orcamento_autosave_v7';
-    const ORC_COUNTER_KEY = 'vooalto_orcamento_counter_v7';
-    let orcNumero = 0;
     let DEFAULT_ORC_FORM = null;
 
     function orcToast(msg){ const t=document.getElementById('orcToast'); if(!t)return; t.textContent=msg; t.style.opacity='1'; t.style.transform='translateY(0)'; clearTimeout(t._tm); t._tm=setTimeout(()=>{t.style.opacity='0'; t.style.transform='translateY(10px)';}, 2600); }
-
-    function orcCounterNext(){ orcNumero = (parseInt(localStorage.getItem(ORC_COUNTER_KEY))||0) + 1; try { localStorage.setItem(ORC_COUNTER_KEY, String(orcNumero)); } catch(e){} return orcNumero; }
 
     const ORC_FORM_KEYS = ['phone','cnpj','address','proposal-title','proposal-date','budget-title','payment-title','payment-text','validity','resp-name','watermark'];
 
@@ -1373,7 +1356,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       ORC_FORM_KEYS.forEach(k => form[k] = get('edit-' + k));
       return {
         version: 'vooalto_orcamento_v7',
-        numero: orcNumero,
         form: form,
         pages: documentPages.map(p => ({ id: p.id, tableItems: p.tableItems })),
         signature: (typeof currentSignatureBase64 !== 'undefined' && currentSignatureBase64 && currentSignatureBase64 !== DEFAULT_SIGNATURE) ? currentSignatureBase64 : ''
@@ -1400,7 +1382,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         for (let i = 1; i < documentPages.length; i++) addDocumentPageSilent(documentPages[i].id);
       }
       if (s.signature) currentSignatureBase64 = s.signature;
-      orcNumero = s.numero || 0;
       return true;
     }
 
@@ -1419,7 +1400,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       newPageDom.querySelector('.band-red').id = `preview-proposal-title-${pageId}`;
       newPageDom.querySelector('.band-black').id = `preview-proposal-date-${pageId}`;
       newPageDom.querySelector('.budget-title').id = `preview-budget-title-${pageId}`;
-      const bn1 = newPageDom.querySelector('.budget-number'); if (bn1) bn1.id = `preview-budget-number-${pageId}`;
       newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${pageId}`;
       newPageDom.querySelector('.total-bar').id = `preview-total-bar-${pageId}`;
       newPageDom.querySelector('.payment-title').id = `preview-payment-title-${pageId}`;
@@ -1447,12 +1427,11 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       documentPages.forEach((p, i) => { if(i > 0) { const el = document.getElementById('printable-a4-page-' + p.id); if(el) el.remove(); } });
       documentPages = [{ id: 1, tableItems: [] }];
       activeFormPageIndex = 0;
-      orcCounterNext();
       try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e){}
       renderItemsEditor();
       updatePreviewFromForm();
       if (typeof setupPageInPlaceListeners === 'function') { /* listeners da p1 já existem */ }
-      orcToast('🗋 Novo orçamento Nº ' + String(orcNumero).padStart(4,'0') + ' pronto!');
+      orcToast('🗋 Novo orçamento pronto!');
     }
 
     function exportarOrcamentoJSON(){
@@ -1461,7 +1440,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'orcamento_vooalto_' + String(orcNumero).padStart(4,'0') + '.json';
+        const ts = new Date().toISOString().slice(0,10).replace(/-/g,'');
+        a.download = 'orcamento_vooalto_' + ts + '_' + Date.now() + '.json';
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -1508,7 +1488,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         if (raw) restored = orcRestoreState(JSON.parse(raw));
       } catch(e) { console.warn('Falha ao restaurar autosave', e); }
 
-      if (!restored) orcCounterNext();
+      // (sem contador de nº de orçamento)
 
       setupBudgetSettingsModal();
       renderItemsEditor();
@@ -1682,7 +1662,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
       newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
       newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
-      const bn = newPageDom.querySelector('.budget-number'); if (bn) bn.id = `preview-budget-number-${newPageId}`;
       newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
       newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
       newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
@@ -1731,7 +1710,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
       newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
       newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
-      const bn = newPageDom.querySelector('.budget-number'); if (bn) bn.id = `preview-budget-number-${newPageId}`;
       newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
       newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
       newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
@@ -1805,10 +1783,9 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
     function salvarRascunhoOrcamento() {
       const state = orcCollectState();
-      const num = orcNumero ? String(orcNumero).padStart(4, '0') : '0001';
       const tit = (document.getElementById('edit-proposal-title')?.value || 'Orçamento').trim();
       const firstItem = (documentPages[0] && documentPages[0].tableItems[0] && documentPages[0].tableItems[0].modelo) ? documentPages[0].tableItems[0].modelo.trim() : '';
-      const sugestao = `${tit} Nº ${num}` + (firstItem ? ` - ${firstItem}` : '');
+      const sugestao = tit + (firstItem ? ` - ${firstItem}` : '');
       const nome = prompt('Nome do rascunho:', sugestao);
       if (!nome) return;
 
@@ -2174,14 +2151,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         document.getElementById(`preview-page-number-${pageId}`).innerText = `Página ${pageId} de ${documentPages.length}`;
       });
 
-      // V7: número do orçamento no A4 (todas as páginas)
-      try {
-        const numStr = 'Orçamento Nº ' + (orcNumero ? String(orcNumero).padStart(4, '0') : '—');
-        documentPages.forEach(p => {
-          const bn = document.getElementById(`preview-budget-number-${p.id}`);
-          if (bn) bn.textContent = numStr;
-        });
-      } catch(e) {}
+
 
       isSyncing = false;
       orcUpdateRunningTotal();

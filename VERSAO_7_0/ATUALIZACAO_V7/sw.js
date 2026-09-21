@@ -1,5 +1,5 @@
-// Service Worker Vooalto V7 — gerado em 20260918-1723 (hash b7d5fe533dfa)
-const CACHE = 'vooalto-v7-b7d5fe533dfa';
+// Service Worker Vooalto V7 — gerado em 20260921-fix (hash 9a1c8b720e04)
+const CACHE = 'vooalto-v7-a1f3c9e5b72d';
 const PRECACHE = ["/", "manifest.webmanifest", "limpar_cache.html", "zerar_dados.html", "index.html", "principal_dashboard/index.html", "criador_ficha_tecnica/index.html", "criador_orcamento/index.html", "assets/cropper.min.css", "assets/cropper.min.js", "assets/html2canvas.min.js", "assets/logo_empresa.png", "assets/logo_orcamento.png", "assets/pdf.min.js", "assets/pdf.worker.min.js", "assets/watermark_vooalto.png", "assets/fonts/poppins-latin-300-normal.woff2", "assets/fonts/poppins-latin-400-normal.woff2", "assets/fonts/poppins-latin-500-normal.woff2", "assets/fonts/poppins-latin-600-normal.woff2", "assets/fonts/poppins-latin-700-normal.woff2", "icons/icon-192.png", "icons/icon-512-maskable.png", "icons/icon-512.png", "icons/icone.png"];
 
 self.addEventListener('install', e => {
@@ -27,8 +27,10 @@ self.addEventListener('fetch', e => {
     try {
       const net = await fetch(req);
       if (net && net.ok && url.pathname.startsWith('/')) {
-        const clone = req.clone();
-        cache.put(clone, net).catch(() => {});
+        // Clone a RESPOSTA (não a requisição) antes de consumir no cache,
+        // senão o body é consumido e a página fica vazia, quebrando o PWA.
+        const copy = net.clone();
+        cache.put(req, copy).catch(() => {});
       }
       return net;
     } catch (err) {

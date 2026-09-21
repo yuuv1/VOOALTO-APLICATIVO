@@ -40,6 +40,5 @@ http.createServer((req, res) => {
     res.end(data);
   });
 }).listen(PORT, HOST, () => {
-  console.log(`Vooalto V7 rodando em:  http://${HOST}:${PORT}`);
-  console.log(`Abra no navegador:       http://localhost:${PORT}`);
+  console.log('Vooalto V7 em http://localhost:' + PORT);
 });
