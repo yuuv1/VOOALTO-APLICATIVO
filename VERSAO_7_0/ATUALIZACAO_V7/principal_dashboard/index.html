@@ -524,17 +524,14 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
 .pdf-viewer{background:#fff!important;background-image:none!important;border-color:rgba(15,23,42,.18)!important;box-shadow:0 28px 80px rgba(0,0,0,.45)!important;color:#111827!important}
 .pdf-viewer .modal-head{background:#fff!important;background-image:none!important;color:#111827!important;border-bottom:1px solid rgba(15,23,42,.12)!important;box-shadow:none!important}
 .pdf-viewer .modal-head h3{color:#111827!important}
-.pdf-viewer .pdf-frame{background:#fff!important;flex:1;min-height:0;width:100%}
+.pdf-viewer .pdf-frame{background:#fff!important;flex:1 1 auto;min-height:0;width:100%;height:100%;display:block;border:0}
 /* Canvas de preview rápido dentro do popup */
-.pdf-quick{flex:1;background:#fff;display:flex;align-items:center;justify-content:center;overflow:auto;padding:8px}
+.pdf-quick{flex:1 1 auto;background:#fff;display:flex;align-items:center;justify-content:center;overflow:auto;padding:8px;min-height:0}
 .pdf-quick canvas{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 12px 40px rgba(0,0,0,.25);background:#fff;display:block}
 .pdf-quick .pdf-loading{color:#64748b;font-size:13px;font-weight:700;padding:40px}
 .pdf-tools{display:flex;gap:8px;align-items:center}
 .pdf-tools .btn{background:#111827!important;color:#fff!important;background-image:none!important;border:0!important;box-shadow:none!important;padding:8px 12px!important;font-size:12px!important}
 .pdf-tools .btn.ghost{background:#f1f5f9!important;color:#111827!important;border:1px solid rgba(15,23,42,.12)!important}
-.pdf-multi{display:none;flex-direction:column;flex:1;min-height:0;background:#fff;padding:8px;gap:8px;overflow:auto;align-items:center}
-.pdf-multi.show{display:flex}
-.pdf-multi canvas{max-width:100%;box-shadow:0 8px 24px rgba(0,0,0,.2);background:#fff;margin-bottom:6px}
 .kpi::after{display:none!important}.neoPanel,.neoMiniCard{background:var(--card)!important;background-image:none!important;border-color:var(--line)!important;box-shadow:var(--solid-shadow)!important}
 .neoRiskCard{background:var(--header-bg)!important;background-image:none!important;color:var(--header-text)!important}.neoRiskCard .panelTop span,.neoRiskCard .owedSub,.neoRiskCard .owedLabel{color:var(--header-text)!important;opacity:.78!important}
 .week-col,.bar-fill,.neoBarFill{background:var(--blue)!important;background-image:none!important}.pdf-open-btn{background:var(--black)!important;background-image:none!important;color:#fff!important}.btn.primary{background:var(--black)!important;color:#fff!important}.btn.blue{background:var(--blue)!important;color:#fff!important}.expand-col{background:var(--panel)!important;color:var(--text)!important}
@@ -585,7 +582,7 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
 <section id="dashboard" class="view"><div class="toolbar"><div><h2>Dashboard</h2><p>Métricas principais da produção — fichas por prioridade e tempo de espera</p></div><button class="btn" onclick="renderAll()">↻ Atualizar</button></div><div class="kpis" id="kpis"></div><div class="dash-grid"><div class="panel"><h3>Fichas por semana</h3><div class="chart" id="weeklyChart"></div></div><div class="panel"><h3>Divisão por prioridade</h3><div class="pie-wrap"><div class="pie" id="priorityPie"></div><div class="legend" id="priorityLegend"></div></div></div><div class="panel"><h3>Idade dos pedidos</h3><div id="ageBars"></div></div><div class="panel wide"><h3>Mais urgentes</h3><div class="urgent-list" id="urgentList"></div></div><div class="panel"><h3>Clientes frequentes</h3><div id="clientList"></div></div></div></section>
 </main></div>
 <div class="modal" id="orderModal"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Adicionar Ficha Técnica</h3><button class="btn" onclick="closeOrderModal()">✕</button></div><div class="modal-body"><input type="hidden" id="editId"><div class="form-grid"><div class="form-group"><label>Nome da ficha técnica</label><input class="form-control" id="orderName"></div><div class="form-group"><label>Número / WhatsApp do cliente (opcional)</label><input class="form-control" id="orderClientPhone"></div><div class="form-group"><label>Data de entrada</label><input type="date" class="form-control" id="orderDate"></div><div class="form-group"><label>Anexar PDF</label><input type="file" class="form-control" id="orderPdf" accept="application/pdf,.pdf"><div id="currentPdf" style="font-size:11px;color:var(--muted);margin-top:5px"></div></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ média (opcional)</label><input type="number" class="form-control" id="orderMedDays" value="15"></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ alta (opcional)</label><input type="number" class="form-control" id="orderHighDays" value="22"></div></div><div class="form-group"><label>Nota / alteração</label><textarea class="form-control" id="orderNote"></textarea></div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" onclick="closeOrderModal()">Cancelar</button><button class="btn primary" onclick="saveOrder()">Salvar</button></div></div></div></div>
-<div class="modal" id="pdfModal"><div class="pdf-viewer"><div class="modal-head"><h3 id="pdfTitle">Visualizar PDF</h3><div class="pdf-tools"><span id="pdfPageInfo" style="font-size:12px;color:#64748b;font-weight:700"></span><button class="btn ghost" id="pdfQuickBtn" onclick="togglePdfFull()" title="Alternar entre preview rápido e PDF completo">📄 PDF completo</button><button class="btn" onclick="closePdf()">Fechar</button></div></div><div class="pdf-quick" id="pdfQuick"><div class="pdf-loading">Carregando ficha...</div></div><iframe class="pdf-frame" id="pdfFrame" style="display:none"></iframe><div class="pdf-multi" id="pdfMulti"></div></div></div><div class="toast" id="toast"></div>
+<div class="modal" id="pdfModal"><div class="pdf-viewer"><div class="modal-head"><h3 id="pdfTitle">Visualizar PDF</h3><div class="pdf-tools"><span id="pdfPageInfo" style="font-size:12px;color:#64748b;font-weight:700"></span><button class="btn ghost" id="pdfQuickBtn" onclick="togglePdfFull()" title="Alternar entre prévia rápida e PDF completo">⚡ Prévia rápida</button><button class="btn" onclick="closePdf()">Fechar</button></div></div><iframe class="pdf-frame" id="pdfFrame"></iframe><div class="pdf-quick" id="pdfQuick" style="display:none"></div></div></div><div class="toast" id="toast"></div>
 <script>
 const KEY='vooalto_main_catalog_v2';let state={thresholds:{low:0,med:15,high:22},orders:[],history:[]};let expandedColumn=null,currentPdfUrl=null;const cols=[['baixa','Baixa','Antes do limite médio','var(--green)'],['media','Média','A partir do limite médio','var(--yellow)'],['alta','Alta','A partir do limite alto','var(--red)'],['concluido','Concluídos','Só entra pelo botão Concluído','var(--gray)']];const $=id=>document.getElementById(id);const PDF_DB='vooalto_pdf_store_v2',PDF_STORE='pdfs';
 function setTheme(t){t=t||'neo';document.documentElement.dataset.theme=t==='neo'?'':t;localStorage.setItem('vooalto_theme_v5',t);const sel=document.getElementById('themeSelect');if(sel)sel.value=t;try{parent.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}}
@@ -722,76 +719,68 @@ async function loadExpandedPdfCards(){
   });
   await Promise.all(tasks);
 }
-function toggleColumnExpand(k){expandedColumn=expandedColumn===k?null:k;renderCatalog()}function saveThresholds(){state.thresholds.low=0;state.thresholds.med=parseInt($('thMed').value)||15;state.thresholds.high=parseInt($('thHigh').value)||22;save()}function autoClassifyAll(){state.orders.forEach(o=>{if(normalizeStatusValue(o.status)!=='concluido')o.status=autoStatus(o)});save();renderAll()}function openOrderModal(id){$('orderPdf').value='';$('editId').value=id||'';const o=id?state.orders.find(x=>x.id===id):null;$('modalTitle').textContent=id?'Editar Ficha Técnica':'Adicionar Ficha Técnica';$('orderName').value=o?.name||'';$('orderClientPhone').value=o?.clientPhone||'';$('orderDate').value=o?.createdAt||today();$('orderNote').value=o?.note||'';$('orderMedDays').value=o?.medDays??state.thresholds.med;$('orderHighDays').value=o?.highDays??state.thresholds.high;$('currentPdf').textContent=o?.pdfName?'PDF atual: '+o.pdfName:'Nenhum PDF anexado';$('orderModal').classList.add('open')}function closeOrderModal(){$('orderModal').classList.remove('open')}function saveOrder(){const id=$('editId').value,name=$('orderName').value.trim();if(!name)return toast('Preencha o nome.');const file=$('orderPdf').files[0];const finish=async(data,pdfName)=>{let isNew=false,o=id?state.orders.find(x=>x.id===id):null;if(!o){isNew=true;o={id:uid(),status:'baixa',createdAt:today(),createdTs:Date.now()};state.orders.push(o)}o.name=name;o.clientPhone=$('orderClientPhone').value.trim();o.createdAt=$('orderDate').value||today();o.note=$('orderNote').value.trim();o.medDays=parseInt($('orderMedDays').value)||15;o.highDays=parseInt($('orderHighDays').value)||22;if(data){try{await storePdfData(o.id,data);o.pdfStored=true;delete o.pdfData}catch(e){o.pdfData=data}o.pdfName=pdfName}o.status=o.status==='concluido'?'concluido':autoStatus(o);if(isNew)addHistory('add',+1);save();closeOrderModal();renderAll()};if(file)readPdfFile(file,(d,n)=>finish(d,n));else finish(null,null)}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){if(!confirm('Excluir ficha?'))return;const o=state.orders.find(x=>x.id===id);if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}let pdfModalMode='quick',pdfModalId=null,pdfModalDoc=null,pdfModalPages=0;
+function toggleColumnExpand(k){expandedColumn=expandedColumn===k?null:k;renderCatalog()}function saveThresholds(){state.thresholds.low=0;state.thresholds.med=parseInt($('thMed').value)||15;state.thresholds.high=parseInt($('thHigh').value)||22;save()}function autoClassifyAll(){state.orders.forEach(o=>{if(normalizeStatusValue(o.status)!=='concluido')o.status=autoStatus(o)});save();renderAll()}function openOrderModal(id){$('orderPdf').value='';$('editId').value=id||'';const o=id?state.orders.find(x=>x.id===id):null;$('modalTitle').textContent=id?'Editar Ficha Técnica':'Adicionar Ficha Técnica';$('orderName').value=o?.name||'';$('orderClientPhone').value=o?.clientPhone||'';$('orderDate').value=o?.createdAt||today();$('orderNote').value=o?.note||'';$('orderMedDays').value=o?.medDays??state.thresholds.med;$('orderHighDays').value=o?.highDays??state.thresholds.high;$('currentPdf').textContent=o?.pdfName?'PDF atual: '+o.pdfName:'Nenhum PDF anexado';$('orderModal').classList.add('open')}function closeOrderModal(){$('orderModal').classList.remove('open')}function saveOrder(){const id=$('editId').value,name=$('orderName').value.trim();if(!name)return toast('Preencha o nome.');const file=$('orderPdf').files[0];const finish=async(data,pdfName)=>{let isNew=false,o=id?state.orders.find(x=>x.id===id):null;if(!o){isNew=true;o={id:uid(),status:'baixa',createdAt:today(),createdTs:Date.now()};state.orders.push(o)}o.name=name;o.clientPhone=$('orderClientPhone').value.trim();o.createdAt=$('orderDate').value||today();o.note=$('orderNote').value.trim();o.medDays=parseInt($('orderMedDays').value)||15;o.highDays=parseInt($('orderHighDays').value)||22;if(data){try{await storePdfData(o.id,data);o.pdfStored=true;delete o.pdfData}catch(e){o.pdfData=data}o.pdfName=pdfName}o.status=o.status==='concluido'?'concluido':autoStatus(o);if(isNew)addHistory('add',+1);save();closeOrderModal();renderAll()};if(file)readPdfFile(file,(d,n)=>finish(d,n));else finish(null,null)}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){if(!confirm('Excluir ficha?'))return;const o=state.orders.find(x=>x.id===id);if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}function closePdf(){
+  const f=$('pdfFrame'),m=$('pdfModal'),q=$('pdfQuick');
+  if(f){try{f.src='about:blank'}catch(e){}f.style.display='none';}
+  if(q){q.style.display='none';q.innerHTML='';}
+  if(m)m.classList.remove('open');
+  pdfModalId=null;pdfModalMode='iframe';
+  if(currentPdfUrl){try{URL.revokeObjectURL(currentPdfUrl)}catch(e){}currentPdfUrl=null;}
+}
+let pdfModalMode='iframe',pdfModalId=null;
 async function viewPdf(id){
-  const o=state.orders.find(x=>x.id===id);if(!o)return toast('Ficha não encontrada.');
-  pdfModalId=id;pdfModalMode='quick';
+  const o=state.orders.find(x=>x.id===id);
+  if(!o)return toast('Ficha não encontrada.');
+  pdfModalId=id;pdfModalMode='iframe';
   $('pdfTitle').textContent=o.name||'Visualizar PDF';
-  $('pdfFrame').style.display='none';$('pdfFrame').src='about:blank';
-  $('pdfMulti').classList.remove('show');$('pdfMulti').innerHTML='';
-  const q=$('pdfQuick');q.innerHTML='<div class="pdf-loading">Carregando ficha...</div>';q.style.display='flex';
+  $('pdfPageInfo').textContent='Carregando...';
+  $('pdfQuickBtn').textContent='⚡ Prévia rápida';
+  const f=$('pdfFrame'),q=$('pdfQuick');
+  q.style.display='none';q.innerHTML='';
+  f.style.display='block';f.src='about:blank';
   $('pdfModal').classList.add('open');
-  $('pdfQuickBtn').textContent='📄 PDF completo';
-  // Espera um frame para o modal estar visível e o clientWidth estar correto
-  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  // Render RÁPIDO: usa cache de thumbnail se já existir (hover/expandido já gerou); senão gera em scale leve
-  try{
-    const data=await getPdfData(id);
-    if(!data||!String(data).startsWith('data:application/pdf')){q.innerHTML='<div class="pdf-loading">Nenhum PDF anexado nesta ficha.</div>';return;}
-    let canvas=_thumbCacheHQ.get(id)||_thumbCache.get(id);
-    if(!canvas){
-      const pdfjs=await ensurePdfJs();
-      let pdf=_pdfDocCache.get(id);
-      if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);}
-      const page=await pdf.getPage(1);
-      const cw=q.clientWidth||880;
-      const ch=q.clientHeight||700;
-      const baseVp=page.getViewport({scale:1});
-      const scale=Math.min(cw/baseVp.width,ch/baseVp.height,2.2)*Math.min(window.devicePixelRatio||1,1.5);
-      const vp=page.getViewport({scale});
-      canvas=document.createElement('canvas');
-      canvas.width=Math.floor(vp.width);canvas.height=Math.floor(vp.height);
-      const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-      await page.render({canvasContext:ctx,viewport:vp}).promise;
-      _thumbCacheHQ.set(id,canvas);
-    }
-    q.innerHTML='';const clone=canvas.cloneNode(true);
-    clone.style.maxWidth='100%';clone.style.maxHeight='100%';clone.style.objectFit='contain';clone.style.display='block';
-    q.appendChild(clone);
-    $('pdfPageInfo').textContent='Página 1 · prévia rápida';
-  }catch(e){
-    console.warn('Falha na prévia canvas, abrindo PDF completo:',e);
-    togglePdfFull();
+  const data=await getPdfData(id);
+  if(!data||!String(data).startsWith('data:application/pdf')){
+    f.style.display='none';
+    q.style.display='flex';
+    q.innerHTML='<div class="pdf-loading" style="text-align:center"><div style="font-size:36px;margin-bottom:10px">📎</div>Esta ficha não tem PDF anexado.<br><span style="font-size:11px;color:#94a3b8;font-weight:600">Clique em "Editar" para anexar um PDF.</span></div>';
+    $('pdfPageInfo').textContent='Sem PDF';
+    return;
   }
+  // Iframe direto com data: URL — sempre funciona, sem fetch/blob, sem depender de CORS.
+  // O visualizador nativo do navegador carrega o PDF.
+  f.src=data+'#page=1&zoom=page-fit&toolbar=0&navpanes=0&scrollbar=0';
+  $('pdfPageInfo').textContent='Carregando visualizador...';
+  // Tenta gerar uma prévia canvas em segundo plano para a próxima vez / modo prévia rápida
+  getThumbHQ(id).then(canvas=>{
+    if(canvas&&pdfModalId===id)$('pdfPageInfo').textContent='PDF aberto';
+  }).catch(()=>{});
 }
 async function togglePdfFull(){
   if(!pdfModalId)return;
-  const q=$('pdfQuick'),f=$('pdfFrame'),m=$('pdfMulti'),btn=$('pdfQuickBtn'),info=$('pdfPageInfo');
-  if(pdfModalMode==='quick'){
-    // abre o iframe completo (viewer nativo) — fallback 100%
-    pdfModalMode='full';
-    btn.textContent='⚡ Voltar à prévia';
-    q.style.display='none';f.style.display='block';
+  const f=$('pdfFrame'),q=$('pdfQuick'),btn=$('pdfQuickBtn'),info=$('pdfPageInfo');
+  if(pdfModalMode==='iframe'){
+    // tenta trocar para prévia rápida (canvas)
     try{
-      if(currentPdfUrl)URL.revokeObjectURL(currentPdfUrl);
-      const data=await getPdfData(pdfModalId);
-      if(!data){info.textContent='Sem PDF';return;}
-      try{
-        const res=await fetch(data),blob=await res.blob();
-        currentPdfUrl=URL.createObjectURL(blob);
-        f.src=currentPdfUrl+'#page=1&zoom=page-width&toolbar=0&navpanes=0&scrollbar=0';
-      }catch(e){f.src=data+'#page=1&zoom=page-width&toolbar=0&navpanes=0&scrollbar=0';}
-      info.textContent='Visualizador completo';
-    }catch(e){info.textContent='Erro ao abrir PDF completo';btn.click();}
+      const canvas=await getThumbHQ(pdfModalId);
+      if(!canvas)throw new Error('sem canvas');
+      f.style.display='none';
+      q.style.display='flex';
+      q.innerHTML='';
+      const clone=canvas.cloneNode(true);
+      clone.style.maxWidth='100%';clone.style.maxHeight='100%';clone.style.objectFit='contain';clone.style.display='block';
+      q.appendChild(clone);
+      pdfModalMode='quick';
+      btn.textContent='📄 PDF completo';
+      info.textContent='Prévia rápida';
+    }catch(e){toast('Prévia rápida indisponível neste navegador')}
   }else{
-    pdfModalMode='quick';
-    btn.textContent='📄 PDF completo';
-    f.style.display='none';f.src='about:blank';
-    q.style.display='flex';
-    info.textContent='Página 1 · prévia rápida';
+    q.style.display='none';f.style.display='block';
+    pdfModalMode='iframe';
+    btn.textContent='⚡ Prévia rápida';
+    info.textContent='PDF aberto';
   }
 }
-function closePdf(){$('pdfFrame').src='about:blank';$('pdfFrame').style.display='none';$('pdfModal').classList.remove('open');$('pdfMulti').classList.remove('show');$('pdfMulti').innerHTML='';pdfModalId=null;pdfModalMode='quick';if(currentPdfUrl)URL.revokeObjectURL(currentPdfUrl)}
 /* Fechar modais com ESC ou clique no backdrop */
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('pdfModal').classList.contains('open'))closePdf();else if($('orderModal').classList.contains('open'))closeOrderModal();}});
 document.addEventListener('click',e=>{
