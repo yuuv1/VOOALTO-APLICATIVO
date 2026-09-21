@@ -622,9 +622,13 @@ function ensurePdfJs(){
   if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
   if(pdfJsLoadingPromise) return pdfJsLoadingPromise;
   pdfJsLoadingPromise=new Promise((resolve,reject)=>{
+    // caminho absoluto (este HTML roda em /principal_dashboard/, então ./assets/ dá 404)
     const sc=document.createElement('script');
-    sc.src='./assets/pdf.min.js';
-    sc.onload=()=>{try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='./assets/pdf.worker.min.js';resolve(window.pdfjsLib)}catch(e){reject(e)}};
+    sc.src=location.origin.replace(/\/$/,'')+'/assets/pdf.min.js';
+    sc.onload=()=>{try{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc=location.origin.replace(/\/$/,'')+'/assets/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    }catch(e){reject(e)}};
     sc.onerror=()=>reject(new Error('pdf.js nao carregou'));
     document.head.appendChild(sc);
   });
@@ -728,6 +732,8 @@ async function viewPdf(id){
   const q=$('pdfQuick');q.innerHTML='<div class="pdf-loading">Carregando ficha...</div>';q.style.display='flex';
   $('pdfModal').classList.add('open');
   $('pdfQuickBtn').textContent='📄 PDF completo';
+  // Espera um frame para o modal estar visível e o clientWidth estar correto
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
   // Render RÁPIDO: usa cache de thumbnail se já existir (hover/expandido já gerou); senão gera em scale leve
   try{
     const data=await getPdfData(id);
@@ -738,10 +744,10 @@ async function viewPdf(id){
       let pdf=_pdfDocCache.get(id);
       if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);}
       const page=await pdf.getPage(1);
-      // scale dinâmico baseado na largura disponível (sem exagerar) para carregamento instantâneo
-      const targetW=Math.min(q.clientWidth||880,900)*window.devicePixelRatio;
+      const cw=q.clientWidth||880;
+      const ch=q.clientHeight||700;
       const baseVp=page.getViewport({scale:1});
-      const scale=Math.min(2.2,Math.max(1.0,targetW/baseVp.width));
+      const scale=Math.min(cw/baseVp.width,ch/baseVp.height,2.2)*Math.min(window.devicePixelRatio||1,1.5);
       const vp=page.getViewport({scale});
       canvas=document.createElement('canvas');
       canvas.width=Math.floor(vp.width);canvas.height=Math.floor(vp.height);
@@ -753,7 +759,10 @@ async function viewPdf(id){
     clone.style.maxWidth='100%';clone.style.maxHeight='100%';clone.style.objectFit='contain';clone.style.display='block';
     q.appendChild(clone);
     $('pdfPageInfo').textContent='Página 1 · prévia rápida';
-  }catch(e){console.warn(e);q.innerHTML='<div class="pdf-loading">Não foi possível carregar a prévia. <button class="btn ghost" onclick="togglePdfFull()" style="margin-left:8px">Abrir PDF</button></div>'}
+  }catch(e){
+    console.warn('Falha na prévia canvas, abrindo PDF completo:',e);
+    togglePdfFull();
+  }
 }
 async function togglePdfFull(){
   if(!pdfModalId)return;
