@@ -1,32 +1,100 @@
 <!DOCTYPE html>
-<html><meta charset='UTF-8'><title>Limpar Cache - Vooalto V6</title>
-<style>body{font-family:Arial,sans-serif;background:#050505;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;flex-direction:column}h1{color:#64FFDA;margin-bottom:10px}p{color:#aaa;font-size:13px;margin:6px 0}.status{font-size:11px;color:#888;margin-top:14px}</style>
+<html lang="pt-BR"><head><meta charset='UTF-8'><title>Limpar Cache - Vooalto V6</title>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;background:#050505;color:#fff;display:flex;
+  justify-content:center;align-items:center;min-height:100vh;margin:0;flex-direction:column;padding:20px}
+.card{max-width:520px;width:100%;text-align:center}
+h1{color:#64FFDA;margin-bottom:6px;font-size:22px}
+p{color:#aaa;font-size:13px;margin:6px 0;line-height:1.55}
+.ok{background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.30);border-left:3px solid #10B981;
+  border-radius:9px;padding:11px 14px;margin:16px 0;text-align:left;font-size:12.5px;color:#A7F3D0}
+.ok b{display:block;margin-bottom:3px;color:#D1FAE5}
+.status{font-size:11.5px;color:#888;margin-top:16px;line-height:1.7;text-align:left;
+  background:rgba(255,255,255,.03);border-radius:8px;padding:10px 13px}
+.status div{margin:2px 0}
+</style>
 </head><body>
-<h1>Limpando Cache...</h1>
-<p>Removendo service worker, caches, localStorage e sessionStorage</p>
-<div class="status" id="status">Processando...</div>
+<div class="card">
+<h1>Limpando cache...</h1>
+<p>Removendo o service worker e os arquivos guardados pelo navegador.</p>
+
+<div class="ok">
+  <b>✔ Suas fichas estão seguras</b>
+  O catálogo, os rascunhos e as cópias de segurança <b>não</b> são apagados —
+  só o cache de arquivos do aplicativo.
+</div>
+
+<div class="status" id="status"></div>
+</div>
 <script>
+/* Marcador: se esta pagina foi substituida pelo index.html vindo do cache,
+   este script nao roda e o navegador mostra o app antigo. Por isso o
+   .bat tambem espera o servidor subir antes de abrir. */
+window.__vooaltoLimpeza=true;
+</script>
+<script>
+/* ============================================================
+   V6 — Limpeza de cache SEM perder dados
+   ------------------------------------------------------------
+   Antes esta pagina chamava localStorage.clear(), que apagava
+   TUDO: o catalogo de fichas (vooalto_main_catalog_v2), o indice
+   de rascunhos e as preferencias. Quem so queria resolver um
+   problema de cache perdia o trabalho.
+
+   Agora remove apenas o que e cache de verdade e preserva os
+   dados do usuario.
+   ============================================================ */
 (async()=>{
   const s=document.getElementById('status');
+  const linha=t=>{const d=document.createElement('div');d.textContent=t;s.appendChild(d);};
+
+  /* Chaves que sao DADOS do usuario — nunca apagar */
+  const PRESERVAR=[
+    /^vooalto_main_catalog/,      /* catalogo de fichas */
+    /^vooalto_ficha_rascunhos/,   /* indice dos rascunhos */
+    /^vooalto_ficha_autosave/,    /* copia de seguranca automatica */
+    /^vooalto_pending_ficha/,     /* ficha aguardando catalogacao */
+    /^va4_/,                      /* numeracao e fichas recentes */
+    /^va3_num$/,                  /* numero da ficha atual */
+    /^vooalto_theme/              /* tema escolhido */
+  ];
+  const ehDado = k => PRESERVAR.some(re=>re.test(k));
+
   try{
-    if('serviceWorker'in navigator){
-      s.textContent='Desregistrando service workers...';
+    if('serviceWorker' in navigator){
       const regs=await navigator.serviceWorker.getRegistrations();
-      for(let x of regs){await x.unregister();}
-      s.textContent+=' OK ('+regs.length+')';
+      for(const r of regs){ await r.unregister(); }
+      linha('✔ Service worker removido ('+regs.length+')');
     }
-    if('caches'in window){
-      s.textContent=' | Limpando caches...';
+  }catch(e){ linha('⚠ Service worker: '+e.message); }
+
+  try{
+    if('caches' in window){
       const keys=await caches.keys();
-      for(let x of keys){await caches.delete(x);}
-      s.textContent+=' OK ('+keys.length+')';
+      for(const k of keys){ await caches.delete(k); }
+      linha('✔ Cache de arquivos limpo ('+keys.length+')');
     }
-    localStorage.clear();
-    sessionStorage.clear();
-    s.textContent=' | localStorage/sessionStorage OK';
-  }catch(e){s.textContent='Erro: '+e.message;}
-  s.textContent+=' | Redirecionando...';
-  setTimeout(()=>{location.replace('./?v=4&fresh='+Date.now());},1500);
+  }catch(e){ linha('⚠ Cache: '+e.message); }
+
+  try{
+    /* Remove só o que é cache/rascunho de tela, preservando os dados */
+    const remover=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k && !ehDado(k)) remover.push(k);
+    }
+    remover.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+    linha('✔ Preferências de tela redefinidas ('+remover.length+')');
+
+    let mantidos=0;
+    for(let i=0;i<localStorage.length;i++){ if(ehDado(localStorage.key(i))) mantidos++; }
+    linha('🛡 Dados preservados: '+mantidos+' registro(s)');
+  }catch(e){ linha('⚠ Armazenamento: '+e.message); }
+
+  try{ sessionStorage.clear(); }catch(e){}
+
+  linha('↻ Abrindo o Vooalto novamente...');
+  setTimeout(()=>{ location.replace('./index.html?fresh='+Date.now()); },1800);
 })();
 </script>
 </body></html>

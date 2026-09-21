@@ -172,6 +172,65 @@
       gap: 12px;
     }
 
+    /* Barra de gerenciamento de páginas (aba Itens) */
+    .page-manager-bar {
+      background: linear-gradient(135deg, #0B1220, #14263B);
+      border: 1px solid #1E4E6B;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .page-manager-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .page-manager-head label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #38BDF8;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .page-count-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: #E2E8F0;
+      background-color: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    .page-manager-bar .form-control {
+      margin-bottom: 10px;
+    }
+
+    .page-manager-actions {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 8px;
+    }
+
+    .page-manager-actions .btn {
+      padding: 10px 12px;
+      font-size: 12.5px;
+    }
+
+    /* Ações no rodapé da lista de itens */
+    .items-footer-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
     /* Dynamic Table Row Editor */
     .item-row-card {
       background-color: #0F172A;
@@ -840,10 +899,28 @@ dos Buritis, Goiânia - GO, 74370-661</textarea>
 
         <!-- Tab 2: Itens -->
         <div id="tab-itens" class="tab-content active">
+
+          <!-- Barra de páginas: sempre visível, junto dos itens -->
+          <div class="page-manager-bar">
+            <div class="page-manager-head">
+              <label>Página em edição</label>
+              <span class="page-count-badge" id="page-count-badge">1 / 1</span>
+            </div>
+            <select class="form-control" id="active-page-select" onchange="changeActiveFormPage(this.value)">
+              <option value="0" selected>Página 1</option>
+            </select>
+            <div class="page-manager-actions">
+              <button class="btn btn-primary" id="btn-add-page" onclick="addDocumentPage()">➕ Adicionar Página</button>
+              <button class="btn btn-danger-outline" id="btn-remove-page" onclick="removeLastDocumentPage()">🗑 Remover Última</button>
+            </div>
+          </div>
+
           <div id="items-editor-list">
             <!-- Dynamic rows will be inserted here -->
           </div>
-          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="addTableRow()">➕ Adicionar Item</button>
+          <div class="items-footer-actions">
+            <button class="btn btn-secondary" onclick="addTableRow()">➕ Adicionar Item</button>
+          </div>
         </div>
 
         <!-- Tab 3: Termos -->
@@ -865,13 +942,6 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
         <!-- Tab 4: Assinatura & Estilo -->
         <div id="tab-assinatura" class="tab-content">
-          <div class="form-group">
-            <label>Gerenciamento de Páginas</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px;">
-              <button class="btn btn-primary" onclick="addDocumentPage()">➕ Add Página</button>
-              <button class="btn btn-danger-outline" onclick="removeLastDocumentPage()">❌ Rem. Página</button>
-            </div>
-          </div>
           <div class="form-group">
             <label>Nome do Responsável</label>
             <input type="text" id="edit-resp-name" class="form-control" value="Esio Andrade - Financeiro" oninput="updatePreviewFromForm()">
@@ -1128,18 +1198,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       const container = document.getElementById('items-editor-list');
       container.innerHTML = '';
 
-      // Add a header for active page selection if multi-page
-      if (documentPages.length > 1) {
-        const selectorGroup = document.createElement('div');
-        selectorGroup.className = 'form-group';
-        selectorGroup.innerHTML = `
-          <label>Editar Itens da Página:</label>
-          <select class="form-control" onchange="changeActiveFormPage(this.value)">
-            ${documentPages.map((p, idx) => `<option value="${idx}" ${idx === activeFormPageIndex ? 'selected' : ''}>Página ${idx + 1}</option>`).join('')}
-          </select>
-        `;
-        container.appendChild(selectorGroup);
-      }
+      renderPageManagerBar();
 
       const activePage = documentPages[activeFormPageIndex];
 
@@ -1181,9 +1240,36 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       });
     }
 
+    // Keep the always-visible page bar in sync with documentPages
+    function renderPageManagerBar() {
+      const select = document.getElementById('active-page-select');
+      const badge = document.getElementById('page-count-badge');
+      const btnRemove = document.getElementById('btn-remove-page');
+
+      if (select) {
+        select.innerHTML = documentPages
+          .map((p, idx) => `<option value="${idx}">Página ${idx + 1}</option>`)
+          .join('');
+        select.value = String(activeFormPageIndex);
+      }
+      if (badge) {
+        badge.textContent = (activeFormPageIndex + 1) + ' / ' + documentPages.length;
+      }
+      if (btnRemove) {
+        btnRemove.disabled = documentPages.length <= 1;
+        btnRemove.style.opacity = documentPages.length <= 1 ? '0.45' : '1';
+        btnRemove.style.cursor = documentPages.length <= 1 ? 'not-allowed' : 'pointer';
+      }
+    }
+
     function changeActiveFormPage(idx) {
       activeFormPageIndex = parseInt(idx);
       renderItemsEditor();
+      // Traz a folha correspondente para a área visível do preview
+      const pageDom = document.getElementById(`printable-a4-page-${activeFormPageIndex + 1}`);
+      if (pageDom && pageDom.scrollIntoView) {
+        pageDom.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     // Add a new document page
@@ -1227,6 +1313,13 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
       renderItemsEditor();
       updatePreviewFromForm();
+
+      // Garante que a aba de Itens esteja visível e mostra a nova folha
+      const itensTab = document.getElementById('tab-itens');
+      if (itensTab) itensTab.classList.add('active');
+      if (newPageDom.scrollIntoView) {
+        newPageDom.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     // Remove the very last A4 page
@@ -1979,6 +2072,270 @@ function printProposal() {
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
 </style>
+
+
+<style id="v6-orc-didatico-css">
+/* ============================================================
+   V6 — Orcamento mais didatico
+   ============================================================ */
+.v6o-passo{display:flex;align-items:center;gap:9px;padding:2px 0 10px}
+.v6o-num{flex-shrink:0;width:21px;height:21px;border-radius:50%;
+  background:linear-gradient(135deg,#38BDF8,#0284C7);color:#fff;font-size:10.5px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(2,132,199,.45)}
+.v6o-passo b{display:block;font-size:12px;color:#F8FAFC;font-weight:900}
+.v6o-passo small{display:block;font-size:10px;color:#94A3B8;font-weight:600;margin-top:1px}
+
+/* dica curta abaixo de um grupo */
+.v6o-dica{font-size:10.5px;line-height:1.5;color:#94A3B8;margin:-4px 0 16px;font-style:italic}
+.v6o-dica b{color:#CBD5E1;font-style:normal}
+
+/* destaque do botao principal de exportar */
+.v6o-nota-exp{background:rgba(2,132,199,.10);border:1px solid rgba(56,189,248,.28);
+  border-left:3px solid #38BDF8;border-radius:8px;padding:9px 11px;margin-bottom:12px;
+  font-size:10.5px;line-height:1.5;color:#BAE6FD}
+.v6o-nota-exp b{color:#E0F2FE;display:block;margin-bottom:2px}
+
+/* botao de ajuda */
+#v6oHelpBtn{position:fixed;right:16px;bottom:16px;z-index:99996;width:42px;height:42px;border-radius:50%;
+  border:none;background:#0284C7;color:#fff;font-size:20px;font-weight:900;cursor:pointer;
+  box-shadow:0 8px 26px rgba(2,132,199,.55);transition:all .18s;font-family:inherit}
+#v6oHelpBtn:hover{background:#0369A1;transform:scale(1.09)}
+#v6oHelp{display:none;position:fixed;inset:0;background:rgba(0,0,0,.66);z-index:100001;
+  align-items:center;justify-content:center;padding:18px}
+#v6oHelp.open{display:flex}
+.v6oh-card{width:min(660px,96vw);max-height:88vh;background:#0F172A;color:#E2E8F0;border-radius:18px;
+  overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.55);
+  border:1px solid #1E293B}
+.v6oh-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  background:linear-gradient(135deg,#0C4A6E,#075985);color:#fff}
+.v6oh-head h3{margin:0;font-size:16.5px}
+.v6oh-head button{border:none;background:rgba(255,255,255,.18);color:#fff;border-radius:8px;
+  padding:7px 13px;font-weight:800;cursor:pointer;font-family:inherit;font-size:12px}
+.v6oh-body{padding:20px;overflow:auto;font-size:13px;line-height:1.6}
+.v6oh-step{display:flex;gap:12px;margin-bottom:14px}
+.v6oh-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#0284C7;color:#fff;
+  font-weight:900;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.v6oh-step b{display:block;margin-bottom:2px;color:#F1F5F9}
+.v6oh-step span{color:#94A3B8;font-size:12.5px}
+.v6oh-tip{background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.26);
+  border-left:3px solid #38BDF8;border-radius:9px;padding:11px 13px;margin-top:14px;
+  font-size:12.5px;color:#BAE6FD}
+.v6oh-tip b{display:block;margin-bottom:3px;color:#E0F2FE}
+</style>
+
+<script id="v6-orc-didatico-js">
+/* ============================================================
+   V6 — Orcamento: linguagem didatica
+   ------------------------------------------------------------
+   Problemas: a aba unica "Itens" nao dizia por onde comecar; o
+   botao de gerar o PDF ("Imprimir / Salvar PDF Vetorial") usava
+   jargao; nao havia nenhuma ajuda no modulo.
+   Tudo aqui e adicionado por cima, sem reescrever a estrutura.
+   ============================================================ */
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+
+  function passo(n,titulo,desc){
+    const d=document.createElement('div');
+    d.className='v6o-passo';
+    d.innerHTML='<div class="v6o-num">'+n+'</div><div><b>'+titulo+'</b><small>'+desc+'</small></div>';
+    return d;
+  }
+
+  function organizar(){
+    const itens=$('tab-itens');
+    if(!itens||itens.dataset.v6Pronto==='1') return;
+    itens.dataset.v6Pronto='1';
+
+    /* --- Passo 1: paginas --- */
+    const barra=itens.querySelector('.page-manager-bar');
+    if(barra){
+      itens.insertBefore(passo(1,'Escolha a página','Cada página é uma folha do orçamento'),barra);
+      const add=$('btn-add-page');
+      if(add) add.title='Cria uma nova folha no orçamento, com a própria lista de itens';
+      const rem=$('btn-remove-page');
+      if(rem) rem.title='Remove a última folha do orçamento';
+    }
+
+    /* --- Passo 2: itens --- */
+    const lista=$('items-editor-list');
+    if(lista){
+      itens.insertBefore(passo(2,'Lance os produtos','Modelo, tecido, quantidade e valor'),lista);
+      const d=document.createElement('div');
+      d.className='v6o-dica';
+      d.innerHTML='O total é calculado sozinho. Você também pode <b>clicar direto na folha</b> à direita para corrigir qualquer texto.';
+      itens.insertBefore(d,lista);
+    }
+
+    /* --- Passo 3: exportar (fica no rodape fixo) --- */
+    const pdf=document.querySelector('button[onclick*="printProposal"]');
+    const png=document.querySelector('button[onclick*="exportPNG"]');
+    if(pdf){
+      pdf.innerHTML='📄 Gerar PDF para o cliente';
+      pdf.title='Abre a janela de impressão. Escolha "Salvar como PDF" para gerar o arquivo.';
+      const área=pdf.parentNode;
+      if(área&&!área.querySelector('.v6o-nota-exp')){
+        const nota=document.createElement('div');
+        nota.className='v6o-nota-exp';
+        nota.innerHTML='<b>Para enviar ao cliente</b>Use <b style="display:inline">PDF</b> — abre a impressão, escolha “Salvar como PDF”. O <b style="display:inline">PNG</b> gera uma imagem, útil para WhatsApp.';
+        área.insertBefore(nota,pdf);
+      }
+    }
+    if(png){
+      png.innerHTML='📸 Salvar como imagem';
+      png.title='Gera uma imagem PNG da folha, boa para mandar por WhatsApp';
+    }
+
+    /* --- Configuracoes (engrenagem) --- */
+    const eng=document.querySelector('button[onclick*="openBudgetSettings"]');
+    if(eng) eng.title='Dados da empresa, condições de pagamento, validade e assinatura';
+  }
+
+  /* ---------------- Ajuda ---------------- */
+  function criarAjuda(){
+    if($('v6oHelpBtn')) return;
+    const b=document.createElement('button');
+    b.id='v6oHelpBtn'; b.textContent='?';
+    b.title='Como montar um orçamento';
+    b.onclick=()=>v6oAbrirAjuda();
+    document.body.appendChild(b);
+
+    const m=document.createElement('div');
+    m.id='v6oHelp';
+    m.innerHTML=`<div class="v6oh-card">
+      <div class="v6oh-head"><h3>💰 Como montar um orçamento</h3>
+        <button onclick="v6oFecharAjuda()">Fechar</button></div>
+      <div class="v6oh-body">
+        <div class="v6oh-step"><div class="v6oh-n">1</div><div>
+          <b>Confira os dados da empresa</b>
+          <span>Clique na engrenagem <b>⚙️</b> no topo do painel para ajustar telefone, CNPJ, endereço, condições de pagamento, validade e assinatura. Esses dados aparecem em todas as folhas.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">2</div><div>
+          <b>Lance os produtos</b>
+          <span>Use <b>➕ Adicionar Item</b> e preencha modelo, tecido, quantidade e valor. O total é somado sozinho.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">3</div><div>
+          <b>Precisa de mais folhas?</b>
+          <span>Use <b>➕ Adicionar Página</b>. Cada folha tem a própria lista de itens — útil quando o orçamento é grande ou quando você quer separar por tipo de produto. O seletor no topo escolhe qual folha você está editando.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">4</div><div>
+          <b>Ajuste direto na folha</b>
+          <span>Quase todo texto da folha à direita pode ser corrigido clicando em cima e digitando — títulos, datas e observações.</span></div></div>
+        <div class="v6oh-step"><div class="v6oh-n">5</div><div>
+          <b>Envie para o cliente</b>
+          <span><b>Gerar PDF</b> abre a janela de impressão: escolha “Salvar como PDF” para ter o arquivo. <b>Salvar como imagem</b> gera um PNG, prático para mandar no WhatsApp.</span></div></div>
+        <div class="v6oh-tip"><b>💡 Dica</b>
+          Se o orçamento for aprovado, você pode montar a ficha técnica de produção no módulo <b>Criador</b> e acompanhar o andamento no <b>Principal</b>.</div>
+      </div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{ if(e.target===m) v6oFecharAjuda(); });
+  }
+  window.v6oAbrirAjuda=function(){ criarAjuda(); $('v6oHelp').classList.add('open'); };
+  window.v6oFecharAjuda=function(){ const m=$('v6oHelp'); if(m) m.classList.remove('open'); };
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') v6oFecharAjuda(); });
+
+  function primeiraVez(){
+    try{
+      if(localStorage.getItem('v6_ajuda_orc')) return;
+      localStorage.setItem('v6_ajuda_orc','1');
+      setTimeout(()=>v6oAbrirAjuda(),2200);
+    }catch(e){}
+  }
+
+  function iniciar(){ organizar(); criarAjuda(); primeiraVez(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,700));
+  else setTimeout(iniciar,700);
+  setTimeout(organizar,1600);
+})();
+
+  /* ============================================================
+     V6 — Esconde a interface de apoio (o "?" e afins) na exportacao
+     ------------------------------------------------------------
+     Deliberadamente conservador: NAO cria CSS, NAO usa @media print
+     e NAO acrescenta nenhuma tag ao documento -- este codigo mora
+     dentro de um <script> que ja existia. Tentativas anteriores
+     falharam justamente por mexer no CSS de impressao e por inserir
+     uma tag <style> mal fechada, o que abriu faixas brancas.
+
+     Aqui os elementos sao apenas ocultados com style.display no
+     momento da exportacao e devolvidos logo depois.
+     ============================================================ */
+  (function(){
+    var IDS=['v6HelpBtn','v6HelpModal','v6SaveStatus','v6UndoBar','v6QuickModal',
+             'v6oHelpBtn','v6oHelp','v6pHelpBtn','v6pHelp','v6pGuia','v6DropOverlay',
+             'v6BackupBtns'];
+    var salvos=null;
+    function esconder(){
+      if(salvos!==null) return;
+      salvos=[];
+      for(var i=0;i<IDS.length;i++){
+        var el=document.getElementById(IDS[i]);
+        if(!el) continue;
+        salvos.push({el:el,prev:el.style.display});
+        el.style.display='none';
+      }
+    }
+    function restaurar(){
+      if(salvos===null) return;
+      for(var i=0;i<salvos.length;i++){
+        try{ salvos[i].el.style.display=salvos[i].prev||''; }catch(e){}
+      }
+      salvos=null;
+    }
+    window.addEventListener('beforeprint',esconder);
+    window.addEventListener('afterprint',restaurar);
+    /* rede de seguranca: se o afterprint nao vier, o foco devolve */
+    window.addEventListener('focus',restaurar);
+
+    /* PNG: html2canvas ignora @media print, entao envolvemos a funcao */
+    function protegerPNG(nome){
+      var orig=window[nome];
+      if(typeof orig!=='function'||orig.__v6Prot) return;
+      var nova=function(){
+        esconder();
+        var r;
+        try{ r=orig.apply(this,arguments); }
+        catch(e){ restaurar(); throw e; }
+        if(r&&typeof r.then==='function'){
+          return r.then(function(v){restaurar();return v;},
+                        function(e){restaurar();throw e;});
+        }
+        /* As exportacoes nao devolvem promise: restauramos assim que a
+           captura terminar. Detectamos isso pelo fim das chamadas ao
+           html2canvas, com um limite de seguranca. */
+        var t0=Date.now();
+        var iv=setInterval(function(){
+          if(salvos===null){ clearInterval(iv); return; }
+          if(!window.__v6Capturando || Date.now()-t0>20000){ clearInterval(iv); restaurar(); }
+        },250);
+        return r;
+      };
+      nova.__v6Prot=true;
+      window[nome]=nova;
+    }
+    /* Marca enquanto houver captura em andamento, para saber a hora certa
+       de devolver os elementos (em vez de chutar um tempo fixo). */
+    function marcarHtml2Canvas(){
+      var h=window.html2canvas;
+      if(typeof h!=='function'||h.__v6Prot) return;
+      var nova=function(){
+        window.__v6Capturando=(window.__v6Capturando||0)+1;
+        var p;
+        try{ p=h.apply(this,arguments); }
+        catch(e){ window.__v6Capturando--; throw e; }
+        if(p&&typeof p.then==='function'){
+          return p.then(function(v){ window.__v6Capturando--; return v; },
+                        function(e){ window.__v6Capturando--; throw e; });
+        }
+        window.__v6Capturando--;
+        return p;
+      };
+      nova.__v6Prot=true;
+      window.html2canvas=nova;
+    }
+    function ligar(){ marcarHtml2Canvas(); protegerPNG('exportarPNG'); protegerPNG('exportPNG'); }
+    setTimeout(ligar,400); setTimeout(ligar,1800); setTimeout(ligar,3500);
+  })();
+
+</script>
 
 </body>
 </html>
