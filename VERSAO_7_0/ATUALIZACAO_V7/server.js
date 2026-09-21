@@ -6,6 +6,14 @@ const ROOT = __dirname;
 const PORT = process.env.PORT || 4700;
 const HOST = '0.0.0.0';
 
+process.on('uncaughtException', err => {
+  console.error('\n[ERRO FATAL] ' + err.message);
+  if (err && err.code === 'EADDRINUSE') {
+    console.error('A porta ' + PORT + ' ja esta em uso. Feche o outro Vooalto V7 antes de rodar.');
+  }
+  console.error('\nPressione Ctrl+C ou feche esta janela.');
+});
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -24,7 +32,7 @@ const MIME = {
   '.map': 'application/json'
 };
 
-http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
   if (urlPath === '/') urlPath = '/index.html';
   const filePath = path.join(ROOT, path.normalize(urlPath).replace(/^([.][.][/\\])+/, ''));
@@ -39,7 +47,22 @@ http.createServer((req, res) => {
     });
     res.end(data);
   });
-}).listen(PORT, HOST, () => {
-  console.log(`Vooalto V7 rodando em:  http://${HOST}:${PORT}`);
-  console.log(`Abra no navegador:       http://localhost:${PORT}`);
+});
+
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.error('\n[ERRO] Porta ' + PORT + ' ja esta em uso.');
+    console.error('O Vooalto V7 provavelmente ja esta rodando em http://localhost:' + PORT);
+    console.error('Feche a outra instancia e tente novamente.\n');
+  } else {
+    console.error('\n[ERRO ao iniciar o servidor] ' + err.message + '\n');
+  }
+});
+
+server.listen(PORT, HOST, () => {
+  console.log('===================================================');
+  console.log('  Vooalto V7 - servidor local no ar');
+  console.log('  URL: http://localhost:' + PORT);
+  console.log('  Para parar, feche esta janela ou pressione Ctrl+C');
+  console.log('===================================================');
 });
