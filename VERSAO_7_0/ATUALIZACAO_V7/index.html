@@ -11,7 +11,9 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f5f7;color:#111827}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--shell-bg,#eef0ff);color:#111827}
+/* Suaviza troca de tema para evitar "piscada" */
+html,body,.app-shell,.topbar,.frame-wrap,.project-frame{transition:background-color .22s ease,color .22s ease,background .22s ease}
 :root{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
 /* ── temas (degradê) ── */
 body[data-theme="neo"]{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
@@ -58,9 +60,9 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
 .utility-btn{border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.22);color:inherit;padding:8px 11px;border-radius:999px;cursor:pointer;font-size:11.5px;font-weight:760;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
 .utility-btn:hover{background:rgba(255,255,255,.4)}
 .frame-wrap{position:relative;flex:1;min-height:0;background:var(--shell-bg)}
-.project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:none}
+.project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--shell-bg,#eef0ff);display:none;color-scheme:light dark}
 .project-frame.active{display:block}
-.loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--bar-text);background:var(--shell-bg);z-index:10;font-weight:760;font-size:13px}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--bar-text);background:var(--shell-bg,#eef0ff);z-index:10;font-weight:760;font-size:13px}
 .loading .spin{width:34px;height:34px;border:3px solid rgba(127,127,140,.3);border-top-color:currentColor;border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .toast{position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.90);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:760;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999}
@@ -165,24 +167,40 @@ let deferredInstallPrompt=null;
 
 function setShellTheme(t){
   t=t||'neo';
-  document.body.dataset.theme=(t==='neo')?'':t;
+  // sincroniza: html + body recebem o atributo para que seletores CSS disparem
+  if(t==='neo'){document.documentElement.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}
+  else{document.documentElement.setAttribute('data-theme',t);document.body.setAttribute('data-theme',t)}
+  // pinta o elemento <iframe> com a nova cor ANTES — evita flash branco enquanto o doc interno carrega
+  const cs=getComputedStyle(document.documentElement);
+  const bg=cs.getPropertyValue('--shell-bg').trim()||'#eef0ff';
+  const scheme=(t==='neo'||t==='butter'||t==='cherry')?'light':'dark';
+  document.querySelectorAll('iframe.project-frame').forEach(f=>{
+    f.style.background=bg;
+    f.style.colorScheme=scheme;
+  });
   const meta=document.getElementById('themeColorMeta');
-  if(meta){
-    const bg=getComputedStyle(document.body).getPropertyValue('--shell-bg').trim()||'#eef0ff';
-    meta.content=bg;
-  }
+  if(meta)meta.content=bg;
   const sel=document.getElementById('themeSelect');
   if(sel&&sel.value!==t)sel.value=t;
   try{localStorage.setItem('vooalto_theme_v5',t)}catch(e){}
 }
 function applyThemeFromShell(t){
-  setShellTheme(t);
+  // envia aos iframes ANTES de aplicar no shell para reduzir dessincronia visual
   broadcastTheme(t);
-  toast('🎨 Tema aplicado: '+(t||'Neo Glass'));
+  // força o navegador a processar o postMessage antes de repintar
+  requestAnimationFrame(()=>{
+    setShellTheme(t);
+    requestAnimationFrame(()=>toast('🎨 Tema aplicado: '+(t||'Neo Glass')));
+  });
 }
 function broadcastTheme(t){
   Object.keys(PROJECTS).forEach(k=>{
     const fr=document.getElementById(PROJECTS[k].frame);
+    if(!fr)return;
+    // já pinta o iframe com o fundo do tema novo aqui, antes mesmo do doc interno receber
+    const cs=getComputedStyle(document.documentElement);
+    fr.style.background=cs.getPropertyValue('--shell-bg').trim()||'#eef0ff';
+    fr.style.colorScheme=(t==='neo'||t==='butter'||t==='cherry')?'light':'dark';
     try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}
   });
 }
