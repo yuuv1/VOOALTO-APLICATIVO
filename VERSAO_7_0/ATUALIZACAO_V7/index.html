@@ -324,17 +324,12 @@ window.addEventListener('message',e=>{
 function updateBadge(n){
   const b=document.getElementById('badgeAlta');
   if(!b)return;
+  n=parseInt(n)||0;
   b.textContent=n;
   b.classList.toggle('show',n>0);
 }
-function pollCounts(){
-  try{
-    const fr=document.getElementById(PROJECTS.principal.frame);
-    const c=fr&&fr.contentWindow&&fr.contentWindow.vooaltoCounts;
-    if(c)updateBadge(c.alta||0);
-  }catch(e){}
-}
-setInterval(pollCounts,3000);
+/* Sem polling: a catalogação envia os counts quando renderiza, evita setInterval de 3s */
+function vooaltoCountsFrom(e){try{return e&&e.data&&e.data.type==='vooalto-counts';}catch(_){return false;}}
 
 function showProject(key){
   activeProject=key;

@@ -2303,7 +2303,9 @@ const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','s
 const CAMPOS_CE=['dc_nome','dc_doc','dc_tel','dc_end','dc_cidade','dc_cep','dc_vendedor','tipoTecido'];
 let undoStack=[],redoStack=[],snapTimer=null;
 let undoSeqStack=[],redoSeqStack=[],v7OpSeq=0,v7SuppressSnap=false;
+let snapLastSig=''; // assinatura LEVE da última mudança (evita JSON.stringify pesado enquanto o usuário digita)
 
+// Retorna o estado completo sem dupla-serialização (o retorno ainda pode ter dataURL de imagens)
 function capState(){
 const d={};
 CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el)d[id]=el.value;});
@@ -2313,7 +2315,27 @@ const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{
 d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
 d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0}));
-return JSON.parse(JSON.stringify(d));
+return d;
+}
+// Assinatura LEVE do estado — NÃO inclui src de imagens (que podem ser MBs), mas cobre todos os campos de texto e metadados das camadas.
+// Serve para detectar "nada mudou" sem serializar o blob das imagens.
+function _snapSig(){
+const p=[];
+CAMPOS_INPUT.forEach(id=>{const el=$(id);p.push(id+'='+(el?el.value:''));});
+CAMPOS_CE.forEach(id=>{const el=$(id);p.push(id+'='+(el?el.innerHTML:''));});
+document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{p.push('g'+i+'='+el.value);});
+p.push('ncores='+document.querySelectorAll('#coresList [id^="ci_"]').length);
+p.push('nlayers='+layers.length);
+layers.forEach((l,i)=>{
+  let s=l.type+'|'+l.xp.toFixed(3)+','+l.yp.toFixed(3)+','+l.wp.toFixed(3)+','+l.hp.toFixed(3)+'|'+(l.rot||0);
+  if(l.type==='txt')s+='|'+(l.txt||'').slice(0,40)+'|'+(l.font||'')+'|'+l.size+'|'+l.color;
+  if(l.type==='img')s+='|'+(l.src?'img':l.src); // só indica HÁ imagem (evita serializar dataURL)
+  if(l.type==='arr')s+='|'+l.color+'|'+(l.stroke||'')+'|'+l.arStyle;
+  if(l.type==='rect'||l.type==='circle')s+='|'+(l.fillColor||'')+'|'+(l.strokeColor||'')+'|'+(l.strokeWidth||0);
+  p.push('L'+i+':'+s);
+});
+paginas.forEach(pg=>{p.push('pg'+pg.id+'='+pg.layers.length);});
+return p.join('');
 }
 function serLayer(l){
 const b={id:l.id,type:l.type,xp:l.xp,yp:l.yp,wp:l.wp,hp:l.hp,rot:l.rot||0,z:l.z};
@@ -2352,9 +2374,27 @@ salvarNum();calcTotal();
 function snap(){
 if(v7SuppressSnap)return;
 clearTimeout(snapTimer);snapTimer=setTimeout(()=>{
-const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(s))return;
-undoStack.push(s);undoSeqStack.push(++v7OpSeq);if(undoStack.length>60){undoStack.shift();undoSeqStack.shift();}redoStack=[];redoSeqStack=[];updUR();
-},400);
+// Compara por assinatura leve primeiro — evita JSON.stringify pesado quando nada mudou
+const sig=_snapSig();
+if(sig===snapLastSig)return;
+const st=capState();
+// Serialização SÓ quando realmente há mudança (e apenas uma vez para comparação/push)
+if(undoStack.length){
+  try{
+    const prev=undoStack[undoStack.length-1];
+    // Comparação estruturada rápida: mesmos campos + layers iguais (src de imagem compara por referência, não stringify)
+    let eq=true;
+    for(const k of CAMPOS_INPUT){if((st[k]||'')!==(prev[k]||'')){eq=false;break;}}
+    if(eq)for(const k of CAMPOS_CE){if((st[k]||'')!==(prev[k]||'')){eq=false;break;}}
+    if(eq){const g1=st._grade||{},g2=prev._grade||{};for(const i in g1){if(g1[i]!==g2[i]){eq=false;break;}}}
+    if(eq)eq=(st._layers||[]).length===(prev._layers||[]).length;
+    if(eq)eq=(st._paginasDetalhe||[]).length===(prev._paginasDetalhe||[]).length;
+    if(eq)return;
+  }catch(_){}
+}
+snapLastSig=sig;
+undoStack.push(st);undoSeqStack.push(++v7OpSeq);if(undoStack.length>40){undoStack.shift();undoSeqStack.shift();}redoStack=[];redoSeqStack=[];updUR();
+},800);
 }
 function undo(){if(!undoStack.length)return;redoStack.push(capState());redoSeqStack.push(undoSeqStack.pop());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
 function redo(){if(!redoStack.length)return;undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop());restState(redoStack.pop());updUR();toast('↪ Refeito');}
@@ -3179,36 +3219,152 @@ function novaFicha() {
 }
 
 /* ══ Preenchimento rápido ══ */
-function abrirPreenchimentoRapido() {
-  if(!$('v4QuickModal')) createQuickModal();
-  const setV=(id,v)=>{const el=$(id); if(el) el.value=v||''};
-  setV('v4qCliente', $('dc_nome')?($('dc_nome').textContent||'').trim():'');
-  setV('v4qVendedor', $('dc_vendedor')?($('dc_vendedor').textContent||'').trim():'');
-  setV('v4qTel', $('dc_tel')?($('dc_tel').textContent||'').trim():'');
-  setV('v4qPrevisao', $('previsao')?$('previsao').value:'');
-  setV('v4qTecido', $('tipoTecido')?($('tipoTecido').textContent||'').trim():'');
-  $('v4QuickModal').classList.add('open');
+/* ══ Máscaras de entrada ══ */
+function _maskPhone(v){
+  v=(v||'').replace(/\D/g,'').slice(0,11);
+  if(v.length>10)return v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  if(v.length>6)return v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+  if(v.length>2)return v.replace(/(\d{2})(\d{0,5})/,'($1) $2');
+  return v;
 }
-function createQuickModal(){const m=document.createElement('div');m.id='v4QuickModal';m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Modelo / descrição primeira linha</label><input id="v4qModelo" placeholder="Ex: Camiseta gola polo"></div><div class="v4-field"><label>Valor unitário</label><input id="v4qValor" placeholder="0,00"></div><div class="v4-field"><label>Quantidade</label><input id="v4qQtd" placeholder="0"></div><div class="v4-field" style="grid-column:1/-1"><label>Observação / aviso</label><textarea id="v4qAviso" placeholder="Observação opcional"></textarea></div></div><div class="v4-actions"><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="aplicarPreenchimentoRapido()">Aplicar preenchimento</button></div></div></div>`;document.body.appendChild(m);
-  m.querySelector('.v4-grid').addEventListener('keydown', e => {
-    if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
-    e.preventDefault();
-    const inputs = Array.from(m.querySelectorAll('.v4-grid input'));
-    const i = inputs.indexOf(e.target);
-    if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
+function _maskCep(v){
+  v=(v||'').replace(/\D/g,'').slice(0,8);
+  if(v.length>5)return v.replace(/(\d{5})(\d{0,3})/,'$1-$2');
+  return v;
+}
+
+/* ══ Histórico de clientes lembrou também doc/end/cidade/cep/tecido ══ */
+function fichaRememberClient(){
+  try{
+    const get=id=>($(id)?($(id).textContent||'').trim():'');
+    const n=get('dc_nome');if(!n)return;
+    const rec=JSON.parse(localStorage.getItem('vooalto_ficha_clientes_v7')||'{}');
+    rec[n]={tel:get('dc_tel'),doc:get('dc_doc'),vendedor:get('dc_vendedor'),end:get('dc_end'),cidade:get('dc_cidade'),cep:get('dc_cep'),tecido:get('tipoTecido'),ts:Date.now()};
+    const keys=Object.keys(rec);
+    if(keys.length>80){keys.sort((a,b)=>(rec[b].ts||0)-(rec[a].ts||0));keys.slice(80).forEach(k=>delete rec[k]);}
+    localStorage.setItem('vooalto_ficha_clientes_v7',JSON.stringify(rec));
+  }catch(e){}
+}
+function fichaClientPool(){
+  try{const raw=JSON.parse(localStorage.getItem('vooalto_ficha_clientes_v7')||'{}');const out={};Object.keys(raw).forEach(k=>{const v=raw[k];out[k]=typeof v==='string'?v:(v.tel||'');});return out;}catch(e){return{};}
+}
+function fichaClientFull(nome){try{const raw=JSON.parse(localStorage.getItem('vooalto_ficha_clientes_v7')||'{}');return raw[nome]||null;}catch(e){return null;}}
+
+/* ══ Preenchimento rápido MELHORADO ══ */
+function abrirPreenchimentoRapido() {
+  if(!$('v4QuickModal'))createQuickModal();
+  const m=$('v4QuickModal');
+  const setV=(id,v)=>{const el=m.querySelector('#'+id);if(el)el.value=v||'';};
+  setV('v4qCliente',$('dc_nome')?($('dc_nome').textContent||'').trim():'');
+  setV('v4qDoc',$('dc_doc')?($('dc_doc').textContent||'').trim():'');
+  setV('v4qVendedor',$('dc_vendedor')?($('dc_vendedor').textContent||'').trim():'');
+  setV('v4qTel',_maskPhone($('dc_tel')?($('dc_tel').textContent||'').trim():''));
+  setV('v4qPrevisao',$('previsao')?$('previsao').value:'');
+  setV('v4qTecido',$('tipoTecido')?($('tipoTecido').textContent||'').trim():'');
+  setV('v4qEnd',$('dc_end')?($('dc_end').textContent||'').trim():'');
+  setV('v4qCidade',$('dc_cidade')?($('dc_cidade').textContent||'').trim():'');
+  setV('v4qCep',$('dc_cep')?($('dc_cep').textContent||'').trim():'');
+  setV('v4qData',$('fichaData')?$('fichaData').value:new Date().toISOString().split('T')[0]);
+  setV('v4qModelo',document.querySelector('#prodLinhas tr input')?(document.querySelector('#prodLinhas tr input').value||''):'');
+  setV('v4qValor','');setV('v4qQtd','');setV('v4qAviso','');
+  // Atualiza datalist
+  const pool=fichaClientPool();const dl=m.querySelector('#v4qClienteList');dl.innerHTML='';
+  Object.keys(pool).slice(0,80).forEach(n=>{const o=document.createElement('option');o.value=n;dl.appendChild(o);});
+  m.classList.add('open');
+  setTimeout(()=>{const inp=m.querySelector('#v4qCliente');if(inp){try{inp.focus();inp.select();}catch(e){}}},50);
+}
+function createQuickModal(){
+  const m=document.createElement('div');m.id='v4QuickModal';
+  m.innerHTML=`<div class="v4-modal-card" style="width:min(760px,96vw);max-height:92vh;overflow:auto">
+  <div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div>
+  <div class="v4-modal-body">
+  <div style="font-size:11px;color:#64748b;margin-bottom:10px">Preencha só o que precisar. Pressione Enter para avançar; no último campo aplica os dados. Clientes recentes aparecem na lista.</div>
+  <div class="v4-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+    <div class="v4-field" style="grid-column:1/-1;position:relative"><label>Cliente (busca automática)</label><input id="v4qCliente" list="v4qClienteList" autocomplete="off" placeholder="Nome do cliente"><datalist id="v4qClienteList"></datalist></div>
+    <div class="v4-field"><label>CPF/CNPJ</label><input id="v4qDoc" placeholder="000.000.000-00"></div>
+    <div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div>
+    <div class="v4-field"><label>Telefone/WhatsApp</label><input id="v4qTel" placeholder="(62) 99999-9999" inputmode="tel"></div>
+    <div class="v4-field"><label>Previsão de entrega</label><input id="v4qPrevisao" placeholder="Ex: 30 dias / dd/mm/aaaa"></div>
+    <div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div>
+    <div class="v4-field"><label>Endereço</label><input id="v4qEnd" placeholder="Rua, número, bairro"></div>
+    <div class="v4-field"><label>Cidade</label><input id="v4qCidade" placeholder="Goiânia - GO"></div>
+    <div class="v4-field"><label>CEP</label><input id="v4qCep" placeholder="00000-000" inputmode="numeric" maxlength="9"></div>
+    <div class="v4-field"><label>Data da ficha</label><input id="v4qData" type="date"></div>
+    <div class="v4-field" style="grid-column:1/-1"><label>Modelo / descrição primeira linha</label><input id="v4qModelo" placeholder="Ex: Camiseta gola polo"></div>
+    <div class="v4-field"><label>Valor unitário (R$)</label><input id="v4qValor" placeholder="0,00" inputmode="decimal"></div>
+    <div class="v4-field"><label>Quantidade</label><input id="v4qQtd" placeholder="0" inputmode="numeric"></div>
+    <div class="v4-field" style="grid-column:1/-1"><label>Observação / aviso (opcional)</label><textarea id="v4qAviso" rows="2" placeholder="Deixe em branco para manter o aviso padrão"></textarea></div>
+  </div>
+  <div class="v4-actions" style="margin-top:12px"><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="aplicarPreenchimentoRapido()">✓ Aplicar preenchimento</button></div>
+  </div></div>`;
+  document.body.appendChild(m);
+
+  // Preenchimento automático ao escolher cliente do datalist
+  const cliInp=m.querySelector('#v4qCliente');
+  const fillFromClient=nome=>{const c=fichaClientFull(nome);if(!c)return;
+    if(c.tel&&!m.querySelector('#v4qTel').value)m.querySelector('#v4qTel').value=_maskPhone(c.tel);
+    if(c.doc&&!m.querySelector('#v4qDoc').value)m.querySelector('#v4qDoc').value=c.doc;
+    if(c.vendedor&&!m.querySelector('#v4qVendedor').value)m.querySelector('#v4qVendedor').value=c.vendedor;
+    if(c.end&&!m.querySelector('#v4qEnd').value)m.querySelector('#v4qEnd').value=c.end;
+    if(c.cidade&&!m.querySelector('#v4qCidade').value)m.querySelector('#v4qCidade').value=c.cidade;
+    if(c.cep&&!m.querySelector('#v4qCep').value)m.querySelector('#v4qCep').value=_maskCep(c.cep);
+    if(c.tecido&&!m.querySelector('#v4qTecido').value)m.querySelector('#v4qTecido').value=c.tecido;
+  };
+  cliInp.addEventListener('input',()=>{const nome=cliInp.value.trim();const pool=fichaClientPool();if(pool[nome])fillFromClient(nome);});
+  cliInp.addEventListener('change',()=>fillFromClient(cliInp.value.trim()));
+
+  // Máscaras de telefone e CEP em tempo real
+  const telInp=m.querySelector('#v4qTel');
+  telInp.addEventListener('input',()=>{telInp.value=_maskPhone(telInp.value);});
+  const cepInp=m.querySelector('#v4qCep');
+  cepInp.addEventListener('input',()=>{cepInp.value=_maskCep(cepInp.value);});
+
+  // Navegação por Enter entre os campos (último aplica)
+  const fields=[...m.querySelectorAll('input,textarea')].filter(el=>!el.readOnly);
+  fields.forEach((f,idx)=>{
+    f.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&!e.shiftKey&&!(e.ctrlKey||e.metaKey)){
+        e.preventDefault();
+        if(idx===fields.length-1){aplicarPreenchimentoRapido();}
+        else{const nxt=fields[idx+1];if(nxt){nxt.focus();if(nxt.select)try{nxt.select();}catch(_){}}}
+      }
+    });
   });
 }
-function fecharPreenchimentoRapido(){const m=$('v4QuickModal'); if(m) m.classList.remove('open');}
+function fecharPreenchimentoRapido(){const m=$('v4QuickModal');if(m)m.classList.remove('open');}
 function aplicarPreenchimentoRapido(){
-  const setCE=(id,v)=>{const el=$(id); if(el) el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$(id); if(el) el.value=v||''};
-  setCE('dc_nome',$('v4qCliente').value); setCE('dc_vendedor',$('v4qVendedor').value); setCE('dc_tel',$('v4qTel').value);
-  setVal('previsao',$('v4qPrevisao').value); setCE('tipoTecido',$('v4qTecido').value);
-  if($('v4qAviso').value) setVal('avisoTxt',$('v4qAviso').value);
-  const first=document.querySelector('#prodLinhas tr');
-  if(first){const inputs=first.querySelectorAll('input'); if(inputs[0])inputs[0].value=$('v4qModelo').value; if(inputs[1])inputs[1].value=$('v4qValor').value; if(inputs[2])inputs[2].value=$('v4qQtd').value; const id=first.id.replace('ln_',''); if(typeof recalcL==='function') recalcL(parseInt(id));}
-  if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap();
-  fecharPreenchimentoRapido(); toast('Preenchimento aplicado.','sucesso');
-  fichaRememberClient(); fichaUpdateReadiness();
+  const m=$('v4QuickModal');if(!m)return;
+  const v=id=>{const el=m.querySelector('#'+id);return el?(el.value||'').trim():'';};
+  const setCE=(id,val)=>{const el=$(id);if(el)el.innerHTML=val||'';};
+  const setVal=(id,val)=>{const el=$(id);if(el)el.value=val||'';};
+  setCE('dc_nome',v('v4qCliente'));
+  setCE('dc_doc',v('v4qDoc'));
+  setCE('dc_vendedor',v('v4qVendedor'));
+  setCE('dc_tel',v('v4qTel'));
+  setCE('dc_end',v('v4qEnd'));
+  setCE('dc_cidade',v('v4qCidade'));
+  setCE('dc_cep',v('v4qCep'));
+  setVal('previsao',v('v4qPrevisao'));
+  setCE('tipoTecido',v('v4qTecido'));
+  const dt=v('v4qData');if(dt)setVal('fichaData',dt);
+  if(v('v4qAviso'))setVal('avisoTxt',v('v4qAviso'));
+  // Linha de modelo: se não houver nenhuma linha, cria uma; senão usa a primeira
+  let first=document.querySelector('#prodLinhas tr');
+  if(!first){criarLinha();first=document.querySelector('#prodLinhas tr');}
+  if(first){
+    const inputs=first.querySelectorAll('input');
+    if(v('v4qModelo')&&inputs[0])inputs[0].value=v('v4qModelo');
+    if(v('v4qValor')&&inputs[1])inputs[1].value=v('v4qValor');
+    if(v('v4qQtd')&&inputs[2])inputs[2].value=v('v4qQtd');
+    const id=first.id.replace('ln_','');if(typeof recalcL==='function')recalcL(parseInt(id));
+  }
+  if(typeof atualizarRodapes==='function')atualizarRodapes();
+  if(typeof calcTotal==='function')calcTotal();
+  if(typeof sincTodasPaginas==='function')sincTodasPaginas();
+  if(typeof snap==='function')snap();
+  fecharPreenchimentoRapido();
+  toast('⚡ Preenchimento aplicado.','sucesso',1800);
+  fichaRememberClient();fichaUpdateReadiness();
 }
 
 /* ══ Receber ficha técnica para editar (vem da catalogação) ══ */
@@ -3227,28 +3383,36 @@ window.addEventListener('message', function(e) {
 
 /* ══ Limpar para nova ficha ══ */
 function limparParaNovaFicha(novoNum) {
+  v7SuppressSnap=true;
   try{ localStorage.removeItem('vooalto_v7_ficha_ativa'); }catch(e){}
+  try{ undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];snapLastSig='';updUR(); }catch(e){}
   try{ v7PageUndoStack=[]; v7PageRedoStack=[]; }catch(e){}
+  editingFichaId=null;editingFichaNome='';
   if(!document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
     try{ v7RestaurarPaginaP1(null); }catch(e){ console.warn('restaurar p1',e); }
   }
-  ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id => {
-    const el = $(id); if(el) el.innerHTML = '';
-  });
-  ['previsao','entradaVal'].forEach(id => { const el = $(id); if(el) el.value = ''; });
+  // Limpa páginas extras que possam ter ficado abertas de ficha anterior
+  if(typeof fecharPaginaExtra==='function'){
+    const extras=[...document.querySelectorAll('[id^="folha"]')].filter(el=>el.id!=='folha1');
+    extras.forEach(el=>{try{fecharPaginaExtra(el.id);}catch(e){}});
+  }
+  ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id=>{const el=$(id);if(el)el.innerHTML='';});
+  ['previsao','entradaVal'].forEach(id=>{const el=$(id);if(el)el.value='';});
   aplicarNumeroFicha(novoNum);
-  const hoje = new Date();
-  const fd = $('fichaData'); if(fd) fd.value = hoje.toISOString().split('T')[0];
-  $('prodLinhas').innerHTML = ''; linhaId = 0;
-  criarLinha(); criarLinha(); criarLinha(); calcTotal();
-  document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach(el => { el.value=''; el.classList.remove('v'); });
+  const hoje=new Date();const fd=$('fichaData');if(fd)fd.value=hoje.toISOString().split('T')[0];
+  const tb=$('prodLinhas');if(tb)tb.innerHTML='';linhaId=0;
+  criarLinha();criarLinha();criarLinha();calcTotal();
+  document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach(el=>{el.value='';el.classList.remove('v');});
   recalcGrade();
-  $('coresList').innerHTML = ''; corId = 0; adicionarCor();
-  clearAllLayers(); updPh(); updList();
-  const sep = $('sepTxt'); if(sep) sep.value = '▸ Detalhes do Modelo ◂';
-  const aviso = $('avisoTxt'); if(aviso) aviso.value = '⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
-  atualizarRodapes(); sincTodasPaginas(); snap();
-  toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!', 'sucesso', 3000);
+  const cl=$('coresList');if(cl)cl.innerHTML='';corId=0;adicionarCor();
+  clearAllLayers();updPh();updList();
+  const sep=$('sepTxt');if(sep)sep.value='▸ Detalhes do Modelo ◂';
+  const aviso=$('avisoTxt');if(aviso)aviso.value='⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
+  if(typeof atualizarRodapes==='function')atualizarRodapes();
+  if(typeof sincTodasPaginas==='function')sincTodasPaginas();
+  v7SuppressSnap=false;snap();
+  const nomeEl=$('dc_nome');if(nomeEl){try{nomeEl.focus();}catch(e){}}
+  toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!','sucesso',2600);
 }
 
 /* ══ Importar ══ */
@@ -3484,12 +3648,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
   const $id=id=>document.getElementById(id);
   const sizesM=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
   const sizesI=['2a','4a','6a','8a','10a','12a','14a'];
-  function createBetterQuickModal(){let m=$id('v4QuickModal'); if(m) m.remove(); m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus'; const modelRow=()=>`<tr data-row><td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove()">✕</button></td></tr>`; const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric"></label>`).join(''); m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido completo</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Aviso / observação</label><input id="v4qAviso" placeholder="Opcional"></div></div><div class="v4-section-title"><span>Modelos da produção</span><button class="v4-mini-btn" onclick="v4AddModeloRow()">+ Adicionar modelo</button></div><table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:120px">Valor unit.</th><th style="width:90px">Qtd</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows">${modelRow()}</tbody></table><div class="v4-section-title"><span>Grade de tamanhos</span><small>Preencha só os tamanhos usados</small></div><div class="v4-grade-box"><div class="v4-grade-card"><h4>Masculino</h4><div class="v4-grade-grid">${gradeInputs('m',sizesM)}</div></div><div class="v4-grade-card"><h4>Baby look fem.</h4><div class="v4-grade-grid">${gradeInputs('b',sizesM)}</div></div><div class="v4-grade-card inf" style="grid-column:1/-1"><h4>Infantil</h4><div class="v4-grade-grid">${gradeInputs('i',sizesI)}</div></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar tudo</button></div></div></div>`; document.body.appendChild(m);}
-  window.v4AddModeloRow=function(){const body=$id('v4ModelRows'); if(!body)return; const tr=document.createElement('tr'); tr.innerHTML='<td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest(\'tr\').remove()">✕</button></td>'; body.appendChild(tr)};
-  window.v4AbrirPreenchimentoRapido=function(){createBetterQuickModal(); $id('v4qCliente').value=($id('dc_nome')?.textContent||'').trim(); $id('v4qVendedor').value=($id('dc_vendedor')?.textContent||'').trim(); $id('v4qTel').value=($id('dc_tel')?.textContent||'').trim(); $id('v4qPrevisao').value=$id('previsao')?.value||''; $id('v4qTecido').value=$id('tipoTecido')?.textContent||''; fillCurrentGradeToQuick(); $id('v4QuickModal').classList.add('open');};
-  function fillCurrentGradeToQuick(){document.querySelectorAll('.gi[data-g="m"]').forEach((el,i)=>{if($id('v4g_m_'+sizesM[i]))$id('v4g_m_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="b"]').forEach((el,i)=>{if($id('v4g_b_'+sizesM[i]))$id('v4g_b_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="i"]').forEach((el,i)=>{if($id('v4g_i_'+sizesI[i]))$id('v4g_i_'+sizesI[i]).value=el.value});}
-  window.v4AplicarPreenchimentoRapido=function(){const setCE=(id,v)=>{const el=$id(id);if(el)el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$id(id);if(el)el.value=v||''}; setCE('dc_nome',$id('v4qCliente').value); setCE('dc_vendedor',$id('v4qVendedor').value); setCE('dc_tel',$id('v4qTel').value); setVal('previsao',$id('v4qPrevisao').value); setCE('tipoTecido',$id('v4qTecido').value); if($id('v4qAviso').value)setVal('avisoTxt',$id('v4qAviso').value); const rows=[...document.querySelectorAll('#v4ModelRows tr')].map(r=>({modelo:r.querySelector('[data-modelo]').value,valor:r.querySelector('[data-valor]').value,qtd:r.querySelector('[data-qtd]').value})).filter(r=>r.modelo||r.valor||r.qtd); if(rows.length){$id('prodLinhas').innerHTML=''; if(typeof linhaId!=='undefined') linhaId=0; rows.forEach(r=>criarLinha(r.modelo,r.valor,r.qtd)); document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_','')); if(typeof recalcL==='function')recalcL(id);});} applyGrade('m',sizesM); applyGrade('b',sizesM); applyGrade('i',sizesI); if(typeof recalcGrade==='function')recalcGrade(); if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap(); v4FecharPreenchimentoRapido(); toast('Preenchimento completo aplicado.','sucesso');};
-  function applyGrade(prefix,arr){const els=document.querySelectorAll(`.gi[data-g="${prefix}"]`); arr.forEach((t,i)=>{const v=$id(`v4g_${prefix}_${t}`)?.value||''; if(els[i]){els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0);}})}
+  function v4FecharPreenchimentoRapido(){if(typeof fecharPreenchimentoRapido==="function")fecharPreenchimentoRapido();}
   function enhanceTextToolbar(){const tb=$id('textTb'); if(tb&&!tb.dataset.v4TextReady){tb.dataset.v4TextReady='1';v7EnhanceTxtTb('textTb');} if(typeof v7EnhanceTxtTbExtra==='function')v7EnhanceTxtTbExtra();}
 function v7EnhanceTxtTb(tbId){
   const tb=$id(tbId); if(!tb||tb.dataset.v4TbReady)return; tb.dataset.v4TbReady='1';

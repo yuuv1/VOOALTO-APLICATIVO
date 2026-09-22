@@ -850,6 +850,17 @@ function initCatalogView(){
 load();loadTheme();initCatalogView();migratePdfsToDB().then(renderAll);
 window.addEventListener('DOMContentLoaded',initCatalogView);
 window.addEventListener('load',initCatalogView);
-setInterval(checkPendingFicha,2000);
-setInterval(checkPendingFichaUpdate,2000);
+/* Escuta o localStorage event (disparado SOMENTE quando o Criador salva em outra janela/aba, 0 CPU ocioso) */
+function onStorage(ev){
+  if(!ev||!ev.key)return;
+  if(ev.key==='vooalto_pending_ficha_catalog'){checkPendingFicha();return;}
+  if(ev.key==='vooalto_pending_ficha_update'){checkPendingFichaUpdate();return;}
+}
+window.addEventListener('storage',onStorage);
+/* Polling DE GRADE baixa apenas no 1os 5 segundos (cobre carregamento inicial cross-iframe que não dispara storage event) — depois desliga. */
+let _pollTicks=0;
+const _bootPoll=setInterval(()=>{
+  checkPendingFicha();checkPendingFichaUpdate();
+  if(++_pollTicks>=3)clearInterval(_bootPoll);
+},1000);
 </script></body></html>
