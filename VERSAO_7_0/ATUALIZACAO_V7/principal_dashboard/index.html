@@ -714,15 +714,24 @@ async function viewPdf(id){
   const data=await getPdfData(id);
   if(!data||!String(data).startsWith('data:application/pdf'))return toast('Esta ficha não tem PDF anexado.');
   try{
-    // converte dataURL em Blob e abre em nova aba (visualizador nativo)
+    // Converte dataURL em Blob e abre em nova aba usando link <a target="_blank"> clicado programaticamente.
+    // Esse método é o único que funciona 100% em PWA/webview: NUNCA substitui a página do app,
+    // e não depende de window.open retornar um objeto (que volta null em alguns PWAs).
     const res=await fetch(data);const blob=await res.blob();
     const url=URL.createObjectURL(blob);
-    const w=window.open(url,'_blank','noopener');
-    if(!w){location.href=url;}
-    else{setTimeout(()=>URL.revokeObjectURL(url),60000);}
+    const a=document.createElement('a');
+    a.href=url;
+    a.target='_blank';
+    a.rel='noopener noreferrer';
+    a.style.display='none';
+    // NÃO definimos a.download para que o navegador ABRA o PDF na aba nova
+    // (em vez de forçar download) usando o visualizador nativo.
+    document.body.appendChild(a);a.click();a.remove();
+    // Libera o blob depois de um tempo
+    setTimeout(()=>URL.revokeObjectURL(url),120000);
   }catch(e){
-    // fallback: abre o data URL direto
-    window.open(data,'_blank','noopener');
+    console.error('Erro ao abrir PDF:',e);
+    toast('❌ Não foi possível abrir o PDF. Tente permitir popups.', 'erro', 4000);
   }
 }
 /* Fechar modais com ESC ou clique no backdrop */
