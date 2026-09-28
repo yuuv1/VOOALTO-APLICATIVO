@@ -795,7 +795,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="sb-btn-icon">🗋</div>
 <span class="sb-btn-label">Nova ficha</span>
 </button>
-<button class="sb-btn sb-btn-accent" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelo, valores e aviso de uma vez">
+<button class="sb-btn sb-btn-accent" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelos, valores, grade de tamanhos e aviso de uma vez só">
 <div class="sb-btn-icon">⚡</div>
 <span class="sb-btn-label">Preenchimento rápido</span>
 </button>
@@ -3169,7 +3169,10 @@ function novaFicha() {
   fichaHideSuggestions(); fichaUpdateReadiness();
 }
 
-/* ══ Preenchimento rápido ══ */
+/* ══ Preenchimento rápido (V7.1 — guiado por etapas, com modelos, grade e totais) ══ */
+const V4Q_SIZES_M=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
+const V4Q_SIZES_I=['2a','4a','6a','8a','10a','12a','14a'];
+
 function abrirPreenchimentoRapido() {
   if(!$('v4QuickModal')) createQuickModal();
   const setV=(id,v)=>{const el=$(id); if(el) el.value=v||''};
@@ -3178,29 +3181,170 @@ function abrirPreenchimentoRapido() {
   setV('v4qTel', $('dc_tel')?($('dc_tel').textContent||'').trim():'');
   setV('v4qPrevisao', $('previsao')?$('previsao').value:'');
   setV('v4qTecido', $('tipoTecido')?($('tipoTecido').textContent||'').trim():'');
+  setV('v4qAviso', $('avisoTxt')?$('avisoTxt').value:'');
+  setV('v4qEntrada', $('entradaVal')?$('entradaVal').value:'');
+  /* lembra o último vendedor e tecido usados (agiliza a próxima ficha) */
+  try{
+    const pref=JSON.parse(localStorage.getItem('vooalto_ficha_quick_v7')||'{}');
+    if(!$('v4qVendedor').value&&pref.vendedor)setV('v4qVendedor',pref.vendedor);
+    if(!$('v4qTecido').value&&pref.tecido)setV('v4qTecido',pref.tecido);
+  }catch(e){}
+  /* traz os modelos já lançados na ficha (nada se perde ao aplicar) */
+  const tb=$('v4ModelRows');
+  if(tb){
+    tb.innerHTML='';
+    const rows=[...document.querySelectorAll('#prodLinhas tr')].map(tr=>{
+      const i=tr.querySelectorAll('input');
+      return {m:(i[0]?i[0].value:''),v:(i[1]?i[1].value:''),q:(i[2]?i[2].value:'')};
+    });
+    (rows.length?rows:[{m:'',v:'',q:''}]).forEach(r=>v4AddModeloRow(r.m,r.v,r.q));
+  }
+  /* traz a grade de tamanhos atual */
+  const fillG=(pref,els,arr)=>els.forEach((el,i)=>{const t=arr[i];if(t&&$('v4g_'+pref+'_'+t))$('v4g_'+pref+'_'+t).value=el.value||''});
+  fillG('m',document.querySelectorAll('.gi[data-g="m"]'),V4Q_SIZES_M);
+  fillG('b',document.querySelectorAll('.gi[data-g="b"]'),V4Q_SIZES_M);
+  fillG('i',document.querySelectorAll('.gi[data-g="i"]'),V4Q_SIZES_I);
+  v4AtualizarClientesDL();
+  v4QuickTotals();
   $('v4QuickModal').classList.add('open');
+  const first=$('v4qCliente'); if(first)setTimeout(()=>{try{first.focus();first.select&&first.select()}catch(e){}},60);
 }
-function createQuickModal(){const m=document.createElement('div');m.id='v4QuickModal';m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Modelo / descrição primeira linha</label><input id="v4qModelo" placeholder="Ex: Camiseta gola polo"></div><div class="v4-field"><label>Valor unitário</label><input id="v4qValor" placeholder="0,00"></div><div class="v4-field"><label>Quantidade</label><input id="v4qQtd" placeholder="0"></div><div class="v4-field" style="grid-column:1/-1"><label>Observação / aviso</label><textarea id="v4qAviso" placeholder="Observação opcional"></textarea></div></div><div class="v4-actions"><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="aplicarPreenchimentoRapido()">Aplicar preenchimento</button></div></div></div>`;document.body.appendChild(m);
-  m.querySelector('.v4-grid').addEventListener('keydown', e => {
-    if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
-    e.preventDefault();
-    const inputs = Array.from(m.querySelectorAll('.v4-grid input'));
-    const i = inputs.indexOf(e.target);
-    if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
+function createQuickModal(){
+  const m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus';
+  const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric" data-grade="1"></label>`).join('');
+  const gradeCard=(prefix,titulo,cls,arr)=>`<div class="v4-grade-card ${cls||''}"><h4>${titulo}</h4><div class="v4-grade-grid">${gradeInputs(prefix,arr)}</div></div>`;
+  m.innerHTML=`
+  <div class="v4-modal-card">
+    <div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div>
+    <div class="v4-modal-body">
+      <p class="v4-hint">Preencha o que souber e clique em <b>Aplicar tudo</b> no final. <b>Enter</b> pula para o próximo campo · <b>Esc</b> fecha · <b>Ctrl+Enter</b> aplica.</p>
+      <div class="v4-step"><span class="n">1</span> Dados do pedido <small>cliente, prazo e tecido</small></div>
+      <div class="v4-grid">
+        <div class="v4-field"><label>Cliente</label><input id="v4qCliente" list="v4qClientesDL" placeholder="Digite o nome — clientes conhecidos aparecem" autocomplete="off"><datalist id="v4qClientesDL"></datalist><span class="v4-hint">escolhendo um cliente conhecido, o telefone preenche sozinho</span></div>
+        <div class="v4-field"><label>Vendedor</label><input id="v4qVendedor" placeholder="Quem atendeu"></div>
+        <div class="v4-field"><label>Telefone</label><input id="v4qTel" placeholder="Ex: 62 99999-0000"></div>
+        <div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div>
+        <div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div>
+        <div class="v4-field"><label>Entrada (R$) — opcional</label><input id="v4qEntrada" placeholder="0,00" inputmode="decimal"></div>
+      </div>
+      <div class="v4-step"><span class="n">2</span> Modelos da produção <small>valor × quantidade — o total aparece sozinho</small></div>
+      <table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:110px">Valor unit.</th><th style="width:80px">Qtd</th><th style="width:92px">Total</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows"></tbody></table>
+      <button class="v4-mini-btn" style="margin-top:6px" onclick="v4AddModeloRow()">+ Adicionar modelo</button>
+      <div class="v4-step"><span class="n">3</span> Grade de tamanhos <small>preencha só os tamanhos usados</small></div>
+      <div class="v4-grade-box">
+        ${gradeCard('m','Masculino','',V4Q_SIZES_M)}
+        ${gradeCard('b','Baby look fem.','',V4Q_SIZES_M)}
+        ${gradeCard('i','Infantil','inf',V4Q_SIZES_I)}
+      </div>
+      <div class="v4-step"><span class="n">4</span> Observação / aviso <small>vai para o rodapé da ficha</small></div>
+      <div class="v4-field" style="grid-column:1/-1"><textarea id="v4qAviso" placeholder="Observação opcional — se deixar vazio, mantém o aviso atual da ficha"></textarea></div>
+    </div>
+    <div class="v4-actions">
+      <div class="v4-summary"><span class="v4-total-line">Total dos modelos: <b id="v4qTotal">R$ 0,00</b></span><span class="v4-total-line">Peças na grade: <b id="v4qPecas">0</b></span></div>
+      <button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button>
+      <button class="v4-apply" onclick="aplicarPreenchimentoRapido()">✅ Aplicar tudo</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();aplicarPreenchimentoRapido();return}
+    if(e.key==='Enter'&&e.target.tagName==='INPUT'){
+      e.preventDefault();
+      const inputs=[...m.querySelectorAll('input')];
+      const i=inputs.indexOf(e.target);
+      if(i>=0&&inputs[i+1])inputs[i+1].focus();
+      else aplicarPreenchimentoRapido();
+    }
+    if(e.key==='Escape'){e.preventDefault();fecharPreenchimentoRapido()}
   });
+  m.addEventListener('input',()=>{v4QuickTotals();v4AutofillTel()});
+  m.addEventListener('change',()=>{v4AutofillTel()});
+  m.addEventListener('click',e=>{if(e.target===m)fecharPreenchimentoRapido()});
 }
 function fecharPreenchimentoRapido(){const m=$('v4QuickModal'); if(m) m.classList.remove('open');}
+function v4AddModeloRow(modelo='',valor='',qtd=''){
+  const tb=$('v4ModelRows'); if(!tb)return;
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input data-modelo placeholder="Ex: Camiseta gola polo" value="${esc(modelo)}"></td><td><input data-valor placeholder="0,00" inputmode="decimal" value="${esc(valor)}"></td><td><input data-qtd placeholder="0" inputmode="numeric" value="${esc(qtd)}"></td><td class="v4-row-total">—</td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove();v4QuickTotals()" title="Remover este modelo">✕</button></td>`;
+  tb.appendChild(tr);
+  v4QuickTotals();
+}
+function v4AtualizarClientesDL(){
+  const dl=$('v4qClientesDL'); if(!dl)return;
+  let pool={};
+  try{pool=fichaClientPool()}catch(e){}
+  dl.innerHTML=Object.keys(pool).sort((a,b)=>a.localeCompare(b)).map(n=>{
+    const tel=pool[n]||'';
+    return `<option value="${n.replace(/"/g,'&quot;')}">${tel?'📞 '+tel:'cliente conhecido'}</option>`;
+  }).join('');
+}
+function v4AutofillTel(){
+  const nome=($('v4qCliente')?$('v4qCliente').value:'').trim();
+  const tel=$('v4qTel');
+  if(!nome||!tel)return;
+  let pool={};
+  try{pool=fichaClientPool()}catch(e){}
+  if(pool[nome]&&(!tel.value||!tel.value.trim()))tel.value=pool[nome];
+}
+function v4QuickTotals(){
+  const m=$('v4QuickModal'); if(!m)return;
+  let total=0,pecas=0;
+  m.querySelectorAll('#v4ModelRows tr').forEach(tr=>{
+    const iv=tr.querySelector('[data-valor]'),iq=tr.querySelector('[data-qtd]'),rt=tr.querySelector('.v4-row-total');
+    const v=parseFloat(((iv&&iv.value)||'0').replace(',','.'))||0;
+    const q=parseFloat((iq&&iq.value)||'0')||0;
+    const t=v*q; total+=t;
+    if(rt)rt.textContent=(v&&q)?'R$\u00a0'+fmt(t):'—';
+  });
+  m.querySelectorAll('input[data-grade]').forEach(inp=>{pecas+=parseInt(inp.value)||0});
+  const tt=$('v4qTotal'),tp=$('v4qPecas');
+  if(tt)tt.textContent='R$\u00a0'+fmt(total);
+  if(tp)tp.textContent=pecas+(pecas===1?' peça':' peças');
+}
 function aplicarPreenchimentoRapido(){
   const setCE=(id,v)=>{const el=$(id); if(el) el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$(id); if(el) el.value=v||''};
-  setCE('dc_nome',$('v4qCliente').value); setCE('dc_vendedor',$('v4qVendedor').value); setCE('dc_tel',$('v4qTel').value);
+  setCE('dc_nome',$('v4qCliente').value.trim()); setCE('dc_vendedor',$('v4qVendedor').value.trim()); setCE('dc_tel',$('v4qTel').value.trim());
   setVal('previsao',$('v4qPrevisao').value); setCE('tipoTecido',$('v4qTecido').value);
   if($('v4qAviso').value) setVal('avisoTxt',$('v4qAviso').value);
-  const first=document.querySelector('#prodLinhas tr');
-  if(first){const inputs=first.querySelectorAll('input'); if(inputs[0])inputs[0].value=$('v4qModelo').value; if(inputs[1])inputs[1].value=$('v4qValor').value; if(inputs[2])inputs[2].value=$('v4qQtd').value; const id=first.id.replace('ln_',''); if(typeof recalcL==='function') recalcL(parseInt(id));}
+  if($('v4qEntrada')&&$('v4qEntrada').value.trim()!==''){ setVal('entradaVal',$('v4qEntrada').value); if(typeof calcEntrada==='function')calcEntrada(); }
+  /* modelos — substitui as linhas apenas se algo foi preenchido */
+  const rows=[...document.querySelectorAll('#v4ModelRows tr')].map(r=>({
+    modelo:(r.querySelector('[data-modelo]')||{}).value||'',
+    valor:(r.querySelector('[data-valor]')||{}).value||'',
+    qtd:(r.querySelector('[data-qtd]')||{}).value||''
+  })).filter(r=>r.modelo.trim()||r.valor.trim()||r.qtd.trim());
+  if(rows.length){
+    $('prodLinhas').innerHTML='';
+    if(typeof linhaId!=='undefined')linhaId=0;
+    rows.forEach(r=>criarLinha(r.modelo,r.valor,r.qtd));
+    document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_','')); if(typeof recalcL==='function')recalcL(id);});
+  }
+  /* grade de tamanhos */
+  const applyG=(pref,arr)=>{
+    const els=document.querySelectorAll('.gi[data-g="'+pref+'"]');
+    arr.forEach((t,i)=>{
+      const el=$('v4g_'+pref+'_'+t); const v=el?el.value:'';
+      if(els[i]){els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0);}
+    });
+  };
+  applyG('m',V4Q_SIZES_M); applyG('b',V4Q_SIZES_M); applyG('i',V4Q_SIZES_I);
+  if(typeof recalcGrade==='function')recalcGrade();
+  /* lembra vendedor/tecido para a próxima ficha */
+  try{
+    const pref=JSON.parse(localStorage.getItem('vooalto_ficha_quick_v7')||'{}');
+    if($('v4qVendedor').value.trim())pref.vendedor=$('v4qVendedor').value.trim();
+    if($('v4qTecido').value.trim())pref.tecido=$('v4qTecido').value.trim();
+    localStorage.setItem('vooalto_ficha_quick_v7',JSON.stringify(pref));
+  }catch(e){}
   if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap();
   fecharPreenchimentoRapido(); toast('Preenchimento aplicado.','sucesso');
   fichaRememberClient(); fichaUpdateReadiness();
 }
+/* compatibilidade com os antigos atalhos v4 */
+window.v4AbrirPreenchimentoRapido=abrirPreenchimentoRapido;
+window.v4FecharPreenchimentoRapido=fecharPreenchimentoRapido;
+window.v4AplicarPreenchimentoRapido=aplicarPreenchimentoRapido;
 
 /* ══ Receber ficha técnica para editar (vem da catalogação) ══ */
 let editingFichaId = null, editingFichaNome = '';
@@ -3439,6 +3583,20 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 <style id="v4-quickfill-texttools-css">
 /* V4.2 - Preenchimento completo sem painel Canva + texto avançado */
 #v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:#111827;margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:#64748b;text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid #CBD5E1;border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:#fff}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:#111827;color:#fff}.v4-mini-btn.red{background:#FEE2E2;color:#991B1B}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:#111827}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:#64748B;text-transform:uppercase}.v4-grade-grid input{border:1.5px solid #CBD5E1;border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
+
+/* V7.1 — Preenchimento rápido guiado */
+.v4-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#111827;margin:18px 0 8px;flex-wrap:wrap}
+.v4-step .n{flex:0 0 20px;width:20px;height:20px;border-radius:999px;background:#111827;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px}
+.v4-step small{font-weight:700;font-size:9.5px;color:#64748B}
+.v4-hint{display:block;font-size:9.5px;font-weight:600;color:#64748B;line-height:1.45}
+.v4-modal-body>.v4-hint{margin:0 0 12px}
+.v4-field .v4-hint{margin-top:4px}
+.v4-row-total{font-size:11.5px;font-weight:900;color:#0F766E;white-space:nowrap;text-align:right;padding:0 6px!important}
+.v4-plus-table td{vertical-align:middle}
+#v4QuickModal.v4plus .v4-actions{padding:12px 18px;border-top:1px solid #E5E7EB;margin-top:0;background:#F8FAFC;align-items:center;flex-wrap:wrap;gap:10px}
+.v4-summary{margin-right:auto;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.v4-total-line{font-size:10.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+.v4-total-line b{font-size:14px;color:#111827;letter-spacing:0}
 /* Texto avançado estilo Canva, sem painel lateral extra */
 .text-tb{background:rgba(255,255,255,.98)!important;border-radius:16px!important;padding:9px 12px!important;gap:8px!important;box-shadow:0 18px 54px rgba(15,23,42,.20)!important}.text-tb::before{content:'Texto';font-size:9px;font-weight:900;color:#D4187A;text-transform:uppercase;letter-spacing:.8px;margin-right:3px}.tt-sel{min-width:150px!important;font-weight:800!important}.tt-num{width:58px!important;font-weight:900!important}.v4-font-slider{width:120px;accent-color:#111827}.v4-font-presets{display:flex;gap:4px}.v4-font-presets button{border:1px solid #D1D5DB;background:#fff;border-radius:7px;padding:4px 7px;font-size:9px;font-weight:900;cursor:pointer}.v4-font-presets button:hover{background:#F3F4F6}.tl-fontsize-handle{position:absolute;right:-10px;top:50%;width:18px;height:18px;transform:translateY(-50%);border-radius:50%;background:#111827;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:ns-resize;z-index:205;display:none}.txt-layer.sel .tl-fontsize-handle{display:block}.tl-fontsize-handle::after{content:'A';position:absolute;inset:0;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}.txt-layer.sel{outline:2px solid #111827!important;outline-offset:4px!important;border-radius:4px}.txt-layer .tc{border-radius:6px!important}
 @media(max-width:760px){.v4-grade-box{grid-template-columns:1fr}.v4-grade-grid{grid-template-columns:repeat(3,1fr)!important}}
@@ -3473,14 +3631,6 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 <script id="v4-quickfill-texttools-js">
 (function(){
   const $id=id=>document.getElementById(id);
-  const sizesM=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
-  const sizesI=['2a','4a','6a','8a','10a','12a','14a'];
-  function createBetterQuickModal(){let m=$id('v4QuickModal'); if(m) m.remove(); m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus'; const modelRow=()=>`<tr data-row><td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove()">✕</button></td></tr>`; const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric"></label>`).join(''); m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido completo</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Aviso / observação</label><input id="v4qAviso" placeholder="Opcional"></div></div><div class="v4-section-title"><span>Modelos da produção</span><button class="v4-mini-btn" onclick="v4AddModeloRow()">+ Adicionar modelo</button></div><table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:120px">Valor unit.</th><th style="width:90px">Qtd</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows">${modelRow()}</tbody></table><div class="v4-section-title"><span>Grade de tamanhos</span><small>Preencha só os tamanhos usados</small></div><div class="v4-grade-box"><div class="v4-grade-card"><h4>Masculino</h4><div class="v4-grade-grid">${gradeInputs('m',sizesM)}</div></div><div class="v4-grade-card"><h4>Baby look fem.</h4><div class="v4-grade-grid">${gradeInputs('b',sizesM)}</div></div><div class="v4-grade-card inf" style="grid-column:1/-1"><h4>Infantil</h4><div class="v4-grade-grid">${gradeInputs('i',sizesI)}</div></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar tudo</button></div></div></div>`; document.body.appendChild(m);}
-  window.v4AddModeloRow=function(){const body=$id('v4ModelRows'); if(!body)return; const tr=document.createElement('tr'); tr.innerHTML='<td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest(\'tr\').remove()">✕</button></td>'; body.appendChild(tr)};
-  window.v4AbrirPreenchimentoRapido=function(){createBetterQuickModal(); $id('v4qCliente').value=($id('dc_nome')?.textContent||'').trim(); $id('v4qVendedor').value=($id('dc_vendedor')?.textContent||'').trim(); $id('v4qTel').value=($id('dc_tel')?.textContent||'').trim(); $id('v4qPrevisao').value=$id('previsao')?.value||''; $id('v4qTecido').value=$id('tipoTecido')?.textContent||''; fillCurrentGradeToQuick(); $id('v4QuickModal').classList.add('open');};
-  function fillCurrentGradeToQuick(){document.querySelectorAll('.gi[data-g="m"]').forEach((el,i)=>{if($id('v4g_m_'+sizesM[i]))$id('v4g_m_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="b"]').forEach((el,i)=>{if($id('v4g_b_'+sizesM[i]))$id('v4g_b_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="i"]').forEach((el,i)=>{if($id('v4g_i_'+sizesI[i]))$id('v4g_i_'+sizesI[i]).value=el.value});}
-  window.v4AplicarPreenchimentoRapido=function(){const setCE=(id,v)=>{const el=$id(id);if(el)el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$id(id);if(el)el.value=v||''}; setCE('dc_nome',$id('v4qCliente').value); setCE('dc_vendedor',$id('v4qVendedor').value); setCE('dc_tel',$id('v4qTel').value); setVal('previsao',$id('v4qPrevisao').value); setCE('tipoTecido',$id('v4qTecido').value); if($id('v4qAviso').value)setVal('avisoTxt',$id('v4qAviso').value); const rows=[...document.querySelectorAll('#v4ModelRows tr')].map(r=>({modelo:r.querySelector('[data-modelo]').value,valor:r.querySelector('[data-valor]').value,qtd:r.querySelector('[data-qtd]').value})).filter(r=>r.modelo||r.valor||r.qtd); if(rows.length){$id('prodLinhas').innerHTML=''; if(typeof linhaId!=='undefined') linhaId=0; rows.forEach(r=>criarLinha(r.modelo,r.valor,r.qtd)); document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_','')); if(typeof recalcL==='function')recalcL(id);});} applyGrade('m',sizesM); applyGrade('b',sizesM); applyGrade('i',sizesI); if(typeof recalcGrade==='function')recalcGrade(); if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap(); v4FecharPreenchimentoRapido(); toast('Preenchimento completo aplicado.','sucesso');};
-  function applyGrade(prefix,arr){const els=document.querySelectorAll(`.gi[data-g="${prefix}"]`); arr.forEach((t,i)=>{const v=$id(`v4g_${prefix}_${t}`)?.value||''; if(els[i]){els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0);}})}
   function enhanceTextToolbar(){const tb=$id('textTb'); if(tb&&!tb.dataset.v4TextReady){tb.dataset.v4TextReady='1';v7EnhanceTxtTb('textTb');} if(typeof v7EnhanceTxtTbExtra==='function')v7EnhanceTxtTbExtra();}
 function v7EnhanceTxtTb(tbId){
   const tb=$id(tbId); if(!tb||tb.dataset.v4TbReady)return; tb.dataset.v4TbReady='1';

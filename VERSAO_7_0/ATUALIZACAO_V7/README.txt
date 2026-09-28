@@ -52,6 +52,12 @@ server.js                → servidor local (porta 4700)
 
 OBSERVAÇÕES
 ───────────
+• A Ficha Técnica abre como JANELA (popup) por cima do sistema, sem sair da
+  Catalogação. Para fechar: botão "✕ Fechar", tecla Esc ou clique fora da janela.
+  O que já foi preenchido continua salvo ao fechar.
+• O "Preenchimento rápido" (Ficha Técnica) agora preenche tudo de uma vez:
+  cliente (com clientes conhecidos), modelos com totais, grade de tamanhos,
+  entrada e aviso. Enter pula de campo em campo; Ctrl+Enter aplica.
 • Para atualizar o V7 com uma versão nova: substitua a pasta, feche o app,
   abra limpar_cache.html e execute "Limpar cache agora", depois rode o bat de novo.
 • O app funciona 100% offline após o primeiro carregamento.

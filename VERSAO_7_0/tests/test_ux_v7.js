@@ -100,6 +100,20 @@ async function main() {
   await new Promise(r => setTimeout(r, 100));
   ft(`document.getElementById('v4qCliente').focus(); document.getElementById('v4qCliente').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})); 'ok'`);
   check('Enter modal avança p/ Vendedor', ft(`document.activeElement.id`) === 'v4qVendedor');
+
+  // ── V7.1: preenchimento rápido guiado (modelos, grade, totais, clientes) ──
+  check('modal pré-carrega modelos da ficha', ft(`document.querySelectorAll('#v4ModelRows tr').length`) >= 1);
+  ft(`document.getElementById('v4ModelRows').innerHTML=''; v4AddModeloRow('Camiseta teste','25,00','10'); 'ok'`);
+  check('total ao vivo R$ 250,00', ft(`document.getElementById('v4qTotal').textContent`) === 'R$\u00a0250,00');
+  check('peças 0 antes da grade', ft(`document.getElementById('v4qPecas').textContent`) === '0 peças');
+  ft(`document.getElementById('v4g_m_M').value='10'; v4QuickTotals(); 'ok'`);
+  check('peças 10 na grade', ft(`document.getElementById('v4qPecas').textContent`) === '10 peças');
+  check('datalist clientes populado', ft(`document.getElementById('v4qClientesDL').options.length`) >= 1);
+  ft(`aplicarPreenchimentoRapido(); 'ok'`);
+  check('modelo aplicado na ficha', ft(`document.querySelector('#prodLinhas tr input').value`) === 'Camiseta teste');
+  check('total da ficha R$ 250,00', ft(`document.getElementById('totalDisp').textContent`) === 'R$\u00a0250,00');
+  check('grade M=10 aplicada', ft(`document.querySelector('.gi[data-g="m"]').value === '' && document.querySelectorAll('.gi[data-g="m"]')[2].value`) === '10');
+  check('modal fechou após aplicar', ft(`!document.getElementById('v4QuickModal').classList.contains('open')`));
   check('sidebar: descrições (4 seções)', fw.eval(`document.querySelectorAll('.sb-section-desc').length`) >= 4);
   check('export: v7-exporting classe existe no CSS', fw.eval(`(function(){const s=[...document.styleSheets].flatMap(x=>{try{return[...x.cssRules]}catch(e){return[]}}).map(r=>r.cssText).join(''); return s.includes('.v7-exporting .dc-inp:empty::before')})()`));
   console.log('  page errors:', ferrs.length ? ferrs : 'none ✓');
