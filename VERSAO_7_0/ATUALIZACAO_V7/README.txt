@@ -58,6 +58,10 @@ OBSERVAÇÕES
 • O "Preenchimento rápido" (Ficha Técnica) agora preenche tudo de uma vez:
   cliente (com clientes conhecidos), modelos com totais, grade de tamanhos,
   entrada e aviso. Enter pula de campo em campo; Ctrl+Enter aplica.
+• DATAS SEMPRE NO DIA ATUAL: com o app aberto, ao virar o dia a contagem de
+  dias e as prioridades da Catalogação são recalculadas sozinhas, a data da
+  Ficha em branco e a "Data da Proposta" do Orçamento vão para hoje.
+  Fichas já preenchidas mantêm a data de criação.
 • Para atualizar o V7 com uma versão nova: substitua a pasta, feche o app,
   abra limpar_cache.html e execute "Limpar cache agora", depois rode o bat de novo.
 • O app funciona 100% offline após o primeiro carregamento.

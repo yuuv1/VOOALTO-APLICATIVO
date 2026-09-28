@@ -295,6 +295,11 @@ function openFichaPopup(){
     const b=document.getElementById(PROJECTS[k].button);
     if(b)b.classList.remove('active');
   });
+  /* se virou o dia desde a última abertura, a ficha em branco já abre com a data de hoje */
+  try{
+    const ff=document.getElementById(PROJECTS.ficha.frame);
+    if(ff&&ff.contentWindow&&typeof ff.contentWindow.v7FichaDayTick==='function')ff.contentWindow.v7FichaDayTick();
+  }catch(e){}
   toast('📋 Ficha Técnica aberta — feche com ✕ Fechar ou Esc');
 }
 function closeFichaPopup(silent){

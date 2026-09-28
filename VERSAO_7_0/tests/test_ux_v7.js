@@ -38,6 +38,11 @@ async function main() {
   check('Enter no fim cria item 3', t(`documentPages[0].tableItems.length`) === 3);
   check('numeração A4', t(`document.getElementById('preview-budget-number-1').textContent`) === 'Orçamento Nº 0001', t(`document.getElementById('preview-budget-number-1').textContent`));
   check('sem campo cliente (V6)', t(`!document.getElementById('edit-client-name')`) === true);
+  // ── V7.1: data da proposta sempre no dia atual ──
+  const hojeBR = String(new Date().getDate()).padStart(2,'0') + '/' + String(new Date().getMonth()+1).padStart(2,'0') + '/' + new Date().getFullYear();
+  check('data da proposta = hoje', t(`document.getElementById('edit-proposal-date').value`) === hojeBR, t(`document.getElementById('edit-proposal-date').value`));
+  t(`document.getElementById('edit-proposal-date').value='01/01/2020'; orcDayTick(); 'ok'`);
+  check('virada do dia atualiza a data', t(`document.getElementById('edit-proposal-date').value`) === hojeBR);
   console.log('  page errors:', errs.length ? errs : 'none ✓');
 
   console.log('===== UX V7: PRINCIPAL =====');
@@ -64,6 +69,23 @@ async function main() {
   check('só 1 coluna visível', pdoc.querySelectorAll('#columns .column').length === 1);
   pt(`setPrioFocus('all'); 'ok'`);
   check('volta a 4 colunas', pdoc.querySelectorAll('#columns .column').length === 4);
+
+  // ── V7.1: datas sempre no dia atual ──
+  const hojeLocal = new Date();
+  const isoHoje = hojeLocal.getFullYear() + '-' + String(hojeLocal.getMonth()+1).padStart(2,'0') + '-' + String(hojeLocal.getDate()).padStart(2,'0');
+  check('today() usa data local', pt(`today()`) === isoHoje, pt(`today()`));
+  check('parseDate aceita dd/mm/yyyy', pt(`(parseDate('16/08/2026').getDate() + '/' + (parseDate('16/08/2026').getMonth()+1))`) === '16/8');
+  check('parseDate aceita yyyy-mm-dd', pt(`parseDate('2026-09-15').toISOString().slice(0,10)`) === '2026-09-15');
+  const d30 = new Date(Date.now() - 30*864e5);
+  const br30 = String(d30.getDate()).padStart(2,'0') + '/' + String(d30.getMonth()+1).padStart(2,'0') + '/' + d30.getFullYear();
+  pt(`state.orders.push({id:'d1',name:'Ficha Legado dd/mm/yyyy',clientPhone:'',createdAt:'${br30}',createdTs:Date.now(),status:'baixa',note:'',medDays:15,highDays:22}); save(); renderAll(); 'ok'`);
+  check('dd/mm/yyyy: conta 30 dias', pt(`document.querySelector('.order-card[data-order-id=\\'d1\\'] .days').textContent`) === '30 dias');
+  check('dd/mm/yyyy: vira prioridade Alta', pt(`document.querySelector('.order-card[data-order-id=\\'d1\\']').className.includes('alta')`));
+  pt(`save(); load(); renderAll(); 'ok'`);
+  check('dd/mm/yyyy: normalizado p/ ISO no storage', /^\d{4}-\d{2}-\d{2}$/.test(pt(`state.orders.find(o=>o.id==='d1').createdAt`)), pt(`state.orders.find(o=>o.id==='d1').createdAt`));
+  pt(`_v7LastDay = '2020-01-01'; v7DayTick(); 'ok'`);
+  check('virada de dia re-renderiza', pt(`_v7LastDay`) === pt(`today()`));
+  check('após rollover card segue correto', pt(`document.querySelector('.order-card[data-order-id=\\'d1\\'] .days').textContent`) === '30 dias');
   console.log('  page errors:', perrs.length ? perrs : 'none ✓');
 
   console.log('===== UX V7: FICHA =====');
@@ -114,6 +136,13 @@ async function main() {
   check('total da ficha R$ 250,00', ft(`document.getElementById('totalDisp').textContent`) === 'R$\u00a0250,00');
   check('grade M=10 aplicada', ft(`document.querySelector('.gi[data-g="m"]').value === '' && document.querySelectorAll('.gi[data-g="m"]')[2].value`) === '10');
   check('modal fechou após aplicar', ft(`!document.getElementById('v4QuickModal').classList.contains('open')`));
+
+  // ── V7.1: data da ficha no dia atual ──
+  check('ficha: data = hoje (fuso local)', ft(`document.getElementById('fichaData').value`) === isoHoje, ft(`document.getElementById('fichaData').value`));
+  ft(`document.getElementById('fichaData').value=''; v7FichaDayTick(); 'ok'`);
+  check('ficha: day tick preenche data vazia', ft(`document.getElementById('fichaData').value`) === isoHoje);
+  ft(`document.getElementById('fichaData').value='2020-01-01'; document.getElementById('dc_nome').textContent='Cliente Teste'; v7FichaDayTick(); 'ok'`);
+  check('ficha com conteúdo mantém a data', ft(`document.getElementById('fichaData').value`) === '2020-01-01');
   check('sidebar: descrições (4 seções)', fw.eval(`document.querySelectorAll('.sb-section-desc').length`) >= 4);
   check('export: v7-exporting classe existe no CSS', fw.eval(`(function(){const s=[...document.styleSheets].flatMap(x=>{try{return[...x.cssRules]}catch(e){return[]}}).map(r=>r.cssText).join(''); return s.includes('.v7-exporting .dc-inp:empty::before')})()`));
   console.log('  page errors:', ferrs.length ? ferrs : 'none ✓');
