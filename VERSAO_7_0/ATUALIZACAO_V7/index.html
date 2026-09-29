@@ -94,6 +94,19 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
 @keyframes sp{to{transform:rotate(360deg)}}
 .toast{position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.90);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:760;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999}
 .toast.show{opacity:1;transform:translateY(0)}
+/* ── Popup da Ficha Técnica (janela sobre o sistema) ── */
+.ficha-popup{position:fixed;inset:0;background:rgba(5,5,10,.55);backdrop-filter:blur(3px);display:none;align-items:stretch;justify-content:center;z-index:9000;padding:clamp(0px,3vh,34px) clamp(0px,3vw,44px)}
+.ficha-popup.open{display:flex;animation:fpIn .16s ease-out}
+@keyframes fpIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
+.ficha-popup-card{position:relative;flex:1;max-width:1700px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.ficha-popup-head{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#111827;color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}
+.ficha-popup-title{font-size:13px;font-weight:900;letter-spacing:.3px;display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.ficha-popup-title small{font-weight:600;font-size:10.5px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-popup-close{margin-left:auto;border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;padding:7px 14px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}
+.ficha-popup-close:hover{background:#DC2626}
+.ficha-popup-body{position:relative;flex:1;min-height:0;background:#4B5563}
+.ficha-popup-body .project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:block}
+@media(max-width:640px){.ficha-popup{padding:0}.ficha-popup-card{border-radius:0}}
 .help-modal{position:fixed;inset:0;background:rgba(5,5,10,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:18px}
 .help-modal.open{display:flex}
 .help-card{background:#fff;color:#111827;border-radius:18px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
@@ -121,7 +134,7 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
     </div>
     <nav class="switcher">
       <button class="switch-btn active" id="btn-principal" onclick="showProject('principal')" title="Fichas em produção, prioridades e PDFs">🏠 Catalogação<span class="badge" id="badgeAlta">0</span></button>
-      <button class="switch-btn" id="btn-ficha" onclick="showProject('ficha')" title="Criar ficha técnica de produção (A4)">📋 Ficha Técnica</button>
+      <button class="switch-btn" id="btn-ficha" onclick="toggleFichaPopup()" title="Abre a Ficha Técnica em janela sobre o sistema (Esc fecha)">📋 Ficha Técnica</button>
       <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
     </nav>
     <div class="controls">
@@ -149,7 +162,6 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
   <main class="frame-wrap">
     <div class="loading" id="loading"><div class="spin"></div>Carregando V7...</div>
     <iframe class="project-frame active" id="frame-principal" src="principal_dashboard/index.html"></iframe>
-    <iframe class="project-frame" id="frame-ficha" src="criador_ficha_tecnica/index.html"></iframe>
     <iframe class="project-frame" id="frame-orcamento" src="criador_orcamento/index.html"></iframe>
   </main>
 </div>
@@ -161,7 +173,7 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
     <div class="sub">Três módulos integrados: crie a ficha, catalogue a produção e envie orçamentos.</div>
     <div class="help-item"><div class="ico">📋</div><div>
       <b>1 · Ficha Técnica</b>
-      <p>Crie a ficha de produção no <b>Ficha Técnica</b>: dados do cliente, modelos, valores, cores e imagens. Quando terminar, clique em <b>Enviar para Catalogação</b> (embaixo). O número da ficha avança sozinho.</p>
+      <p>Abre em <b>janela sobre o sistema</b> (não sai da Catalogação): dados do cliente, modelos, valores, cores e imagens. Quando terminar, clique em <b>Enviar para Catalogação</b> (embaixo) — a janela fecha sozinha. Para fechar antes, use o botão <b>✕ Fechar</b> ou a tecla <b>Esc</b>; o que já foi preenchido continua salvo. O número da ficha avança sozinho.</p>
     </div></div>
     <div class="help-item"><div class="ico">🏠</div><div>
       <b>2 · Catalogação</b>
@@ -182,6 +194,18 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<div class="ficha-popup" id="fichaPopup">
+  <div class="ficha-popup-card">
+    <div class="ficha-popup-head">
+      <div class="ficha-popup-title">📋 Ficha Técnica <small>· janela sobre o sistema — seu trabalho continua salvo ao fechar</small></div>
+      <button class="ficha-popup-close" onclick="closeFichaPopup()" title="Fechar a Ficha Técnica (Esc)">✕ Fechar</button>
+    </div>
+    <div class="ficha-popup-body">
+      <iframe class="project-frame" id="frame-ficha" src="criador_ficha_tecnica/index.html" title="Criador de Ficha Técnica"></iframe>
+    </div>
+  </div>
+</div>
 
 <script>
 const PROJECTS={
@@ -312,6 +336,8 @@ window.addEventListener('message',e=>{
       pf.contentWindow.postMessage(e.data,'*');
       toast('✅ Ficha atualizada na Catalogação');
     }
+    closeFichaPopup(true);
+    showProject('principal');
   }
   if(e.data.type==='vooalto-switch-tab'&&e.data.tab&&PROJECTS[e.data.tab]){
     showProject(e.data.tab);
@@ -332,9 +358,12 @@ function updateBadge(n){
 function vooaltoCountsFrom(e){try{return e&&e.data&&e.data.type==='vooalto-counts';}catch(_){return false;}}
 
 function showProject(key){
+  if(key==='ficha'){openFichaPopup();return}
+  if(fichaPopupOpen)closeFichaPopup(true);
   activeProject=key;
   Object.keys(PROJECTS).forEach(k=>{
     const p=PROJECTS[k];
+    if(k==='ficha')return;
     document.getElementById(p.button).classList.toggle('active',k===key);
     document.getElementById(p.frame).classList.toggle('active',k===key);
   });
@@ -342,10 +371,46 @@ function showProject(key){
   if(l)l.style.display='none';
   toast('Aberto: '+PROJECTS[key].name);
 }
+
+/* ── Popup da Ficha Técnica (janela sobre o sistema) ── */
+let fichaPopupOpen=false;
+function openFichaPopup(){
+  fichaPopupOpen=true;
+  const fp=document.getElementById('fichaPopup');
+  if(fp)fp.classList.add('open');
+  const bf=document.getElementById('btn-ficha');
+  if(bf)bf.classList.add('active');
+  ['principal','orcamento'].forEach(k=>{
+    const b=document.getElementById(PROJECTS[k].button);
+    if(b)b.classList.remove('active');
+  });
+  /* se virou o dia desde a última abertura, a ficha em branco já abre com a data de hoje */
+  try{
+    const ff=document.getElementById(PROJECTS.ficha.frame);
+    if(ff&&ff.contentWindow&&typeof ff.contentWindow.v7FichaDayTick==='function')ff.contentWindow.v7FichaDayTick();
+  }catch(e){}
+  toast('📋 Ficha Técnica aberta — feche com ✕ Fechar ou Esc');
+}
+function closeFichaPopup(silent){
+  if(!fichaPopupOpen)return;
+  fichaPopupOpen=false;
+  const fp=document.getElementById('fichaPopup');
+  if(fp)fp.classList.remove('open');
+  const bf=document.getElementById('btn-ficha');
+  if(bf)bf.classList.remove('active');
+  if(activeProject!=='ficha'){
+    const ab=document.getElementById(PROJECTS[activeProject].button);
+    if(ab)ab.classList.add('active');
+  }
+  if(!silent)toast('Ficha Técnica fechada — o preenchido continua salvo nela');
+}
+function toggleFichaPopup(){fichaPopupOpen?closeFichaPopup():openFichaPopup()}
+document.getElementById('fichaPopup').addEventListener('click',e=>{if(e.target.id==='fichaPopup')closeFichaPopup()});
 function reloadActive(){
-  const fr=document.getElementById(PROJECTS[activeProject].frame);
+  const key=fichaPopupOpen?'ficha':activeProject;
+  const fr=document.getElementById(PROJECTS[key].frame);
   try{fr.contentWindow.location.reload()}catch(e){fr.src=fr.src}
-  toast('Recarregado: '+PROJECTS[activeProject].name);
+  toast('Recarregado: '+PROJECTS[key].name);
 }
 function toast(msg){
   const t=document.getElementById('toast');
@@ -357,6 +422,11 @@ function toast(msg){
 function openHelp(){document.getElementById('helpModal').classList.add('open')}
 function closeHelp(){document.getElementById('helpModal').classList.remove('open')}
 document.getElementById('helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')closeHelp()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(fichaPopupOpen)closeFichaPopup();
+  else closeHelp();
+});
 
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();

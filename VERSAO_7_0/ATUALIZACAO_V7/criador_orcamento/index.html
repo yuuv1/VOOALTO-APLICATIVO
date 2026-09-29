@@ -405,6 +405,65 @@
       padding: 0 4px;
     }
 
+    .orc-pill-del {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      margin-left: 2px;
+      border-radius: 50%;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 900;
+      color: #FCA5A5;
+      background: rgba(239, 68, 68, 0.22);
+      transition: all 0.15s;
+    }
+
+    .orc-pill-del:hover {
+      background: #EF4444;
+      color: #FFFFFF;
+    }
+
+    .orc-a4-page-actions {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.86);
+      backdrop-filter: blur(6px);
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      font-family: 'Poppins', sans-serif;
+      font-size: 10.5px;
+      color: #E2E8F0;
+    }
+
+    .orc-a4-page-actions .orc-a4-del-btn {
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      background: rgba(239, 68, 68, 0.2);
+      color: #FCA5A5;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .orc-a4-page-actions .orc-a4-del-btn:hover {
+      background: #EF4444;
+      border-color: #EF4444;
+      color: #FFFFFF;
+    }
+
     .orc-page-btn-group {
       display: flex;
       align-items: center;
@@ -970,6 +1029,7 @@
       .v5-tool-input,
       .v5-highlight-group,
       .v5-hl,
+      .orc-a4-page-actions,
       #budget-settings-modal,
       #signature-modal {
         display: none !important;
@@ -1081,7 +1141,7 @@ dos Buritis, Goiânia - GO, 74370-661</textarea>
           </div>
           <div class="form-group">
             <label>Data da Proposta</label>
-            <input type="text" id="edit-proposal-date" class="form-control" value="30/06/2025" oninput="updatePreviewFromForm()">
+            <input type="text" id="edit-proposal-date" class="form-control" value="" oninput="updatePreviewFromForm()" title="Data que aparece na proposta — sempre preenchida com o dia atual">
           </div>
           <div class="form-group">
             <label>Título do Orçamento</label>
@@ -1370,47 +1430,126 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       }, 700);
     }
 
+    /* ══ V7.1 — data da proposta sempre no dia atual ══
+       O módulo fica carregado por dias e a data ficava presa no dia em que
+       o app abriu (ou no dia do rascunho automático antigo). Agora, ao virar
+       o dia, a "Data da Proposta" passa para HOJE. */
+    function orcHojeBR(){ const t = new Date(); return String(t.getDate()).padStart(2,'0') + '/' + String(t.getMonth()+1).padStart(2,'0') + '/' + t.getFullYear(); }
+    function orcDayTick(){
+      const ed = document.getElementById('edit-proposal-date'); if(!ed) return;
+      const hoje = orcHojeBR();
+      if(ed.value === hoje) return;
+      ed.value = hoje;
+      if (typeof updatePreviewFromForm === 'function') updatePreviewFromForm();
+      if (typeof scheduleOrcautosave === 'function') scheduleOrcautosave();
+      orcToast('📅 Data da proposta atualizada para hoje');
+    }
+    setInterval(orcDayTick, 60000);
+    document.addEventListener('visibilitychange', () => { if(!document.hidden) orcDayTick(); });
+
+    function _assignPageDomIds(pageDom, pageId) {
+      pageDom.id = `printable-a4-page-${pageId}`;
+      const map = [
+        ['.watermark', `preview-watermark-${pageId}`],
+        ['.header-logo', `preview-logo-${pageId}`],
+        ['.phone', `preview-phone-${pageId}`],
+        ['.cnpj', `preview-cnpj-${pageId}`],
+        ['.address', `preview-address-${pageId}`],
+        ['.band-red', `preview-proposal-title-${pageId}`],
+        ['.band-black', `preview-proposal-date-${pageId}`],
+        ['.budget-title', `preview-budget-title-${pageId}`],
+        ['.budget-table tbody', `preview-table-body-${pageId}`],
+        ['.total-bar', `preview-total-bar-${pageId}`],
+        ['.payment-title', `preview-payment-title-${pageId}`],
+        ['.payment-text', `preview-payment-text-${pageId}`],
+        ['.signature-image', `preview-signature-${pageId}`],
+        ['.validity-days', `preview-validity-${pageId}`],
+        ['.page-number-indicator', `preview-page-number-${pageId}`],
+        ['.resp-name', `preview-resp-name-${pageId}`]
+      ];
+      map.forEach(([sel, id]) => {
+        const el = pageDom.querySelector(sel);
+        if (el) el.id = id;
+      });
+    }
+
+    /* Clona o DOM da página sem mexer em documentPages (usado no restore / sync) */
+    function addDocumentPageSilent(pageId){
+      const container = document.getElementById('preview-pages-container');
+      const basePage = document.getElementById('printable-a4-page-1') || container.querySelector('.page');
+      const newPageDom = document.createElement('div');
+      newPageDom.className = 'page';
+      newPageDom.innerHTML = basePage ? basePage.innerHTML : '';
+      newPageDom.querySelectorAll('.orc-a4-page-actions').forEach(el => el.remove());
+      _assignPageDomIds(newPageDom, pageId);
+      container.appendChild(newPageDom);
+      if (typeof setupPageInPlaceListeners === 'function') setupPageInPlaceListeners(newPageDom, pageId);
+      return newPageDom;
+    }
+
+    /* Mantém documentPages (ids 1..N) e as folhas .page no DOM 100% sincronizados */
+    function syncDocumentPagesDOM() {
+      if (!Array.isArray(documentPages) || documentPages.length === 0) {
+        documentPages = [{ id: 1, tableItems: [] }];
+      }
+      documentPages.forEach((p, idx) => {
+        p.id = idx + 1;
+        if (!Array.isArray(p.tableItems)) p.tableItems = [];
+      });
+      if (typeof activeFormPageIndex !== 'number' || isNaN(activeFormPageIndex) || activeFormPageIndex < 0) {
+        activeFormPageIndex = 0;
+      }
+      if (activeFormPageIndex >= documentPages.length) {
+        activeFormPageIndex = documentPages.length - 1;
+      }
+
+      const container = document.getElementById('preview-pages-container');
+      if (!container) return;
+
+      let domPages = Array.from(container.querySelectorAll('.page'));
+      while (domPages.length > documentPages.length) {
+        const extra = domPages.pop();
+        if (extra) extra.remove();
+      }
+      domPages.forEach((domPage, idx) => {
+        const expectedId = idx + 1;
+        if (domPage.id !== `printable-a4-page-${expectedId}`) {
+          _assignPageDomIds(domPage, expectedId);
+        }
+      });
+      for (let i = domPages.length; i < documentPages.length; i++) {
+        addDocumentPageSilent(i + 1);
+      }
+
+      domPages = Array.from(container.querySelectorAll('.page'));
+      domPages.forEach((domPage, idx) => {
+        let act = domPage.querySelector('.orc-a4-page-actions');
+        if (documentPages.length <= 1) {
+          if (act) act.remove();
+        } else {
+          if (!act) {
+            act = document.createElement('div');
+            act.className = 'orc-a4-page-actions';
+            domPage.appendChild(act);
+          }
+          act.innerHTML = `<span>Pág. ${idx + 1}/${documentPages.length}</span><button type="button" class="orc-a4-del-btn" onclick="removeActiveDocumentPage(${idx})" title="Remover Página ${idx + 1}">🗑 Excluir pág. ${idx + 1}</button>`;
+        }
+      });
+    }
+    window.syncDocumentPagesDOM = syncDocumentPagesDOM;
+
     function orcRestoreState(s){
       if(!s || !s.form) return false;
       const set = (id, v) => { const el = document.getElementById(id); if(el && typeof v === 'string') el.value = v; };
       const fm = s.form;
       ORC_FORM_KEYS.forEach(k => set('edit-' + k, fm[k]));
       if (Array.isArray(s.pages) && s.pages.length) {
-        documentPages = s.pages.map(p => ({ id: p.id, tableItems: Array.isArray(p.tableItems) ? p.tableItems : [] }));
+        documentPages = s.pages.map((p, idx) => ({ id: idx + 1, tableItems: Array.isArray(p.tableItems) ? p.tableItems : [] }));
         activeFormPageIndex = 0;
-        document.querySelectorAll('#preview-pages-container .page:not(#printable-a4-page-1)').forEach(el => el.remove());
-        for (let i = 1; i < documentPages.length; i++) addDocumentPageSilent(documentPages[i].id);
+        syncDocumentPagesDOM();
       }
       if (s.signature) currentSignatureBase64 = s.signature;
       return true;
-    }
-
-    /* Clona o DOM da página sem mexer em documentPages (usado no restore) */
-    function addDocumentPageSilent(pageId){
-      const container = document.getElementById('preview-pages-container');
-      const newPageDom = document.createElement('div');
-      newPageDom.className = 'page';
-      newPageDom.id = `printable-a4-page-${pageId}`;
-      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
-      newPageDom.querySelector('.watermark').id = `preview-watermark-${pageId}`;
-      newPageDom.querySelector('.header-logo').id = `preview-logo-${pageId}`;
-      newPageDom.querySelector('.phone').id = `preview-phone-${pageId}`;
-      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${pageId}`;
-      newPageDom.querySelector('.address').id = `preview-address-${pageId}`;
-      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${pageId}`;
-      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${pageId}`;
-      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${pageId}`;
-      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${pageId}`;
-      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${pageId}`;
-      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${pageId}`;
-      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${pageId}`;
-      newPageDom.querySelector('.signature-image').id = `preview-signature-${pageId}`;
-      newPageDom.querySelector('.validity-days').id = `preview-validity-${pageId}`;
-      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${pageId}`;
-      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${pageId}`;
-      container.appendChild(newPageDom);
-      if (typeof setupPageInPlaceListeners === 'function') setupPageInPlaceListeners(newPageDom, pageId);
-      return newPageDom;
     }
 
     function novoOrcamento(){
@@ -1424,9 +1563,9 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       const today = new Date();
       const ds = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
       const ed = document.getElementById('edit-proposal-date'); if(ed) ed.value = ds;
-      documentPages.forEach((p, i) => { if(i > 0) { const el = document.getElementById('printable-a4-page-' + p.id); if(el) el.remove(); } });
       documentPages = [{ id: 1, tableItems: [] }];
       activeFormPageIndex = 0;
+      syncDocumentPagesDOM();
       try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e){}
       renderItemsEditor();
       updatePreviewFromForm();
@@ -1489,6 +1628,12 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       } catch(e) { console.warn('Falha ao restaurar autosave', e); }
 
       // (sem contador de nº de orçamento)
+      /* V7.1 — rascunho restaurado: a data da proposta passa para o dia atual
+         (autosave é rascunho de trabalho; versões arquivadas são os .json/rascunhos nomeados) */
+      if (restored) {
+        const ed = document.getElementById('edit-proposal-date');
+        if (ed) ed.value = orcHojeBR();
+      }
 
       setupBudgetSettingsModal();
       renderItemsEditor();
@@ -1505,7 +1650,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
       });
 
-      if (restored) orcToast('💾 Orçamento anterior restaurado automaticamente.');
+      if (restored) orcToast('💾 Orçamento anterior restaurado — data da proposta atualizada para hoje.');
       orcUpdateDraftsBadge();
     });
 
@@ -1558,6 +1703,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     // Render sidebar input fields dynamically based on active page's table items — Compact V7
     function renderItemsEditor() {
       if (isSyncing) return;
+      syncDocumentPagesDOM();
       const container = document.getElementById('items-editor-list');
       if (!container) return;
       container.innerHTML = '';
@@ -1571,13 +1717,14 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
             <button type="button" class="orc-page-pill ${idx === activeFormPageIndex ? 'active' : ''}" onclick="changeActiveFormPage(${idx})" title="Ir para Página ${idx + 1}">
               Pág. ${idx + 1}
               <span class="orc-page-count">${(p.tableItems || []).length}</span>
+              ${documentPages.length > 1 ? `<span class="orc-pill-del" onclick="event.stopPropagation(); removeActiveDocumentPage(${idx})" title="Remover Página ${idx + 1}">×</span>` : ''}
             </button>
           `).join('')}
         </div>
         <div class="orc-page-btn-group">
           <button type="button" class="btn-orc-tool" onclick="addDocumentPage()" title="Adicionar nova página vazia">➕ Pág</button>
           <button type="button" class="btn-orc-tool accent" onclick="duplicateDocumentPage()" title="Duplicar página ativa com todos os seus itens">⧉ Duplicar</button>
-          ${documentPages.length > 1 ? `<button type="button" class="btn-orc-tool danger" onclick="removeActiveDocumentPage()" title="Excluir página ativa">✕</button>` : ''}
+          ${documentPages.length > 1 ? `<button type="button" class="btn-orc-tool danger" onclick="removeActiveDocumentPage()" title="Excluir página ativa (Pág. ${activeFormPageIndex + 1})">🗑 Excluir</button>` : ''}
         </div>
       `;
       container.appendChild(navBar);
@@ -1635,6 +1782,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     function changeActiveFormPage(idx) {
       activeFormPageIndex = parseInt(idx);
       renderItemsEditor();
+      const targetPage = document.getElementById(`printable-a4-page-${activeFormPageIndex + 1}`);
+      if (targetPage && typeof targetPage.scrollIntoView === 'function') {
+        try { targetPage.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {}
+      }
     }
 
     // Add a new document page
@@ -1645,85 +1796,26 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         tableItems: []
       });
       activeFormPageIndex = documentPages.length - 1;
-      
-      // Render page DOM in preview
-      const container = document.getElementById('preview-pages-container');
-      const newPageDom = document.createElement('div');
-      newPageDom.className = 'page';
-      newPageDom.id = `printable-a4-page-${newPageId}`;
-      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
-      
-      // Update individual child IDs to avoid clashing
-      newPageDom.querySelector('.watermark').id = `preview-watermark-${newPageId}`;
-      newPageDom.querySelector('.header-logo').id = `preview-logo-${newPageId}`;
-      newPageDom.querySelector('.phone').id = `preview-phone-${newPageId}`;
-      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${newPageId}`;
-      newPageDom.querySelector('.address').id = `preview-address-${newPageId}`;
-      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
-      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
-      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
-      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
-      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
-      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
-      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${newPageId}`;
-      newPageDom.querySelector('.signature-image').id = `preview-signature-${newPageId}`;
-      newPageDom.querySelector('.validity-days').id = `preview-validity-${newPageId}`;
-      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${newPageId}`;
-      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${newPageId}`;
-
-      container.appendChild(newPageDom);
-
-      // Re-apply listeners
-      setupPageInPlaceListeners(newPageDom, newPageId);
-
+      syncDocumentPagesDOM();
       renderItemsEditor();
       updatePreviewFromForm();
+      if (typeof toastOrc === 'function') toastOrc(`➕ Página ${documentPages.length} adicionada.`);
+      else orcToast(`➕ Página ${documentPages.length} adicionada.`);
     }
 
 
     // Duplicate document page with all its items
     function duplicateDocumentPage(pageIdx) {
-      if (typeof pageIdx !== 'number') pageIdx = activeFormPageIndex;
+      if (typeof pageIdx !== 'number' || pageIdx < 0 || pageIdx >= documentPages.length) pageIdx = activeFormPageIndex;
       const sourcePage = documentPages[pageIdx];
       if (!sourcePage) return;
-      const newPageId = Math.max(0, ...documentPages.map(p => p.id || 0)) + 1;
       const clonedItems = JSON.parse(JSON.stringify(sourcePage.tableItems || []));
       documentPages.push({
-        id: newPageId,
+        id: documentPages.length + 1,
         tableItems: clonedItems
       });
       activeFormPageIndex = documentPages.length - 1;
-
-      // Render page DOM in preview
-      const container = document.getElementById('preview-pages-container');
-      const newPageDom = document.createElement('div');
-      newPageDom.className = 'page';
-      newPageDom.id = `printable-a4-page-${newPageId}`;
-      newPageDom.innerHTML = document.getElementById('printable-a4-page-1').innerHTML;
-
-      // Update individual child IDs
-      newPageDom.querySelector('.watermark').id = `preview-watermark-${newPageId}`;
-      newPageDom.querySelector('.header-logo').id = `preview-logo-${newPageId}`;
-      newPageDom.querySelector('.phone').id = `preview-phone-${newPageId}`;
-      newPageDom.querySelector('.cnpj').id = `preview-cnpj-${newPageId}`;
-      newPageDom.querySelector('.address').id = `preview-address-${newPageId}`;
-      newPageDom.querySelector('.band-red').id = `preview-proposal-title-${newPageId}`;
-      newPageDom.querySelector('.band-black').id = `preview-proposal-date-${newPageId}`;
-      newPageDom.querySelector('.budget-title').id = `preview-budget-title-${newPageId}`;
-      newPageDom.querySelector('.budget-table tbody').id = `preview-table-body-${newPageId}`;
-      newPageDom.querySelector('.total-bar').id = `preview-total-bar-${newPageId}`;
-      newPageDom.querySelector('.payment-title').id = `preview-payment-title-${newPageId}`;
-      newPageDom.querySelector('.payment-text').id = `preview-payment-text-${newPageId}`;
-      newPageDom.querySelector('.signature-image').id = `preview-signature-${newPageId}`;
-      newPageDom.querySelector('.validity-days').id = `preview-validity-${newPageId}`;
-      newPageDom.querySelector('.page-number-indicator').id = `preview-page-number-${newPageId}`;
-      newPageDom.querySelector('.resp-name').id = `preview-resp-name-${newPageId}`;
-
-      container.appendChild(newPageDom);
-
-      // Re-apply listeners
-      setupPageInPlaceListeners(newPageDom, newPageId);
-
+      syncDocumentPagesDOM();
       renderItemsEditor();
       updatePreviewFromForm();
       if (typeof toastOrc === 'function') toastOrc(`⧉ Página ${pageIdx + 1} duplicada com sucesso! (${clonedItems.length} itens)`);
@@ -1732,34 +1824,33 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     window.duplicateDocumentPage = duplicateDocumentPage;
 
     function removeActiveDocumentPage(pageIdx) {
-      if (typeof pageIdx !== 'number') pageIdx = activeFormPageIndex;
+      if (typeof pageIdx !== 'number' || isNaN(pageIdx) || pageIdx < 0 || pageIdx >= documentPages.length) {
+        pageIdx = activeFormPageIndex;
+      }
       if (documentPages.length <= 1) {
-        alert("O documento deve conter ao menos 1 página.");
+        if (typeof toastOrc === 'function') toastOrc('⚠️ O orçamento deve conter ao menos 1 página.');
+        else alert("O documento deve conter ao menos 1 página.");
         return;
       }
-      if (!confirm(`Remover a Página ${pageIdx + 1}? Os itens desta página serão excluídos.`)) return;
-      const pageToRemove = documentPages[pageIdx];
-      const pageId = pageToRemove.id;
-
-      if (pageIdx === documentPages.length - 1) {
-        removeLastDocumentPage();
-        return;
-      }
-
+      const removedNum = pageIdx + 1;
       documentPages.splice(pageIdx, 1);
-      const domPage = document.getElementById(`printable-a4-page-${pageId}`);
-      if (domPage && pageId !== 1) {
-        domPage.remove();
-      }
 
+      if (pageIdx < activeFormPageIndex) {
+        activeFormPageIndex--;
+      }
       if (activeFormPageIndex >= documentPages.length) {
         activeFormPageIndex = documentPages.length - 1;
       }
+      if (activeFormPageIndex < 0) {
+        activeFormPageIndex = 0;
+      }
 
+      syncDocumentPagesDOM();
       renderItemsEditor();
       updatePreviewFromForm();
-      if (typeof toastOrc === 'function') toastOrc('Página removida.');
-      else orcToast('Página removida.');
+      try { localStorage.setItem(ORC_AUTOSAVE_KEY, JSON.stringify(orcCollectState())); } catch(e) {}
+      if (typeof toastOrc === 'function') toastOrc(`🗑 Página ${removedNum} removida.`);
+      else orcToast(`🗑 Página ${removedNum} removida.`);
     }
     window.removeActiveDocumentPage = removeActiveDocumentPage;
 
@@ -1907,21 +1998,11 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     // Remove the very last A4 page
     function removeLastDocumentPage() {
       if (documentPages.length <= 1) {
-        alert("O documento deve conter ao menos 1 página.");
+        if (typeof toastOrc === 'function') toastOrc('⚠️ O orçamento deve conter ao menos 1 página.');
+        else alert("O documento deve conter ao menos 1 página.");
         return;
       }
-      const pageId = documentPages.length;
-      documentPages.pop();
-      if (activeFormPageIndex >= documentPages.length) {
-        activeFormPageIndex = documentPages.length - 1;
-      }
-
-      // Remove from preview DOM
-      const domPage = document.getElementById(`printable-a4-page-${pageId}`);
-      if (domPage) domPage.remove();
-
-      renderItemsEditor();
-      updatePreviewFromForm();
+      removeActiveDocumentPage(documentPages.length - 1);
     }
 
     // Set up text editing listeners on a newly appended page
@@ -1955,10 +2036,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     // Remove a row from the active table
     function deleteTableRow(index) {
       const activePage = documentPages[activeFormPageIndex];
-      if (activePage.tableItems.length <= 1) {
-        alert("A tabela deve conter ao menos 1 item.");
-        return;
-      }
+      if (!activePage || !Array.isArray(activePage.tableItems)) return;
+      if (activePage.tableItems.length === 0) return;
       activePage.tableItems.splice(index, 1);
       renderItemsEditor();
       updatePreviewFromForm();
@@ -2072,6 +2151,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     function updatePreviewFromForm() {
       if (isSyncing) return;
       isSyncing = true;
+      syncDocumentPagesDOM();
 
       const phoneVal = document.getElementById('edit-phone').value;
       const cnpjVal = document.getElementById('edit-cnpj').value;
@@ -2086,7 +2166,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       const watermarkOpacity = document.getElementById('edit-watermark-opacity').value;
 
       documentPages.forEach((pageState, pageIdx) => {
-        const pageId = pageState.id;
+        const pageId = pageIdx + 1;
+        pageState.id = pageId;
         
         // 1. Optimize density specifically based on that page's item count
         adjustLayoutDensityForPage(pageId, pageState.tableItems.length);
@@ -2148,7 +2229,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         document.getElementById(`preview-resp-name-${pageId}`).innerHTML = respNameVal;
 
         // Dynamic page numbering (Página X de Y)
-        document.getElementById(`preview-page-number-${pageId}`).innerText = `Página ${pageId} de ${documentPages.length}`;
+        document.getElementById(`preview-page-number-${pageId}`).innerText = `Página ${pageIdx + 1} de ${documentPages.length}`;
       });
 
 
@@ -2462,7 +2543,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
         '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-        '.v5-highlight-group','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
+        '.v5-highlight-group','.orc-a4-page-actions','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
       const saved = [];
       hideSelectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => {
@@ -2511,7 +2592,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
    Uses a flag to prevent double-hiding (printProposal + beforeprint both trigger). */
 const _printHideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
   '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-  '.v5-highlight-group','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
+  '.v5-highlight-group','.orc-a4-page-actions','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
 let _printSavedStyles = null; /* null = not hidden; array = hidden, originals saved */
 
 function _beforePrintHide() {

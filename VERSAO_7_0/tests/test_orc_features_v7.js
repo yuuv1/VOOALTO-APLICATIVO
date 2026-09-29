@@ -94,6 +94,34 @@ function check(label, ok, extra) {
   const draftsAfterDel = t(`orcGetDrafts()`);
   check('exclui rascunho com sucesso', !draftsAfterDel.some(d => d.id === draftId));
 
+  // 5. Test Page Removal (Pág. 1, página do meio e última página)
+  t(`documentPages = [
+    { id: 1, tableItems: [{ modelo: 'Item Pag 1', tecido: 'Piquet', descricao: 'A', qnt: 1, unit: 100 }] },
+    { id: 2, tableItems: [{ modelo: 'Item Pag 2', tecido: 'Dry', descricao: 'B', qnt: 2, unit: 150 }] },
+    { id: 3, tableItems: [{ modelo: 'Item Pag 3', tecido: 'Algodao', descricao: 'C', qnt: 3, unit: 200 }] }
+  ]; activeFormPageIndex = 0; syncDocumentPagesDOM(); renderItemsEditor(); updatePreviewFromForm(); 'ok'`);
+  check('3 páginas no DOM antes de remover', doc.querySelectorAll('#preview-pages-container .page').length === 3);
+  // Remove página do meio (Pág. 2 -> índice 1)
+  t(`removeActiveDocumentPage(1); 'ok'`);
+  check('remove página do meio -> restam 2 páginas no array', t(`documentPages.length`) === 2);
+  check('remove página do meio -> restam 2 páginas no DOM', doc.querySelectorAll('#preview-pages-container .page').length === 2);
+  check('IDs renumerados sequencialmente (1 e 2)', t(`documentPages.map(p=>p.id).join(',')`) === '1,2');
+  check('conteúdo da nova Pág. 2 é o antigo Item Pag 3', t(`documentPages[1].tableItems[0].modelo`) === 'Item Pag 3');
+  check('preview A4 da Pág. 2 mostra Item Pag 3', doc.getElementById('preview-table-body-2').textContent.includes('Item Pag 3'));
+
+  // Remove a PRIMEIRA página (Pág. 1 -> índice 0)
+  t(`removeActiveDocumentPage(0); 'ok'`);
+  check('remove Pág. 1 -> resta 1 página no array', t(`documentPages.length`) === 1);
+  check('remove Pág. 1 -> resta 1 página no DOM (#printable-a4-page-1)', doc.querySelectorAll('#preview-pages-container .page').length === 1 && !!doc.getElementById('printable-a4-page-1'));
+  check('Pág. restante tem id=1 e preserva Item Pag 3', t(`documentPages[0].id === 1 && documentPages[0].tableItems[0].modelo === 'Item Pag 3'`));
+  check('preview A4 da Pág. 1 atualizado para Item Pag 3', doc.getElementById('preview-table-body-1').textContent.includes('Item Pag 3'));
+
+  // Adicionar nova página e remover via removeLastDocumentPage()
+  t(`addDocumentPage(); 'ok'`);
+  check('adicionar página após exclusões cria #printable-a4-page-2', doc.querySelectorAll('#preview-pages-container .page').length === 2 && !!doc.getElementById('printable-a4-page-2'));
+  t(`removeLastDocumentPage(); 'ok'`);
+  check('removeLastDocumentPage remove a última folha do DOM', doc.querySelectorAll('#preview-pages-container .page').length === 1 && !doc.getElementById('printable-a4-page-2'));
+
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   console.log(`\n═══ RESULTADO ORÇAMENTO FEATURES: ${pass} OK, ${fail} FAIL ═══`);
   process.exit(fail ? 1 : 0);
