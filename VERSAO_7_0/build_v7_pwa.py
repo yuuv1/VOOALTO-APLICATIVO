@@ -85,8 +85,10 @@ self.addEventListener('fetch', e => {{
     try {{
       const net = await fetch(req);
       if (net && net.ok && url.pathname.startsWith('/')) {{
-        const clone = req.clone();
-        cache.put(clone, net).catch(() => {{}});
+        // Clone a RESPOSTA (não a requisição) antes de consumir no cache,
+        // senão o body é consumido e a página fica vazia, quebrando o PWA.
+        const copy = net.clone();
+        cache.put(req, copy).catch(() => {{}});
       }}
       return net;
     }} catch (err) {{
@@ -101,6 +103,16 @@ self.addEventListener('fetch', e => {{
     with open(sw_path, 'w', encoding='utf-8') as fh:
         fh.write(sw)
     print(f'sw.js gerado  cache={cache_name}  arquivos={len(precache)}')
+
+    # Garante CRLF em arquivos .bat para compatibilidade total com o cmd.exe do Windows
+    for root, dirs, fnames in os.walk(SRC):
+        for fn in fnames:
+            if fn.lower().endswith('.bat'):
+                bat_full = os.path.join(root, fn)
+                with open(bat_full, 'rb') as bf:
+                    raw_bat = bf.read().replace(b'\r\n', b'\n').replace(b'\r', b'\n').replace(b'\n', b'\r\n')
+                with open(bat_full, 'wb') as bf:
+                    bf.write(raw_bat)
 
     # ── zip ─
     zip_path = os.path.join(BASE, 'VOOALTO_V7_PWA.zip')

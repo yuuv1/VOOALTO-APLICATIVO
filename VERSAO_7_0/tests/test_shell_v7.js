@@ -53,6 +53,24 @@ const { BASE } = require('./_base');
   ok('reload', frames['orcamento'].reloaded === true);
   ok('ajuda abre', (w.eval(`openHelp()`), doc.getElementById('helpModal').classList.contains('open')));
   ok('ajuda fecha', (w.eval(`closeHelp()`), !doc.getElementById('helpModal').classList.contains('open')));
+
+  // ── V7.1: Ficha Técnica abre como popup dentro do sistema ──
+  ok('popup ficha existe', !!doc.getElementById('fichaPopup'));
+  ok('iframe ficha dentro do popup', doc.getElementById('fichaPopup').contains(doc.getElementById('frame-ficha')));
+  w.eval(`toggleFichaPopup()`);
+  ok('toggle abre popup', doc.getElementById('fichaPopup').classList.contains('open'));
+  ok('botão ficha ativo com popup aberto', doc.getElementById('btn-ficha').classList.contains('active'));
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  ok('Esc fecha popup', !doc.getElementById('fichaPopup').classList.contains('open'));
+  ok('botão ficha inativo após fechar', !doc.getElementById('btn-ficha').classList.contains('active'));
+  w.postMessage({ type: 'vooalto-switch-tab', tab: 'ficha' }, '*');
+  await new Promise(r => setTimeout(r, 120));
+  ok('switch-tab ficha abre popup', doc.getElementById('fichaPopup').classList.contains('open'));
+  w.eval(`showProject('principal')`);
+  ok('trocar de módulo fecha popup', !doc.getElementById('fichaPopup').classList.contains('open'));
+  w.eval(`openFichaPopup(); closeFichaPopup(true)`);
+  ok('fechamento silencioso ok', !doc.getElementById('fichaPopup').classList.contains('open'));
+
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   process.exit(process.exitCode || 0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

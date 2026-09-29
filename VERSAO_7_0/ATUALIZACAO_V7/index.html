@@ -5,13 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vooalto V7</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#050505" id="themeColorMeta">
+<meta name="theme-color" content="#eef0ff" id="themeColorMeta">
 <meta name="application-name" content="Vooalto V7">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>
+/* Anti-flash síncrono: aplica o tema salvo ANTES do primeiro paint,
+   evitando que o navegador pinte o fundo padrão (#eef0ff) e depois troque. */
+(function(){
+  try{
+    var t=localStorage.getItem('vooalto_theme_v5')||'neo';
+    var LIGHT={neo:1,butter:1,cherry:1,vanilla:1,yellowblack:1,wine:1,coffee:1,pastel:1,givry:1};
+    var V={neo:['#eef0ff','#eef0ff','#17172a'],oxford:['#002147','#002147','#f6e7ca'],cherry:['#efe6de','#9a0002','#fff8ec'],
+      butter:['#ffefb3','#013e37','#ffefb3'],asphalt:['#10002b','#10002B','#fff'],vanilla:['#fff7e6','#fff7e6','#0a122a'],
+      yellowblack:['#f9d344','#f9d344','#111'],wine:['#f5ebd0','#7f011f','#fff'],burgundy:['#151515','#93032e','#fff'],
+      crimson:['#021024','#c50337','#fff'],sunset:['#242f49','#242f49','#fff'],ocean:['#021024','#021024','#fff'],
+      coffee:['#f7f1e8','#8b5e3c','#2b2118'],pastel:['#f8f7ff','#f8f7ff','#242038'],dark:['#0b0f17','#0b0f17','#fff'],
+      givry:['#F5E4CF','#F5E4CF','#275CCC'],neon:['#000000','#000000','#FD4012'],stratos:['#011936','#011936','#ED254E'],
+      kiwi:['#222222','#222222','#89E900'],asphaltsolid:['#10002B','#10002B','#8338EC'],tech:['#0A1929','#0A1929','#64FFDA'],
+      coral:['#1A0A0A','#1A0A0A','#FF6B6B'],lime:['#0D1A0D','#0D1A0D','#00E676'],violet:['#1A0D2E','#1A0D2E','#BB86FC']};
+    var v=V[t]||V.neo;
+    var scheme=(LIGHT[t]?'light':'dark');
+    var st=document.createElement('style');
+    st.id='__theme_boot';
+    st.textContent=':root{--shell-bg:'+v[0]+';--top-solid:'+v[1]+';--bar-text:'+v[2]+'!important;--top-grad:none}html,body{background:'+v[0]+'!important;color:'+v[2]+'!important;color-scheme:'+scheme+'}iframe.project-frame{background:'+v[0]+'!important;color-scheme:'+scheme+'!important}';
+    if(t!=='neo')st.textContent+='html{data-theme="'+t+'"}';
+    document.documentElement.setAttribute('data-theme-boot','1');
+    document.documentElement.style.colorScheme=scheme;
+    document.write('<style>'+st.textContent+'</style>');
+  }catch(e){}
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f5f7;color:#111827}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--shell-bg,#eef0ff);color:#111827}
+/* Suaviza APENAS trocas manuais (classe .theme-animating) — na carga inicial não pisca */
+html.theme-animating body,html.theme-animating .app-shell,html.theme-animating .topbar,html.theme-animating .frame-wrap,html.theme-animating .project-frame{transition:background-color .18s ease,color .18s ease}
 :root{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
 /* ── temas (degradê) ── */
 body[data-theme="neo"]{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
@@ -58,13 +87,26 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
 .utility-btn{border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.22);color:inherit;padding:8px 11px;border-radius:999px;cursor:pointer;font-size:11.5px;font-weight:760;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
 .utility-btn:hover{background:rgba(255,255,255,.4)}
 .frame-wrap{position:relative;flex:1;min-height:0;background:var(--shell-bg)}
-.project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:none}
+.project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--shell-bg,#eef0ff);display:none;color-scheme:light dark}
 .project-frame.active{display:block}
-.loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--bar-text);background:var(--shell-bg);z-index:10;font-weight:760;font-size:13px}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--bar-text);background:var(--shell-bg,#eef0ff);z-index:10;font-weight:760;font-size:13px}
 .loading .spin{width:34px;height:34px;border:3px solid rgba(127,127,140,.3);border-top-color:currentColor;border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .toast{position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.90);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:760;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999}
 .toast.show{opacity:1;transform:translateY(0)}
+/* ── Popup da Ficha Técnica (janela sobre o sistema) ── */
+.ficha-popup{position:fixed;inset:0;background:rgba(5,5,10,.55);backdrop-filter:blur(3px);display:none;align-items:stretch;justify-content:center;z-index:9000;padding:clamp(0px,3vh,34px) clamp(0px,3vw,44px)}
+.ficha-popup.open{display:flex;animation:fpIn .16s ease-out}
+@keyframes fpIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
+.ficha-popup-card{position:relative;flex:1;max-width:1700px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.5);display:flex;flex-direction:column}
+.ficha-popup-head{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#111827;color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}
+.ficha-popup-title{font-size:13px;font-weight:900;letter-spacing:.3px;display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.ficha-popup-title small{font-weight:600;font-size:10.5px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ficha-popup-close{margin-left:auto;border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;padding:7px 14px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}
+.ficha-popup-close:hover{background:#DC2626}
+.ficha-popup-body{position:relative;flex:1;min-height:0;background:#4B5563}
+.ficha-popup-body .project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;display:block}
+@media(max-width:640px){.ficha-popup{padding:0}.ficha-popup-card{border-radius:0}}
 .help-modal{position:fixed;inset:0;background:rgba(5,5,10,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:18px}
 .help-modal.open{display:flex}
 .help-card{background:#fff;color:#111827;border-radius:18px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
@@ -92,7 +134,7 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
     </div>
     <nav class="switcher">
       <button class="switch-btn active" id="btn-principal" onclick="showProject('principal')" title="Fichas em produção, prioridades e PDFs">🏠 Catalogação<span class="badge" id="badgeAlta">0</span></button>
-      <button class="switch-btn" id="btn-ficha" onclick="showProject('ficha')" title="Criar ficha técnica de produção (A4)">📋 Ficha Técnica</button>
+      <button class="switch-btn" id="btn-ficha" onclick="toggleFichaPopup()" title="Abre a Ficha Técnica em janela sobre o sistema (Esc fecha)">📋 Ficha Técnica</button>
       <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
     </nav>
     <div class="controls">
@@ -120,7 +162,6 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
   <main class="frame-wrap">
     <div class="loading" id="loading"><div class="spin"></div>Carregando V7...</div>
     <iframe class="project-frame active" id="frame-principal" src="principal_dashboard/index.html"></iframe>
-    <iframe class="project-frame" id="frame-ficha" src="criador_ficha_tecnica/index.html"></iframe>
     <iframe class="project-frame" id="frame-orcamento" src="criador_orcamento/index.html"></iframe>
   </main>
 </div>
@@ -132,7 +173,7 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
     <div class="sub">Três módulos integrados: crie a ficha, catalogue a produção e envie orçamentos.</div>
     <div class="help-item"><div class="ico">📋</div><div>
       <b>1 · Ficha Técnica</b>
-      <p>Crie a ficha de produção no <b>Ficha Técnica</b>: dados do cliente, modelos, valores, cores e imagens. Quando terminar, clique em <b>Enviar para Catalogação</b> (embaixo). O número da ficha avança sozinho.</p>
+      <p>Abre em <b>janela sobre o sistema</b> (não sai da Catalogação): dados do cliente, modelos, valores, cores e imagens. Quando terminar, clique em <b>Enviar para Catalogação</b> (embaixo) — a janela fecha sozinha. Para fechar antes, use o botão <b>✕ Fechar</b> ou a tecla <b>Esc</b>; o que já foi preenchido continua salvo. O número da ficha avança sozinho.</p>
     </div></div>
     <div class="help-item"><div class="ico">🏠</div><div>
       <b>2 · Catalogação</b>
@@ -154,6 +195,18 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
 </div>
 <div class="toast" id="toast"></div>
 
+<div class="ficha-popup" id="fichaPopup">
+  <div class="ficha-popup-card">
+    <div class="ficha-popup-head">
+      <div class="ficha-popup-title">📋 Ficha Técnica <small>· janela sobre o sistema — seu trabalho continua salvo ao fechar</small></div>
+      <button class="ficha-popup-close" onclick="closeFichaPopup()" title="Fechar a Ficha Técnica (Esc)">✕ Fechar</button>
+    </div>
+    <div class="ficha-popup-body">
+      <iframe class="project-frame" id="frame-ficha" src="criador_ficha_tecnica/index.html" title="Criador de Ficha Técnica"></iframe>
+    </div>
+  </div>
+</div>
+
 <script>
 const PROJECTS={
   principal:{name:'Catalogação',button:'btn-principal',frame:'frame-principal'},
@@ -163,26 +216,80 @@ const PROJECTS={
 let activeProject='principal';
 let deferredInstallPrompt=null;
 
-function setShellTheme(t){
+let currentTheme=null; // evita aplicar tema repetidamente / loop de mensagens
+const LIGHT_THEMES={neo:1,butter:1,cherry:1,vanilla:1,yellowblack:1,wine:1,coffee:1,pastel:1,givry:1};
+const THEME_VARS={
+  neo:     {bg:'#eef0ff',top:'#eef0ff',text:'#17172a',grad:'linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72))'},
+  oxford:  {bg:'#002147',top:'#002147',text:'#f6e7ca',grad:'linear-gradient(135deg,#002147,#d2b48c)'},
+  cherry:  {bg:'#efe6de',top:'#9a0002',text:'#fff8ec',grad:'linear-gradient(135deg,#9a0002,#efe6de)'},
+  butter:  {bg:'#ffefb3',top:'#013e37',text:'#ffefb3',grad:'linear-gradient(135deg,#ffefb3,#013e37)'},
+  asphalt: {bg:'#10002b',top:'#10002B',text:'#fff',   grad:'linear-gradient(135deg,#10002b,#8338ec)'},
+  vanilla: {bg:'#fff7e6',top:'#fff7e6',text:'#0a122a',grad:'linear-gradient(135deg,#fff7e6,#0a122a)'},
+  yellowblack:{bg:'#f9d344',top:'#f9d344',text:'#111',grad:'linear-gradient(135deg,#f9d344,#2e2d29)'},
+  wine:    {bg:'#f5ebd0',top:'#7f011f',text:'#fff',   grad:'linear-gradient(135deg,#7f011f,#f5ebd0)'},
+  burgundy:{bg:'#151515',top:'#93032e',text:'#fff',   grad:'linear-gradient(135deg,#93032e,#151515)'},
+  crimson: {bg:'#021024',top:'#c50337',text:'#fff',   grad:'linear-gradient(135deg,#c50337,#021024)'},
+  sunset:  {bg:'#242f49',top:'#242f49',text:'#fff',   grad:'linear-gradient(135deg,#e51a2b,#ffa586,#242f49)'},
+  ocean:   {bg:'#021024',top:'#021024',text:'#fff',   grad:'linear-gradient(135deg,#c1e8ff,#052659,#021024)'},
+  coffee:  {bg:'#f7f1e8',top:'#8b5e3c',text:'#2b2118',grad:'linear-gradient(135deg,#fff8ee,#8b5e3c)'},
+  pastel:  {bg:'#f8f7ff',top:'#f8f7ff',text:'#242038',grad:'linear-gradient(135deg,#fff,#ffc8dd,#bde0fe)'},
+  dark:    {bg:'#0b0f17',top:'#0b0f17',text:'#fff',   grad:'linear-gradient(135deg,#171b24,#050505)'},
+  givry:      {bg:'#F5E4CF',top:'#F5E4CF',text:'#275CCC',grad:null},
+  neon:       {bg:'#000000',top:'#000000',text:'#FD4012',grad:null},
+  stratos:    {bg:'#011936',top:'#011936',text:'#ED254E',grad:null},
+  kiwi:       {bg:'#222222',top:'#222222',text:'#89E900',grad:null},
+  asphaltsolid:{bg:'#10002B',top:'#10002B',text:'#8338EC',grad:null},
+  tech:       {bg:'#0A1929',top:'#0A1929',text:'#64FFDA',grad:null},
+  coral:      {bg:'#1A0A0A',top:'#1A0A0A',text:'#FF6B6B',grad:null},
+  lime:       {bg:'#0D1A0D',top:'#0D1A0D',text:'#00E676',grad:null},
+  violet:     {bg:'#1A0D2E',top:'#1A0D2E',text:'#BB86FC',grad:null}
+};
+
+function setShellTheme(t,opts){
   t=t||'neo';
-  document.body.dataset.theme=(t==='neo')?'':t;
+  if(currentTheme===t)return; // evita repintura/loop
+  currentTheme=t;
+  const v=THEME_VARS[t]||THEME_VARS.neo;
+  const scheme=(LIGHT_THEMES[t]?'light':'dark');
+  const withAnim=opts&&opts.animate;
+  // remove o estilo de boot anti-flash (não é mais necessário agora que o CSS real carregou)
+  const bootStyle=document.getElementById('__theme_boot');
+  if(bootStyle)bootStyle.remove();
+  document.documentElement.removeAttribute('data-theme-boot');
+  if(withAnim)document.documentElement.classList.add('theme-animating');
+  // aplica variáveis DIRETO no :root
+  const root=document.documentElement;
+  root.style.setProperty('--shell-bg',v.bg);
+  root.style.setProperty('--top-solid',v.top);
+  root.style.setProperty('--bar-text',v.text);
+  if(v.grad)root.style.setProperty('--top-grad',v.grad);
+  else root.style.setProperty('--top-grad','none');
+  if(t==='neo'){root.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}
+  else{root.setAttribute('data-theme',t);document.body.setAttribute('data-theme',t)}
+  root.style.colorScheme=scheme;
+  document.querySelectorAll('iframe.project-frame').forEach(f=>{
+    f.style.background=v.bg;
+    f.style.colorScheme=scheme;
+  });
   const meta=document.getElementById('themeColorMeta');
-  if(meta){
-    const bg=getComputedStyle(document.body).getPropertyValue('--shell-bg').trim()||'#eef0ff';
-    meta.content=bg;
-  }
+  if(meta)meta.content=v.bg;
   const sel=document.getElementById('themeSelect');
   if(sel&&sel.value!==t)sel.value=t;
   try{localStorage.setItem('vooalto_theme_v5',t)}catch(e){}
+  if(withAnim)setTimeout(()=>document.documentElement.classList.remove('theme-animating'),200);
 }
 function applyThemeFromShell(t){
-  setShellTheme(t);
+  if(currentTheme===t)return;
+  // APLICA NO SHELL IMEDIATAMENTE (síncrono, com animação), DEPOIS avisa os iframes.
+  // Isso evita o flash: o shell já está na cor nova quando os iframes repintam.
+  setShellTheme(t,{animate:true});
   broadcastTheme(t);
   toast('🎨 Tema aplicado: '+(t||'Neo Glass'));
 }
 function broadcastTheme(t){
   Object.keys(PROJECTS).forEach(k=>{
     const fr=document.getElementById(PROJECTS[k].frame);
+    if(!fr)return;
     try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}
   });
 }
@@ -191,12 +298,23 @@ function broadcastTheme(t){
 window.addEventListener('message',e=>{
   if(!e.data||!e.data.type)return;
   if(e.data.type==='vooalto-theme'){
-    setShellTheme(e.data.theme);
-    /* repassa aos outros módulos */
+    // Quando um módulo interno avisa que o usuário trocou o tema nele,
+    // aplica no shell mas NÃO reenvia para todos os iframes (evita loop infinito).
+    // Envia só para os OUTROS iframes que não foram a origem.
+    if(currentTheme===e.data.theme)return;
+    setShellTheme(e.data.theme,{animate:true});
     Object.keys(PROJECTS).forEach(k=>{
       const fr=document.getElementById(PROJECTS[k].frame);
-      try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:e.data.theme},'*')}catch(err){}
+      // Evita mandar de volta para quem enviou (comparando por source — o iframe que enviou é e.source)
+      if(fr&&fr.contentWindow!==e.source){
+        try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:e.data.theme},'*')}catch(err){}
+      }
     });
+    // Sincroniza o select do shell
+    const sel=document.getElementById('themeSelect');
+    if(sel)sel.value=e.data.theme;
+    try{localStorage.setItem('vooalto_theme_v5',e.data.theme)}catch(e){}
+    return;
   }
   if(e.data.type==='vooalto-ficha-to-catalog'){
     const pf=document.getElementById(PROJECTS.principal.frame);
@@ -218,6 +336,8 @@ window.addEventListener('message',e=>{
       pf.contentWindow.postMessage(e.data,'*');
       toast('✅ Ficha atualizada na Catalogação');
     }
+    closeFichaPopup(true);
+    showProject('principal');
   }
   if(e.data.type==='vooalto-switch-tab'&&e.data.tab&&PROJECTS[e.data.tab]){
     showProject(e.data.tab);
@@ -230,22 +350,20 @@ window.addEventListener('message',e=>{
 function updateBadge(n){
   const b=document.getElementById('badgeAlta');
   if(!b)return;
+  n=parseInt(n)||0;
   b.textContent=n;
   b.classList.toggle('show',n>0);
 }
-function pollCounts(){
-  try{
-    const fr=document.getElementById(PROJECTS.principal.frame);
-    const c=fr&&fr.contentWindow&&fr.contentWindow.vooaltoCounts;
-    if(c)updateBadge(c.alta||0);
-  }catch(e){}
-}
-setInterval(pollCounts,3000);
+/* Sem polling: a catalogação envia os counts quando renderiza, evita setInterval de 3s */
+function vooaltoCountsFrom(e){try{return e&&e.data&&e.data.type==='vooalto-counts';}catch(_){return false;}}
 
 function showProject(key){
+  if(key==='ficha'){openFichaPopup();return}
+  if(fichaPopupOpen)closeFichaPopup(true);
   activeProject=key;
   Object.keys(PROJECTS).forEach(k=>{
     const p=PROJECTS[k];
+    if(k==='ficha')return;
     document.getElementById(p.button).classList.toggle('active',k===key);
     document.getElementById(p.frame).classList.toggle('active',k===key);
   });
@@ -253,10 +371,46 @@ function showProject(key){
   if(l)l.style.display='none';
   toast('Aberto: '+PROJECTS[key].name);
 }
+
+/* ── Popup da Ficha Técnica (janela sobre o sistema) ── */
+let fichaPopupOpen=false;
+function openFichaPopup(){
+  fichaPopupOpen=true;
+  const fp=document.getElementById('fichaPopup');
+  if(fp)fp.classList.add('open');
+  const bf=document.getElementById('btn-ficha');
+  if(bf)bf.classList.add('active');
+  ['principal','orcamento'].forEach(k=>{
+    const b=document.getElementById(PROJECTS[k].button);
+    if(b)b.classList.remove('active');
+  });
+  /* se virou o dia desde a última abertura, a ficha em branco já abre com a data de hoje */
+  try{
+    const ff=document.getElementById(PROJECTS.ficha.frame);
+    if(ff&&ff.contentWindow&&typeof ff.contentWindow.v7FichaDayTick==='function')ff.contentWindow.v7FichaDayTick();
+  }catch(e){}
+  toast('📋 Ficha Técnica aberta — feche com ✕ Fechar ou Esc');
+}
+function closeFichaPopup(silent){
+  if(!fichaPopupOpen)return;
+  fichaPopupOpen=false;
+  const fp=document.getElementById('fichaPopup');
+  if(fp)fp.classList.remove('open');
+  const bf=document.getElementById('btn-ficha');
+  if(bf)bf.classList.remove('active');
+  if(activeProject!=='ficha'){
+    const ab=document.getElementById(PROJECTS[activeProject].button);
+    if(ab)ab.classList.add('active');
+  }
+  if(!silent)toast('Ficha Técnica fechada — o preenchido continua salvo nela');
+}
+function toggleFichaPopup(){fichaPopupOpen?closeFichaPopup():openFichaPopup()}
+document.getElementById('fichaPopup').addEventListener('click',e=>{if(e.target.id==='fichaPopup')closeFichaPopup()});
 function reloadActive(){
-  const fr=document.getElementById(PROJECTS[activeProject].frame);
+  const key=fichaPopupOpen?'ficha':activeProject;
+  const fr=document.getElementById(PROJECTS[key].frame);
   try{fr.contentWindow.location.reload()}catch(e){fr.src=fr.src}
-  toast('Recarregado: '+PROJECTS[activeProject].name);
+  toast('Recarregado: '+PROJECTS[key].name);
 }
 function toast(msg){
   const t=document.getElementById('toast');
@@ -268,6 +422,11 @@ function toast(msg){
 function openHelp(){document.getElementById('helpModal').classList.add('open')}
 function closeHelp(){document.getElementById('helpModal').classList.remove('open')}
 document.getElementById('helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')closeHelp()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(fichaPopupOpen)closeFichaPopup();
+  else closeHelp();
+});
 
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
@@ -288,7 +447,14 @@ async function installPWA(){
 }
 
 function initVooalto(){
-  try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'neo')}catch(e){}
+  // Aplica tema SALVO SEM animação no boot (evita flash de cor padrão→tema)
+  try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'neo',{animate:false})}catch(e){}
+  const syncThemeTo=fr=>{try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'neo'},'*')}catch(e){}};
+  /* Quando cada iframe carrega, empurra o tema atual pra ele (cobre reloads e cold start) */
+  Object.values(PROJECTS).forEach(p=>{
+    const f=document.getElementById(p.frame);
+    if(f)f.addEventListener('load',()=>syncThemeTo(f));
+  });
   /* esconde o loading quando o primeiro iframe carregar e garante tela de catalogacao */
   const fr=document.getElementById('frame-principal');
   const ensureCatalog=()=>{
@@ -300,10 +466,11 @@ function initVooalto(){
       }
       fr.contentWindow.postMessage({type:'vooalto-switch-view',view:'catalogo'},'*');
     }catch(e){}
+    syncThemeTo(fr);
   };
   fr.addEventListener('load',ensureCatalog);
-  setTimeout(ensureCatalog,1200);
-  setTimeout(ensureCatalog,3500);
+  setTimeout(ensureCatalog,400);
+  setTimeout(ensureCatalog,1500);
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initVooalto)}else{initVooalto()}
 if('serviceWorker' in navigator){

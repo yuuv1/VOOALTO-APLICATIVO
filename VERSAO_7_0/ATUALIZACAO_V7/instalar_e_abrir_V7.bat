@@ -1,54 +1,85 @@
 @echo off
-setlocal
-title Instalador Vooalto V7
-color 0A
+setlocal EnableExtensions
 cd /d "%~dp0"
+title Vooalto V7 - Servidor Local
+set PORT=4700
+set URL=http://localhost:%PORT%
 
-echo ══════════════════════════════════════════════════════
-echo   VOOALTO V7 - Instalacao e Servidor
-echo ══════════════════════════════════════════════════════
+echo ====================================================
+echo   VOOALTO V7 - UNIFORMES (Aplicativo Offline / PWA)
+echo ====================================================
 echo.
 
 where node >nul 2>nul
-if errorlevel 1 (
-  echo [ERRO] Node.js nao encontrado.
-  echo Baixe e instale em: https://nodejs.org  (versao LTS)
-  echo Depois, execute este arquivo novamente.
-  echo.
-  pause
-  exit /b 1
-)
-echo [OK] Node.js encontrado.
+if %errorlevel% equ 0 goto :run_node
 
-echo [1/3] Iniciando o servidor em http://localhost:4700 ...
-start "" /min cmd /c "node server.js"
+if exist "%ProgramFiles%\nodejs\node.exe" set "PATH=%ProgramFiles%\nodejs;%PATH%"
+if exist "%ProgramFiles(x86)%\nodejs\node.exe" set "PATH=%ProgramFiles(x86)%\nodejs;%PATH%"
+if exist "%LOCALAPPDATA%\Programs\nodejs\node.exe" set "PATH=%LOCALAPPDATA%\Programs\nodejs;%PATH%"
+if defined NVM_SYMLINK if exist "%NVM_SYMLINK%\node.exe" set "PATH=%NVM_SYMLINK%;%PATH%"
 
-echo [2/3] Aguardando o servidor subir ...
-set /a TENTATIVA=0
-:AGUARDAR
-set /a TENTATIVA+=1
-timeout /t 1 /nobreak >nul
-powershell -NoProfile -Command "try{$r=Invoke-WebRequest -Uri 'http://localhost:4700' -UseBasicParsing -TimeoutSec 2; exit 0}catch{exit 1}" >nul 2>nul
-if errorlevel 1 (
-  if %TENTATIVA% LSS 25 goto AGUARDAR
-  echo [ERRO] Servidor nao respondeu apos 25 segundos.
-  pause
-  exit /b 1
-)
+where node >nul 2>nul
+if %errorlevel% equ 0 goto :run_node
 
-echo [3/3] Abrendo o Vooalto V7 no navegador ...
-start "" "http://localhost:4700"
+where python >nul 2>nul
+if %errorlevel% equ 0 goto :run_python
 
+where py >nul 2>nul
+if %errorlevel% equ 0 goto :run_py
+
+echo [!] Node.js nao foi encontrado neste computador.
+echo     Instale o Node.js LTS em: https://nodejs.org
+echo     e execute novamente este arquivo.
 echo.
-echo ══════════════════════════════════════════════════════
-echo   VOOALTO V7 esta rodando!
-echo   - Aplicativo:        http://localhost:4700
-echo   - Limpar cache:      http://localhost:4700/limpar_cache.html
-echo   - Zerar dados:       http://localhost:4700/zerar_dados.html
-echo.
-echo   Para parar o servidor, feche a janela do Node
-echo   (o quadro preto minimizado que abriu).
-echo ══════════════════════════════════════════════════════
-echo.
+start "" "https://nodejs.org"
 pause
-endlocal
+exit /b 1
+
+:run_node
+echo [OK] Iniciando servidor local em %URL% ...
+echo      (Mantenha esta janela aberta enquanto usar o Vooalto V7)
+echo.
+node "%~dp0server.js" --open
+if %errorlevel% neq 0 (
+  echo.
+  echo [!] O servidor encerrou com erro. Pressione qualquer tecla para sair.
+  pause >nul
+)
+exit /b 0
+
+:run_python
+echo [OK] Iniciando servidor via Python em %URL% ...
+echo      (Mantenha esta janela aberta enquanto usar o Vooalto V7)
+echo.
+call :open_browser
+python -m http.server %PORT%
+pause
+exit /b 0
+
+:run_py
+echo [OK] Iniciando servidor via Python Launcher em %URL% ...
+echo      (Mantenha esta janela aberta enquanto usar o Vooalto V7)
+echo.
+call :open_browser
+py -3 -m http.server %PORT%
+pause
+exit /b 0
+
+:open_browser
+set "EDGE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+if not exist "%EDGE%" set "EDGE=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
+if not exist "%EDGE%" set "EDGE=%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe"
+set "CHROME=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
+if not exist "%CHROME%" set "CHROME=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+if not exist "%CHROME%" set "CHROME=%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"
+
+if exist "%EDGE%" (
+  start "" "%EDGE%" --app=%URL%
+  goto :eof
+)
+if exist "%CHROME%" (
+  start "" "%CHROME%" --app=%URL%
+  goto :eof
+)
+start "" "%URL%"
+goto :eof

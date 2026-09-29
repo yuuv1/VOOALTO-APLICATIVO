@@ -519,6 +519,13 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .arr-ep{width:12px;height:12px;border:2.5px solid var(--ar);z-index:202;transform:translate(-50%,-50%)}
 .arr-layer.sel .arr-ep{display:block}
 
+/* ══ Marquee de seleção múltipla + caixa do grupo ══ */
+.v7-marquee{position:absolute;border:1.5px dashed #3B82F6;background:rgba(59,130,246,.08);z-index:300;pointer-events:none}
+.v7-group-box{position:absolute;border:1.5px solid #3B82F6;background:transparent;z-index:250;pointer-events:none;box-sizing:border-box}
+.v7-group-rot{position:absolute;width:16px;height:16px;border:2.5px solid #3B82F6;background:#fff;border-radius:50%;z-index:350;cursor:crosshair;margin-left:-8px;margin-top:-8px;box-shadow:0 1px 5px rgba(0,0,0,.25)}
+.v7-group-rot::after{content:'';position:absolute;left:50%;top:100%;width:2px;height:26px;background:#3B82F6;transform:translateX(-50%);margin-top:2px}
+.img-layer.msel,.txt-layer.msel,.arr-layer.msel,.rect-layer.msel,.circle-layer.msel{outline:2px dashed #3B82F6!important;outline-offset:2px!important;}
+
 /* CANVAS TOOLBARS */
 .canvas-tb,.text-tb,.arr-tb{position:absolute;left:50%;transform:translateX(-50%);display:none;gap:3px;align-items:center;background:rgba(255,255,255,.97);border:1px solid var(--bd);border-radius:8px;padding:5px 9px;box-shadow:0 4px 18px rgba(0,0,0,.15);z-index:502;white-space:nowrap;backdrop-filter:blur(8px)}
 .canvas-tb{bottom:8px;gap:2px;border-radius:7px;padding:4px 7px;z-index:500}
@@ -795,7 +802,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="sb-btn-icon">🗋</div>
 <span class="sb-btn-label">Nova ficha</span>
 </button>
-<button class="sb-btn sb-btn-accent" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelo, valores e aviso de uma vez">
+<button class="sb-btn sb-btn-accent" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelos, valores, grade de tamanhos e aviso de uma vez só">
 <div class="sb-btn-icon">⚡</div>
 <span class="sb-btn-label">Preenchimento rápido</span>
 </button>
@@ -1231,6 +1238,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <button class="ct-btn" onclick="lTras()">⬇</button>
 <button class="ct-btn" onclick="lCentro()">⊕ Centro</button>
 <button class="ct-btn" onclick="lFill()">⤢ Fill</button>
+<button class="ct-btn" onclick="aninharImagens()" title="Aninhar/encaixar imagens (aproxima aproveitando os espaços)">🧩 Aninhar</button>
 <button class="ct-btn" onclick="abrirCrop('layer')">✂️</button>
 <button class="ct-btn" id="propBtn" onclick="toggleProp()">🔒</button>
 <div class="ct-sep"></div>
@@ -1379,12 +1387,24 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 </div>
 <script>
 const fmt=n=>{
+  if(!isFinite(n))n=0;
   const partes=n.toFixed(2).split('.');
   partes[0]=partes[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   return partes.join(',');
 };
+/* Converte string formatada em BRL ("1.234,56") para Number (1234.56) */
+function parseBRL(s){
+  if(typeof s==='number')return isFinite(s)?s:0;
+  if(!s)return 0;
+  // remove R$, espaços, e o ponto de milhar; troca a vírgula decimal por ponto
+  const v=String(s).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.').trim();
+  const n=parseFloat(v);
+  return isFinite(n)?n:0;
+}
 const uid=()=>'_'+Math.random().toString(36).slice(2,9);
 const $=id=>document.getElementById(id);
+/* V7.1 — data de hoje no fuso local (toISOString usava UTC e dava "ontem" de madrugada) */
+const v7HojeISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 function contraste(hex){try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(0.299*r+0.587*g+0.114*b)>128?'#000':'#fff';}catch(e){return'#000';}}
 function toast(msg,tipo='',dur=2400){const t=$('toast');t.textContent=msg;t.className='show '+tipo;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',dur);}
 
@@ -1937,14 +1957,14 @@ function getTotalLinhasExtra(p){
 let t=0;
 document.querySelectorAll(`#prodLinhas_${p.id} tr`).forEach(tr=>{
 const inps=tr.querySelectorAll('input');
-t+=(parseFloat(((inps[1]?inps[1].value:'0')||'0').replace(',','.'))||0)*(parseFloat(inps[2]?inps[2].value:'0')||0);
+t+=parseBRL(inps[1]?inps[1].value:'0')*(parseFloat(inps[2]?inps[2].value:'0')||0);
 });return t;
 }
 function recalcLExtra(pid,id){
 const p=paginas.find(x=>x.id===pid);if(!p)return;
 const tr=$(`ln_${pid}_${id}`);if(!tr)return;
 const inps=tr.querySelectorAll('input');
-const v=parseFloat(((inps[1]?inps[1].value:'0')||'0').replace(',','.'))||0;
+const v=parseBRL(inps[1]?inps[1].value:'0');
 const q=parseFloat(inps[2]?inps[2].value:'0')||0;
 const vt=$(`vt_${pid}_${id}`);if(vt)vt.textContent=(v&&q)?'R$\u00a0'+fmt(v*q):'—';
 calcTotalExtra(p);
@@ -1959,8 +1979,7 @@ function calcEntradaExtra(pid,total){
 const p=paginas.find(x=>x.id===pid);
 const t=total===undefined?(p?getTotalLinhasExtra(p):0):total;
 const ev=$('entradaVal_'+pid),rv=$('restanteVal_'+pid);if(!ev||!rv)return;
-const raw=ev.value.replace(/[R$\s]/g,'').replace(',','.').trim();
-rv.value=fmt(t-(parseFloat(raw)||0));
+rv.value=fmt(t-parseBRL(ev.value));
 }
 
 /* ═══ GRADE EXTRA ═══ */
@@ -2294,7 +2313,9 @@ const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','s
 const CAMPOS_CE=['dc_nome','dc_doc','dc_tel','dc_end','dc_cidade','dc_cep','dc_vendedor','tipoTecido'];
 let undoStack=[],redoStack=[],snapTimer=null;
 let undoSeqStack=[],redoSeqStack=[],v7OpSeq=0,v7SuppressSnap=false;
+let snapLastSig=''; // assinatura LEVE da última mudança (evita JSON.stringify pesado enquanto o usuário digita)
 
+// Retorna o estado completo sem dupla-serialização (o retorno ainda pode ter dataURL de imagens)
 function capState(){
 const d={};
 CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el)d[id]=el.value;});
@@ -2304,7 +2325,27 @@ const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{
 d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
 d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0}));
-return JSON.parse(JSON.stringify(d));
+return d;
+}
+// Assinatura LEVE do estado — NÃO inclui src de imagens (que podem ser MBs), mas cobre todos os campos de texto e metadados das camadas.
+// Serve para detectar "nada mudou" sem serializar o blob das imagens.
+function _snapSig(){
+const p=[];
+CAMPOS_INPUT.forEach(id=>{const el=$(id);p.push(id+'='+(el?el.value:''));});
+CAMPOS_CE.forEach(id=>{const el=$(id);p.push(id+'='+(el?el.innerHTML:''));});
+document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{p.push('g'+i+'='+el.value);});
+p.push('ncores='+document.querySelectorAll('#coresList [id^="ci_"]').length);
+p.push('nlayers='+layers.length);
+layers.forEach((l,i)=>{
+  let s=l.type+'|'+l.xp.toFixed(3)+','+l.yp.toFixed(3)+','+l.wp.toFixed(3)+','+l.hp.toFixed(3)+'|'+(l.rot||0);
+  if(l.type==='txt')s+='|'+(l.txt||'').slice(0,40)+'|'+(l.font||'')+'|'+l.size+'|'+l.color;
+  if(l.type==='img')s+='|'+(l.src?'img':l.src); // só indica HÁ imagem (evita serializar dataURL)
+  if(l.type==='arr')s+='|'+l.color+'|'+(l.stroke||'')+'|'+l.arStyle;
+  if(l.type==='rect'||l.type==='circle')s+='|'+(l.fillColor||'')+'|'+(l.strokeColor||'')+'|'+(l.strokeWidth||0);
+  p.push('L'+i+':'+s);
+});
+paginas.forEach(pg=>{p.push('pg'+pg.id+'='+pg.layers.length);});
+return p.join('');
 }
 function serLayer(l){
 const b={id:l.id,type:l.type,xp:l.xp,yp:l.yp,wp:l.wp,hp:l.hp,rot:l.rot||0,z:l.z};
@@ -2343,9 +2384,27 @@ salvarNum();calcTotal();
 function snap(){
 if(v7SuppressSnap)return;
 clearTimeout(snapTimer);snapTimer=setTimeout(()=>{
-const s=capState();if(undoStack.length&&JSON.stringify(undoStack[undoStack.length-1])===JSON.stringify(s))return;
-undoStack.push(s);undoSeqStack.push(++v7OpSeq);if(undoStack.length>60){undoStack.shift();undoSeqStack.shift();}redoStack=[];redoSeqStack=[];updUR();
-},400);
+// Compara por assinatura leve primeiro — evita JSON.stringify pesado quando nada mudou
+const sig=_snapSig();
+if(sig===snapLastSig)return;
+const st=capState();
+// Serialização SÓ quando realmente há mudança (e apenas uma vez para comparação/push)
+if(undoStack.length){
+  try{
+    const prev=undoStack[undoStack.length-1];
+    // Comparação estruturada rápida: mesmos campos + layers iguais (src de imagem compara por referência, não stringify)
+    let eq=true;
+    for(const k of CAMPOS_INPUT){if((st[k]||'')!==(prev[k]||'')){eq=false;break;}}
+    if(eq)for(const k of CAMPOS_CE){if((st[k]||'')!==(prev[k]||'')){eq=false;break;}}
+    if(eq){const g1=st._grade||{},g2=prev._grade||{};for(const i in g1){if(g1[i]!==g2[i]){eq=false;break;}}}
+    if(eq)eq=(st._layers||[]).length===(prev._layers||[]).length;
+    if(eq)eq=(st._paginasDetalhe||[]).length===(prev._paginasDetalhe||[]).length;
+    if(eq)return;
+  }catch(_){}
+}
+snapLastSig=sig;
+undoStack.push(st);undoSeqStack.push(++v7OpSeq);if(undoStack.length>40){undoStack.shift();undoSeqStack.shift();}redoStack=[];redoSeqStack=[];updUR();
+},800);
 }
 function undo(){if(!undoStack.length)return;redoStack.push(capState());redoSeqStack.push(undoSeqStack.pop());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
 function redo(){if(!redoStack.length)return;undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop());restState(redoStack.pop());updUR();toast('↪ Refeito');}
@@ -2615,7 +2674,8 @@ function initResizeTxt(e,l,el){const W=cw(),sx=e.clientX,sw=l.wp*W;makeDrag(e,ev
 function initResizeArr(e,l,el){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDrag(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{savLayers();snap();});}
 function initRotEl(e,l,el){const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;makeDrag(e,ev=>{l.rot=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;el.style.transform=`rotate(${l.rot}deg)`;},()=>{savLayers();snap();});}
 function selLayer(id){
-selId=id;document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(el=>el.classList.remove('sel'));
+selId=id;multiSelIds=[];clearGroupBox();clearMarquee();
+document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(el=>{el.classList.remove('sel','msel');});
 const target=document.getElementById('ly_'+id);if(target)target.classList.add('sel');const l=layers.find(x=>x.id===id);if(!l)return;fecharLogo();
 canvasTb.classList.remove('vis');textTb.classList.remove('vis');arrTb.classList.remove('vis');$('shapeTb').classList.remove('vis');
 if(l.type==='img'){canvasTb.classList.add('vis');$('tbNome').textContent=`Imagem ${layers.filter(x=>x.type==='img').indexOf(l)+1}`;$('propBtn').classList.toggle('on',l.prop);}
@@ -2626,9 +2686,223 @@ updList();
 }
 function deselecionarTudo(){
 layers.filter(x=>x.type==='txt'&&x._editing).forEach(l=>{l._editing=false;const el=document.getElementById('ly_'+l.id);if(!el)return;el.classList.remove('editing');const tc=el.querySelector('.tc');if(tc){tc.contentEditable='false';l.richHtml=tc.innerHTML;l.txt=tc.textContent||'Texto';}});
-selId=null;document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(el=>el.classList.remove('sel'));
+selId=null;multiSelIds=[];clearGroupBox();clearMarquee();
+document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(el=>{el.classList.remove('sel','msel');});
 canvasTb.classList.remove('vis');textTb.classList.remove('vis');arrTb.classList.remove('vis');$('shapeTb').classList.remove('vis');
 }
+
+/* ══════ MULTI-SELEÇÃO + MARQUEE + ANINHAR + ROTAÇÃO LIVRE DE GRUPO ══════ */
+let multiSelIds=[], marqueeEl=null, groupBoxEl=null, groupRotEl=null, groupDragInfo=null;
+
+function _lyRectPct(l){
+  // AABB (em % do canvas) da camada — ignora rotação para fins de seleção simples
+  const rot=((l.rot||0)*Math.PI)/180;
+  const w=l.wp,h=l.hp;
+  const cos=Math.abs(Math.cos(rot)),sin=Math.abs(Math.sin(rot));
+  const aw=w*cos+h*sin, ah=w*sin+h*cos;
+  return {x:l.xp-(aw-w)/2, y:l.yp-(ah-h)/2, w:aw, h:ah};
+}
+
+function clearMarquee(){if(marqueeEl){marqueeEl.remove();marqueeEl=null;}}
+function clearGroupBox(){
+  if(groupBoxEl){groupBoxEl.remove();groupBoxEl=null;}
+  if(groupRotEl){groupRotEl.remove();groupRotEl=null;}
+  document.querySelectorAll('#canvasInner .v7-group-box,#canvasInner .v7-group-rot').forEach(n=>n.remove());
+  groupBoxEl=null;groupRotEl=null;
+}
+
+function updGroupBox(){
+  clearGroupBox();
+  const ids=multiSelIds.length?multiSelIds:(selId?[selId]:[]);
+  if(!ids.length)return;
+  let minX=1,minY=1,maxX=0,maxY=0,cnt=0;
+  ids.forEach(id=>{const l=layers.find(x=>x.id===id);if(!l)return;const r=_lyRectPct(l);if(cnt===0){minX=r.x;minY=r.y;maxX=r.x+r.w;maxY=r.y+r.h;}else{minX=Math.min(minX,r.x);minY=Math.min(minY,r.y);maxX=Math.max(maxX,r.x+r.w);maxY=Math.max(maxY,r.y+r.h);}cnt++;});
+  if(!cnt)return;
+  const pad=0.01;
+  minX=Math.max(0,minX-pad);minY=Math.max(0,minY-pad);
+  maxX=Math.min(1,maxX+pad);maxY=Math.min(1,maxY+pad);
+  const W=cw(),H=ch();
+  const g=document.createElement('div');g.className='v7-group-box';
+  g.style.left=(minX*W)+'px';g.style.top=(minY*H)+'px';
+  g.style.width=((maxX-minX)*W)+'px';g.style.height=((maxY-minY)*H)+'px';
+  canvasInner.appendChild(g);groupBoxEl=g;
+  // Alça de rotação livre no topo da caixa
+  const rh=document.createElement('div');rh.className='v7-group-rot';
+  rh.style.left=((minX+(maxX-minX)/2)*W)+'px';rh.style.top=Math.max(8,(minY*H)-30)+'px';
+  rh.title='Rotação livre — segure e gire';
+  canvasInner.appendChild(rh);groupRotEl=rh;
+  rh.addEventListener('mousedown',startGroupRotate);
+}
+
+function startMarqueeDrag(sx,sy){
+  deselecionarTudo();
+  const el=document.createElement('div');el.className='v7-marquee';
+  el.style.left=sx+'px';el.style.top=sy+'px';el.style.width='0';el.style.height='0';
+  canvasInner.appendChild(el);marqueeEl=el;
+  const baseX=sx,baseY=sy;
+  function onMove(ev){
+    const x=ev.clientX-canvasInner.getBoundingClientRect().left;
+    const y=ev.clientY-canvasInner.getBoundingClientRect().top;
+    const rx=Math.min(baseX,x),ry=Math.min(baseY,y),rw=Math.abs(x-baseX),rh=Math.abs(y-baseY);
+    el.style.left=rx+'px';el.style.top=ry+'px';el.style.width=rw+'px';el.style.height=rh+'px';
+    const W=cw(),H=ch();
+    const mxp=rx/W,myp=ry/H,mwp=rw/W,mhp=rh/H;
+    document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(n=>n.classList.remove('msel'));
+    multiSelIds=[];
+    layers.forEach(l=>{
+      if(l.type==='arr'){
+        if(l.x1p>=mxp&&l.x1p<=mxp+mwp&&l.y1p>=myp&&l.y1p<=myp+mhp&&l.x2p>=mxp&&l.x2p<=mxp+mwp&&l.y2p>=myp&&l.y2p<=myp+mhp){
+          const el=document.getElementById('ly_'+l.id);if(el)el.classList.add('msel');multiSelIds.push(l.id);
+        }
+      }else{
+        const r=_lyRectPct(l);
+        if(r.x>=mxp&&r.y>=myp&&r.x+r.w<=mxp+mwp&&r.y+r.h<=myp+mhp){
+          const el=document.getElementById('ly_'+l.id);if(el)el.classList.add('msel');multiSelIds.push(l.id);
+        }
+      }
+    });
+  }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);
+    clearMarquee();
+    if(multiSelIds.length===1){const id=multiSelIds[0];multiSelIds=[];selLayer(id);return;}
+    if(multiSelIds.length>1){
+      // Mantém seleção múltipla — mostra caixa de grupo
+      selId=null;
+      document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(n=>n.classList.remove('sel'));
+      document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(n=>{if(multiSelIds.includes(n.id.replace('ly_','')))n.classList.add('msel');else n.classList.remove('msel');});
+      canvasTb.classList.remove('vis');textTb.classList.remove('vis');arrTb.classList.remove('vis');$('shapeTb').classList.remove('vis');
+      updGroupBox();
+    }
+  }
+  document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+}
+
+canvasInner.addEventListener('mousedown',function(ev){
+  if(eyeAtivo||modoSeta)return;
+  // Inicia marquee só quando clicar no fundo do canvas (não em camada/handle)
+  if(ev.target!==canvasInner&&ev.target!==canvasPh&&!canvasPh.contains(ev.target)&&!ev.target.classList.contains('canvas-ph'))return;
+  // Não inicia marquee ao clicar em arrDrawHint ou overlays
+  if(ev.button!==0)return;
+  const rect=canvasInner.getBoundingClientRect();
+  const sx=ev.clientX-rect.left,sy=ev.clientY-rect.top;
+  // Espera um pequeno movimento para não atrapalhar clique de deseleção
+  let moved=false,starter=null;
+  function onMove(e){
+    if(Math.abs(e.clientX-rect.left-sx)>4||Math.abs(e.clientY-rect.top-sy)>4){moved=true;document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);startMarqueeDrag(sx,sy);}
+  }
+  function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
+  document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+},true);
+
+// Shift+clique em camada = adicionar à multiseleção (listener em captura para interceptar antes dos handlers individuais)
+canvasInner.addEventListener('mousedown',function(ev){
+  if(!ev.shiftKey||ev.button!==0)return;
+  let el=ev.target;
+  while(el&&el!==canvasInner){
+    if(el.classList&&(el.classList.contains('img-layer')||el.classList.contains('txt-layer')||el.classList.contains('arr-layer')||el.classList.contains('rect-layer')||el.classList.contains('circle-layer'))){
+      const id=el.id.replace('ly_','');const l=layers.find(x=>x.id===id);if(!l)return;
+      ev.stopPropagation();ev.preventDefault();
+      const idx=multiSelIds.indexOf(id);
+      if(idx>=0){multiSelIds.splice(idx,1);el.classList.remove('msel');}
+      else{multiSelIds.push(id);el.classList.add('msel');}
+      selId=null;
+      document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(n=>n.classList.remove('sel'));
+      if(multiSelIds.length>=1)updGroupBox();else clearGroupBox();
+      return;
+    }
+    el=el.parentElement;
+  }
+},true);
+
+// Rotação LIVRE de grupo (rotaciona todas as camadas selecionadas ao redor do centro do grupo)
+function startGroupRotate(e){
+  e.stopPropagation();e.preventDefault();
+  const ids=multiSelIds.length?multiSelIds:(selId?[selId]:[]);
+  if(!ids.length)return;
+  const W=cw(),H=ch();
+  let minX=1,minY=1,maxX=0,maxY=0;
+  ids.forEach(id=>{const l=layers.find(x=>x.id===id);if(!l)return;const r=_lyRectPct(l);minX=Math.min(minX,r.x);minY=Math.min(minY,r.y);maxX=Math.max(maxX,r.x+r.w);maxY=Math.max(maxY,r.y+r.h);});
+  const ccx=(minX+(maxX-minX)/2)*W, ccy=(minY+(maxY-minY)/2)*H;
+  const angles={};ids.forEach(id=>{const l=layers.find(x=>x.id===id);if(!l)return;angles[id]=l.rot||0;});
+  const startAng=Math.atan2(e.clientY-ccy,e.clientX-ccx)*(180/Math.PI);
+  makeDrag(e,ev=>{
+    const cur=Math.atan2(ev.clientY-ccy,ev.clientX-ccx)*(180/Math.PI);
+    const delta=cur-startAng;
+    ids.forEach(id=>{
+      const l=layers.find(x=>x.id===id);if(!l)return;
+      l.rot=((angles[id]||0)+delta);
+      const el=document.getElementById('ly_'+l.id);if(!el)return;
+      el.style.transform=`rotate(${l.rot}deg)`;
+      if(l.type==='arr'){posArrEl(l,el,false,W,H);refreshArrSVG(l);}
+    });
+  },()=>{savLayers();snap();updGroupBox();});
+}
+
+// Arrastar grupo inteiro pelo centro
+canvasInner.addEventListener('mousedown',function(ev){
+  if(ev.target!==groupBoxEl)return;
+  ev.stopPropagation();ev.preventDefault();
+  const ids=[...multiSelIds];if(!ids.length)return;
+  const W=cw(),H=ch();
+  const starts={};ids.forEach(id=>{const l=layers.find(x=>x.id===id);if(l)starts[id]={xp:l.xp,yp:l.yp,x1p:l.x1p,y1p:l.y1p,x2p:l.x2p,y2p:l.y2p};});
+  const sx=ev.clientX,sy=ev.clientY;
+  makeDrag(ev,e2=>{
+    const dx=(e2.clientX-sx)/W,dy=(e2.clientY-sy)/H;
+    ids.forEach(id=>{
+      const l=layers.find(x=>x.id===id);if(!l)return;
+      if(l.type==='arr'){
+        l.x1p=starts[id].x1p+dx;l.y1p=starts[id].y1p+dy;l.x2p=starts[id].x2p+dx;l.y2p=starts[id].y2p+dy;
+        const el=document.getElementById('ly_'+l.id);if(el)posArrEl(l,el,false,W,H);
+      }else{
+        l.xp=starts[id].xp+dx;l.yp=starts[id].yp+dy;
+        const el=document.getElementById('ly_'+l.id);if(el){el.style.left=(l.xp*W)+'px';el.style.top=(l.yp*H)+'px';}
+      }
+    });
+    updGroupBox();
+  },()=>{savLayers();snap();updGroupBox();});
+},true);
+
+// Excluir multi-seleção com Delete/Backspace
+document.addEventListener('keydown',function(ev){
+  if(multiSelIds.length>1&&(ev.key==='Delete'||ev.key==='Backspace')){
+    const tag=(ev.target&&(ev.target.tagName||''));
+    if(tag==='INPUT'||tag==='TEXTAREA'||(ev.target&&ev.target.isContentEditable))return;
+    ev.preventDefault();
+    multiSelIds.forEach(id=>excluirId(id));multiSelIds=[];clearGroupBox();toast('🗑 '+multiSelIds.length+' camadas removidas','',1800);
+  }
+});
+
+/* ══════ ANINHAR/ENCAIXAR IMAGENS (pack binário simples em faixas) ══════ */
+function aninharImagens(){
+  const imgs=layers.filter(l=>l.type==='img');
+  if(imgs.length<2){toast('Adicione pelo menos 2 imagens para aninhar.','erro');return;}
+  // Ordena por altura (desc) para melhor encaixe (algoritmo bin-packing simples "shelf")
+  const items=imgs.map(l=>({l,w:l.wp,h:l.hp})).sort((a,b)=>b.h-a.h);
+  const pad=0.005; // pequeno espaçamento entre artes
+  let x=0,y=0,rowH=0,rowX=0;
+  items.forEach(it=>{
+    if(rowX+it.w>1){x=0;y+=rowH+pad;rowH=0;rowX=0;}
+    // Se ficar muito alto para a folha, tenta virar 90° como alternativa (mantém wp/hp proporcionais)
+    if(y+it.h>1){
+      // fallback: escala para caber
+      const s=1/Math.max(1,y+it.h);it.w*=s;it.h*=s;y=0;x=0;rowX=0;rowH=0;
+    }
+    it.l.xp=x;it.l.yp=y;it.l.rot=0;
+    x+=it.w+pad;rowX+=it.w+pad;rowH=Math.max(rowH,it.h);
+    const el=document.getElementById('ly_'+it.l.id);
+    if(el){posEl(it.l,el,false);el.style.transform='';}
+  });
+  // Centraliza verticalmente o conjunto (mexe em y)
+  const maxY=Math.max(...items.map(it=>it.l.yp+it.h));
+  if(maxY<1){
+    const dy=(1-maxY)/2;
+    items.forEach(it=>{it.l.yp+=dy;const el=document.getElementById('ly_'+it.l.id);if(el)el.style.top=(it.l.yp*ch())+'px';});
+  }
+  savLayers();snap();
+  toast('🧩 Imagens aninhadas!','sucesso',1800);
+}
+
 function lFrente(){const l=layers.find(x=>x.id===selId);if(!l)return;l.z=++zCnt;const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();}
 function lTras(){const l=layers.find(x=>x.id===selId);if(!l)return;const mz=Math.min(...layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();}
 function lCentro(){const l=layers.find(x=>x.id===selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+l.id);if(el)posArrEl(l,el,false,cw(),ch());}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+l.id);if(el){el.style.left=(l.xp*cw())+'px';el.style.top=(l.yp*ch())+'px';}}savLayers();}
@@ -2688,11 +2962,11 @@ linhaId++;const id=linhaId;const tr=document.createElement('tr');tr.id=`ln_${id}
 tr.innerHTML=`<td><div class="n-cel">${id}</div></td><td><input class="field" type="text" value="${modelo}" placeholder="Descrição do produto" style="min-width:60px"></td><td style="text-align:right"><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end"><span style="font-size:8px;color:var(--txl)">R$</span><input class="field" type="text" value="${valor}" placeholder="0,00" style="width:48px;text-align:right" oninput="recalcL(${id})"></div></td><td style="text-align:center;color:var(--txl);font-size:10px">×</td><td><input class="field" type="text" value="${qtd}" placeholder="0" style="width:26px;text-align:center" oninput="recalcL(${id})"></td><td style="text-align:center;color:var(--txl);font-size:10px">=</td><td style="text-align:right"><span id="vt_${id}" style="font-size:10px;font-weight:800;color:var(--az)">—</span></td><td><button class="del-btn" onclick="removerL(${id})">✕</button></td>`;
 $('prodLinhas').appendChild(tr);
 }
-function getTotalLinhas(){let t=0;document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const inps=tr.querySelectorAll('input');t+=(parseFloat(((inps[1]?inps[1].value:'0')||'0').replace(',','.'))||0)*(parseFloat(inps[2]?inps[2].value:'0')||0);});return t;}
-function recalcL(id){const tr=$(`ln_${id}`);if(!tr)return;const inps=tr.querySelectorAll('input');const v=parseFloat(((inps[1]?inps[1].value:'0')||'0').replace(',','.'))||0;const q=parseFloat(inps[2]?inps[2].value:'0')||0;const vt=$(`vt_${id}`);if(vt)vt.textContent=(v&&q)?'R$\u00a0'+fmt(v*q):'—';calcTotal();}
+function getTotalLinhas(){let t=0;document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const inps=tr.querySelectorAll('input');t+=parseBRL(inps[1]?inps[1].value:'0')*(parseFloat(inps[2]?inps[2].value:'0')||0);});return t;}
+function recalcL(id){const tr=$(`ln_${id}`);if(!tr)return;const inps=tr.querySelectorAll('input');const v=parseBRL(inps[1]?inps[1].value:'0');const q=parseFloat(inps[2]?inps[2].value:'0')||0;const vt=$(`vt_${id}`);if(vt)vt.textContent=(v&&q)?'R$\u00a0'+fmt(v*q):'—';calcTotal();}
 function removerL(id){const el=$(`ln_${id}`);if(el)el.remove();calcTotal();}
 function calcTotal(){const t=getTotalLinhas();const td=$('totalDisp');if(td)td.textContent='R$\u00a0'+fmt(t);calcEntrada(t);}
-function calcEntrada(total){const t=total===undefined?getTotalLinhas():total;const ev=$('entradaVal'),rv=$('restanteVal');if(!ev||!rv)return;const raw=ev.value.replace(/[R$\s]/g,'').replace(',','.').trim();rv.value=fmt(t-(parseFloat(raw)||0));}
+function calcEntrada(total){const t=total===undefined?getTotalLinhas():total;const ev=$('entradaVal'),rv=$('restanteVal');if(!ev||!rv)return;rv.value=fmt(t-parseBRL(ev.value));}
 
 /* ═══ GRADE P1 ═══ */
 function cg(inp){const v=parseInt(inp.value)||0;inp.classList.toggle('v',v>0);recalcGrade();}
@@ -2751,7 +3025,7 @@ paginas.forEach(p=>{p.layers.forEach(l=>{const el=document.getElementById('ly_'+
 });
 
 /* ═══ INIT ═══ */
-const hoje=new Date(),fd=$('fichaData');if(fd&&!fd.value)fd.value=hoje.toISOString().split('T')[0];
+const fd=$('fichaData');if(fd&&!fd.value)fd.value=v7HojeISO();
 document.addEventListener('DOMContentLoaded',()=>{
 carregarNum();loadLogo();loadLogoSt();iniciarProd();iniciarCores();carregarDados();
 try{const sl=localStorage.getItem('va3_layers');if(sl){const arr=JSON.parse(sl);arr.forEach(s=>{if(s.type==='img')addImgLayer(s.src,s);else if(s.type==='txt')addTxtLayer(s);else if(s.type==='arr')addArrLayer(s);});}}catch(e){}
@@ -3093,6 +3367,26 @@ function fichaSetupUX(){
   fichaSyncFloatCta();
 }
 
+/* ══ V7.1 — data da ficha sempre no dia atual ══
+   O módulo fica carregado (popup) por dias; a data só era definida no
+   carregamento. Agora, ao virar o dia, a data vai pra HOJE enquanto a ficha
+   ainda estiver em branco (sem cliente e sem modelos). Ficha com conteúdo
+   mantém a data original — é a data de criação dela. */
+function v7FichaDayTick(){
+  const fd=$('fichaData'); if(!fd)return;
+  const hoje=v7HojeISO();
+  if(fd.value===hoje)return;
+  const nome=($('dc_nome')?($('dc_nome').textContent||'').trim():'');
+  const mi=document.querySelector('#prodLinhas tr input');
+  const modelo=mi?(mi.value||'').trim():'';
+  if(!fd.value||(!nome&&!modelo)){
+    fd.value=hoje;
+    if(typeof sincTodasPaginas==='function')sincTodasPaginas();
+  }
+}
+setInterval(v7FichaDayTick,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)v7FichaDayTick()});
+
 function enviarParaCatalogacao() {
   const nomeCliente = ($('dc_nome') ? ($('dc_nome').textContent||'').trim() : '') || '';
   const numFicha = ($('fichaNum') ? $('fichaNum').value : '') || '';
@@ -3169,7 +3463,10 @@ function novaFicha() {
   fichaHideSuggestions(); fichaUpdateReadiness();
 }
 
-/* ══ Preenchimento rápido ══ */
+/* ══ Preenchimento rápido (V7.1 — guiado por etapas, com modelos, grade e totais) ══ */
+const V4Q_SIZES_M=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
+const V4Q_SIZES_I=['2a','4a','6a','8a','10a','12a','14a'];
+
 function abrirPreenchimentoRapido() {
   if(!$('v4QuickModal')) createQuickModal();
   const setV=(id,v)=>{const el=$(id); if(el) el.value=v||''};
@@ -3178,29 +3475,170 @@ function abrirPreenchimentoRapido() {
   setV('v4qTel', $('dc_tel')?($('dc_tel').textContent||'').trim():'');
   setV('v4qPrevisao', $('previsao')?$('previsao').value:'');
   setV('v4qTecido', $('tipoTecido')?($('tipoTecido').textContent||'').trim():'');
+  setV('v4qAviso', $('avisoTxt')?$('avisoTxt').value:'');
+  setV('v4qEntrada', $('entradaVal')?$('entradaVal').value:'');
+  /* lembra o último vendedor e tecido usados (agiliza a próxima ficha) */
+  try{
+    const pref=JSON.parse(localStorage.getItem('vooalto_ficha_quick_v7')||'{}');
+    if(!$('v4qVendedor').value&&pref.vendedor)setV('v4qVendedor',pref.vendedor);
+    if(!$('v4qTecido').value&&pref.tecido)setV('v4qTecido',pref.tecido);
+  }catch(e){}
+  /* traz os modelos já lançados na ficha (nada se perde ao aplicar) */
+  const tb=$('v4ModelRows');
+  if(tb){
+    tb.innerHTML='';
+    const rows=[...document.querySelectorAll('#prodLinhas tr')].map(tr=>{
+      const i=tr.querySelectorAll('input');
+      return {m:(i[0]?i[0].value:''),v:(i[1]?i[1].value:''),q:(i[2]?i[2].value:'')};
+    });
+    (rows.length?rows:[{m:'',v:'',q:''}]).forEach(r=>v4AddModeloRow(r.m,r.v,r.q));
+  }
+  /* traz a grade de tamanhos atual */
+  const fillG=(pref,els,arr)=>els.forEach((el,i)=>{const t=arr[i];if(t&&$('v4g_'+pref+'_'+t))$('v4g_'+pref+'_'+t).value=el.value||''});
+  fillG('m',document.querySelectorAll('.gi[data-g="m"]'),V4Q_SIZES_M);
+  fillG('b',document.querySelectorAll('.gi[data-g="b"]'),V4Q_SIZES_M);
+  fillG('i',document.querySelectorAll('.gi[data-g="i"]'),V4Q_SIZES_I);
+  v4AtualizarClientesDL();
+  v4QuickTotals();
   $('v4QuickModal').classList.add('open');
+  const first=$('v4qCliente'); if(first)setTimeout(()=>{try{first.focus();first.select&&first.select()}catch(e){}},60);
 }
-function createQuickModal(){const m=document.createElement('div');m.id='v4QuickModal';m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Modelo / descrição primeira linha</label><input id="v4qModelo" placeholder="Ex: Camiseta gola polo"></div><div class="v4-field"><label>Valor unitário</label><input id="v4qValor" placeholder="0,00"></div><div class="v4-field"><label>Quantidade</label><input id="v4qQtd" placeholder="0"></div><div class="v4-field" style="grid-column:1/-1"><label>Observação / aviso</label><textarea id="v4qAviso" placeholder="Observação opcional"></textarea></div></div><div class="v4-actions"><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="aplicarPreenchimentoRapido()">Aplicar preenchimento</button></div></div></div>`;document.body.appendChild(m);
-  m.querySelector('.v4-grid').addEventListener('keydown', e => {
-    if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
-    e.preventDefault();
-    const inputs = Array.from(m.querySelectorAll('.v4-grid input'));
-    const i = inputs.indexOf(e.target);
-    if (i >= 0 && inputs[i + 1]) inputs[i + 1].focus();
+function createQuickModal(){
+  const m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus';
+  const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric" data-grade="1"></label>`).join('');
+  const gradeCard=(prefix,titulo,cls,arr)=>`<div class="v4-grade-card ${cls||''}"><h4>${titulo}</h4><div class="v4-grade-grid">${gradeInputs(prefix,arr)}</div></div>`;
+  m.innerHTML=`
+  <div class="v4-modal-card">
+    <div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div>
+    <div class="v4-modal-body">
+      <p class="v4-hint">Preencha o que souber e clique em <b>Aplicar tudo</b> no final. <b>Enter</b> pula para o próximo campo · <b>Esc</b> fecha · <b>Ctrl+Enter</b> aplica.</p>
+      <div class="v4-step"><span class="n">1</span> Dados do pedido <small>cliente, prazo e tecido</small></div>
+      <div class="v4-grid">
+        <div class="v4-field"><label>Cliente</label><input id="v4qCliente" list="v4qClientesDL" placeholder="Digite o nome — clientes conhecidos aparecem" autocomplete="off"><datalist id="v4qClientesDL"></datalist><span class="v4-hint">escolhendo um cliente conhecido, o telefone preenche sozinho</span></div>
+        <div class="v4-field"><label>Vendedor</label><input id="v4qVendedor" placeholder="Quem atendeu"></div>
+        <div class="v4-field"><label>Telefone</label><input id="v4qTel" placeholder="Ex: 62 99999-0000"></div>
+        <div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div>
+        <div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div>
+        <div class="v4-field"><label>Entrada (R$) — opcional</label><input id="v4qEntrada" placeholder="0,00" inputmode="decimal"></div>
+      </div>
+      <div class="v4-step"><span class="n">2</span> Modelos da produção <small>valor × quantidade — o total aparece sozinho</small></div>
+      <table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:110px">Valor unit.</th><th style="width:80px">Qtd</th><th style="width:92px">Total</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows"></tbody></table>
+      <button class="v4-mini-btn" style="margin-top:6px" onclick="v4AddModeloRow()">+ Adicionar modelo</button>
+      <div class="v4-step"><span class="n">3</span> Grade de tamanhos <small>preencha só os tamanhos usados</small></div>
+      <div class="v4-grade-box">
+        ${gradeCard('m','Masculino','',V4Q_SIZES_M)}
+        ${gradeCard('b','Baby look fem.','',V4Q_SIZES_M)}
+        ${gradeCard('i','Infantil','inf',V4Q_SIZES_I)}
+      </div>
+      <div class="v4-step"><span class="n">4</span> Observação / aviso <small>vai para o rodapé da ficha</small></div>
+      <div class="v4-field" style="grid-column:1/-1"><textarea id="v4qAviso" placeholder="Observação opcional — se deixar vazio, mantém o aviso atual da ficha"></textarea></div>
+    </div>
+    <div class="v4-actions">
+      <div class="v4-summary"><span class="v4-total-line">Total dos modelos: <b id="v4qTotal">R$ 0,00</b></span><span class="v4-total-line">Peças na grade: <b id="v4qPecas">0</b></span></div>
+      <button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button>
+      <button class="v4-apply" onclick="aplicarPreenchimentoRapido()">✅ Aplicar tudo</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();aplicarPreenchimentoRapido();return}
+    if(e.key==='Enter'&&e.target.tagName==='INPUT'){
+      e.preventDefault();
+      const inputs=[...m.querySelectorAll('input')];
+      const i=inputs.indexOf(e.target);
+      if(i>=0&&inputs[i+1])inputs[i+1].focus();
+      else aplicarPreenchimentoRapido();
+    }
+    if(e.key==='Escape'){e.preventDefault();fecharPreenchimentoRapido()}
   });
+  m.addEventListener('input',()=>{v4QuickTotals();v4AutofillTel()});
+  m.addEventListener('change',()=>{v4AutofillTel()});
+  m.addEventListener('click',e=>{if(e.target===m)fecharPreenchimentoRapido()});
 }
 function fecharPreenchimentoRapido(){const m=$('v4QuickModal'); if(m) m.classList.remove('open');}
+function v4AddModeloRow(modelo='',valor='',qtd=''){
+  const tb=$('v4ModelRows'); if(!tb)return;
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input data-modelo placeholder="Ex: Camiseta gola polo" value="${esc(modelo)}"></td><td><input data-valor placeholder="0,00" inputmode="decimal" value="${esc(valor)}"></td><td><input data-qtd placeholder="0" inputmode="numeric" value="${esc(qtd)}"></td><td class="v4-row-total">—</td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove();v4QuickTotals()" title="Remover este modelo">✕</button></td>`;
+  tb.appendChild(tr);
+  v4QuickTotals();
+}
+function v4AtualizarClientesDL(){
+  const dl=$('v4qClientesDL'); if(!dl)return;
+  let pool={};
+  try{pool=fichaClientPool()}catch(e){}
+  dl.innerHTML=Object.keys(pool).sort((a,b)=>a.localeCompare(b)).map(n=>{
+    const tel=pool[n]||'';
+    return `<option value="${n.replace(/"/g,'&quot;')}">${tel?'📞 '+tel:'cliente conhecido'}</option>`;
+  }).join('');
+}
+function v4AutofillTel(){
+  const nome=($('v4qCliente')?$('v4qCliente').value:'').trim();
+  const tel=$('v4qTel');
+  if(!nome||!tel)return;
+  let pool={};
+  try{pool=fichaClientPool()}catch(e){}
+  if(pool[nome]&&(!tel.value||!tel.value.trim()))tel.value=pool[nome];
+}
+function v4QuickTotals(){
+  const m=$('v4QuickModal'); if(!m)return;
+  let total=0,pecas=0;
+  m.querySelectorAll('#v4ModelRows tr').forEach(tr=>{
+    const iv=tr.querySelector('[data-valor]'),iq=tr.querySelector('[data-qtd]'),rt=tr.querySelector('.v4-row-total');
+    const v=parseBRL((iv&&iv.value)||'0');
+    const q=parseFloat((iq&&iq.value)||'0')||0;
+    const t=v*q; total+=t;
+    if(rt)rt.textContent=(v&&q)?'R$\u00a0'+fmt(t):'—';
+  });
+  m.querySelectorAll('input[data-grade]').forEach(inp=>{pecas+=parseInt(inp.value)||0});
+  const tt=$('v4qTotal'),tp=$('v4qPecas');
+  if(tt)tt.textContent='R$\u00a0'+fmt(total);
+  if(tp)tp.textContent=pecas+(pecas===1?' peça':' peças');
+}
 function aplicarPreenchimentoRapido(){
   const setCE=(id,v)=>{const el=$(id); if(el) el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$(id); if(el) el.value=v||''};
-  setCE('dc_nome',$('v4qCliente').value); setCE('dc_vendedor',$('v4qVendedor').value); setCE('dc_tel',$('v4qTel').value);
+  setCE('dc_nome',$('v4qCliente').value.trim()); setCE('dc_vendedor',$('v4qVendedor').value.trim()); setCE('dc_tel',$('v4qTel').value.trim());
   setVal('previsao',$('v4qPrevisao').value); setCE('tipoTecido',$('v4qTecido').value);
   if($('v4qAviso').value) setVal('avisoTxt',$('v4qAviso').value);
-  const first=document.querySelector('#prodLinhas tr');
-  if(first){const inputs=first.querySelectorAll('input'); if(inputs[0])inputs[0].value=$('v4qModelo').value; if(inputs[1])inputs[1].value=$('v4qValor').value; if(inputs[2])inputs[2].value=$('v4qQtd').value; const id=first.id.replace('ln_',''); if(typeof recalcL==='function') recalcL(parseInt(id));}
+  if($('v4qEntrada')&&$('v4qEntrada').value.trim()!==''){ setVal('entradaVal',$('v4qEntrada').value); if(typeof calcEntrada==='function')calcEntrada(); }
+  /* modelos — substitui as linhas apenas se algo foi preenchido */
+  const rows=[...document.querySelectorAll('#v4ModelRows tr')].map(r=>({
+    modelo:(r.querySelector('[data-modelo]')||{}).value||'',
+    valor:(r.querySelector('[data-valor]')||{}).value||'',
+    qtd:(r.querySelector('[data-qtd]')||{}).value||''
+  })).filter(r=>r.modelo.trim()||r.valor.trim()||r.qtd.trim());
+  if(rows.length){
+    $('prodLinhas').innerHTML='';
+    if(typeof linhaId!=='undefined')linhaId=0;
+    rows.forEach(r=>criarLinha(r.modelo,r.valor,r.qtd));
+    document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_','')); if(typeof recalcL==='function')recalcL(id);});
+  }
+  /* grade de tamanhos */
+  const applyG=(pref,arr)=>{
+    const els=document.querySelectorAll('.gi[data-g="'+pref+'"]');
+    arr.forEach((t,i)=>{
+      const el=$('v4g_'+pref+'_'+t); const v=el?el.value:'';
+      if(els[i]){els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0);}
+    });
+  };
+  applyG('m',V4Q_SIZES_M); applyG('b',V4Q_SIZES_M); applyG('i',V4Q_SIZES_I);
+  if(typeof recalcGrade==='function')recalcGrade();
+  /* lembra vendedor/tecido para a próxima ficha */
+  try{
+    const pref=JSON.parse(localStorage.getItem('vooalto_ficha_quick_v7')||'{}');
+    if($('v4qVendedor').value.trim())pref.vendedor=$('v4qVendedor').value.trim();
+    if($('v4qTecido').value.trim())pref.tecido=$('v4qTecido').value.trim();
+    localStorage.setItem('vooalto_ficha_quick_v7',JSON.stringify(pref));
+  }catch(e){}
   if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap();
   fecharPreenchimentoRapido(); toast('Preenchimento aplicado.','sucesso');
   fichaRememberClient(); fichaUpdateReadiness();
 }
+/* compatibilidade com os antigos atalhos v4 */
+window.v4AbrirPreenchimentoRapido=abrirPreenchimentoRapido;
+window.v4FecharPreenchimentoRapido=fecharPreenchimentoRapido;
+window.v4AplicarPreenchimentoRapido=aplicarPreenchimentoRapido;
 
 /* ══ Receber ficha técnica para editar (vem da catalogação) ══ */
 let editingFichaId = null, editingFichaNome = '';
@@ -3218,28 +3656,36 @@ window.addEventListener('message', function(e) {
 
 /* ══ Limpar para nova ficha ══ */
 function limparParaNovaFicha(novoNum) {
+  v7SuppressSnap=true;
   try{ localStorage.removeItem('vooalto_v7_ficha_ativa'); }catch(e){}
+  try{ undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];snapLastSig='';updUR(); }catch(e){}
   try{ v7PageUndoStack=[]; v7PageRedoStack=[]; }catch(e){}
+  editingFichaId=null;editingFichaNome='';
   if(!document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
     try{ v7RestaurarPaginaP1(null); }catch(e){ console.warn('restaurar p1',e); }
   }
-  ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id => {
-    const el = $(id); if(el) el.innerHTML = '';
-  });
-  ['previsao','entradaVal'].forEach(id => { const el = $(id); if(el) el.value = ''; });
+  // Limpa páginas extras que possam ter ficado abertas de ficha anterior
+  if(typeof fecharPaginaExtra==='function'){
+    const extras=[...document.querySelectorAll('[id^="folha"]')].filter(el=>el.id!=='folha1');
+    extras.forEach(el=>{try{fecharPaginaExtra(el.id);}catch(e){}});
+  }
+  ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id=>{const el=$(id);if(el)el.innerHTML='';});
+  ['previsao','entradaVal'].forEach(id=>{const el=$(id);if(el)el.value='';});
   aplicarNumeroFicha(novoNum);
-  const hoje = new Date();
-  const fd = $('fichaData'); if(fd) fd.value = hoje.toISOString().split('T')[0];
-  $('prodLinhas').innerHTML = ''; linhaId = 0;
+  const fd = $('fichaData'); if(fd) fd.value = v7HojeISO();
+  const tb = $('prodLinhas'); if(tb) tb.innerHTML = ''; linhaId = 0;
   criarLinha(); criarLinha(); criarLinha(); calcTotal();
   document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach(el => { el.value=''; el.classList.remove('v'); });
   recalcGrade();
-  $('coresList').innerHTML = ''; corId = 0; adicionarCor();
-  clearAllLayers(); updPh(); updList();
-  const sep = $('sepTxt'); if(sep) sep.value = '▸ Detalhes do Modelo ◂';
-  const aviso = $('avisoTxt'); if(aviso) aviso.value = '⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
-  atualizarRodapes(); sincTodasPaginas(); snap();
-  toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!', 'sucesso', 3000);
+  const cl=$('coresList');if(cl)cl.innerHTML='';corId=0;adicionarCor();
+  clearAllLayers();updPh();updList();
+  const sep=$('sepTxt');if(sep)sep.value='▸ Detalhes do Modelo ◂';
+  const aviso=$('avisoTxt');if(aviso)aviso.value='⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
+  if(typeof atualizarRodapes==='function')atualizarRodapes();
+  if(typeof sincTodasPaginas==='function')sincTodasPaginas();
+  v7SuppressSnap=false;snap();
+  const nomeEl=$('dc_nome');if(nomeEl){try{nomeEl.focus();}catch(e){}}
+  toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!','sucesso',2600);
 }
 
 /* ══ Importar ══ */
@@ -3439,6 +3885,20 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 <style id="v4-quickfill-texttools-css">
 /* V4.2 - Preenchimento completo sem painel Canva + texto avançado */
 #v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:#111827;margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:#64748b;text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid #CBD5E1;border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:#fff}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:#111827;color:#fff}.v4-mini-btn.red{background:#FEE2E2;color:#991B1B}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:#111827}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:#64748B;text-transform:uppercase}.v4-grade-grid input{border:1.5px solid #CBD5E1;border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
+
+/* V7.1 — Preenchimento rápido guiado */
+.v4-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#111827;margin:18px 0 8px;flex-wrap:wrap}
+.v4-step .n{flex:0 0 20px;width:20px;height:20px;border-radius:999px;background:#111827;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px}
+.v4-step small{font-weight:700;font-size:9.5px;color:#64748B}
+.v4-hint{display:block;font-size:9.5px;font-weight:600;color:#64748B;line-height:1.45}
+.v4-modal-body>.v4-hint{margin:0 0 12px}
+.v4-field .v4-hint{margin-top:4px}
+.v4-row-total{font-size:11.5px;font-weight:900;color:#0F766E;white-space:nowrap;text-align:right;padding:0 6px!important}
+.v4-plus-table td{vertical-align:middle}
+#v4QuickModal.v4plus .v4-actions{padding:12px 18px;border-top:1px solid #E5E7EB;margin-top:0;background:#F8FAFC;align-items:center;flex-wrap:wrap;gap:10px}
+.v4-summary{margin-right:auto;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.v4-total-line{font-size:10.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+.v4-total-line b{font-size:14px;color:#111827;letter-spacing:0}
 /* Texto avançado estilo Canva, sem painel lateral extra */
 .text-tb{background:rgba(255,255,255,.98)!important;border-radius:16px!important;padding:9px 12px!important;gap:8px!important;box-shadow:0 18px 54px rgba(15,23,42,.20)!important}.text-tb::before{content:'Texto';font-size:9px;font-weight:900;color:#D4187A;text-transform:uppercase;letter-spacing:.8px;margin-right:3px}.tt-sel{min-width:150px!important;font-weight:800!important}.tt-num{width:58px!important;font-weight:900!important}.v4-font-slider{width:120px;accent-color:#111827}.v4-font-presets{display:flex;gap:4px}.v4-font-presets button{border:1px solid #D1D5DB;background:#fff;border-radius:7px;padding:4px 7px;font-size:9px;font-weight:900;cursor:pointer}.v4-font-presets button:hover{background:#F3F4F6}.tl-fontsize-handle{position:absolute;right:-10px;top:50%;width:18px;height:18px;transform:translateY(-50%);border-radius:50%;background:#111827;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:ns-resize;z-index:205;display:none}.txt-layer.sel .tl-fontsize-handle{display:block}.tl-fontsize-handle::after{content:'A';position:absolute;inset:0;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}.txt-layer.sel{outline:2px solid #111827!important;outline-offset:4px!important;border-radius:4px}.txt-layer .tc{border-radius:6px!important}
 @media(max-width:760px){.v4-grade-box{grid-template-columns:1fr}.v4-grade-grid{grid-template-columns:repeat(3,1fr)!important}}
@@ -3473,14 +3933,6 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 <script id="v4-quickfill-texttools-js">
 (function(){
   const $id=id=>document.getElementById(id);
-  const sizesM=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
-  const sizesI=['2a','4a','6a','8a','10a','12a','14a'];
-  function createBetterQuickModal(){let m=$id('v4QuickModal'); if(m) m.remove(); m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus'; const modelRow=()=>`<tr data-row><td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest('tr').remove()">✕</button></td></tr>`; const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric"></label>`).join(''); m.innerHTML=`<div class="v4-modal-card"><div class="v4-modal-head"><h3>⚡ Preenchimento rápido completo</h3><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Fechar</button></div><div class="v4-modal-body"><div class="v4-grid"><div class="v4-field"><label>Cliente</label><input id="v4qCliente"></div><div class="v4-field"><label>Vendedor</label><input id="v4qVendedor"></div><div class="v4-field"><label>Telefone</label><input id="v4qTel"></div><div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div><div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div><div class="v4-field"><label>Aviso / observação</label><input id="v4qAviso" placeholder="Opcional"></div></div><div class="v4-section-title"><span>Modelos da produção</span><button class="v4-mini-btn" onclick="v4AddModeloRow()">+ Adicionar modelo</button></div><table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:120px">Valor unit.</th><th style="width:90px">Qtd</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows">${modelRow()}</tbody></table><div class="v4-section-title"><span>Grade de tamanhos</span><small>Preencha só os tamanhos usados</small></div><div class="v4-grade-box"><div class="v4-grade-card"><h4>Masculino</h4><div class="v4-grade-grid">${gradeInputs('m',sizesM)}</div></div><div class="v4-grade-card"><h4>Baby look fem.</h4><div class="v4-grade-grid">${gradeInputs('b',sizesM)}</div></div><div class="v4-grade-card inf" style="grid-column:1/-1"><h4>Infantil</h4><div class="v4-grade-grid">${gradeInputs('i',sizesI)}</div></div></div><div class="v4-actions"><button class="v4-cancel" onclick="v4FecharPreenchimentoRapido()">Cancelar</button><button class="v4-apply" onclick="v4AplicarPreenchimentoRapido()">Aplicar tudo</button></div></div></div>`; document.body.appendChild(m);}
-  window.v4AddModeloRow=function(){const body=$id('v4ModelRows'); if(!body)return; const tr=document.createElement('tr'); tr.innerHTML='<td><input data-modelo placeholder="Ex: Camiseta polo"></td><td><input data-valor placeholder="0,00"></td><td><input data-qtd placeholder="0"></td><td><button class="v4-mini-btn red" onclick="this.closest(\'tr\').remove()">✕</button></td>'; body.appendChild(tr)};
-  window.v4AbrirPreenchimentoRapido=function(){createBetterQuickModal(); $id('v4qCliente').value=($id('dc_nome')?.textContent||'').trim(); $id('v4qVendedor').value=($id('dc_vendedor')?.textContent||'').trim(); $id('v4qTel').value=($id('dc_tel')?.textContent||'').trim(); $id('v4qPrevisao').value=$id('previsao')?.value||''; $id('v4qTecido').value=$id('tipoTecido')?.textContent||''; fillCurrentGradeToQuick(); $id('v4QuickModal').classList.add('open');};
-  function fillCurrentGradeToQuick(){document.querySelectorAll('.gi[data-g="m"]').forEach((el,i)=>{if($id('v4g_m_'+sizesM[i]))$id('v4g_m_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="b"]').forEach((el,i)=>{if($id('v4g_b_'+sizesM[i]))$id('v4g_b_'+sizesM[i]).value=el.value});document.querySelectorAll('.gi[data-g="i"]').forEach((el,i)=>{if($id('v4g_i_'+sizesI[i]))$id('v4g_i_'+sizesI[i]).value=el.value});}
-  window.v4AplicarPreenchimentoRapido=function(){const setCE=(id,v)=>{const el=$id(id);if(el)el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$id(id);if(el)el.value=v||''}; setCE('dc_nome',$id('v4qCliente').value); setCE('dc_vendedor',$id('v4qVendedor').value); setCE('dc_tel',$id('v4qTel').value); setVal('previsao',$id('v4qPrevisao').value); setCE('tipoTecido',$id('v4qTecido').value); if($id('v4qAviso').value)setVal('avisoTxt',$id('v4qAviso').value); const rows=[...document.querySelectorAll('#v4ModelRows tr')].map(r=>({modelo:r.querySelector('[data-modelo]').value,valor:r.querySelector('[data-valor]').value,qtd:r.querySelector('[data-qtd]').value})).filter(r=>r.modelo||r.valor||r.qtd); if(rows.length){$id('prodLinhas').innerHTML=''; if(typeof linhaId!=='undefined') linhaId=0; rows.forEach(r=>criarLinha(r.modelo,r.valor,r.qtd)); document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const id=parseInt(tr.id.replace('ln_','')); if(typeof recalcL==='function')recalcL(id);});} applyGrade('m',sizesM); applyGrade('b',sizesM); applyGrade('i',sizesI); if(typeof recalcGrade==='function')recalcGrade(); if(typeof sincTodasPaginas==='function')sincTodasPaginas(); if(typeof snap==='function')snap(); v4FecharPreenchimentoRapido(); toast('Preenchimento completo aplicado.','sucesso');};
-  function applyGrade(prefix,arr){const els=document.querySelectorAll(`.gi[data-g="${prefix}"]`); arr.forEach((t,i)=>{const v=$id(`v4g_${prefix}_${t}`)?.value||''; if(els[i]){els[i].value=v; els[i].classList.toggle('v',(parseInt(v)||0)>0);}})}
   function enhanceTextToolbar(){const tb=$id('textTb'); if(tb&&!tb.dataset.v4TextReady){tb.dataset.v4TextReady='1';v7EnhanceTxtTb('textTb');} if(typeof v7EnhanceTxtTbExtra==='function')v7EnhanceTxtTbExtra();}
 function v7EnhanceTxtTb(tbId){
   const tb=$id(tbId); if(!tb||tb.dataset.v4TbReady)return; tb.dataset.v4TbReady='1';
