@@ -16,8 +16,20 @@ const { BASE } = require('./_base');
   });
   const ow = od.window;
   await new Promise(r => setTimeout(r, 1600));
-  const t = (label, expr) => { try { const r = ow.eval(expr); console.log('  [OK]', label, r !== undefined ? '-> ' + JSON.stringify(r).slice(0,90) : ''); return r; } catch(e) { console.log('  [ERR]', label, ':', e.message); return undefined; } };
+  let fail=0;
+  const t = (label, expr) => {
+    try {
+      const r=ow.eval(expr),ok=r!==undefined&&r!==null&&r!==false;
+      console.log(ok?'  [OK]':'  [FAIL]',label,r!==undefined?'-> '+JSON.stringify(r).slice(0,90):'');
+      if(!ok)fail++;
+      return r;
+    } catch(e) { fail++;console.log('  [ERR]',label,':',e.message);return undefined; }
+  };
   console.log('===== FICHA V7 =====');
+  ow.document.getElementById('dc_nome').textContent='Teste autosave fechamento';
+  t('pagehide descarrega autosave imediatamente', `v7Autosave(); window.dispatchEvent(new Event('pagehide')); localStorage.getItem('vooalto_v7_ficha_ativa')`);
+  const savedFicha=JSON.parse(ow.localStorage.getItem('vooalto_v7_ficha_ativa')||'null');
+  if(!savedFicha||savedFicha.dc_nome!=='Teste autosave fechamento')throw new Error('Autosave da Ficha não foi descarregado no pagehide');
   t('cloudflare removido', `!document.querySelector('script[src*="cloudflare"]')`);
   t('cropper local', `!!document.querySelector('script[src*="assets/cropper"]')`);
   t('html2canvas local', `!!document.querySelector('script[src*="assets/html2canvas"]')`);
@@ -32,6 +44,7 @@ const { BASE } = require('./_base');
   t('chip prontidão existe', `!!document.getElementById('fichaReadiness')`);
   t('CTA flutuante existe', `!!document.getElementById('fichaFloatCta')`);
   t('sugestões: pool do catálogo', `localStorage.setItem('vooalto_main_catalog_v2', JSON.stringify({orders:[{name:'Escola X',clientPhone:'111'}]})); fichaShowSuggestions; 'ok'`);
+  if(oerr.length)fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
-  process.exit(0);
+  process.exit(fail?1:0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

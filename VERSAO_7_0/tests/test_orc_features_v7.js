@@ -31,7 +31,7 @@ function check(label, ok, extra) {
 
   const t = expr => {
     try { return w.eval(expr); }
-    catch(e) { console.log('  [ERR]', e.message); return undefined; }
+    catch(e) { fail++;console.log('  [ERR]', e.message); return undefined; }
   };
 
   console.log('===== ORÇAMENTO V7: NOVAS FUNCIONALIDADES (COMPACTAÇÃO, RASCUNHO, DUPLICAÇÃO) =====');
@@ -122,6 +122,7 @@ function check(label, ok, extra) {
   t(`removeLastDocumentPage(); 'ok'`);
   check('removeLastDocumentPage remove a última folha do DOM', doc.querySelectorAll('#preview-pages-container .page').length === 1 && !doc.getElementById('printable-a4-page-2'));
 
+  if(errs.length)fail++;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   console.log(`\n═══ RESULTADO ORÇAMENTO FEATURES: ${pass} OK, ${fail} FAIL ═══`);
   process.exit(fail ? 1 : 0);
