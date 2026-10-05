@@ -32,30 +32,50 @@ p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
 </div>
 <script>
 function log(m){ const l=document.getElementById('log'); l.textContent += m+'\n'; l.scrollTop=l.scrollHeight; }
+let cacheCleanupRunning=false;
+function isVooaltoCacheKey(name){return name==='vooalto-v7'||name.startsWith('vooalto-v7-')}
+function isVooaltoRegistration(reg){
+  try{
+    const expected=new URL('./',location.href);
+    const scope=new URL(reg.scope);
+    return scope.origin===expected.origin&&scope.pathname===expected.pathname;
+  }catch(e){return false}
+}
 async function limparCache(){
+  if(cacheCleanupRunning)return;
+  cacheCleanupRunning=true;
+  const runButton=document.querySelector('.btn:not(.sec)');
+  if(runButton)runButton.disabled=true;
   log('Iniciando limpeza segura...');
-  let nReg=0, nCache=0;
+  let nReg=0,nCache=0,nFail=0;
   if('serviceWorker' in navigator){
-    const regs = await navigator.serviceWorker.getRegistrations();
-    for(const r of regs){
-      await r.unregister(); nReg++;
-    }
-    log('Service Workers desregistrados: '+nReg);
-  } else {
-    log('Service Worker não suportado aqui.');
-  }
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const reg of regs){
+        if(!isVooaltoRegistration(reg))continue;
+        try{if(await reg.unregister())nReg++;}catch(e){nFail++;log('Falha ao remover o Service Worker: '+e.message)}
+      }
+      log('Service Workers do Vooalto removidos: '+nReg);
+      log('Service Workers de outros apps mantidos.');
+    }catch(e){nFail++;log('Nao foi possivel listar Service Workers: '+e.message)}
+  }else log('Service Worker nao suportado neste navegador.');
   if('caches' in window){
-    const keys = await caches.keys();
-    for(const k of keys){
-      await caches.delete(k); nCache++;
-      log('Cache removido: '+k);
-    }
-    if(!nCache) log('Nenhum cache encontrado (tudo limpo).');
+    try{
+      const keys=await caches.keys();
+      for(const key of keys){
+        if(!isVooaltoCacheKey(key))continue;
+        try{if(await caches.delete(key)){nCache++;log('Cache removido: '+key)}}catch(e){nFail++;log('Falha no cache '+key+': '+e.message)}
+      }
+      if(!nCache)log('Nenhum cache Vooalto V7 encontrado.');
+      log('Caches de outros aplicativos mantidos.');
+    }catch(e){nFail++;log('Nao foi possivel listar caches: '+e.message)}
   }
-  const btn = document.getElementById('btnVoltar');
-  if(btn) btn.href = './index.html?t=' + Date.now();
-  log('✔ Concluído. Seu cadastro NÃO foi tocado.');
-  log('Clique em "Voltar ao V7" para abrir a versão atualizada.');
+  const btn=document.getElementById('btnVoltar');
+  if(btn)btn.href='./index.html?atualizar='+Date.now();
+  log(nFail?'⚠ Limpeza concluida com '+nFail+' falha(s). Tente novamente ou recarregue a pagina.':'✔ Concluido. Seus dados (fichas, PDFs e orcamentos) NAO foram tocados.');
+  log('Clique em "Voltar ao V7" para abrir e recachear a versao atual.');
+  cacheCleanupRunning=false;
+  if(runButton)runButton.disabled=false;
 }
 </script>
 </body>

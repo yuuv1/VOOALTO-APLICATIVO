@@ -428,21 +428,44 @@ document.addEventListener('keydown',e=>{
   else closeHelp();
 });
 
+function isStandaloneApp(){
+  try{return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}catch(e){return false}
+}
+function hideInstallButton(){
+  const b=document.getElementById('installAppBtn');
+  if(b)b.style.display='none';
+}
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
+  if(isStandaloneApp())return;
   deferredInstallPrompt=e;
   const b=document.getElementById('installAppBtn');
   if(b)b.style.display='inline-flex';
 });
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  hideInstallButton();
+  toast('✅ Vooalto instalado. Fixe o aplicativo Vooalto V7 na barra de tarefas.');
+});
 async function installPWA(){
+  if(isStandaloneApp()){
+    hideInstallButton();
+    return;
+  }
   if(deferredInstallPrompt){
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice.catch(()=>{});
+    const installPrompt=deferredInstallPrompt;
     deferredInstallPrompt=null;
-    const b=document.getElementById('installAppBtn');
-    if(b)b.style.display='none';
+    try{
+      await installPrompt.prompt();
+      const choice=await installPrompt.userChoice;
+      if(choice&&choice.outcome==='accepted')hideInstallButton();
+      else{hideInstallButton();toast('Instalação cancelada. Você pode instalar pelo menu do navegador.');}
+    }catch(e){
+      hideInstallButton();
+      toast('Não foi possível abrir a instalação. Use o menu Aplicativos do navegador.');
+    }
   }else{
-    alert('No Edge/Chrome: menu ⋮ > Aplicativos > Instalar este site como app.');
+    alert('No Edge/Chrome: menu ⋮ > Aplicativos > Instalar este site como app. Depois fixe o Vooalto instalado na barra de tarefas.');
   }
 }
 

@@ -3134,7 +3134,8 @@ async function salvarArquivoJSON(nomeArquivo, jsonString) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Aguarda o navegador iniciar o download antes de liberar o Blob.
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
   return true;
 }
 
@@ -4635,16 +4636,24 @@ let v7DragMoved=false;
 let v7DropMeta=null;
 
 /* ── Autosave (rascunho vivo) ── */
+function v7SalvarAutosaveAgora(){
+  clearTimeout(v7AutosaveTimer);v7AutosaveTimer=null;
+  try{
+    if(typeof capturarFichaParaJSON!=='function')return false;
+    const dados=capturarFichaParaJSON();
+    localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(dados));
+    return true;
+  }catch(e){return false}
+}
 function v7Autosave(){
   clearTimeout(v7AutosaveTimer);
-  v7AutosaveTimer=setTimeout(()=>{
-    try{
-      if(typeof capturarFichaParaJSON!=='function')return;
-      const d=capturarFichaParaJSON();
-      localStorage.setItem(V7_AUTOSAVE_KEY, JSON.stringify(d));
-    }catch(e){}
-  },700);
+  v7AutosaveTimer=setTimeout(v7SalvarAutosaveAgora,700);
 }
+// Flush síncrono nos momentos de encerramento/saída: não deixe o debounce perder
+// a última edição quando o usuário fecha a janela ou alterna de app rapidamente.
+window.addEventListener('pagehide',v7SalvarAutosaveAgora);
+window.addEventListener('beforeunload',v7SalvarAutosaveAgora);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)v7SalvarAutosaveAgora()});
 
 /* ── Aplicar dados salvos de uma página extra ── */
 function v7AplicarPaginaSalva(p,s){

@@ -14,7 +14,15 @@ const { BASE } = require('./_base');
   });
   const pw = pd.window;
   await new Promise(r => setTimeout(r, 1400));
-  const t = (label, expr) => { try { const r = pw.eval(expr); console.log('  [OK]', label, r !== undefined ? '-> ' + JSON.stringify(r).slice(0,90) : ''); return r; } catch(e) { console.log('  [ERR]', label, ':', e.message); return undefined; } };
+  let fail=0;
+  const t = (label, expr) => {
+    try {
+      const r=pw.eval(expr),ok=r!==undefined&&r!==null&&r!==false;
+      console.log(ok?'  [OK]':'  [FAIL]',label,r!==undefined?'-> '+JSON.stringify(r).slice(0,90):'');
+      if(!ok)fail++;
+      return r;
+    } catch(e) { fail++;console.log('  [ERR]',label,':',e.message);return undefined; }
+  };
   console.log('===== PRINCIPAL V7 =====');
   t('title V7', `document.title`);
   t('aba catalogo ativa por padrao', `document.querySelector('.tab.active').textContent.includes('Catalogação')`);
@@ -34,6 +42,7 @@ const { BASE } = require('./_base');
   t('foco alta', `state.orders.push({id:'t2',name:'Ficha Antiga',clientPhone:'',createdAt:'16/08/2026',createdTs:Date.now()-30*864e5,status:'alta',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false}); save(); setPrioFocus('alta'); 'ok'`);
   t('1 coluna no foco', `document.querySelectorAll('#columns .column').length`);
   t('volta a 4', `setPrioFocus('all'); document.querySelectorAll('#columns .column').length`);
+  if(perr.length)fail++;
   console.log('  page errors:', perr.length ? perr : 'none ✓');
-  process.exit(0);
+  process.exit(fail?1:0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

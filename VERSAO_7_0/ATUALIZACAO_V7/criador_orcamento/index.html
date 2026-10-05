@@ -1423,12 +1423,19 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     }
 
     let orcSaveTimer = null;
+    function saveOrcautosaveNow(){
+      clearTimeout(orcSaveTimer);orcSaveTimer=null;
+      try{localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(orcCollectState()));return true}
+      catch(e){console.warn('Autosave do orçamento falhou',e);return false}
+    }
     function scheduleOrcautosave(){
       clearTimeout(orcSaveTimer);
-      orcSaveTimer = setTimeout(() => {
-        try { localStorage.setItem(ORC_AUTOSAVE_KEY, JSON.stringify(orcCollectState())); } catch(e) { console.warn('Autosave do orçamento falhou', e); }
-      }, 700);
+      orcSaveTimer=setTimeout(saveOrcautosaveNow,700);
     }
+    // Garante a gravação da última alteração ao fechar/alternar de janela.
+    window.addEventListener('pagehide',saveOrcautosaveNow);
+    window.addEventListener('beforeunload',saveOrcautosaveNow);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)saveOrcautosaveNow()});
 
     /* ══ V7.1 — data da proposta sempre no dia atual ══
        O módulo fica carregado por dias e a data ficava presa no dia em que

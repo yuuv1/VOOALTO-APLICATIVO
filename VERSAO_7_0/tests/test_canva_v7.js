@@ -31,7 +31,7 @@ function check(label, ok, extra) {
 
   const t = expr => {
     try { return w.eval(expr); }
-    catch(e) { console.log('  [ERR]', e.message); return undefined; }
+    catch(e) { fail++;console.log('  [ERR]', e.message); return undefined; }
   };
 
   console.log('===== CANVA V7: TESTES DE PÁGINAS E FERRAMENTAS =====');
@@ -90,6 +90,7 @@ function check(label, ok, extra) {
   const countAfterUndo = doc.querySelectorAll('#pageStripList .v7-thumb').length;
   check('undo restaura página na faixa', countAfterUndo === thumbsAfterBlank, countAfterUndo);
 
+  if(errs.length)fail++;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   console.log(`\n═══ RESULTADO CANVA: ${pass} OK, ${fail} FAIL ═══`);
   process.exit(fail ? 1 : 0);

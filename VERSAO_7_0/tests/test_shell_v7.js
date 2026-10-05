@@ -41,11 +41,7 @@ const { BASE } = require('./_base');
   // bug butter corrigido: barra legível
   w.eval(`applyThemeFromShell('butter')`);
   await new Promise(r => setTimeout(r, 80));
-  const st = w.getComputedStyle ? null : null;
-  ok('butter: bar-text != top-solid', (function(){
-    const m = doc.body.outerHTML;
-    return true;
-  })());
+  ok('butter: barra com contraste', doc.documentElement.style.getPropertyValue('--bar-text') === '#ffefb3' && doc.documentElement.style.getPropertyValue('--top-solid') === '#013e37');
   w.postMessage({ type: 'vooalto-switch-tab', tab: 'orcamento' }, '*');
   await new Promise(r => setTimeout(r, 120));
   ok('orcamento ativo', doc.getElementById('frame-orcamento').classList.contains('active'));
@@ -71,6 +67,7 @@ const { BASE } = require('./_base');
   w.eval(`openFichaPopup(); closeFichaPopup(true)`);
   ok('fechamento silencioso ok', !doc.getElementById('fichaPopup').classList.contains('open'));
 
+  if(errs.length)process.exitCode=1;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   process.exit(process.exitCode || 0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

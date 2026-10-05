@@ -24,7 +24,7 @@ async function loadOrc() {
 async function main() {
   console.log('===== UX V7: ORÇAMENTO =====');
   const { w, d, errs } = await loadOrc();
-  const t = (expr) => { try { const r = w.eval(expr); return r; } catch(e) { console.log('  [ERR] eval:', e.message); return undefined; } };
+  const t = (expr) => { try { return w.eval(expr); } catch(e) { fail++;console.log('  [ERR] eval:', e.message);return undefined; } };
   check('barra total existe', !!d.getElementById('orcRunningTotal'));
   t(`addTableRow(); documentPages[0].tableItems[0].modelo='Camiseta'; documentPages[0].tableItems[0].qnt=10; documentPages[0].tableItems[0].unit=20; renderItemsEditor(); updatePreviewFromForm(); 'ok'`);
   check('total geral R$ 200,00', t(`document.getElementById('orcRunningTotal').textContent`) === 'R$ 200,00', t(`document.getElementById('orcRunningTotal').textContent`));
@@ -43,6 +43,7 @@ async function main() {
   check('data da proposta = hoje', t(`document.getElementById('edit-proposal-date').value`) === hojeBR, t(`document.getElementById('edit-proposal-date').value`));
   t(`document.getElementById('edit-proposal-date').value='01/01/2020'; orcDayTick(); 'ok'`);
   check('virada do dia atualiza a data', t(`document.getElementById('edit-proposal-date').value`) === hojeBR);
+  if(errs.length)fail++;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
 
   console.log('===== UX V7: PRINCIPAL =====');
@@ -58,7 +59,7 @@ async function main() {
   });
   const pw = pd.window, pdoc = pd.window.document;
   await new Promise(r => setTimeout(r, 1400));
-  const pt = (expr) => { try { return pw.eval(expr); } catch(e) { console.log('  [ERR]', e.message); return undefined; } };
+  const pt = (expr) => { try { return pw.eval(expr); } catch(e) { fail++;console.log('  [ERR]', e.message);return undefined; } };
   pt(`state.orders.push({id:'a1',name:'Ficha Antiga',clientPhone:'',createdAt:'16/08/2026',createdTs:Date.now()-30*864e5,status:'alta',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false});
       state.orders.push({id:'b1',name:'Ficha Nova',clientPhone:'',createdAt:'15/09/2026',createdTs:Date.now(),status:'baixa',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false});
       save(); renderAll(); 'ok'`);
@@ -86,6 +87,7 @@ async function main() {
   pt(`_v7LastDay = '2020-01-01'; v7DayTick(); 'ok'`);
   check('virada de dia re-renderiza', pt(`_v7LastDay`) === pt(`today()`));
   check('após rollover card segue correto', pt(`document.querySelector('.order-card[data-order-id=\\'d1\\'] .days').textContent`) === '30 dias');
+  if(perrs.length)fail++;
   console.log('  page errors:', perrs.length ? perrs : 'none ✓');
 
   console.log('===== UX V7: FICHA =====');
@@ -103,7 +105,7 @@ async function main() {
   });
   const fw = fd.window;
   await new Promise(r => setTimeout(r, 1600));
-  const ft = (expr) => { try { return fw.eval(expr); } catch(e) { console.log('  [ERR]', e.message); return undefined; } };
+  const ft = (expr) => { try { return fw.eval(expr); } catch(e) { fail++;console.log('  [ERR]', e.message);return undefined; } };
   ft(`fichaUpdateReadiness(); 'ok'`);
   check('readiness pendente no início', ft(`document.getElementById('fichaReadiness').textContent.includes('falta')`));
   ft(`document.getElementById('dc_nome').textContent='Escola Municipal Centro'; document.getElementById('dc_tel').textContent='62 99999-0001'; fichaUpdateReadiness(); 'ok'`);
@@ -145,6 +147,7 @@ async function main() {
   check('ficha com conteúdo mantém a data', ft(`document.getElementById('fichaData').value`) === '2020-01-01');
   check('sidebar: descrições (4 seções)', fw.eval(`document.querySelectorAll('.sb-section-desc').length`) >= 4);
   check('export: v7-exporting classe existe no CSS', fw.eval(`(function(){const s=[...document.styleSheets].flatMap(x=>{try{return[...x.cssRules]}catch(e){return[]}}).map(r=>r.cssText).join(''); return s.includes('.v7-exporting .dc-inp:empty::before')})()`));
+  if(ferrs.length)fail++;
   console.log('  page errors:', ferrs.length ? ferrs : 'none ✓');
 
   console.log(`\n═══ RESULTADO: ${pass} OK, ${fail} FAIL ═══`);

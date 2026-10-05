@@ -1,42 +1,52 @@
-// Service Worker Vooalto V7 — gerado em 20260929-1759 (hash 0675b82e02e8)
-const CACHE = 'vooalto-v7-0675b82e02e8';
-const PRECACHE = ["/", "manifest.webmanifest", "limpar_cache.html", "zerar_dados.html", "index.html", "principal_dashboard/index.html", "criador_ficha_tecnica/index.html", "criador_orcamento/index.html", "assets/cropper.min.css", "assets/cropper.min.js", "assets/html2canvas.min.js", "assets/logo_empresa.png", "assets/logo_orcamento.png", "assets/pdf.min.js", "assets/pdf.worker.min.js", "assets/watermark_vooalto.png", "assets/fonts/poppins-latin-300-normal.woff2", "assets/fonts/poppins-latin-400-normal.woff2", "assets/fonts/poppins-latin-500-normal.woff2", "assets/fonts/poppins-latin-600-normal.woff2", "assets/fonts/poppins-latin-700-normal.woff2", "icons/icon-192.png", "icons/icon-512-maskable.png", "icons/icon-512.png", "icons/icone.png"];
+// Service Worker Vooalto V7 — gerado em 20261005-1220 (hash 9826dae95376)
+const CACHE_PREFIX = 'vooalto-v7-';
+const CACHE = 'vooalto-v7-9826dae95376';
+const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","principal_dashboard/index.html","criador_ficha_tecnica/index.html","criador_orcamento/index.html","assets/cropper.min.css","assets/cropper.min.js","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/pdf.min.js","assets/pdf.worker.min.js","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png"];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+self.addEventListener('install', event => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await cache.addAll(PRECACHE);
+    await self.skipWaiting();
+  })());
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil((async () => {
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
     const keys = await caches.keys();
-    for (const k of keys) if (k !== CACHE) await caches.delete(k);
+    // Never delete caches owned by another app on the same origin.
+    await Promise.all(keys
+      .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+      .map(key => caches.delete(key)));
     await self.clients.claim();
   })());
 });
 
-// Cache-first para assets; o DADOS ficam em localStorage/IndexedDB (nunca passam pelo SW).
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
-  e.respondWith((async () => {
+// Cache-first for same-origin app resources; application data stays in
+// localStorage/IndexedDB and is never handled by the service worker.
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname === '/__vooalto_health') return;
+
+  event.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    const hit = await cache.match(req);
+    const hit = await cache.match(request) || (request.mode === 'navigate'
+      ? await cache.match(url.pathname, { ignoreSearch: true })
+      : null);
     if (hit) return hit;
+
     try {
-      const net = await fetch(req);
-      if (net && net.ok && url.pathname.startsWith('/')) {
-        // Clone a RESPOSTA (não a requisição) antes de consumir no cache,
-        // senão o body é consumido e a página fica vazia, quebrando o PWA.
-        const copy = net.clone();
-        cache.put(req, copy).catch(() => {});
+      const response = await fetch(request);
+      if (response && response.ok && url.pathname.startsWith('/')) {
+        cache.put(request, response.clone()).catch(() => {});
       }
-      return net;
-    } catch (err) {
-      const fallback = await cache.match(req, {ignoreSearch: true});
+      return response;
+    } catch (error) {
+      const fallback = await cache.match(request, { ignoreSearch: true });
       if (fallback) return fallback;
-      throw err;
+      throw error;
     }
   })());
 });

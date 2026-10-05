@@ -15,7 +15,15 @@ const fs = require('fs');
   });
   const ow = od.window, d = od.window.document;
   await new Promise(r => setTimeout(r, 1500));
-  const t = (label, expr) => { try { const r = ow.eval(expr); console.log('  [OK]', label, r !== undefined ? '-> ' + JSON.stringify(r).slice(0,90) : ''); return r; } catch(e) { console.log('  [ERR]', label, ':', e.message); return undefined; } };
+  let fail=0;
+  const t = (label, expr) => {
+    try {
+      const r=ow.eval(expr),ok=r!==undefined&&r!==null&&r!==false;
+      console.log(ok?'  [OK]':'  [FAIL]',label,r!==undefined?'-> '+JSON.stringify(r).slice(0,90):'');
+      if(!ok)fail++;
+      return r;
+    } catch(e) { fail++;console.log('  [ERR]',label,':',e.message);return undefined; }
+  };
   console.log('===== ORCAMENTO V7b (interface V6 + infra V7) =====');
   t('poppins local', `!document.querySelector('link[href*="fonts.googleapis"]')`);
   t('html2canvas local', `!!document.querySelector('script[src="../assets/html2canvas.min.js"]')`);
@@ -35,10 +43,14 @@ const fs = require('fs');
   t('botoes novo/json', `!!document.getElementById('orcJsonInput') && typeof novoOrcamento === 'function' && typeof exportarOrcamentoJSON === 'function'`);
   await new Promise(r => setTimeout(r, 900));
   t('autosave gravado', `(localStorage.getItem('vooalto_orcamento_autosave_v7')||'').length > 100`);
+  t('pagehide grava a última edição sem esperar o debounce', `document.getElementById('edit-phone').value='62 99999-1234'; scheduleOrcautosave(); window.dispatchEvent(new Event('pagehide')); JSON.parse(localStorage.getItem('vooalto_orcamento_autosave_v7')).form.phone`);
+  const flushedPhone=JSON.parse(ow.localStorage.getItem('vooalto_orcamento_autosave_v7')||'{}').form?.phone;
+  if(flushedPhone!=='62 99999-1234')throw new Error('Autosave do Orçamento não descarregou a última edição');
   t('novo orcamento', `window.confirm=()=>true; novoOrcamento(); documentPages.length + ' | ' + documentPages[0].tableItems.length`);
   t('add page 2', `addDocumentPage(); documentPages.length + ' | ' + !!document.getElementById('printable-a4-page-2')`);
   t('remove page 2', `removeActiveDocumentPage(); documentPages.length + ' | ' + !document.getElementById('printable-a4-page-2')`);
   t('tema global fn', `typeof applyGlobalTheme === 'function'`);
+  if(oerr.length)fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
-  process.exit(0);
+  process.exit(fail?1:0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

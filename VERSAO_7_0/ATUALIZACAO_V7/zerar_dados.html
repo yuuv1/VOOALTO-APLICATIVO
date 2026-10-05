@@ -30,7 +30,7 @@ p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
     • Rascunhos e backups da Ficha Técnica<br>
     • Orçamento em andamento (autosave) e seu número de sequência<br>
     <br>
-    <b>Antes de zerar, exporte o backup em Catalogação → Exportar backup.</b>
+    <b>Antes de zerar, exporte o backup em Catalogação → Exportar backup. Feche outras janelas/abas do Vooalto para permitir apagar os bancos IndexedDB.</b>
   </div>
   <div class="log" id="log">Nada foi apagado. O botão vermelho está desativado até a confirmação dupla.</div>
   <div class="row">
@@ -40,44 +40,96 @@ p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
   </div>
 </div>
 <script>
-function log(m){ const l=document.getElementById('log'); l.textContent += '\n'+m; l.scrollTop=l.scrollHeight; }
+const VOOALTO_IDB_KNOWN=['vooalto_pdf_store_v2','vooalto_ficha_rascunhos_db_v4'];
+const VOOALTO_LEGACY_KEYS=['va3_','va4_','v4_text_toolbar_pos','v5_orcamento_toolbar_pos'];
+let resetConfirmTimer=null,resetRunning=false;
+function log(message){const el=document.getElementById('log');el.textContent+='\n'+message;el.scrollTop=el.scrollHeight;}
+function isVooaltoStorageKey(key){return key.startsWith('vooalto_')||VOOALTO_LEGACY_KEYS.some(prefix=>prefix.endsWith('_')?key.startsWith(prefix):key===prefix)}
+function isVooaltoCacheKey(name){return name==='vooalto-v7'||name.startsWith('vooalto-v7-')}
+function isVooaltoRegistration(reg){
+  try{const expected=new URL('./',location.href),scope=new URL(reg.scope);return scope.origin===expected.origin&&scope.pathname===expected.pathname}catch(e){return false}
+}
+function deleteDatabase(name){
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    const finish=(fn,value)=>{if(settled)return;settled=true;clearTimeout(timer);fn(value)};
+    const timer=setTimeout(()=>finish(reject,new Error('Tempo esgotado: feche as outras janelas do Vooalto e tente novamente.')),8000);
+    let request;
+    try{request=indexedDB.deleteDatabase(name)}catch(error){finish(reject,error);return}
+    request.onsuccess=()=>finish(resolve,true);
+    request.onerror=()=>finish(reject,request.error||new Error('Falha ao apagar o banco.'));
+    request.onblocked=()=>log('Aguardando o banco '+name+'; feche outras janelas/abas do Vooalto.');
+  });
+}
+async function listVooaltoDatabases(){
+  const names=new Set(VOOALTO_IDB_KNOWN);
+  if(typeof indexedDB.databases==='function'){
+    const dbs=await indexedDB.databases();
+    dbs.forEach(db=>{if(db.name&&db.name.startsWith('vooalto_'))names.add(db.name)});
+  }
+  return [...names];
+}
 async function zerar(etapa){
+  if(resetRunning)return;
   if(etapa===1){
-    const c1 = confirm('ETAPA 1 de 2 — Preparar apagamento\n\nIsso vai apagar TODOS os dados do V7 neste navegador.\nExporte um backup antes, se precisar.\n\nDeseja continuar?');
-    if(!c1) return;
-    document.getElementById('btnZerar').disabled = true;
-    const b2 = document.getElementById('btnZerar2');
-    b2.style.display = 'inline-block';
-    b2.disabled = false;
-    log('Pronto para a etapa 2. Clique em "APAGAR TUDO" se tiver certeza.');
-    setTimeout(()=>{ b2.style.display='none'; log('Tempo esgotado — nada foi apagado.'); }, 30000);
+    if(!confirm('ETAPA 1 de 2 — Preparar apagamento\n\nIsso apaga fichas, catálogo, PDFs, rascunhos e orçamentos salvos pelo Vooalto neste perfil do navegador.\n\nExporte um backup antes, se precisar. Deseja continuar?'))return;
+    document.getElementById('btnZerar').disabled=true;
+    const second=document.getElementById('btnZerar2');second.style.display='inline-block';second.disabled=false;
+    log('Pronto para a etapa 2. Feche outras janelas do Vooalto e confirme somente se tiver certeza.');
+    clearTimeout(resetConfirmTimer);
+    resetConfirmTimer=setTimeout(()=>{second.style.display='none';document.getElementById('btnZerar').disabled=false;log('Tempo esgotado — nada foi apagado.');},30000);
     return;
   }
-  const c2 = confirm('ETAPA 2 de 2 — APAGAR TUDO DEFINITIVAMENTE\n\nEsta ação NÃO tem como desfazer.\n\nClique em OK para apagar agora.');
-  if(!c2) { document.getElementById('btnZerar2').style.display='none'; log('Cancelado na etapa 2 — nada foi apagado.'); return; }
-  let nLS=0;
-  const keys = Object.keys(localStorage);
-  for(const k of keys){
-    if(k.startsWith('vooalto_')){ localStorage.removeItem(k); nLS++; }
+  if(!confirm('ETAPA 2 de 2 — APAGAR TUDO DEFINITIVAMENTE\n\nEsta ação NÃO tem como desfazer.\n\nClique em OK para apagar agora.')){
+    clearTimeout(resetConfirmTimer);document.getElementById('btnZerar2').style.display='none';document.getElementById('btnZerar').disabled=false;log('Cancelado na etapa 2 — nada foi apagado.');return;
   }
-  log('Chaves localStorage removidas: '+nLS);
-  let nDB=0;
+
+  clearTimeout(resetConfirmTimer);resetRunning=true;
+  const second=document.getElementById('btnZerar2');second.disabled=true;
+  const errors=[];let nLS=0,nDB=0,nCache=0,nSW=0;
   try{
-    const dbs = await indexedDB.databases();
-    for(const db of dbs){
-      if(db.name && db.name.startsWith('vooalto_')){
-        await new Promise((res,rej)=>{ const rq=indexedDB.deleteDatabase(db.name); rq.onsuccess=()=>{nDB++;res()}; rq.onerror=()=>rej(rq.error); rq.onblocked=()=>res(); });
-        log('Banco IDB removido: '+db.name);
-      }
+    for(const key of Array.from({length:localStorage.length},(_,i)=>localStorage.key(i)).filter(Boolean)){
+      if(!isVooaltoStorageKey(key))continue;
+      try{localStorage.removeItem(key);nLS++}catch(error){errors.push('localStorage '+key+': '+error.message)}
     }
-    if(!nDB) log('Nenhum banco IDB da Vooalto encontrado.');
-  }catch(e){ log('IDB: '+e.message); }
+    log('Chaves do Vooalto removidas: '+nLS+' (inclui dados legados da Ficha Técnica).');
+  }catch(error){errors.push('localStorage: '+error.message)}
+
+  try{
+    const names=await listVooaltoDatabases();
+    for(const name of names){
+      try{await deleteDatabase(name);nDB++;log('Banco IndexedDB removido: '+name)}
+      catch(error){errors.push('IndexedDB '+name+': '+error.message);log('Falha no banco '+name+': '+error.message)}
+    }
+    if(!nDB)log('Nenhum banco IndexedDB do Vooalto encontrado.');
+  }catch(error){errors.push('IndexedDB: '+error.message)}
+
   if('caches' in window){
-    const keys2 = await caches.keys();
-    for(const k of keys2){ await caches.delete(k); log('Cache removido: '+k); }
+    try{
+      for(const name of await caches.keys()){
+        if(!isVooaltoCacheKey(name))continue;
+        try{if(await caches.delete(name)){nCache++;log('Cache Vooalto removido: '+name)}}catch(error){errors.push('Cache '+name+': '+error.message)}
+      }
+      if(!nCache)log('Nenhum cache Vooalto V7 encontrado.');
+    }catch(error){errors.push('Cache: '+error.message)}
   }
-  log('✔ TUDO APAGADO. Recarregue o V7 para começar do zero.');
-  document.getElementById('btnZerar2').style.display='none';
+
+  if('serviceWorker' in navigator){
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const reg of regs){
+        if(!isVooaltoRegistration(reg))continue;
+        try{if(await reg.unregister())nSW++}catch(error){errors.push('Service Worker: '+error.message)}
+      }
+    }catch(error){errors.push('Service Worker: '+error.message)}
+  }
+
+  log('Service Workers removidos: '+nSW+'; caches removidos: '+nCache+'.');
+  if(errors.length){
+    log('⚠ LIMPEZA INCOMPLETA — '+errors.length+' falha(s). Feche outras janelas do Vooalto, volte a esta página e tente novamente.');
+    errors.forEach(error=>log('• '+error));
+  }else log('✔ DADOS DO VOOALTO APAGADOS. Os dados de outros aplicativos foram mantidos. Recarregue o V7 para começar do zero.');
+  second.style.display='none';document.getElementById('btnZerar').disabled=false;resetRunning=false;
 }
 </script>
 </body>
