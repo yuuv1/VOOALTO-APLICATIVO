@@ -4,7 +4,7 @@
   "version": "7.1.0",
   "description": "Testes e ferramentas de build do Vooalto V7 PWA",
   "scripts": {
-    "test": "node tests/test_shell_v7.js && node tests/test_principal_v7.js && node tests/test_ficha_v7.js && node tests/test_orc_v7.js && node tests/test_orc_features_v7.js && node tests/test_canva_v7.js && node tests/test_ux_v7.js && node tests/test_pwa_infra_v7.js && node tests/test_server_v7.js",
+    "test": "node tests/test_shell_v7.js && node tests/test_principal_v7.js && node tests/test_ficha_v7.js && node tests/test_orc_v7.js && node tests/test_orc_features_v7.js && node tests/test_canva_v7.js && node tests/test_ux_v7.js && node tests/test_pwa_infra_v7.js && node tests/test_server_v7.js && node tests/test_perf_v7.js",
     "test:python": "python -m unittest discover -s tests -p 'test_*.py'",
     "build": "python build_v7_pwa.py"
   },

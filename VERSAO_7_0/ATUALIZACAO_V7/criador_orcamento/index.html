@@ -2225,8 +2225,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         document.getElementById(`preview-payment-title-${pageId}`).innerHTML = paymentTitleVal;
         document.getElementById(`preview-payment-text-${pageId}`).innerHTML = paymentTextVal;
 
-        // Signature image
-        document.getElementById(`preview-signature-${pageId}`).src = currentSignatureBase64;
+        // Signature image (só troca o src quando mudou: antes reatribuía o
+        // dataURL a cada tecla digitada, forçando o navegador a reprocessar)
+        const _sigEl = document.getElementById(`preview-signature-${pageId}`);
+        if (_sigEl && _sigEl.getAttribute('src') !== currentSignatureBase64) _sigEl.src = currentSignatureBase64;
 
         // Watermark opacity
         document.getElementById(`preview-watermark-${pageId}`).style.opacity = watermarkOpacity;
@@ -2504,10 +2506,13 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         const img = new Image();
         img.onload = function() {
           const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = img.width;
-          tempCanvas.height = img.height;
+          /* V7.1.1 — limita a assinatura a 800px (anti-travamento): foto em
+             resolução total virava PNG de MBs no autosave e no estado. */
+          const MAXS = 800, sc = Math.min(1, MAXS / Math.max(img.width, img.height));
+          tempCanvas.width = Math.max(1, Math.round(img.width * sc));
+          tempCanvas.height = Math.max(1, Math.round(img.height * sc));
           const tempCtx = tempCanvas.getContext('2d');
-          tempCtx.drawImage(img, 0, 0);
+          tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
           const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
           const data = imgData.data;
