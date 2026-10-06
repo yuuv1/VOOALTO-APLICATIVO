@@ -572,13 +572,28 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
 <div class="modal" id="orderModal"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Adicionar Ficha Técnica</h3><button class="btn" onclick="closeOrderModal()">✕</button></div><div class="modal-body"><input type="hidden" id="editId"><div class="form-grid"><div class="form-group"><label>Nome da ficha técnica</label><input class="form-control" id="orderName"></div><div class="form-group"><label>Número / WhatsApp do cliente (opcional)</label><input class="form-control" id="orderClientPhone"></div><div class="form-group"><label>Data de entrada</label><input type="date" class="form-control" id="orderDate"></div><div class="form-group"><label>Anexar PDF</label><input type="file" class="form-control" id="orderPdf" accept="application/pdf,.pdf"><div id="currentPdf" style="font-size:11px;color:var(--muted);margin-top:5px"></div></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ média (opcional)</label><input type="number" class="form-control" id="orderMedDays" value="15"></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ alta (opcional)</label><input type="number" class="form-control" id="orderHighDays" value="22"></div></div><div class="form-group"><label>Nota / alteração</label><textarea class="form-control" id="orderNote"></textarea></div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" onclick="closeOrderModal()">Cancelar</button><button class="btn primary" onclick="saveOrder()">Salvar</button></div></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
-const KEY='vooalto_main_catalog_v2';let state={thresholds:{low:0,med:15,high:22},orders:[],history:[]};let expandedColumn=null;const cols=[['baixa','Baixa','Antes do limite médio','var(--green)'],['media','Média','A partir do limite médio','var(--yellow)'],['alta','Alta','A partir do limite alto','var(--red)'],['concluido','Concluídos','Só entra pelo botão Concluído','var(--gray)']];const $=id=>document.getElementById(id);const PDF_DB='vooalto_pdf_store_v2',PDF_STORE='pdfs';
+const KEY='vooalto_main_catalog_v2';let state={thresholds:{low:0,med:15,high:22},orders:[],history:[]};let expandedColumn=null;const cols=[['baixa','Baixa','Antes do limite médio','var(--green)'],['media','Média','A partir do limite médio','var(--yellow)'],['alta','Alta','A partir do limite alto','var(--red)'],['concluido','Concluídos','Só entra pelo botão Concluído','var(--gray)']];const $=id=>document.getElementById(id);const PDF_DB='vooalto_pdf_store_v2',PDF_STORE='pdfs',FICHA_STORE='fichaData',PDF_DB_VERSION=2;
 function setTheme(t,fromParent){t=t||'neo';document.documentElement.dataset.theme=t==='neo'?'':t;localStorage.setItem('vooalto_theme_v5',t);const sel=document.getElementById('themeSelect');if(sel)sel.value=t;/* só notifica o shell se a troca foi iniciada NO iframe (select local), não se veio do shell (evita loop) */if(!fromParent){try{parent.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}}}
 function loadTheme(){setTheme(localStorage.getItem('vooalto_theme_v5')||'neo')}
 window.addEventListener('message',e=>{if(e.data&&e.data.type==='vooalto-theme')setTheme(e.data.theme,true)});
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}function uid(){return'o_'+Math.random().toString(36).slice(2,9)+'_'+Date.now().toString(36)}function toISODate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}function parseDate(s){if(s instanceof Date&&!isNaN(s))return s;if(typeof s==='number')return new Date(s);s=String(s==null?'':s).trim();if(!s)return new Date();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const t=Date.parse(s);if(!isNaN(t))return new Date(t);return new Date()}function daysSince(s){const a=parseDate(s),b=new Date();b.setHours(0,0,0,0);a.setHours(0,0,0,0);return Math.max(0,Math.floor((b-a)/86400000))}function normalizeStatusValue(v){v=String(v||'baixa').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();if(['concluido','concluidos','finalizado','done','completed'].includes(v))return'concluido';if(['alta','high'].includes(v))return'alta';if(['media','medio','medium'].includes(v))return'media';return'baixa'}function getLimits(o){return{med:parseInt(o?.medDays??state.thresholds.med)||15,high:parseInt(o?.highDays??state.thresholds.high)||22}}function autoStatus(o){if(normalizeStatusValue(o.status)==='concluido')return'concluido';const d=daysSince(o.createdAt),l=getLimits(o);if(d>=l.high)return'alta';if(d>=l.med)return'media';return'baixa'}function priorityRank(st){return({baixa:1,media:2,alta:3,concluido:4})[normalizeStatusValue(st)]||1}function openCount(){return state.orders.filter(o=>normalizeStatusValue(o.status)!=='concluido').length}
-function openPdfDB(){return new Promise((res,rej)=>{const r=indexedDB.open(PDF_DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(PDF_STORE))r.result.createObjectStore(PDF_STORE)};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}async function storePdfData(id,data){const db=await openPdfDB();return new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).put(data,id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}const _pdfDataCache=new Map();async function getPdfData(id){if(_pdfDataCache.has(id))return _pdfDataCache.get(id);const mem=state.orders.find(o=>o.id===id)?.pdfData;if(mem){_pdfDataCache.set(id,mem);return mem;}try{const db=await openPdfDB();const data=await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readonly'),rq=tx.objectStore(PDF_STORE).get(id);rq.onsuccess=()=>{db.close();res(rq.result||null)};rq.onerror=()=>{db.close();rej(rq.error)}});if(data)_pdfDataCache.set(id,data);return data}catch(e){return null}}async function deletePdfData(id){try{const db=await openPdfDB();return await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).delete(id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}catch(e){}}
-function normalizeImportedData(data){data=data||{};data.thresholds={low:0,med:15,high:22,...(data.thresholds||{})};data.orders=(data.orders||[]).map(o=>({id:o.id||uid(),name:o.name||'Ficha sem nome',clientPhone:o.clientPhone||o.whatsapp||o.phone||'',createdAt:toISODate(parseDate(o.createdAt||today())),createdTs:o.createdTs||Date.now(),status:normalizeStatusValue(o.status),note:o.note||'',medDays:o.medDays??data.thresholds.med,highDays:o.highDays??data.thresholds.high,pdfData:o.pdfData,pdfName:o.pdfName,completedAt:o.completedAt,manual:o.manual,pdfStored:o.pdfStored||!!o.pdfName}));data.history=data.history||[];return data}function load(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem('vooalto_main_catalog_v1');if(raw)state=normalizeImportedData(JSON.parse(raw))}catch(e){}state=normalizeImportedData(state);$('thMed').value=state.thresholds.med;$('thHigh').value=state.thresholds.high}function save(){const clone=JSON.parse(JSON.stringify(state));(clone.orders||[]).forEach(o=>{if(o.pdfData&&o.pdfStored)delete o.pdfData});localStorage.setItem(KEY,JSON.stringify(clone))}function refreshAutomaticStages(){let ch=false;state.orders.forEach(o=>{o.status=normalizeStatusValue(o.status);if(o.status==='concluido')return;const due=autoStatus(o);if(priorityRank(due)>priorityRank(o.status)){o.status=due;ch=true}});if(ch)save()}async function migratePdfsToDB(){let ch=false,failed=0;for(const o of state.orders){if(o.pdfData){o.pdfStored=false;try{await storePdfData(o.id,o.pdfData);_pdfDataCache.delete(o.id);delete o.pdfData;o.pdfStored=true;ch=true}catch(e){failed++}}}if(ch)save();if(failed)toast('⚠️ '+failed+' PDF(s) continuam no backup local porque o navegador não conseguiu migrá-los para IndexedDB. Exporte um backup e libere espaço.')}
+function openPdfDB(){return new Promise((res,rej)=>{const r=indexedDB.open(PDF_DB,PDF_DB_VERSION);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(PDF_STORE))r.result.createObjectStore(PDF_STORE);if(!r.result.objectStoreNames.contains(FICHA_STORE))r.result.createObjectStore(FICHA_STORE)};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}async function storePdfData(id,data){const db=await openPdfDB();return new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).put(data,id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}const _pdfDataCache=new Map();async function getPdfData(id){if(_pdfDataCache.has(id))return _pdfDataCache.get(id);const mem=state.orders.find(o=>o.id===id)?.pdfData;if(mem){_pdfDataCache.set(id,mem);return mem;}try{const db=await openPdfDB();const data=await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readonly'),rq=tx.objectStore(PDF_STORE).get(id);rq.onsuccess=()=>{db.close();res(rq.result||null)};rq.onerror=()=>{db.close();rej(rq.error)}});if(data){_pdfDataCache.set(id,data);_capMap(_pdfDataCache,20);}return data}catch(e){return null}}async function deletePdfData(id){try{const db=await openPdfDB();return await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).delete(id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}catch(e){}}
+/* ══ V7.1.1 — fichaData (Criador) fora do localStorage (anti-travamento + anti-perda) ══
+   A ficha com fotos (MBs em base64) era gravada no localStorage a cada save():
+   travava a interface nas serializações e estourava a cota (~5MB), quebrando o
+   salvamento. Agora vai para o IndexedDB (assíncrono); no localStorage ficam só
+   os metadados. A cópia em memória continua para edição/exportação imediatas. */
+function _capMap(m,n,destroy){try{while(m.size>n){const k=m.keys().next().value;const v=m.get(k);m.delete(k);if(destroy&&v&&typeof v.destroy==='function'){try{const r=v.destroy();if(r&&typeof r.catch==='function')r.catch(()=>{})}catch(_){}}}}catch(_){}}
+async function storeFichaData(id,data){const db=await openPdfDB();return new Promise((res,rej)=>{const tx=db.transaction(FICHA_STORE,'readwrite');tx.objectStore(FICHA_STORE).put(data,id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}
+const _fichaDataCache=new Map();
+async function getFichaData(id){if(_fichaDataCache.has(id))return _fichaDataCache.get(id);const mem=state.orders.find(o=>o.id===id)?.fichaData;if(mem)return mem;try{const db=await openPdfDB();const data=await new Promise((res,rej)=>{const tx=db.transaction(FICHA_STORE,'readonly'),rq=tx.objectStore(FICHA_STORE).get(id);rq.onsuccess=()=>{db.close();res(rq.result||null)};rq.onerror=()=>{db.close();rej(rq.error)}});if(data){_fichaDataCache.set(id,data);_capMap(_fichaDataCache,10);}return data}catch(e){return null}}
+async function deleteFichaData(id){_fichaDataCache.delete(id);try{const db=await openPdfDB();return await new Promise((res,rej)=>{const tx=db.transaction(FICHA_STORE,'readwrite');tx.objectStore(FICHA_STORE).delete(id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}catch(e){}}
+/* Persiste a ficha no IDB sem bloquear a interface; quando termina, marca o flag
+   e salva de novo para enxugar o localStorage. Falha = segue inline (sem IDB). */
+function persistFichaDataAsync(o){if(!o||!o.fichaData||o.fichaInIDB)return;try{storeFichaData(o.id,o.fichaData).then(()=>{o.fichaInIDB=true;save();}).catch(()=>{})}catch(e){}}
+async function migrateFichaDataToDB(){let ch=false;for(const o of state.orders){if(o.fichaData&&!o.fichaInIDB){try{await storeFichaData(o.id,o.fichaData);o.fichaInIDB=true;ch=true}catch(e){}}}if(ch)save()}
+async function loadFichaDataFromDB(){for(const o of state.orders){if(!o.fichaData&&o.fichaInIDB){try{const fd=await getFichaData(o.id);if(fd)o.fichaData=fd}catch(e){}}}}
+function normalizeImportedData(data){data=data||{};data.thresholds={low:0,med:15,high:22,...(data.thresholds||{})};data.orders=(data.orders||[]).map(o=>({id:/^[A-Za-z0-9_-]+$/.test(String(o.id||''))?o.id:uid(),name:o.name||'Ficha sem nome',clientPhone:o.clientPhone||o.whatsapp||o.phone||'',createdAt:toISODate(parseDate(o.createdAt||today())),createdTs:o.createdTs||Date.now(),status:normalizeStatusValue(o.status),note:o.note||'',medDays:o.medDays??data.thresholds.med,highDays:o.highDays??data.thresholds.high,pdfData:o.pdfData,pdfName:o.pdfName,completedAt:o.completedAt,manual:o.manual,pdfStored:o.pdfStored||!!o.pdfName,...(o.fichaData!==undefined?{fichaData:o.fichaData}:{}),...(o.fichaNum!==undefined?{fichaNum:o.fichaNum}:{}),...(o.fichaInIDB?{fichaInIDB:true}:{})}));data.history=data.history||[];return data}function load(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem('vooalto_main_catalog_v1');if(raw)state=normalizeImportedData(JSON.parse(raw))}catch(e){}state=normalizeImportedData(state);$('thMed').value=state.thresholds.med;$('thHigh').value=state.thresholds.high}function save(){try{const orders=(state.orders||[]).map(o=>{const c=Object.assign({},o);if(c.pdfData&&c.pdfStored)delete c.pdfData;if(c.fichaInIDB&&c.fichaData)delete c.fichaData;return c});localStorage.setItem(KEY,JSON.stringify({thresholds:state.thresholds,orders:orders,history:state.history}));return true}catch(e){console.warn('Catalogação: falha ao salvar no armazenamento local',e);try{toast('⚠️ Espaço cheio: parte dos dados pode não ter sido salva. Exporte um backup.')}catch(_){}return false}}function refreshAutomaticStages(){let ch=false;state.orders.forEach(o=>{o.status=normalizeStatusValue(o.status);if(o.status==='concluido')return;const due=autoStatus(o);if(priorityRank(due)>priorityRank(o.status)){o.status=due;ch=true}});if(ch)save()}async function migratePdfsToDB(){let ch=false,failed=0;for(const o of state.orders){if(o.pdfData){o.pdfStored=false;try{await storePdfData(o.id,o.pdfData);_pdfDataCache.delete(o.id);delete o.pdfData;o.pdfStored=true;ch=true}catch(e){failed++}}}if(ch)save();if(failed)toast('⚠️ '+failed+' PDF(s) continuam no backup local porque o navegador não conseguiu migrá-los para IndexedDB. Exporte um backup e libere espaço.')}
 function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',(b.getAttribute('onclick')||'').includes("'"+id+"'")));renderAll()}function filteredOrders(){const q=($('search')?.value||'').toLowerCase().trim();return state.orders.filter(o=>!q||o.name.toLowerCase().includes(q)||(o.note||'').toLowerCase().includes(q)||(o.clientPhone||'').toLowerCase().includes(q))}
 /* ══ V7 UX: foco por prioridade ══ */
 let prioFocus='all';
@@ -595,7 +610,7 @@ try{window.vooaltoCounts={total,abertos:active,alta:c.alta};parent.postMessage({
 function renderWeekly(){const weeks=[],now=weekStart(new Date());for(let i=7;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i*7);weeks.push({start:d,label:d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),count:0})}state.orders.forEach(o=>{const ws=weekStart(parseDate(o.createdAt)).getTime(),w=weeks.find(x=>x.start.getTime()===ws);if(w)w.count++});const max=Math.max(1,...weeks.map(w=>w.count));$('weeklyChart').innerHTML='<div class="weekly">'+weeks.map(w=>`<div class="week-col" style="height:${Math.max(6,w.count/max*100)}%"><b>${w.count}</b><span>${w.label}</span></div>`).join('')+'</div>'}function weekStart(date){const d=new Date(date);d.setHours(0,0,0,0);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d}
 function renderPie(c,total){let acc=0,vals=[['Baixa',c.baixa,'var(--green)'],['Média',c.media,'var(--yellow)'],['Alta',c.alta,'var(--red)'],['Concluídos',c.concluido,'var(--gray)']];const seg=vals.map(v=>{const pct=total?v[1]/total*100:0,part=`${v[2]} ${acc}% ${acc+pct}%`;acc+=pct;return part}).join(',');$('priorityPie').style.background=`conic-gradient(${seg||'var(--gray) 0 100%'})`;$('priorityLegend').innerHTML=vals.map(v=>`<div><i style="background:${v[2]}"></i>${v[0]} · <b>${v[1]}</b></div>`).join('')}
 function renderAge(){const b=[['0-7d',0,'var(--green)'],['8-14d',0,'var(--blue)'],['15-21d',0,'var(--yellow)'],['22+d',0,'var(--red)']];state.orders.filter(o=>normalizeStatusValue(o.status)!=='concluido').forEach(o=>{const d=daysSince(o.createdAt);if(d<=7)b[0][1]++;else if(d<=14)b[1][1]++;else if(d<=21)b[2][1]++;else b[3][1]++});renderBars('ageBars',b)}function renderBars(id,items){const max=Math.max(1,...items.map(i=>i[1]));$(id).innerHTML=items.map(i=>`<div class="bar-row"><div class="bar-label">${i[0]}</div><div class="bar-track"><div class="bar-fill" style="width:${i[1]/max*100}%;background:${i[2]}"></div></div><b>${i[1]}</b></div>`).join('')}function renderUrgent(){const arr=state.orders.filter(o=>normalizeStatusValue(o.status)!=='concluido').sort((a,b)=>daysSince(b.createdAt)-daysSince(a.createdAt)).slice(0,8);$('urgentList').innerHTML=arr.length?arr.map(o=>`<div class="urgent-item"><b>${esc(o.name)}</b><br><span>${fmtDate(o.createdAt)} · ${daysSince(o.createdAt)} dias · ${label(o.status)}</span></div>`).join(''):'<div class="empty">Nenhum pedido em aberto</div>'}function renderClients(){const c={};state.orders.forEach(o=>{const k=(o.clientPhone||'').trim();if(k)c[k]=(c[k]||0)+1});const arr=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,8);$('clientList').innerHTML=arr.length?arr.map(x=>`<div class="bar-row"><div class="bar-label">${esc(x[0])}</div><div class="bar-track"><div class="bar-fill" style="width:${x[1]/Math.max(...arr.map(a=>a[1]))*100}%;background:var(--blue)"></div></div><b>${x[1]}</b></div>`).join(''):'<div class="empty">Nenhum número cadastrado</div>'}
-function renderCatalog(){const wrap=$('columns');if(!wrap)return;state.orders.forEach(o=>o.status=normalizeStatusValue(o.status));wrap.innerHTML='';wrap.classList.toggle('expanded',!!expandedColumn);wrap.classList.toggle('focus-one',prioFocus!=='all');const orders=filteredOrders();renderPrioChips();cols.forEach(([key,title,desc,color])=>{if(prioFocus!=='all'&&prioFocus!==key)return;const list=orders.filter(o=>(o.status||autoStatus(o))===key);const col=document.createElement('div');col.className='column'+(expandedColumn===key?' expanded':'');col.innerHTML=`<div class="col-head"><div class="col-title"><span style="color:${color}">●</span> ${title}</div><div class="col-actions"><span class="badge">${list.length}</span><button class="expand-col" onclick="toggleColumnExpand('${key}')">${expandedColumn===key?'↙':'⛶'}</button></div></div><div class="col-desc">${desc}</div><div class="dropzone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOrder(event,'${key}')"></div>`;wrap.appendChild(col);const dz=col.querySelector('.dropzone');if(!list.length)dz.innerHTML='<div class="empty">Nenhuma ficha aqui</div>';list.sort((a,b)=>daysSince(b.createdAt)-daysSince(a.createdAt)).forEach(o=>dz.appendChild(card(o)))});if(expandedColumn)setTimeout(loadExpandedPdfCards,120)}function card(o){const d=daysSince(o.createdAt),l=getLimits(o),st=normalizeStatusValue(o.status||autoStatus(o)),hot=d>=l.high&&st!=='concluido';const el=document.createElement('div');if(expandedColumn){el.className='order-card expanded-pdf-card '+st;el.dataset.orderId=o.id;el.onclick=()=>viewPdf(o.id);el.innerHTML=`<div class="expanded-pdf-date">${fmtDate(o.createdAt)}</div><div class="expanded-pdf-sheet" data-expanded-pdf="${o.id}"><div class="expanded-pdf-loading">Carregando ficha...</div></div>`;return el}el.className='order-card '+st;el.dataset.orderId=o.id;el.draggable=true;el.ondragstart=e=>e.dataTransfer.setData('text/plain',o.id);const fichaBtn=o.fichaData?`<button class="mini ficha" onclick="editarFichaTecnica('${o.id}')">✏️ Modificar Ficha</button>`:'';el.innerHTML=`<div class="card-top"><div><div class="order-title">${esc(o.name)}</div>${o.clientPhone?`<div class="client-phone">📱 ${esc(o.clientPhone)}</div>`:''}</div><div class="days ${hot?'hot':''}">${st==='concluido'?'Finalizado':d+' dias'}</div></div><button class="pdf-open-btn" onclick="viewPdf('${o.id}')">📄 Visualizar PDF</button><div class="meta"><div><span>Entrada</span><b>${fmtDate(o.createdAt)}</b></div><div><span>Urgência</span><b>M ${l.med}d · A ${l.high}d</b></div><div><span>PDF</span><b>${o.pdfName?esc(o.pdfName):'Sem anexo'}</b></div><div><span>Status</span><b>${label(st)}</b></div></div>${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}<div class="card-actions">${fichaBtn}<button class="mini view" onclick="viewPdf('${o.id}')">👁 Ver PDF</button><button class="mini done" onclick="markDone('${o.id}')" ${st==='concluido'?'disabled':''}>✔ Concluído</button><button class="mini edit" onclick="openOrderModal('${o.id}')">Editar</button><button class="mini del" onclick="deleteOrder('${o.id}')">Excluir</button></div>`;return el}
+function renderCatalog(){const wrap=$('columns');if(!wrap)return;state.orders.forEach(o=>o.status=normalizeStatusValue(o.status));wrap.innerHTML='';wrap.classList.toggle('expanded',!!expandedColumn);wrap.classList.toggle('focus-one',prioFocus!=='all');const orders=filteredOrders();renderPrioChips();cols.forEach(([key,title,desc,color])=>{if(prioFocus!=='all'&&prioFocus!==key)return;const list=orders.filter(o=>(o.status||autoStatus(o))===key);const col=document.createElement('div');col.className='column'+(expandedColumn===key?' expanded':'');col.innerHTML=`<div class="col-head"><div class="col-title"><span style="color:${color}">●</span> ${title}</div><div class="col-actions"><span class="badge">${list.length}</span><button class="expand-col" onclick="toggleColumnExpand('${key}')">${expandedColumn===key?'↙':'⛶'}</button></div></div><div class="col-desc">${desc}</div><div class="dropzone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOrder(event,'${key}')"></div>`;wrap.appendChild(col);const dz=col.querySelector('.dropzone');if(!list.length)dz.innerHTML='<div class="empty">Nenhuma ficha aqui</div>';list.sort((a,b)=>daysSince(b.createdAt)-daysSince(a.createdAt)).forEach(o=>dz.appendChild(card(o)))});if(expandedColumn)setTimeout(loadExpandedPdfCards,120)}function card(o){const d=daysSince(o.createdAt),l=getLimits(o),st=normalizeStatusValue(o.status||autoStatus(o)),hot=d>=l.high&&st!=='concluido';const el=document.createElement('div');if(expandedColumn){el.className='order-card expanded-pdf-card '+st;el.dataset.orderId=o.id;el.onclick=()=>viewPdf(o.id);el.innerHTML=`<div class="expanded-pdf-date">${fmtDate(o.createdAt)}</div><div class="expanded-pdf-sheet" data-expanded-pdf="${o.id}"><div class="expanded-pdf-loading">Carregando ficha...</div></div>`;return el}el.className='order-card '+st;el.dataset.orderId=o.id;el.draggable=true;el.ondragstart=e=>e.dataTransfer.setData('text/plain',o.id);const fichaBtn=(o.fichaData||o.fichaInIDB)?`<button class="mini ficha" onclick="editarFichaTecnica('${o.id}')">✏️ Modificar Ficha</button>`:'';el.innerHTML=`<div class="card-top"><div><div class="order-title">${esc(o.name)}</div>${o.clientPhone?`<div class="client-phone">📱 ${esc(o.clientPhone)}</div>`:''}</div><div class="days ${hot?'hot':''}">${st==='concluido'?'Finalizado':d+' dias'}</div></div><button class="pdf-open-btn" onclick="viewPdf('${o.id}')">📄 Visualizar PDF</button><div class="meta"><div><span>Entrada</span><b>${fmtDate(o.createdAt)}</b></div><div><span>Urgência</span><b>M ${l.med}d · A ${l.high}d</b></div><div><span>PDF</span><b>${o.pdfName?esc(o.pdfName):'Sem anexo'}</b></div><div><span>Status</span><b>${label(st)}</b></div></div>${o.note?`<div class="note">📝 ${esc(o.note)}</div>`:''}<div class="card-actions">${fichaBtn}<button class="mini view" onclick="viewPdf('${o.id}')">👁 Ver PDF</button><button class="mini done" onclick="markDone('${o.id}')" ${st==='concluido'?'disabled':''}>✔ Concluído</button><button class="mini edit" onclick="openOrderModal('${o.id}')">Editar</button><button class="mini del" onclick="deleteOrder('${o.id}')">Excluir</button></div>`;return el}
 
 /* ═══ PDF PREVIEW SYSTEM — optimized ═══ */
 let pdfJsLoadingPromise=null;
@@ -631,7 +646,7 @@ async function getThumbLo(id){
   if(!data||!String(data).startsWith('data:application/pdf')){return null;}
   const pdfjs=await ensurePdfJs();
   let pdf=_pdfDocCache.get(id);
-  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);}
+  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);_capMap(_pdfDocCache,8,true);}
   const page=await pdf.getPage(1);
   const vp=page.getViewport({scale:1.0});
   const canvas=document.createElement('canvas');
@@ -639,7 +654,7 @@ async function getThumbLo(id){
   const ctx=canvas.getContext('2d',{alpha:false});
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
   await page.render({canvasContext:ctx,viewport:vp}).promise;
-  _thumbCache.set(id,canvas);
+  _thumbCache.set(id,canvas);_capMap(_thumbCache,30);
   return canvas;
 }
 
@@ -650,7 +665,7 @@ async function getThumbHQ(id){
   if(!data||!String(data).startsWith('data:application/pdf')){return null;}
   const pdfjs=await ensurePdfJs();
   let pdf=_pdfDocCache.get(id);
-  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);}
+  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);_capMap(_pdfDocCache,8,true);}
   const page=await pdf.getPage(1);
   const vp=page.getViewport({scale:2.0});
   const canvas=document.createElement('canvas');
@@ -658,7 +673,7 @@ async function getThumbHQ(id){
   const ctx=canvas.getContext('2d',{alpha:false});
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
   await page.render({canvasContext:ctx,viewport:vp}).promise;
-  _thumbCacheHQ.set(id,canvas);
+  _thumbCacheHQ.set(id,canvas);_capMap(_thumbCacheHQ,30);
   return canvas;
 }
 
@@ -686,26 +701,35 @@ async function renderPdfFirstPageCanvas(dataUrl,box){
   }catch(e){console.warn('Falha no preview canvas PDF:',e);return false;}
 }
 
-/* Parallel loading — all cards render at once */
+/* V7.1.1 — no máximo 2 PDFs renderizando por vez (anti-travamento).
+   Disparar todos os cards em paralelo congelava a interface quando a coluna
+   tinha muitas fichas: cada PDF ocupa CPU/memória de uma vez só. */
+async function loadOneExpandedPdfCard(box){
+  const id=box.dataset.expandedPdf;
+  try{
+    const thumb=await getThumbHQ(id);
+    if(thumb){
+      box.innerHTML='';box.classList.add('pdf-canvas-ready');
+      /* cloneNode() NÃO copia o desenho de um <canvas> (sairia em branco):
+         cria um canvas novo e copia os pixels com drawImage. */
+      const display=document.createElement('canvas');
+      display.width=thumb.width;display.height=thumb.height;
+      try{const dctx=display.getContext('2d');if(dctx)dctx.drawImage(thumb,0,0);}catch(e){}
+      display.style.width='100%';display.style.height='100%';display.style.objectFit='contain';display.style.display='block';
+      box.appendChild(display);box.dataset.loaded='1';
+    }else{
+      const data=await getPdfData(id);
+      if(!data){box.innerHTML='<div class="expanded-pdf-empty">Sem PDF anexado</div>';box.dataset.loaded='1';}
+      else{box.style.height='380px';box.innerHTML='<iframe class="fallback-pdf" loading="lazy" src="'+data+'#page=1&zoom=page-fit&toolbar=0&navpanes=0&scrollbar=0"></iframe>';box.dataset.loaded='1';}
+    }
+  }catch(e){box.innerHTML='<div class="expanded-pdf-empty">Erro ao carregar</div>';box.dataset.loaded='1';}
+}
 async function loadExpandedPdfCards(){
-  const boxes=[...document.querySelectorAll('[data-expanded-pdf]')];
-  const tasks=boxes.filter(b=>b.dataset.loaded!=='1').map(async(box)=>{
-    const id=box.dataset.expandedPdf;
-    try{
-      const thumb=await getThumbHQ(id);
-      if(thumb){
-        box.innerHTML='';box.classList.add('pdf-canvas-ready');
-        const display=thumb.cloneNode(true);
-        display.style.width='100%';display.style.height='100%';display.style.objectFit='contain';display.style.display='block';
-        box.appendChild(display);box.dataset.loaded='1';
-      }else{
-        const data=await getPdfData(id);
-        if(!data){box.innerHTML='<div class="expanded-pdf-empty">Sem PDF anexado</div>';box.dataset.loaded='1';}
-        else{box.style.height='380px';box.innerHTML='<iframe class="fallback-pdf" loading="lazy" src="'+data+'#page=1&zoom=page-fit&toolbar=0&navpanes=0&scrollbar=0"></iframe>';box.dataset.loaded='1';}
-      }
-    }catch(e){box.innerHTML='<div class="expanded-pdf-empty">Erro ao carregar</div>';box.dataset.loaded='1';}
-  });
-  await Promise.all(tasks);
+  const boxes=[...document.querySelectorAll('[data-expanded-pdf]')].filter(b=>b.dataset.loaded!=='1');
+  if(!boxes.length)return;
+  let next=0;
+  const worker=async()=>{while(next<boxes.length){const box=boxes[next++];await loadOneExpandedPdfCard(box);}};
+  await Promise.all(Array.from({length:Math.min(2,boxes.length)},worker));
 }
 function toggleColumnExpand(k){expandedColumn=expandedColumn===k?null:k;renderCatalog()}function saveThresholds(){state.thresholds.low=0;state.thresholds.med=parseInt($('thMed').value)||15;state.thresholds.high=parseInt($('thHigh').value)||22;save()}function autoClassifyAll(){state.orders.forEach(o=>{if(normalizeStatusValue(o.status)!=='concluido')o.status=autoStatus(o)});save();renderAll()}function openOrderModal(id){$('orderPdf').value='';$('editId').value=id||'';const o=id?state.orders.find(x=>x.id===id):null;$('modalTitle').textContent=id?'Editar Ficha Técnica':'Adicionar Ficha Técnica';$('orderName').value=o?.name||'';$('orderClientPhone').value=o?.clientPhone||'';$('orderDate').value=o?.createdAt||today();$('orderNote').value=o?.note||'';$('orderMedDays').value=o?.medDays??state.thresholds.med;$('orderHighDays').value=o?.highDays??state.thresholds.high;$('currentPdf').textContent=o?.pdfName?'PDF atual: '+o.pdfName:'Nenhum PDF anexado';$('orderModal').classList.add('open')}function closeOrderModal(){$('orderModal').classList.remove('open')}async function saveOrder(){
   const id=$('editId').value,name=$('orderName').value.trim();
@@ -739,7 +763,7 @@ function toggleColumnExpand(k){expandedColumn=expandedColumn===k?null:k;renderCa
   };
   if(file)readPdfFile(file,(data,fileName)=>finish(data,fileName));
   else finish(null,null);
-}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){if(!confirm('Excluir ficha?'))return;const o=state.orders.find(x=>x.id===id);if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}
+}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){if(!confirm('Excluir ficha?'))return;const o=state.orders.find(x=>x.id===id);if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);deleteFichaData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}
 /* Abre o PDF direto no visualizador padrão do navegador (aba nova) — sem popup customizado */
 async function viewPdf(id){
   const o=state.orders.find(x=>x.id===id);if(!o)return toast('Ficha não encontrada.');
@@ -790,12 +814,13 @@ if(!confirm(msg))return;
 const substituir=confirm('Deseja SUBSTITUIR o catálogo inteiro pelo backup?\n\nOK = Substituir tudo\nCancelar = Mesclar (mantém as atuais)');
 for(const o of data.orders){
 if(o.pdfData){try{await storePdfData(o.id,o.pdfData);_pdfDataCache.delete(o.id);delete o.pdfData;o.pdfStored=true}catch(storeError){throw new Error('Não foi possível armazenar o PDF da ficha “'+o.name+'”. Feche outras abas do Vooalto e tente novamente.')}}
+if(o.fichaData&&!o.fichaInIDB){try{await storeFichaData(o.id,o.fichaData);o.fichaInIDB=true}catch(_){o.fichaInIDB=false;/* sem IndexedDB: segue inline no localStorage */}}
 }
 if(substituir){state=data}
 else{
 data.orders.forEach(o=>{const i=state.orders.findIndex(x=>x.id===o.id);if(i>=0){state.orders[i]=Object.assign({},state.orders[i],o)}else{state.orders.push(o)}});
 }
-save();load();renderAll();toast('✅ Backup importado!');
+save();load();await loadFichaDataFromDB().catch(()=>{});renderAll();toast('✅ Backup importado!');
 }catch(err){alert('Erro ao importar: '+err.message)}
 };r.readAsText(f);e.target.value=''}
 /* Hover preview desativado a pedido do usuário — visualização só via clique (aba nova do navegador).
@@ -812,6 +837,7 @@ window.addEventListener('message',function(e){
     state.orders.push(o);
     addHistory('add',+1);
     save();
+    persistFichaDataAsync(o);
     renderAll();
     toast('📋 Ficha técnica adicionada à catalogação!');
   }
@@ -830,6 +856,7 @@ function checkPendingFicha(){
       state.orders.push(o);
       addHistory('add',+1);
       save();
+      persistFichaDataAsync(o);
       renderAll();
       toast('📋 Ficha técnica adicionada à catalogação!');
     }
@@ -847,7 +874,7 @@ function checkPendingFichaUpdate(){
       if(o){
         o.fichaData=d.fichaData;
         if(d.fichaNome)o.name=d.fichaNome;
-        save();renderAll();
+        save();persistFichaDataAsync(o);renderAll();
         toast('✅ Ficha técnica atualizada!');
       }
     }
@@ -855,13 +882,16 @@ function checkPendingFichaUpdate(){
 }
 
 /* ══ Editar ficha técnica — abre no Criador ══ */
-function editarFichaTecnica(id){
+async function editarFichaTecnica(id){
   const o=state.orders.find(x=>x.id===id);
-  if(!o||!o.fichaData)return toast('Dados da ficha não encontrados.');
+  if(!o)return toast('Dados da ficha não encontrados.');
+  let fd=o.fichaData;
+  if(!fd&&o.fichaInIDB){try{fd=await getFichaData(id);if(fd)o.fichaData=fd;}catch(e){fd=null;}}
+  if(!fd)return toast('Dados da ficha não encontrados.');
   try{
     parent.postMessage({
       type:'vooalto-ficha-edit',
-      fichaData:o.fichaData,
+      fichaData:fd,
       fichaId:o.id,
       fichaNome:o.name||''
     },'*');
@@ -882,6 +912,7 @@ window.addEventListener('message',function(e){
       o.fichaData=d.fichaData;
       o.name=d.fichaNome||o.name;
       save();
+      persistFichaDataAsync(o);
       renderAll();
       toast('✅ Ficha técnica atualizada!');
     }
@@ -928,4 +959,7 @@ function v7DayTick(){
 setInterval(v7DayTick,60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)v7DayTick()});
 window.addEventListener('focus',v7DayTick);
+</script></body></html>.addEventListener('visibilitychange',()=>{if(!document.hidden)v7DayTick()});
+window.addEventListener('focus',v7DayTick);
+</script></body></html>stener('focus',v7DayTick);
 </script></body></html>

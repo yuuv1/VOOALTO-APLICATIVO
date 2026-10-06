@@ -737,6 +737,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 .v7-thumb{position:relative;width:64px;height:92px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,.28);cursor:pointer;background:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .v7-thumb.active{border-color:#3B82F6;box-shadow:0 0 0 2px rgba(59,130,246,.55)}
 .v7-thumb-scale{position:absolute;top:0;left:0;width:64px;height:92px;overflow:hidden}
+.v7-thumb-scale img[data-v7-img]{background:#E5E7EB;min-width:10px;min-height:10px}
 .v7-thumb-scale .folha,.v7-thumb-scale .folha-branca{margin:0!important;box-shadow:none!important;border:0!important;border-radius:0!important}
 .v7-thumb-num{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:7.5px;font-weight:900;text-align:center;padding:2px;letter-spacing:.4px;line-height:1.2}
 .v7-thumb-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:0;background:rgba(239,68,68,.92);color:#fff;font-size:9px;line-height:1;cursor:pointer;z-index:5;padding:0}
@@ -2051,7 +2052,7 @@ document.addEventListener('mouseup',function up(ev){document.removeEventListener
 e.preventDefault();
 }
 function onCanvasFilesExtra(e,p){Array.from(e.target.files).forEach(f=>{if(f.type.startsWith('image/'))lerArqExtra(f,p);});e.target.value='';}
-function lerArqExtra(f,p){const r=new FileReader();r.onload=ev=>addImgLayerExtra(p,ev.target.result);r.readAsDataURL(f);}
+function lerArqExtra(f,p){const r=new FileReader();r.onload=ev=>{v7DownscaleDataURL(ev.target.result).then(src=>addImgLayerExtra(p,src));};r.readAsDataURL(f);}
 function onDragOverExtra(e,pid){e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='2px solid var(--ro)';}
 function onDragLeaveExtra(e,pid){e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='';}
 function onDropExtra(e,pid){
@@ -2485,8 +2486,44 @@ else{el.style.left=usePct?(l.xp*100)+'%':(l.xp*W)+'px';el.style.top=usePct?(l.yp
 }
 function restAllPx(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});document.documentElement.classList.remove('v7-exporting');}
 function makeDrag(e,onMove,onUp){document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',function up(ev){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',up);onUp&&onUp(ev);});e.preventDefault();}
+/* ══ V7.1.1 — Fotos gigantes travavam tudo (anti-travamento) ══
+   Uma foto de celular (12MP ≈ 5–15MB em base64) ia inteira para a memória, para
+   cada snapshot do Ctrl+Z (40×), para o autosave (a cada edição) e para a
+   catalogação. Reduzir na IMPORTAÇÃO (lado maior ≤1600px) corta ~5–20× o peso
+   sem diferença visível na ficha impressa. Imagens pequenas (logos, ícones)
+   passam intactas, preservando transparência. Falha = usa o original. */
+const V7_IMG_MAX_DIM=1600;
+const V7_IMG_JPEG_Q=0.85;
+function v7DownscaleDataURL(dataURL,maxDim,qualidade){
+  return new Promise((resolve)=>{
+    try{
+      maxDim=maxDim||V7_IMG_MAX_DIM;
+      if(!dataURL||typeof dataURL!=='string'||dataURL.length<150*1024||typeof Image==='undefined'||typeof document==='undefined'){resolve(dataURL);return;}
+      const img=new Image();
+      let done=false;
+      const timer=setTimeout(()=>finish(null),3000);
+      const finish=(out)=>{if(done)return;done=true;clearTimeout(timer);try{resolve(out||dataURL)}catch(e){resolve(dataURL)}};
+      img.onload=()=>{
+        try{
+          const w=img.naturalWidth||img.width||0,h=img.naturalHeight||img.height||0;
+          if(!w||!h){finish(null);return;}
+          const sc=Math.min(1,maxDim/Math.max(w,h));
+          if(sc>=1){finish(null);return;}
+          const cw=Math.max(1,Math.round(w*sc)),ch=Math.max(1,Math.round(h*sc));
+          const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+          const cx=cv.getContext('2d');if(!cx){finish(null);return;}
+          cx.drawImage(img,0,0,cw,ch);
+          const isJpeg=/^data:image\/jpe?g/i.test(dataURL);
+          finish(isJpeg?cv.toDataURL('image/jpeg',(qualidade||V7_IMG_JPEG_Q)):cv.toDataURL('image/png'));
+        }catch(e){finish(null);}
+      };
+      img.onerror=()=>finish(null);
+      img.src=dataURL;
+    }catch(e){resolve(dataURL);}
+  });
+}
 function onCanvasFiles(e){Array.from(e.target.files).forEach(f=>{if(f.type.startsWith('image/'))lerArq(f);});e.target.value='';}
-function lerArq(f){const r=new FileReader();r.onload=ev=>addImgLayer(ev.target.result);r.readAsDataURL(f);}
+function lerArq(f){const r=new FileReader();r.onload=ev=>{v7DownscaleDataURL(ev.target.result).then(src=>addImgLayer(src));};r.readAsDataURL(f);}
 function onDragOver(e){e.preventDefault();canvasInner.style.outline='2px solid var(--ro)';}
 function onDragLeave(e){e.preventDefault();canvasInner.style.outline='';}
 function onDrop(e){e.preventDefault();canvasInner.style.outline='';Array.from(e.dataTransfer.files).forEach(f=>{if(f.type.startsWith('image/'))lerArq(f);});}
@@ -3812,11 +3849,13 @@ function atualizarRelinkStatus() {
 /* ══ Capturar nome de arquivo ao adicionar imagem ══ */
 function lerArqComNome(f) {
   const r = new FileReader(); r.onload = ev => {
-    const src = ev.target.result, id = uid(), tmp = new Image();
+    v7DownscaleDataURL(ev.target.result).then(src=>{
+    const id = uid(), tmp = new Image();
     tmp.onload = () => { const ratio = tmp.naturalWidth/tmp.naturalHeight; let wp=0.5, hp=wp/ratio; if(hp>0.8){hp=0.8;wp=hp*ratio;}
       const l = {type:'img',id,src,ratio,xp:(1-wp)/2,yp:(1-hp)/2,wp,hp,rot:0,prop:true,z:++zCnt,_fileName:f.name};
       layers.push(l);renderImgLayer(l);selLayer(id);updPh();updList();savLayers();snap();
     }; tmp.src = src;
+    });
   }; r.readAsDataURL(f);
 }
 function onCanvasFilesPatched(e) {
@@ -4636,6 +4675,7 @@ let v7DragMoved=false;
 let v7DropMeta=null;
 
 /* ── Autosave (rascunho vivo) ── */
+let v7LastQuotaWarn=0;
 function v7SalvarAutosaveAgora(){
   clearTimeout(v7AutosaveTimer);v7AutosaveTimer=null;
   try{
@@ -4643,7 +4683,12 @@ function v7SalvarAutosaveAgora(){
     const dados=capturarFichaParaJSON();
     localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(dados));
     return true;
-  }catch(e){return false}
+  }catch(e){
+    /* V7.1.1 — antes a falha era silenciosa (dava a impressão de "travou e
+       perdeu"); agora avisa (no máximo 1× por minuto) para exportar backup. */
+    try{const agora=Date.now();if(agora-v7LastQuotaWarn>60000){v7LastQuotaWarn=agora;toast('⚠️ Espaço cheio: autosave da ficha falhou. Exporte a ficha como backup.','erro');}}catch(_){}
+    return false;
+  }
 }
 function v7Autosave(){
   clearTimeout(v7AutosaveTimer);
@@ -4703,13 +4748,20 @@ function v7ThumbHtml(folhaId,label,extraId,active,drag,removable){
   clone.removeAttribute('id');
   clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
   clone.querySelectorAll('input,textarea,button,select').forEach(el=>el.disabled=true);
+  /* V7.1.1 — miniatura LEVE (anti-travamento): o clone carregava as fotos em
+     tamanho real (MBs) para CADA página a cada renderização da faixa. */
+  clone.querySelectorAll('img').forEach(im=>{im.removeAttribute('src');im.removeAttribute('srcset');im.setAttribute('data-v7-img','1');});
+  clone.querySelectorAll('canvas,video').forEach(cv=>{try{cv.remove()}catch(e){}});
   clone.style.cssText='width:794px;height:1123px;margin:0;padding:4px;box-shadow:none;border:0;border-radius:0;transform:scale('+scale+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none;background:#fff;';
   const alvoId = extraId || folhaId;
   const delBtn = removable !== false ? '<button class="v7-thumb-del" onmousedown="event.stopPropagation()" onclick="event.stopPropagation();v7RemoverPaginaComUndo(\''+alvoId+'\')" title="Remover página">✕</button>' : '';
   const dragAttrs = drag ? ' draggable="true" ondragstart="v7ThumbDragStart(event,\''+folhaId+'\')" ondragover="v7ThumbDragOver(event,\''+folhaId+'\')" ondragleave="v7ThumbDragLeave(event)" ondrop="v7ThumbDrop(event,\''+folhaId+'\')" ondragend="v7ThumbDragEnd(event)"' : '';
-  return '<div class="v7-thumb'+(active?' active':'')+'" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')"'+dragAttrs+'>'
+  const v7h='<div class="v7-thumb'+(active?' active':'')+'" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')"'+dragAttrs+'>'
        +'<div class="v7-thumb-scale">'+clone.outerHTML+'</div>'
        +'<span class="v7-thumb-num">'+label+'</span>'+delBtn+'</div>';
+  /* trava de segurança: página pesada demais vira miniatura simples (só rótulo) */
+  if(v7h.length>400000)return '<div class="v7-thumb'+(active?' active':'')+'" data-folha="'+folhaId+'" onclick="v7GoToPage(\''+folhaId+'\')"'+dragAttrs+'><span class="v7-thumb-num">'+label+'</span>'+delBtn+'</div>';
+  return v7h;
 }
 
 /* ── UNDO/REDO DE PÁGINAS (Ctrl+Z restaura página excluída) ── */
