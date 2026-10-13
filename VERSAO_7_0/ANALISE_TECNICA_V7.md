@@ -1,7 +1,7 @@
 # VOOALTO V7 — Análise técnica e plano de melhorias
 
-> **Status:** análise concluída, **Onda 1 (V7.2.0)** e **redução de temas (V7.3.0)** implementadas
-> (`VERSAO_7_0/`, suíte de testes verde: JS 11 arquivos + 5 testes Python).
+> **Status:** análise concluída e **Ondas 1 e 2 entregues** (V7.2.0, V7.3.0 e V7.4.0)
+> (`VERSAO_7_0/`, suíte de testes verde: JS 12 arquivos + 3 arquivos de teste Python/9 casos).
 > **Base analisada:** `VERSAO_7_0/ATUALIZACAO_V7` (a versão que está publicada na `main`).
 > **Foco principal do pedido:** conseguir **ver os PDFs dentro do próprio sistema**, sem quebrar nada.
 > **Regra que segui:** nenhuma ferramenta atual (Ficha Técnica, Catalogação, Orçamento) mudou de
@@ -11,8 +11,8 @@
 > teste bomba-relógio corrigido (A3) · código morto removido (A5) · `storage.persist()` + aviso de
 > uso (A7) · plano B do iframe com `blob:` (A6) · confirmação de exclusão com nome da ficha e selo
 > "💾 Salvo HH:MM" (A10) · versão alinhada em 7.2.0 (A11). Detalhes em `CHANGELOG_V7.md`.
-> **Pendente (Ondas 2 a 4):** consolidação do CSS do modo expandido (A2), teto do cache de
-> miniaturas (A4), debounce da busca (A8), PDF como Blob no IndexedDB (A9) e os itens de UX.
+> **Pendente (Ondas 3 e 4):** os itens de experiência do `SUGESTOES_UX_V7.md` e a estrutura de
+> dados (PDF como Blob no IndexedDB — A9), que só valem a pena se você quiser.
 >
 > **Entregue fora das ondas, a pedido (V7.3.0 — 13/10):** o sistema saiu de **24 paletas de tema**
 > para **2 (Claro padrão + Escuro)**. As 24 paletas do shell, 23 da Catalogação, 23 × 11 dos
@@ -290,14 +290,19 @@ móveis = menos chance de quebrar.
 **Peso removido:** shell −5 KB · Catalogação −11 KB · Ficha −44 KB · Orçamento −12 KB ≈ **−72 KB**
 de CSS a menos no app (e no ZIP da PWA).
 
-### Onda 2 — Desempenho e estrutura
+### Onda 2 — Desempenho e estrutura ✅ **concluída na V7.4.0**
 
-| # | Melhoria | Impacto | Esforço | Risco |
+| # | Melhoria | Impacto | Risco | Status |
 |---|---|---|---|---|
-| 10 | Consolidar as 18 regras do card expandido / reduzir `!important` (A2) — **facilitado na V7.3.0**, que já tirou 24 blocos de tema do arquivo | médio/alto | médio | médio (visual) |
-| 11 | Teto do cache de miniaturas + miniatura como JPEG (A4) | alto em máquinas fracas | baixo | baixo |
-| 12 | Debounce na busca e re-render só da coluna afetada (A8) | médio | baixo | baixo |
-| 13 | Miniatura gerada 1× e guardada (evita re-render ao reabrir) | médio | baixo | baixo |
+| 10 | CSS do card expandido: 56 regras → 14, `!important` 457 → 184, uma faixa por tela (A2) | médio/alto | baixo (verificado por simulação) | ✅ entregue |
+| 11 | Miniatura: escala 1.5, teto 8 e sem cópia de pixels — ~240 MB → ~36 MB (A4) | alto em máquinas fracas | baixo | ✅ entregue |
+| 12 | Debounce de 150 ms na busca (A8) | médio | baixo | ✅ entregue |
+| 13 | Miniatura gerada 1× e reaproveitada (mesmo canvas do cache) | médio | baixo | ✅ entregue |
+
+**Como foi verificado:** simulador de cascata próprio (`tests/css_cascata.py`) — 17 elementos ×
+16 larguras, 7.120 propriedades comparadas antes/depois da consolidação, **0 diferenças**. Os
+valores ficaram travados em `tests/test_css_expandido_v7.py` (+ fixture), e a memória/debounce em
+`tests/test_onda2_v7.js`. Visual público: **nenhuma mudança** (era o requisito da onda).
 
 ### Onda 3 — Experiência do usuário (itens já mapeados no `SUGESTOES_UX_V7.md`, que continua válido)
 

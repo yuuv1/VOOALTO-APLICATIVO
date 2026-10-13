@@ -1,5 +1,62 @@
 # VOOALTO V7 — Registro de alterações
 
+## V7.4.0 — Onda 2: desempenho e estrutura (2026-10-13)
+
+Segunda onda da análise técnica (`ANALISE_TECNICA_V7.md`), focada em **peso, memória e
+previsibilidade** — sem mudar nenhuma ferramenta nem o visual.
+
+### A2 — fim da "guerra de `!important`" no modo coluna expandida
+O modo expandido (⛶) tinha **56 regras** empilhadas em 6 rodadas de patch, com alturas
+conflitantes (360/430/465/470/560/580/620/720/800 px) e **457 `!important`** no arquivo.
+Qual rodada "ganhava" dependia da largura da tela — resultado imprevisível e qualquer ajuste
+novo precisava vencer todas as anteriores.
+
+Agora: **14 regras**, sem nenhuma rodada duplicada e **sem `!important`** (0 no bloco).
+
+*Como foi feito sem risco:* escrevi um **simulador de cascata** (novo arquivo
+`tests/css_cascata.py`) que resolve o que o navegador resolveria — especificidade, ordem,
+`!important`, `@media min/max-width` — para **17 elementos × 16 larguras de tela**
+(2560 → 360 px). Ele foi usado para provar que cada regra removida perdia em todos os casos
+e que cada `!important` retirado não fazia diferença. Conferência final:
+**7.120 propriedades comparadas, 0 diferenças** (inclusive dentro de `@media print`).
+Mesma técnica para juntar regras repetidas de mesmo seletor.
+
+*Resultado:* o card continua **260×430** em telas normais, **285×465** em telas grandes
+(≥1500 px) e **210×360** em telas pequenas (≤900 px) — exatamente como antes.
+
+### A4 — miniatura do card expandido gastava até ~240 MB
+Cada miniatura era um canvas em escala **2.0** (≈1190×1684 ≈ **8 MB**), guardado até **30**
+vezes, e ainda era feita uma **cópia dos pixels** para cada card na tela — o dobro de memória
+por ficha visível. Em máquina modesta, travamento na certa.
+
+Agora: escala **1.5** (≈893×1263 ≈ 4,5 MB), teto de **8** miniaturas, **sem cópia de pixels**
+(o card mostra o próprio canvas guardado) e o cache é **limpo ao recolher a coluna**.
+De ~240 MB para ~36 MB no pior caso — e sem perda visual (a miniatura continua nítida no
+tamanho em que é exibida).
+
+### A8 — buscar ficou leve
+Cada **letra digitada** na busca re-renderizava a tela inteira (todos os cards recriados do
+zero — daí o "piscar"). Agora a busca espera **150 ms** de pausa e faz **um** render.
+20 fichas digitando "ficha" = 5 renders em vez de 5 × 20 cards.
+
+### Testes novos
+* `tests/css_cascata.py` + `tests/test_css_expandido_v7.py` (+ fixture em
+  `tests/fixtures/css_expandido_v7.json`): **travam os valores atuais** do modo expandido e
+  impedem que a pilha de patches volte (1 regra por seletor/faixa, sem `!important`).
+* `tests/test_onda2_v7.js`: miniatura reaproveitada, cache limitado e limpo ao recolher,
+  busca com debounce (jsdom: 0 renders imediatos, 1 depois de parar de digitar).
+* Para mudar o visual do modo expandido de propósito: confira no preview e rode
+  `python tests/_gerar_fixture_css_v7.py` para regravar os valores esperados.
+
+### Peso
+Catalogação: **−8,5 KB** (−457 → 184 `!important` no arquivo todo). Somado às ondas 1 e 3 de
+limpeza (temas), o app está **~80 KB** mais leve que a versão publicada antes da V7.2.0.
+
+> Detalhe preservado de propósito: na faixa ≤900 px o card tem `width:210px` mas
+> `flex-basis:190px`, como no original. Não é incoerência visível (na grade expandida o
+> `flex-basis` não é usado) e a regra desta onda era **não mudar o visual** — ficou registrado
+> para quem quiser arrumar depois.
+
 ## V7.3.0 — Só dois temas: Claro e Escuro (2026-10-13)
 
 Pedido: **retirar os temas e deixar só claro e escuro, bem adaptados**. Antes existiam
