@@ -18,7 +18,7 @@ import webbrowser
 
 ROOT = Path(__file__).resolve().parent
 APP_ID = "vooalto-v7"
-APP_VERSION = "7.2.0"
+APP_VERSION = "7.3.0"
 HEALTH_PATH = "/__vooalto_health"
 HOST = "127.0.0.1"
 

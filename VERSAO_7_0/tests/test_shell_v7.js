@@ -13,6 +13,7 @@ const { BASE } = require('./_base');
     }
   });
   const w = d.window, doc = w.document;
+  const ultimoTema = k => { const ms = frames[k].got.filter(m => m.type === 'vooalto-theme'); return ms.length ? ms[ms.length - 1].theme : null; };
   ['principal','ficha','orcamento'].forEach(k => {
     const real = doc.getElementById('frame-' + k);
     Object.defineProperty(real, 'contentWindow', { value: frames[k], configurable: true });
@@ -31,17 +32,28 @@ const { BASE } = require('./_base');
   w.postMessage({ type: 'vooalto-ficha-edit', fichaId: 'x1' }, '*');
   await new Promise(r => setTimeout(r, 120));
   ok('relay p/ ficha', frames['ficha'].got.filter(m=>m.type==='vooalto-ficha-edit').length === 1);
-  w.postMessage({ type: 'vooalto-theme', theme: 'dark' }, '*');
+  /* V7.3 — só existem dois temas: Claro e Escuro (o resto é convertido) */
+  w.postMessage({ type: 'vooalto-theme', theme: 'escuro' }, '*');
   await new Promise(r => setTimeout(r, 120));
-  ok('body dark', doc.body.dataset.theme === 'dark');
-  ok('orcamento tema', frames['orcamento'].got.filter(m=>m.type==='vooalto-theme'&&m.theme==='dark').length === 1);
-  w.eval(`applyThemeFromShell('tech')`);
+  ok('body escuro', doc.body.dataset.theme === 'escuro' && doc.documentElement.dataset.theme === 'escuro');
+  ok('orcamento recebe escuro', ultimoTema('orcamento') === 'escuro');
+  ok('--bar-text branco no escuro', doc.documentElement.style.getPropertyValue('--bar-text') === '#fff' && doc.documentElement.style.getPropertyValue('--shell-bg') === '#0b0f17');
+  w.eval(`applyThemeFromShell('claro')`);
   await new Promise(r => setTimeout(r, 120));
-  ok('principal tech', frames['principal'].got.filter(m=>m.type==='vooalto-theme'&&m.theme==='tech').length === 1);
-  // bug butter corrigido: barra legível
+  ok('principal recebe claro', ultimoTema('principal') === 'claro');
+  ok('claro remove o atributo escuro', !doc.documentElement.dataset.theme && !doc.body.dataset.theme);
+  ok('--bar-text escuro no claro', doc.documentElement.style.getPropertyValue('--bar-text') === '#17172a' && doc.documentElement.style.getPropertyValue('--shell-bg') === '#eef0ff');
+  // nome de tema antigo continua funcionando (converte automaticamente)
   w.eval(`applyThemeFromShell('butter')`);
   await new Promise(r => setTimeout(r, 80));
-  ok('butter: barra com contraste', doc.documentElement.style.getPropertyValue('--bar-text') === '#ffefb3' && doc.documentElement.style.getPropertyValue('--top-solid') === '#013e37');
+  ok('tema antigo "butter" -> claro', doc.documentElement.style.getPropertyValue('--shell-bg') === '#eef0ff' && !doc.documentElement.dataset.theme);
+  w.postMessage({ type: 'vooalto-theme', theme: 'tech' }, '*');
+  await new Promise(r => setTimeout(r, 80));
+  ok('tema antigo "tech" -> escuro', doc.documentElement.dataset.theme === 'escuro');
+  ok('seletor com 2 opções', (() => { const o = doc.querySelectorAll('#themeSelect option'); return o.length === 2 && o[0].value === 'claro' && o[1].value === 'escuro'; })());
+  /* volta ao claro para o resto do teste */
+  w.eval(`applyThemeFromShell('claro')`);
+  await new Promise(r => setTimeout(r, 60));
   w.postMessage({ type: 'vooalto-switch-tab', tab: 'orcamento' }, '*');
   await new Promise(r => setTimeout(r, 120));
   ok('orcamento ativo', doc.getElementById('frame-orcamento').classList.contains('active'));

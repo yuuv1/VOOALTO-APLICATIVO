@@ -14,23 +14,19 @@
    evitando que o navegador pinte o fundo padrão (#eef0ff) e depois troque. */
 (function(){
   try{
-    var t=localStorage.getItem('vooalto_theme_v5')||'neo';
-    var LIGHT={neo:1,butter:1,cherry:1,vanilla:1,yellowblack:1,wine:1,coffee:1,pastel:1,givry:1};
-    var V={neo:['#eef0ff','#eef0ff','#17172a'],oxford:['#002147','#002147','#f6e7ca'],cherry:['#efe6de','#9a0002','#fff8ec'],
-      butter:['#ffefb3','#013e37','#ffefb3'],asphalt:['#10002b','#10002B','#fff'],vanilla:['#fff7e6','#fff7e6','#0a122a'],
-      yellowblack:['#f9d344','#f9d344','#111'],wine:['#f5ebd0','#7f011f','#fff'],burgundy:['#151515','#93032e','#fff'],
-      crimson:['#021024','#c50337','#fff'],sunset:['#242f49','#242f49','#fff'],ocean:['#021024','#021024','#fff'],
-      coffee:['#f7f1e8','#8b5e3c','#2b2118'],pastel:['#f8f7ff','#f8f7ff','#242038'],dark:['#0b0f17','#0b0f17','#fff'],
-      givry:['#F5E4CF','#F5E4CF','#275CCC'],neon:['#000000','#000000','#FD4012'],stratos:['#011936','#011936','#ED254E'],
-      kiwi:['#222222','#222222','#89E900'],asphaltsolid:['#10002B','#10002B','#8338EC'],tech:['#0A1929','#0A1929','#64FFDA'],
-      coral:['#1A0A0A','#1A0A0A','#FF6B6B'],lime:['#0D1A0D','#0D1A0D','#00E676'],violet:['#1A0D2E','#1A0D2E','#BB86FC']};
-    var v=V[t]||V.neo;
-    var scheme=(LIGHT[t]?'light':'dark');
+    var salvo=localStorage.getItem('vooalto_theme_v5')||'claro';
+    /* V7.3 - so existem dois temas. Valores antigos (tech, butter, givry...)
+       sao convertidos automaticamente na primeira abertura. */
+    var ANTIGOS_ESCUROS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+    var escuro=(salvo==='escuro')||(salvo!=='claro'&&!!ANTIGOS_ESCUROS[salvo]);
+    var v=escuro?['#0b0f17','#0b0f17','#fff']:['#eef0ff','#eef0ff','#17172a'];
+    var grad=escuro?'linear-gradient(135deg,#171b24,#050505)':'linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72))';
+    var scheme=escuro?'dark':'light';
     var st=document.createElement('style');
     st.id='__theme_boot';
-    st.textContent=':root{--shell-bg:'+v[0]+';--top-solid:'+v[1]+';--bar-text:'+v[2]+'!important;--top-grad:none}html,body{background:'+v[0]+'!important;color:'+v[2]+'!important;color-scheme:'+scheme+'}iframe.project-frame{background:'+v[0]+'!important;color-scheme:'+scheme+'!important}';
-    if(t!=='neo')st.textContent+='html{data-theme="'+t+'"}';
+    st.textContent=':root{--shell-bg:'+v[0]+';--top-solid:'+v[1]+';--bar-text:'+v[2]+'!important;--top-grad:'+grad+'}html,body{background:'+v[0]+'!important;color:'+v[2]+'!important;color-scheme:'+scheme+'}iframe.project-frame{background:'+v[0]+'!important;color-scheme:'+scheme+'!important}';
     document.documentElement.setAttribute('data-theme-boot','1');
+    if(escuro)document.documentElement.setAttribute('data-theme','escuro');
     document.documentElement.style.colorScheme=scheme;
     document.write('<style>'+st.textContent+'</style>');
   }catch(e){}
@@ -42,35 +38,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* Suaviza APENAS trocas manuais (classe .theme-animating) — na carga inicial não pisca */
 html.theme-animating body,html.theme-animating .app-shell,html.theme-animating .topbar,html.theme-animating .frame-wrap,html.theme-animating .project-frame{transition:background-color .18s ease,color .18s ease}
 :root{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
-/* ── temas (degradê) ── */
-body[data-theme="neo"]{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
-body[data-theme="oxford"]{--top-grad:linear-gradient(135deg,#002147,#d2b48c);--bar-text:#f6e7ca;--shell-bg:#002147;--top-solid:#002147}
-body[data-theme="cherry"]{--top-grad:linear-gradient(135deg,#9a0002,#efe6de);--bar-text:#fff8ec;--shell-bg:#efe6de;--top-solid:#9a0002}
-body[data-theme="butter"]{--top-grad:linear-gradient(135deg,#ffefb3,#013e37);--bar-text:#ffefb3;--shell-bg:#ffefb3;--top-solid:#013e37}
-body[data-theme="asphalt"]{--top-grad:linear-gradient(135deg,#10002b,#8338ec);--bar-text:#fff;--shell-bg:#10002b;--top-solid:#10002B}
-body[data-theme="vanilla"]{--top-grad:linear-gradient(135deg,#fff7e6,#0a122a);--bar-text:#0a122a;--shell-bg:#fff7e6;--top-solid:#fff7e6}
-body[data-theme="yellowblack"]{--top-grad:linear-gradient(135deg,#f9d344,#2e2d29);--bar-text:#111;--shell-bg:#f9d344;--top-solid:#f9d344}
-body[data-theme="wine"]{--top-grad:linear-gradient(135deg,#7f011f,#f5ebd0);--bar-text:#fff;--shell-bg:#f5ebd0;--top-solid:#7f011f}
-body[data-theme="burgundy"]{--top-grad:linear-gradient(135deg,#93032e,#151515);--bar-text:#fff;--shell-bg:#151515;--top-solid:#93032e}
-body[data-theme="crimson"]{--top-grad:linear-gradient(135deg,#c50337,#021024);--bar-text:#fff;--shell-bg:#021024;--top-solid:#c50337}
-body[data-theme="sunset"]{--top-grad:linear-gradient(135deg,#e51a2b,#ffa586,#242f49);--bar-text:#fff;--shell-bg:#242f49;--top-solid:#242f49}
-body[data-theme="ocean"]{--top-grad:linear-gradient(135deg,#c1e8ff,#052659,#021024);--bar-text:#fff;--shell-bg:#021024;--top-solid:#021024}
-body[data-theme="coffee"]{--top-grad:linear-gradient(135deg,#fff8ee,#8b5e3c);--bar-text:#2b2118;--shell-bg:#f7f1e8;--top-solid:#8b5e3c}
-body[data-theme="pastel"]{--top-grad:linear-gradient(135deg,#fff,#ffc8dd,#bde0fe);--bar-text:#242038;--shell-bg:#f8f7ff;--top-solid:#f8f7ff}
-body[data-theme="dark"]{--top-grad:linear-gradient(135deg,#171b24,#050505);--bar-text:#fff;--shell-bg:#0b0f17;--top-solid:#0b0f17}
-/* ── temas (sólidos) ── */
-body[data-theme="givry"]{--top-solid:#F5E4CF;--bar-text:#275CCC;--shell-bg:#F5E4CF}
-body[data-theme="neon"]{--top-solid:#000000;--bar-text:#FD4012;--shell-bg:#000000}
-body[data-theme="stratos"]{--top-solid:#011936;--bar-text:#ED254E;--shell-bg:#011936}
-body[data-theme="kiwi"]{--top-solid:#222222;--bar-text:#89E900;--shell-bg:#222222}
-body[data-theme="asphaltsolid"]{--top-solid:#10002B;--bar-text:#8338EC;--shell-bg:#10002B}
-body[data-theme="tech"]{--top-solid:#0A1929;--bar-text:#64FFDA;--shell-bg:#0A1929}
-body[data-theme="coral"]{--top-solid:#1A0A0A;--bar-text:#FF6B6B;--shell-bg:#1A0A0A}
-body[data-theme="lime"]{--top-solid:#0D1A0D;--bar-text:#00E676;--shell-bg:#0D1A0D}
-body[data-theme="violet"]{--top-solid:#1A0D2E;--bar-text:#BB86FC;--shell-bg:#1A0D2E}
-body[data-theme="givry"] .switch-btn.active,body[data-theme="neon"] .switch-btn.active,body[data-theme="stratos"] .switch-btn.active,body[data-theme="kiwi"] .switch-btn.active,body[data-theme="asphaltsolid"] .switch-btn.active,body[data-theme="tech"] .switch-btn.active,body[data-theme="coral"] .switch-btn.active,body[data-theme="lime"] .switch-btn.active,body[data-theme="violet"] .switch-btn.active{background:rgba(255,255,255,.95)!important;color:#111!important}
-body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-theme="tech"] .switcher,body[data-theme="coral"] .switcher,body[data-theme="lime"] .switcher,body[data-theme="violet"] .switcher{background:rgba(255,255,255,.10)!important}
-
+/* -- V7.3 - dois temas: Claro (padrao, sem atributo) e Escuro --
+   As antigas 24 paletas foram removidas; o valor salvo e convertido no boot. */
+html[data-theme="escuro"],body[data-theme="escuro"]{--top-grad:linear-gradient(135deg,#171b24,#050505);--bar-text:#fff;--shell-bg:#0b0f17;--top-solid:#0b0f17}
+/* controles do topo no escuro: fundo escuro com texto claro (antes ficavam
+   claros com texto claro, difícil de ler na barra escura) */
+html[data-theme="escuro"] .theme-select,html[data-theme="escuro"] .utility-btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.20);color:#f8fafc}
+html[data-theme="escuro"] .utility-btn:hover{background:rgba(255,255,255,.24)}
+html[data-theme="escuro"] .switcher{background:rgba(255,255,255,.08)}
+html[data-theme="escuro"] .switch-btn{color:#f8fafc}
+html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
 .app-shell{height:100vh;display:flex;flex-direction:column;background:var(--shell-bg)}
 .topbar{min-height:64px;flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--top-solid);color:var(--bar-text);border-bottom:1px solid rgba(0,0,0,.12);z-index:50;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
@@ -138,21 +115,9 @@ body[data-theme="neon"] .switcher,body[data-theme="kiwi"] .switcher,body[data-th
       <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
     </nav>
     <div class="controls">
-      <select class="theme-select" id="themeSelect" onchange="applyThemeFromShell(this.value)" title="Tema do sistema inteiro">
-        <option value="neo">Tema: Neo Glass</option>
-        <option value="dark">Tema: Dark</option>
-        <option value="oxford">Tema: Oxford Blue</option>
-        <option value="cherry">Tema: Cherry</option>
-        <option value="butter">Tema: Butter</option>
-        <option value="givry">Tema: Givry</option>
-        <option value="neon">Tema: Neon</option>
-        <option value="stratos">Tema: Stratos</option>
-        <option value="kiwi">Tema: Kiwi</option>
-        <option value="asphaltsolid">Tema: Asfalto</option>
-        <option value="tech">Tema: Tech</option>
-        <option value="coral">Tema: Coral</option>
-        <option value="lime">Tema: Lime</option>
-        <option value="violet">Tema: Violet</option>
+      <select class="theme-select" id="themeSelect" onchange="applyThemeFromShell(this.value)" title="Tema do sistema: Claro ou Escuro">
+        <option value="claro">Claro</option>
+        <option value="escuro">Escuro</option>
       </select>
       <button class="utility-btn" id="installAppBtn" onclick="installPWA()" style="display:none" title="Instalar como aplicativo">⬇ Instalar</button>
       <button class="utility-btn" onclick="reloadActive()" title="Recarregar o módulo atual">↻</button>
@@ -217,55 +182,38 @@ let activeProject='principal';
 let deferredInstallPrompt=null;
 
 let currentTheme=null; // evita aplicar tema repetidamente / loop de mensagens
-const LIGHT_THEMES={neo:1,butter:1,cherry:1,vanilla:1,yellowblack:1,wine:1,coffee:1,pastel:1,givry:1};
-const THEME_VARS={
-  neo:     {bg:'#eef0ff',top:'#eef0ff',text:'#17172a',grad:'linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72))'},
-  oxford:  {bg:'#002147',top:'#002147',text:'#f6e7ca',grad:'linear-gradient(135deg,#002147,#d2b48c)'},
-  cherry:  {bg:'#efe6de',top:'#9a0002',text:'#fff8ec',grad:'linear-gradient(135deg,#9a0002,#efe6de)'},
-  butter:  {bg:'#ffefb3',top:'#013e37',text:'#ffefb3',grad:'linear-gradient(135deg,#ffefb3,#013e37)'},
-  asphalt: {bg:'#10002b',top:'#10002B',text:'#fff',   grad:'linear-gradient(135deg,#10002b,#8338ec)'},
-  vanilla: {bg:'#fff7e6',top:'#fff7e6',text:'#0a122a',grad:'linear-gradient(135deg,#fff7e6,#0a122a)'},
-  yellowblack:{bg:'#f9d344',top:'#f9d344',text:'#111',grad:'linear-gradient(135deg,#f9d344,#2e2d29)'},
-  wine:    {bg:'#f5ebd0',top:'#7f011f',text:'#fff',   grad:'linear-gradient(135deg,#7f011f,#f5ebd0)'},
-  burgundy:{bg:'#151515',top:'#93032e',text:'#fff',   grad:'linear-gradient(135deg,#93032e,#151515)'},
-  crimson: {bg:'#021024',top:'#c50337',text:'#fff',   grad:'linear-gradient(135deg,#c50337,#021024)'},
-  sunset:  {bg:'#242f49',top:'#242f49',text:'#fff',   grad:'linear-gradient(135deg,#e51a2b,#ffa586,#242f49)'},
-  ocean:   {bg:'#021024',top:'#021024',text:'#fff',   grad:'linear-gradient(135deg,#c1e8ff,#052659,#021024)'},
-  coffee:  {bg:'#f7f1e8',top:'#8b5e3c',text:'#2b2118',grad:'linear-gradient(135deg,#fff8ee,#8b5e3c)'},
-  pastel:  {bg:'#f8f7ff',top:'#f8f7ff',text:'#242038',grad:'linear-gradient(135deg,#fff,#ffc8dd,#bde0fe)'},
-  dark:    {bg:'#0b0f17',top:'#0b0f17',text:'#fff',   grad:'linear-gradient(135deg,#171b24,#050505)'},
-  givry:      {bg:'#F5E4CF',top:'#F5E4CF',text:'#275CCC',grad:null},
-  neon:       {bg:'#000000',top:'#000000',text:'#FD4012',grad:null},
-  stratos:    {bg:'#011936',top:'#011936',text:'#ED254E',grad:null},
-  kiwi:       {bg:'#222222',top:'#222222',text:'#89E900',grad:null},
-  asphaltsolid:{bg:'#10002B',top:'#10002B',text:'#8338EC',grad:null},
-  tech:       {bg:'#0A1929',top:'#0A1929',text:'#64FFDA',grad:null},
-  coral:      {bg:'#1A0A0A',top:'#1A0A0A',text:'#FF6B6B',grad:null},
-  lime:       {bg:'#0D1A0D',top:'#0D1A0D',text:'#00E676',grad:null},
-  violet:     {bg:'#1A0D2E',top:'#1A0D2E',text:'#BB86FC',grad:null}
-};
-
+/** V7.3 - o sistema tem DOIS temas: 'claro' (padrao) e 'escuro'.
+ *  Nomes antigos (dark, tech, butter, givry...) sao convertidos por
+ *  v7TemaValido(), que tambem e usado pelo boot anti-flash. */
+const TEMA_CLARO={bg:'#eef0ff',top:'#eef0ff',text:'#17172a',grad:'linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72))'};
+const TEMA_ESCURO={bg:'#0b0f17',top:'#0b0f17',text:'#fff',grad:'linear-gradient(135deg,#171b24,#050505)'};
+const TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+function v7TemaValido(t){
+  if(t==='escuro')return 'escuro';
+  if(t==='claro')return 'claro';
+  return TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro';
+}
+function v7NomeTema(t){return t==='escuro'?'Escuro':'Claro'}
 function setShellTheme(t,opts){
-  t=t||'neo';
+  t=v7TemaValido(t);
   if(currentTheme===t)return; // evita repintura/loop
   currentTheme=t;
-  const v=THEME_VARS[t]||THEME_VARS.neo;
-  const scheme=(LIGHT_THEMES[t]?'light':'dark');
+  const v=(t==='escuro')?TEMA_ESCURO:TEMA_CLARO;
+  const scheme=(t==='escuro')?'dark':'light';
   const withAnim=opts&&opts.animate;
   // remove o estilo de boot anti-flash (não é mais necessário agora que o CSS real carregou)
   const bootStyle=document.getElementById('__theme_boot');
   if(bootStyle)bootStyle.remove();
   document.documentElement.removeAttribute('data-theme-boot');
   if(withAnim)document.documentElement.classList.add('theme-animating');
-  // aplica variáveis DIRETO no :root
+  // aplica variáveis DIRETO no :root (o modulo escuro do CSS usa data-theme="escuro")
   const root=document.documentElement;
   root.style.setProperty('--shell-bg',v.bg);
   root.style.setProperty('--top-solid',v.top);
   root.style.setProperty('--bar-text',v.text);
-  if(v.grad)root.style.setProperty('--top-grad',v.grad);
-  else root.style.setProperty('--top-grad','none');
-  if(t==='neo'){root.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}
-  else{root.setAttribute('data-theme',t);document.body.setAttribute('data-theme',t)}
+  root.style.setProperty('--top-grad',v.grad);
+  if(t==='escuro'){root.setAttribute('data-theme','escuro');document.body.setAttribute('data-theme','escuro')}
+  else{root.removeAttribute('data-theme');document.body.removeAttribute('data-theme')}
   root.style.colorScheme=scheme;
   document.querySelectorAll('iframe.project-frame').forEach(f=>{
     f.style.background=v.bg;
@@ -279,12 +227,13 @@ function setShellTheme(t,opts){
   if(withAnim)setTimeout(()=>document.documentElement.classList.remove('theme-animating'),200);
 }
 function applyThemeFromShell(t){
+  t=v7TemaValido(t);
   if(currentTheme===t)return;
   // APLICA NO SHELL IMEDIATAMENTE (síncrono, com animação), DEPOIS avisa os iframes.
   // Isso evita o flash: o shell já está na cor nova quando os iframes repintam.
   setShellTheme(t,{animate:true});
   broadcastTheme(t);
-  toast('🎨 Tema aplicado: '+(t||'Neo Glass'));
+  toast('🎨 Tema aplicado: '+v7NomeTema(t));
 }
 function broadcastTheme(t){
   Object.keys(PROJECTS).forEach(k=>{
@@ -301,19 +250,20 @@ window.addEventListener('message',e=>{
     // Quando um módulo interno avisa que o usuário trocou o tema nele,
     // aplica no shell mas NÃO reenvia para todos os iframes (evita loop infinito).
     // Envia só para os OUTROS iframes que não foram a origem.
-    if(currentTheme===e.data.theme)return;
-    setShellTheme(e.data.theme,{animate:true});
+    const tema=v7TemaValido(e.data.theme);
+    if(currentTheme===tema)return;
+    setShellTheme(tema,{animate:true});
     Object.keys(PROJECTS).forEach(k=>{
       const fr=document.getElementById(PROJECTS[k].frame);
       // Evita mandar de volta para quem enviou (comparando por source — o iframe que enviou é e.source)
       if(fr&&fr.contentWindow!==e.source){
-        try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:e.data.theme},'*')}catch(err){}
+        try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:tema},'*')}catch(err){}
       }
     });
     // Sincroniza o select do shell
     const sel=document.getElementById('themeSelect');
-    if(sel)sel.value=e.data.theme;
-    try{localStorage.setItem('vooalto_theme_v5',e.data.theme)}catch(e){}
+    if(sel)sel.value=tema;
+    try{localStorage.setItem('vooalto_theme_v5',tema)}catch(e){}
     return;
   }
   if(e.data.type==='vooalto-ficha-to-catalog'){
@@ -471,8 +421,8 @@ async function installPWA(){
 
 function initVooalto(){
   // Aplica tema SALVO SEM animação no boot (evita flash de cor padrão→tema)
-  try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'neo',{animate:false})}catch(e){}
-  const syncThemeTo=fr=>{try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'neo'},'*')}catch(e){}};
+  try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'claro',{animate:false})}catch(e){}
+  const syncThemeTo=fr=>{try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},'*')}catch(e){}};
   /* Quando cada iframe carrega, empurra o tema atual pra ele (cobre reloads e cold start) */
   Object.values(PROJECTS).forEach(p=>{
     const f=document.getElementById(p.frame);

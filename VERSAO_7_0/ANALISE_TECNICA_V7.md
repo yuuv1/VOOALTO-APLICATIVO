@@ -1,7 +1,7 @@
 # VOOALTO V7 — Análise técnica e plano de melhorias
 
-> **Status:** análise concluída e **Onda 1 implementada** na versão **V7.2.0**
-> (`VERSAO_7_0/`, suíte de testes verde: JS 10 arquivos + 5 testes Python).
+> **Status:** análise concluída, **Onda 1 (V7.2.0)** e **redução de temas (V7.3.0)** implementadas
+> (`VERSAO_7_0/`, suíte de testes verde: JS 11 arquivos + 5 testes Python).
 > **Base analisada:** `VERSAO_7_0/ATUALIZACAO_V7` (a versão que está publicada na `main`).
 > **Foco principal do pedido:** conseguir **ver os PDFs dentro do próprio sistema**, sem quebrar nada.
 > **Regra que segui:** nenhuma ferramenta atual (Ficha Técnica, Catalogação, Orçamento) mudou de
@@ -13,6 +13,15 @@
 > "💾 Salvo HH:MM" (A10) · versão alinhada em 7.2.0 (A11). Detalhes em `CHANGELOG_V7.md`.
 > **Pendente (Ondas 2 a 4):** consolidação do CSS do modo expandido (A2), teto do cache de
 > miniaturas (A4), debounce da busca (A8), PDF como Blob no IndexedDB (A9) e os itens de UX.
+>
+> **Entregue fora das ondas, a pedido (V7.3.0 — 13/10):** o sistema saiu de **24 paletas de tema**
+> para **2 (Claro padrão + Escuro)**. As 24 paletas do shell, 23 da Catalogação, 23 × 11 dos
+> componentes da Ficha e 23 do Orçamento viraram **1 bloco de escuro por arquivo**, com conversão
+> automática de quem tinha tema antigo salvo. Corrigido de passagem o cabeçalho claro no escuro da
+> Catalogação, o brilho branco do fundo no escuro e — o mais importante — o escuro que **escurecia
+> campos dentro da folha A4** da Ficha (a folha agora fica sempre branca). Ganho: **−72 KB** de CSS
+> e muito menos conflito de `!important`, o que também ajuda a Onda 2 (A2). Detalhes em
+> `CHANGELOG_V7.md`; garantias cobertas por `tests/test_temas_v7.js`.
 
 ---
 
@@ -266,11 +275,26 @@ móveis = menos chance de quebrar.
 | 8 | Indicador "💾 Salvo automaticamente · HH:MM" (Ficha e Orçamento) | alto (confiança) | baixo | baixo | ✅ entregue na Catalogação (Ficha/Orçamento na Onda 3) |
 | 9 | Versão alinhada (7.2.0) em `package.json`, `server.js`, `server.py`, CHANGELOG (A11) | baixo | mínimo | baixo | ✅ entregue |
 
+### V7.3.0 — Temas reduzidos a Claro e Escuro ✅ **concluída a pedido** (13/10/2026)
+
+| # | Melhoria | Impacto | Risco | Status |
+|---|---|---|---|---|
+| T1 | Um seletor só, com **Claro (padrão) e Escuro**; seletor duplicado da Catalogação removido | alto (clareza) | baixo | ✅ entregue |
+| T2 | Conversão automática dos 15 nomes antigos (Oxford, Neon, Tech… → Escuro) inclusive no boot anti-flash | alto (ninguém perde a escolha) | baixo | ✅ entregue |
+| T3 | Catalogação: cabeçalho e fundo acompanham o escuro (antes ficavam claros com o tema escuro) | médio (bug visível) | baixo | ✅ entregue |
+| T4 | Ficha: escuro restrito ao painel/barras; **folha A4 sempre branca** | alto (impressão) | baixo | ✅ entregue |
+| T5 | Orçamento: 23 blocos de tema inúteis removidos (a interface é escura por natureza) | baixo | zero | ✅ entregue |
+| T6 | Controles do topo (seletor e botões) legíveis no escuro | médio | baixo | ✅ entregue |
+| T7 | Teste de regressão `test_temas_v7.js` na suíte (nenhuma paleta antiga volta; folha A4 branca) | alto (confiança) | zero | ✅ entregue |
+
+**Peso removido:** shell −5 KB · Catalogação −11 KB · Ficha −44 KB · Orçamento −12 KB ≈ **−72 KB**
+de CSS a menos no app (e no ZIP da PWA).
+
 ### Onda 2 — Desempenho e estrutura
 
 | # | Melhoria | Impacto | Esforço | Risco |
 |---|---|---|---|---|
-| 10 | Consolidar as 18 regras do card expandido / reduzir `!important` (A2) | médio/alto | médio | médio (visual) |
+| 10 | Consolidar as 18 regras do card expandido / reduzir `!important` (A2) — **facilitado na V7.3.0**, que já tirou 24 blocos de tema do arquivo | médio/alto | médio | médio (visual) |
 | 11 | Teto do cache de miniaturas + miniatura como JPEG (A4) | alto em máquinas fracas | baixo | baixo |
 | 12 | Debounce na busca e re-render só da coluna afetada (A8) | médio | baixo | baixo |
 | 13 | Miniatura gerada 1× e guardada (evita re-render ao reabrir) | médio | baixo | baixo |
