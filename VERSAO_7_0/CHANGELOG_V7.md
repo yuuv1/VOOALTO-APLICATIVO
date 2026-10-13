@@ -1,5 +1,58 @@
 # VOOALTO V7 — Registro de alterações
 
+## V7.2.0 — PDF dentro do sistema + polimento (2026-10-13)
+
+Pedido: **ver os PDFs pelo próprio sistema**, sem quebrar nada. Nenhuma ferramenta
+atual mudou de comportamento; tudo abaixo é aditivo.
+
+### Leitor de PDF interno (`principal_dashboard/index.html`)
+
+1. **"Ver PDF" não sai mais do sistema.** O clique no card, no botão "👁 Ver PDF" e no
+   modo coluna expandida abre um **leitor dentro da Catalogação** (pdf.js que já vinha
+   embarcado — nenhum arquivo novo, continua 100% offline). Antes o arquivo era jogado
+   numa aba nova do navegador, o que no PWA instalado abre fora do app ou é bloqueado.
+2. **Recursos do leitor:** trocar de página (‹ ›, campo de página, ←/→, Home/End),
+   zoom (− / +, Ajustar largura, Ajustar página), girar 90°, **baixar**, **imprimir a
+   página** e **⧉ Nova aba** (o visualizador do navegador virou opção explícita).
+   Esc fecha; clicar fora fecha.
+3. **Nunca deixa o usuário sem o PDF:** se o pdf.js não conseguir abrir (arquivo
+   protegido por senha, corrompido ou muito pesado), aparece uma explicação clara com
+   botão para abrir na aba do navegador — e a aba é aberta automaticamente como plano B.
+4. **Proteções:** uma página por vez, cancelamento da renderização anterior ao trocar de
+   página (sem imagem "pulando"), teto de ~12 megapixels por página, liberação do
+   canvas ao fechar (memória) e reaproveitamento do mesmo cache de documentos que as
+   miniaturas já usavam.
+5. **Impressão segura:** a troca de tela para impressão só vale quando a impressão veio
+   do leitor (classe `pdfv-printing` no `<html>`) — um Ctrl+P normal do módulo não é
+   afetado.
+
+### Correções e polimento
+
+6. **Lixo de edição no fim do HTML** — o arquivo da Catalogação terminava com um
+   `</script></body></html>` duplicado e restos de código (`...stener('focus',v7DayTick);`)
+   que o navegador transformava em **texto dentro do `<body>`**. Removido.
+7. **Código morto removido** — `getThumbLo()` e `renderPdfFirstPageCanvas()` não eram
+   chamados por ninguém desde a desativação do hover preview.
+8. **Plano B do card expandido com `blob:`** em vez de `src="data:application/pdf;base64,..."`
+   (URL de megabytes, lenta de montar).
+9. **Teste que falhava sozinho com o tempo** — `tests/test_ux_v7.js` usava datas fixas
+   ("15/09/2026"), que passaram de 22 dias e viraram prioridade Alta de verdade; agora as
+   datas são calculadas a partir de hoje. A suíte voltou a ficar verde.
+10. **Armazenamento protegido e visível** — o app pede armazenamento persistente
+    (`navigator.storage.persist()`) para o navegador não descartar PDFs/fichas do
+    IndexedDB e mostra um selo "🗄 N fichas · X MB" junto do botão de backup.
+11. **Selo "💾 Salvo HH:MM"** na barra da Catalogação (fica **⚠️ Não salvou** quando o
+    espaço acaba) e **confirmação de exclusão com o nome da ficha** avisando que o PDF e a
+    ficha anexada também serão apagados.
+12. **Versão alinhada em 7.2.0** (`package.json`, `server.js`, `server.py`) e
+    `tests/test_pdf_viewer_v7.js` acrescentado ao `npm test`.
+
+### Arquivos que **não** mudaram de comportamento
+
+Ficha Técnica, Orçamento, shell, servidor local, identidade da PWA, chaves de dados e o
+banco IndexedDB (v2, sem migração). O pacote continua sendo gerado por
+`python build_v7_pwa.py`.
+
 ## V7.1.1 — Anti-travamento, anti-perda e previews de PDF (2026-10-06)
 
 Sintoma: com fichas que têm fotos (especialmente fotos de celular) e com

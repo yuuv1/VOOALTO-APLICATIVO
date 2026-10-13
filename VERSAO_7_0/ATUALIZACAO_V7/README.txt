@@ -76,8 +76,11 @@ MÓDULOS
 • Ficha Técnica: abre como janela sobre o sistema. Use “✕ Fechar” ou Esc; a
   ficha em andamento continua salva. “Enviar para Catalogação” cria a ficha no
   catálogo.
-• Catalogação: organiza fichas por prioridade e permite anexar/visualizar PDFs,
-  concluir pedidos e exportar/importar backup.
+• Catalogação: organiza fichas por prioridade e permite anexar PDFs, concluir
+  pedidos e exportar/importar backup. O botão “Ver PDF” abre o PDF DENTRO do
+  sistema (trocar de página, zoom, girar, baixar e imprimir a página). O botão
+  “⧉ Nova aba” dentro do leitor abre no visualizador do navegador; ele também
+  é usado automaticamente se o leitor interno não conseguir abrir o arquivo.
 • Orçamento: salva automaticamente neste navegador. Salve um .json ou rascunho
   antes de iniciar outro orçamento se quiser manter uma cópia independente.
 

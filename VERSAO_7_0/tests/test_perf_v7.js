@@ -35,7 +35,8 @@ function jsdomStubs(w, perr) {
   statik('dash: save() tira fichaData do localStorage', dashSrc.includes('if(c.fichaInIDB&&c.fichaData)delete c.fichaData'));
   statik('dash: preview usa drawImage (não cloneNode)', dashSrc.includes('dctx.drawImage(thumb,0,0)'));
   statik('dash: PDFs expandidos com concorrência limitada', dashSrc.includes('Math.min(2,boxes.length)'));
-  statik('dash: caches com teto (LRU)', dashSrc.includes('_capMap(_pdfDocCache,8,true)') && dashSrc.includes('_capMap(_pdfDataCache,20)'));
+  statik('dash: caches com teto (LRU)', /_capMap\(_pdfDocCache,8,true[,)]/.test(dashSrc) && dashSrc.includes('_capMap(_pdfDataCache,20)'));
+  statik('dash: PDF aberto no leitor não é descartado do cache', dashSrc.includes('_capMap(_pdfDocCache,8,true,_pdfvProtegidos)'));
   statik('orc: assinatura limitada a 800px', orcSrc.includes('const MAXS = 800'));
   statik('orc: preview não reatribui assinatura igual', orcSrc.includes("getAttribute('src') !== currentSignatureBase64"));
 

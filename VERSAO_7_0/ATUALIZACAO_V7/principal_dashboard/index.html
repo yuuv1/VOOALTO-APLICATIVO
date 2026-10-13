@@ -551,6 +551,64 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
 [data-theme="lime"]{--bg:#0D1A0D;--panel:rgba(0,230,118,0.20);--card:#0F200F;--text:#00E676;--muted:#A5D6A7;--line:rgba(0,230,118,0.25);--black:#ffffff;--green:#00E676;--yellow:#FFD54F;--red:#FF5252;--blue:#64FFDA;--gray:#689F38}
 [data-theme="violet"]{--bg:#1A0D2E;--panel:rgba(187,134,252,0.25);--card:#1F0F35;--text:#BB86FC;--muted:#CE93D8;--line:rgba(187,134,252,0.30);--black:#ffffff;--green:#69F0AE;--yellow:#FFD54F;--red:#FF5252;--blue:#448AFF;--gray:#7E57C2}
 
+/* ══ V7.2 — CHIPS DE ARMAZENAMENTO E DE SALVAMENTO (Catalogação) ══ */
+.storage-chip,.save-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--card) 70%,var(--bg));color:var(--muted);font-size:11px;font-weight:850;white-space:nowrap}
+.save-chip{color:var(--text)}
+.save-chip.aviso{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red);border-color:transparent}
+.storage-chip.protegido{border-color:color-mix(in srgb,var(--green) 45%,transparent)}
+@media(max-width:820px){.storage-chip{display:none}}
+
+/* ══ V7.2 — LEITOR DE PDF INTERNO ══
+   Regras novas e isoladas: usam as variáveis de tema já existentes e não
+   alteram nenhuma regra do modo coluna expandida nem dos cards. */
+.pdf-viewer{display:none;position:fixed;inset:0;background:rgba(8,10,18,.72);backdrop-filter:blur(3px);z-index:900;padding:clamp(0px,2.4vh,26px) clamp(0px,2.4vw,34px);align-items:stretch;justify-content:center}
+.pdf-viewer.open{display:flex;animation:pdfvIn .16s ease-out}
+@keyframes pdfvIn{from{opacity:0;transform:scale(.99)}to{opacity:1;transform:scale(1)}}
+.pdfv-card{position:relative;flex:1;max-width:1500px;display:flex;flex-direction:column;min-height:0;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 34px 90px rgba(0,0,0,.45)}
+.pdfv-head{flex:0 0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--black);color:#fff}
+.pdfv-title{display:flex;flex-direction:column;min-width:0;flex:1}
+.pdfv-title b{font-size:13px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdfv-title small{font-size:10.5px;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdfv-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pdfv-btn{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;font-family:inherit;font-size:11.5px;font-weight:850;padding:7px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.pdfv-btn:hover{background:rgba(255,255,255,.26)}
+.pdfv-btn:disabled{opacity:.4;cursor:not-allowed}
+.pdfv-close{background:rgba(220,38,38,.85);border-color:transparent}
+.pdfv-close:hover{background:#DC2626}
+.pdfv-bar{flex:0 0 auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 14px;background:color-mix(in srgb,var(--bg) 82%,var(--card));border-bottom:1px solid var(--line)}
+.pdfv-bar .pdfv-btn{border-color:var(--line);background:color-mix(in srgb,var(--card) 70%,var(--bg));color:var(--text)}
+.pdfv-bar .pdfv-btn:hover{background:color-mix(in srgb,var(--blue) 16%,transparent)}
+.pdfv-nav{border:1px solid var(--line);background:color-mix(in srgb,var(--card) 70%,var(--bg));color:var(--text);width:34px;height:32px;border-radius:9px;font-size:17px;font-weight:900;line-height:1;cursor:pointer;font-family:inherit}
+.pdfv-nav:hover:not(:disabled){background:color-mix(in srgb,var(--blue) 20%,transparent)}
+.pdfv-nav:disabled{opacity:.35;cursor:not-allowed}
+.pdfv-page{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:850;color:var(--text)}
+.pdfv-page input{width:56px;padding:5px 7px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--card) 70%,var(--bg));color:var(--text);font-family:inherit;font-size:12px;font-weight:900;text-align:center}
+.pdfv-zoom{min-width:52px;text-align:center;font-size:11.5px;font-weight:900;color:var(--muted)}
+.pdfv-sep{width:1px;height:22px;background:var(--line);margin:0 3px}
+.pdfv-hint{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--muted)}
+.pdfv-body{position:relative;flex:1;min-height:0;overflow:auto;background:#4B5563;padding:18px;display:flex;align-items:flex-start;justify-content:center}
+.pdfv-body.pdfv-zoom-mode{align-items:flex-start}
+.pdfv-sheet{background:#fff;border-radius:6px;box-shadow:0 16px 40px rgba(0,0,0,.35);line-height:0;flex:0 0 auto}
+.pdfv-sheet canvas{display:block;background:#fff}
+.pdfv-status{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:850;text-align:center;padding:20px}
+.pdfv-status .pdfv-spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.28);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite}
+.pdfv-status[hidden]{display:none}
+.pdfv-erro{max-width:520px;line-height:1.5}
+.pdfv-erro .pdfv-erro-acoes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+#pdfvPrintArea{display:none}
+/* Só troca o que será impresso quando a impressão veio do leitor (classe
+   aplicada em <html> durante o window.print): Ctrl+P normal não é afetado. */
+@media print{
+  html.pdfv-printing .app,html.pdfv-printing .header,html.pdfv-printing .toolbar,
+  html.pdfv-printing .modal,html.pdfv-printing .toast,html.pdfv-printing .pdf-viewer{display:none!important}
+  html.pdfv-printing #pdfvPrintArea{display:block!important}
+  html.pdfv-printing #pdfvPrintArea img{width:100%;max-width:100%;display:block}
+}
+@media(max-width:820px){
+  .pdf-viewer{padding:0}
+  .pdfv-card{border-radius:0}
+  .pdfv-hint{display:none}
+}
 </style>
 </head>
 <body>
@@ -566,10 +624,41 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
         <option value="violet">Violet</option>
       </select></header>
 <main class="main" id="mainArea" ondragover="pageDragOver(event)" ondragleave="pageDragLeave(event)" ondrop="pageDrop(event)">
-<section id="catalogo" class="view active"><div class="toolbar"><div class="toolbar-left"><button class="btn primary" onclick="openOrderModal()">＋ Nova ficha</button><input class="search" id="search" placeholder="Pesquisar por nome, nota ou telefone..." oninput="renderCatalog()"><span class="drop-hint">Arraste um PDF para adicionar</span></div><div class="toolbar-right"><div class="settings"><span class="setting" title="A partir de quantos dias a ficha vira prioridade MÉDIA">Média <input id="thMed" type="number" value="15"> dias</span><span class="setting" title="A partir de quantos dias a ficha vira prioridade ALTA">Alta <input id="thHigh" type="number" value="22"> dias</span><button class="btn blue" onclick="saveThresholds();autoClassifyAll()">Reclassificar</button></div><button class="btn" onclick="exportData()">Exportar backup</button><button class="btn" onclick="document.getElementById('importInput').click()">Importar</button><input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)"></div></div><div class="prio-chips" id="prioChips"></div><div class="columns" id="columns"></div></section>
+<section id="catalogo" class="view active"><div class="toolbar"><div class="toolbar-left"><button class="btn primary" onclick="openOrderModal()">＋ Nova ficha</button><input class="search" id="search" placeholder="Pesquisar por nome, nota ou telefone..." oninput="renderCatalog()"><span class="drop-hint">Arraste um PDF para adicionar</span></div><div class="toolbar-right"><div class="settings"><span class="setting" title="A partir de quantos dias a ficha vira prioridade MÉDIA">Média <input id="thMed" type="number" value="15"> dias</span><span class="setting" title="A partir de quantos dias a ficha vira prioridade ALTA">Alta <input id="thHigh" type="number" value="22"> dias</span><button class="btn blue" onclick="saveThresholds();autoClassifyAll()">Reclassificar</button></div><span class="storage-chip" id="storageChip" title="Uso do armazenamento deste navegador"></span><span class="save-chip" id="saveChip" title="Última gravação do catálogo neste navegador">💾 —</span><button class="btn" onclick="exportData()">Exportar backup</button><button class="btn" onclick="document.getElementById('importInput').click()">Importar</button><input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)"></div></div><div class="prio-chips" id="prioChips"></div><div class="columns" id="columns"></div></section>
 <section id="dashboard" class="view"><div class="toolbar"><div><h2>Dashboard</h2><p>Métricas principais da produção — fichas por prioridade e tempo de espera</p></div><button class="btn" onclick="renderAll()">↻ Atualizar</button></div><div class="kpis" id="kpis"></div><div class="dash-grid"><div class="panel"><h3>Fichas por semana</h3><div class="chart" id="weeklyChart"></div></div><div class="panel"><h3>Divisão por prioridade</h3><div class="pie-wrap"><div class="pie" id="priorityPie"></div><div class="legend" id="priorityLegend"></div></div></div><div class="panel"><h3>Idade dos pedidos</h3><div id="ageBars"></div></div><div class="panel wide"><h3>Mais urgentes</h3><div class="urgent-list" id="urgentList"></div></div><div class="panel"><h3>Clientes frequentes</h3><div id="clientList"></div></div></div></section>
 </main></div>
 <div class="modal" id="orderModal"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Adicionar Ficha Técnica</h3><button class="btn" onclick="closeOrderModal()">✕</button></div><div class="modal-body"><input type="hidden" id="editId"><div class="form-grid"><div class="form-group"><label>Nome da ficha técnica</label><input class="form-control" id="orderName"></div><div class="form-group"><label>Número / WhatsApp do cliente (opcional)</label><input class="form-control" id="orderClientPhone"></div><div class="form-group"><label>Data de entrada</label><input type="date" class="form-control" id="orderDate"></div><div class="form-group"><label>Anexar PDF</label><input type="file" class="form-control" id="orderPdf" accept="application/pdf,.pdf"><div id="currentPdf" style="font-size:11px;color:var(--muted);margin-top:5px"></div></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ média (opcional)</label><input type="number" class="form-control" id="orderMedDays" value="15"></div><div class="form-group"><label title="Prioriza esta ficha a partir deste número de dias (sobrescreve o padrão global)">Dias p/ alta (opcional)</label><input type="number" class="form-control" id="orderHighDays" value="22"></div></div><div class="form-group"><label>Nota / alteração</label><textarea class="form-control" id="orderNote"></textarea></div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" onclick="closeOrderModal()">Cancelar</button><button class="btn primary" onclick="saveOrder()">Salvar</button></div></div></div></div>
+<div class="pdf-viewer" id="pdfViewer" aria-hidden="true">
+  <div class="pdfv-card">
+    <div class="pdfv-head">
+      <div class="pdfv-title"><b id="pdfvName">PDF</b><small id="pdfvMeta">—</small></div>
+      <div class="pdfv-actions">
+        <button class="pdfv-btn" id="pdfvOpenTab" title="Abrir este PDF no visualizador do navegador (aba nova)">⧉ Nova aba</button>
+        <button class="pdfv-btn" id="pdfvDownload" title="Baixar o PDF para o computador">⤓ Baixar</button>
+        <button class="pdfv-btn" id="pdfvPrint" title="Imprimir a página que está na tela">🖨 Imprimir</button>
+        <button class="pdfv-btn pdfv-close" id="pdfvClose" title="Fechar o leitor (Esc)">✕ Fechar</button>
+      </div>
+    </div>
+    <div class="pdfv-bar">
+      <button class="pdfv-nav" id="pdfvPrev" title="Página anterior (←)">‹</button>
+      <span class="pdfv-page">Página <input id="pdfvPageInput" type="number" min="1" value="1" title="Digite o número da página e aperte Enter"> de <b id="pdfvPages">1</b></span>
+      <button class="pdfv-nav" id="pdfvNext" title="Próxima página (→)">›</button>
+      <span class="pdfv-sep"></span>
+      <button class="pdfv-btn" id="pdfvZoomOut" title="Diminuir o zoom (-)">−</button>
+      <span class="pdfv-zoom" id="pdfvZoomLabel">100%</span>
+      <button class="pdfv-btn" id="pdfvZoomIn" title="Aumentar o zoom (+)">＋</button>
+      <button class="pdfv-btn" id="pdfvFitWidth" title="Ajustar a largura da página à janela">↔ Largura</button>
+      <button class="pdfv-btn" id="pdfvFitPage" title="Ver a página inteira na janela">⤢ Página</button>
+      <button class="pdfv-btn" id="pdfvRotate" title="Girar a página 90°">↻ Girar</button>
+      <span class="pdfv-hint">←/→ muda de página · +/- zoom · Esc fecha</span>
+    </div>
+    <div class="pdfv-body" id="pdfvBody">
+      <div class="pdfv-status" id="pdfvStatus"><div class="pdfv-spin"></div><span id="pdfvStatusMsg">Carregando PDF...</span></div>
+      <div class="pdfv-sheet" id="pdfvSheet" hidden><canvas id="pdfvCanvas"></canvas></div>
+    </div>
+  </div>
+</div>
+<div id="pdfvPrintArea"></div>
 <div class="toast" id="toast"></div>
 <script>
 const KEY='vooalto_main_catalog_v2';let state={thresholds:{low:0,med:15,high:22},orders:[],history:[]};let expandedColumn=null;const cols=[['baixa','Baixa','Antes do limite médio','var(--green)'],['media','Média','A partir do limite médio','var(--yellow)'],['alta','Alta','A partir do limite alto','var(--red)'],['concluido','Concluídos','Só entra pelo botão Concluído','var(--gray)']];const $=id=>document.getElementById(id);const PDF_DB='vooalto_pdf_store_v2',PDF_STORE='pdfs',FICHA_STORE='fichaData',PDF_DB_VERSION=2;
@@ -583,7 +672,9 @@ function openPdfDB(){return new Promise((res,rej)=>{const r=indexedDB.open(PDF_D
    travava a interface nas serializações e estourava a cota (~5MB), quebrando o
    salvamento. Agora vai para o IndexedDB (assíncrono); no localStorage ficam só
    os metadados. A cópia em memória continua para edição/exportação imediatas. */
-function _capMap(m,n,destroy){try{while(m.size>n){const k=m.keys().next().value;const v=m.get(k);m.delete(k);if(destroy&&v&&typeof v.destroy==='function'){try{const r=v.destroy();if(r&&typeof r.catch==='function')r.catch(()=>{})}catch(_){}}}}catch(_){}}
+function _capMap(m,n,destroy,protegidos){try{while(m.size>n){/* Escolhe a entrada mais antiga que NÃO esteja em uso (ex.: o PDF aberto no
+   leitor fica protegido, mas o teto continua valendo: pula para a próxima). */
+let k=null;for(const kk of m.keys()){if(protegidos&&protegidos.has&&protegidos.has(kk))continue;k=kk;break;}if(k===null)break;const v=m.get(k);m.delete(k);if(destroy&&v&&typeof v.destroy==='function'){try{const r=v.destroy();if(r&&typeof r.catch==='function')r.catch(()=>{})}catch(_){}}}}catch(_){}}
 async function storeFichaData(id,data){const db=await openPdfDB();return new Promise((res,rej)=>{const tx=db.transaction(FICHA_STORE,'readwrite');tx.objectStore(FICHA_STORE).put(data,id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}
 const _fichaDataCache=new Map();
 async function getFichaData(id){if(_fichaDataCache.has(id))return _fichaDataCache.get(id);const mem=state.orders.find(o=>o.id===id)?.fichaData;if(mem)return mem;try{const db=await openPdfDB();const data=await new Promise((res,rej)=>{const tx=db.transaction(FICHA_STORE,'readonly'),rq=tx.objectStore(FICHA_STORE).get(id);rq.onsuccess=()=>{db.close();res(rq.result||null)};rq.onerror=()=>{db.close();rej(rq.error)}});if(data){_fichaDataCache.set(id,data);_capMap(_fichaDataCache,10);}return data}catch(e){return null}}
@@ -593,7 +684,7 @@ async function deleteFichaData(id){_fichaDataCache.delete(id);try{const db=await
 function persistFichaDataAsync(o){if(!o||!o.fichaData||o.fichaInIDB)return;try{storeFichaData(o.id,o.fichaData).then(()=>{o.fichaInIDB=true;save();}).catch(()=>{})}catch(e){}}
 async function migrateFichaDataToDB(){let ch=false;for(const o of state.orders){if(o.fichaData&&!o.fichaInIDB){try{await storeFichaData(o.id,o.fichaData);o.fichaInIDB=true;ch=true}catch(e){}}}if(ch)save()}
 async function loadFichaDataFromDB(){for(const o of state.orders){if(!o.fichaData&&o.fichaInIDB){try{const fd=await getFichaData(o.id);if(fd)o.fichaData=fd}catch(e){}}}}
-function normalizeImportedData(data){data=data||{};data.thresholds={low:0,med:15,high:22,...(data.thresholds||{})};data.orders=(data.orders||[]).map(o=>({id:/^[A-Za-z0-9_-]+$/.test(String(o.id||''))?o.id:uid(),name:o.name||'Ficha sem nome',clientPhone:o.clientPhone||o.whatsapp||o.phone||'',createdAt:toISODate(parseDate(o.createdAt||today())),createdTs:o.createdTs||Date.now(),status:normalizeStatusValue(o.status),note:o.note||'',medDays:o.medDays??data.thresholds.med,highDays:o.highDays??data.thresholds.high,pdfData:o.pdfData,pdfName:o.pdfName,completedAt:o.completedAt,manual:o.manual,pdfStored:o.pdfStored||!!o.pdfName,...(o.fichaData!==undefined?{fichaData:o.fichaData}:{}),...(o.fichaNum!==undefined?{fichaNum:o.fichaNum}:{}),...(o.fichaInIDB?{fichaInIDB:true}:{})}));data.history=data.history||[];return data}function load(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem('vooalto_main_catalog_v1');if(raw)state=normalizeImportedData(JSON.parse(raw))}catch(e){}state=normalizeImportedData(state);$('thMed').value=state.thresholds.med;$('thHigh').value=state.thresholds.high}function save(){try{const orders=(state.orders||[]).map(o=>{const c=Object.assign({},o);if(c.pdfData&&c.pdfStored)delete c.pdfData;if(c.fichaInIDB&&c.fichaData)delete c.fichaData;return c});localStorage.setItem(KEY,JSON.stringify({thresholds:state.thresholds,orders:orders,history:state.history}));return true}catch(e){console.warn('Catalogação: falha ao salvar no armazenamento local',e);try{toast('⚠️ Espaço cheio: parte dos dados pode não ter sido salva. Exporte um backup.')}catch(_){}return false}}function refreshAutomaticStages(){let ch=false;state.orders.forEach(o=>{o.status=normalizeStatusValue(o.status);if(o.status==='concluido')return;const due=autoStatus(o);if(priorityRank(due)>priorityRank(o.status)){o.status=due;ch=true}});if(ch)save()}async function migratePdfsToDB(){let ch=false,failed=0;for(const o of state.orders){if(o.pdfData){o.pdfStored=false;try{await storePdfData(o.id,o.pdfData);_pdfDataCache.delete(o.id);delete o.pdfData;o.pdfStored=true;ch=true}catch(e){failed++}}}if(ch)save();if(failed)toast('⚠️ '+failed+' PDF(s) continuam no backup local porque o navegador não conseguiu migrá-los para IndexedDB. Exporte um backup e libere espaço.')}
+function normalizeImportedData(data){data=data||{};data.thresholds={low:0,med:15,high:22,...(data.thresholds||{})};data.orders=(data.orders||[]).map(o=>({id:/^[A-Za-z0-9_-]+$/.test(String(o.id||''))?o.id:uid(),name:o.name||'Ficha sem nome',clientPhone:o.clientPhone||o.whatsapp||o.phone||'',createdAt:toISODate(parseDate(o.createdAt||today())),createdTs:o.createdTs||Date.now(),status:normalizeStatusValue(o.status),note:o.note||'',medDays:o.medDays??data.thresholds.med,highDays:o.highDays??data.thresholds.high,pdfData:o.pdfData,pdfName:o.pdfName,completedAt:o.completedAt,manual:o.manual,pdfStored:o.pdfStored||!!o.pdfName,...(o.fichaData!==undefined?{fichaData:o.fichaData}:{}),...(o.fichaNum!==undefined?{fichaNum:o.fichaNum}:{}),...(o.fichaInIDB?{fichaInIDB:true}:{})}));data.history=data.history||[];return data}function load(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem('vooalto_main_catalog_v1');if(raw)state=normalizeImportedData(JSON.parse(raw))}catch(e){}state=normalizeImportedData(state);$('thMed').value=state.thresholds.med;$('thHigh').value=state.thresholds.high}function save(){try{const orders=(state.orders||[]).map(o=>{const c=Object.assign({},o);if(c.pdfData&&c.pdfStored)delete c.pdfData;if(c.fichaInIDB&&c.fichaData)delete c.fichaData;return c});localStorage.setItem(KEY,JSON.stringify({thresholds:state.thresholds,orders:orders,history:state.history}));v7MarcarSalvo();return true}catch(e){v7MarcarFalha();console.warn('Catalogação: falha ao salvar no armazenamento local',e);try{toast('⚠️ Espaço cheio: parte dos dados pode não ter sido salva. Exporte um backup.')}catch(_){}return false}}function refreshAutomaticStages(){let ch=false;state.orders.forEach(o=>{o.status=normalizeStatusValue(o.status);if(o.status==='concluido')return;const due=autoStatus(o);if(priorityRank(due)>priorityRank(o.status)){o.status=due;ch=true}});if(ch)save()}async function migratePdfsToDB(){let ch=false,failed=0;for(const o of state.orders){if(o.pdfData){o.pdfStored=false;try{await storePdfData(o.id,o.pdfData);_pdfDataCache.delete(o.id);delete o.pdfData;o.pdfStored=true;ch=true}catch(e){failed++}}}if(ch)save();if(failed)toast('⚠️ '+failed+' PDF(s) continuam no backup local porque o navegador não conseguiu migrá-los para IndexedDB. Exporte um backup e libere espaço.')}
 function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',(b.getAttribute('onclick')||'').includes("'"+id+"'")));renderAll()}function filteredOrders(){const q=($('search')?.value||'').toLowerCase().trim();return state.orders.filter(o=>!q||o.name.toLowerCase().includes(q)||(o.note||'').toLowerCase().includes(q)||(o.clientPhone||'').toLowerCase().includes(q))}
 /* ══ V7 UX: foco por prioridade ══ */
 let prioFocus='all';
@@ -614,7 +705,6 @@ function renderCatalog(){const wrap=$('columns');if(!wrap)return;state.orders.fo
 
 /* ═══ PDF PREVIEW SYSTEM — optimized ═══ */
 let pdfJsLoadingPromise=null;
-const _thumbCache=new Map();
 const _thumbCacheHQ=new Map();
 const _pdfDocCache=new Map();
 
@@ -639,33 +729,12 @@ function dataUrlToUint8Array(d){const b=atob(d.split(',')[1]),a=new Uint8Array(b
 /* Pre-load pdf.js on page load */
 setTimeout(()=>ensurePdfJs().catch(()=>{}),500);
 
-/* Low-res thumbnail for hover preview (scale 1.0 ≈ instant) */
-async function getThumbLo(id){
-  if(_thumbCache.has(id)) return _thumbCache.get(id);
-  const data=await getPdfData(id);
-  if(!data||!String(data).startsWith('data:application/pdf')){return null;}
-  const pdfjs=await ensurePdfJs();
-  let pdf=_pdfDocCache.get(id);
-  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);_capMap(_pdfDocCache,8,true);}
-  const page=await pdf.getPage(1);
-  const vp=page.getViewport({scale:1.0});
-  const canvas=document.createElement('canvas');
-  canvas.width=Math.floor(vp.width);canvas.height=Math.floor(vp.height);
-  const ctx=canvas.getContext('2d',{alpha:false});
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  await page.render({canvasContext:ctx,viewport:vp}).promise;
-  _thumbCache.set(id,canvas);_capMap(_thumbCache,30);
-  return canvas;
-}
-
 /* Medium-res thumbnail for expanded view / modal preview (scale 2.0 — rápido e legível) */
 async function getThumbHQ(id){
   if(_thumbCacheHQ.has(id)) return _thumbCacheHQ.get(id);
   const data=await getPdfData(id);
   if(!data||!String(data).startsWith('data:application/pdf')){return null;}
-  const pdfjs=await ensurePdfJs();
-  let pdf=_pdfDocCache.get(id);
-  if(!pdf){pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;_pdfDocCache.set(id,pdf);_capMap(_pdfDocCache,8,true);}
+  const pdf=await obterDocPdf(id,data);
   const page=await pdf.getPage(1);
   const vp=page.getViewport({scale:2.0});
   const canvas=document.createElement('canvas');
@@ -677,29 +746,6 @@ async function getThumbHQ(id){
   return canvas;
 }
 
-async function renderPdfFirstPageCanvas(dataUrl,box){
-  try{
-    if(!String(dataUrl).startsWith('data:application/pdf')) return false;
-    const pdfjs=await ensurePdfJs();
-    const pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(dataUrl)}).promise;
-    const page=await pdf.getPage(1);
-    const baseViewport=page.getViewport({scale:1});
-    box.style.aspectRatio='210 / 297';
-    const sheetW=box.clientWidth||247;
-    const sheetH=sheetW*(297/210);
-    const scale=Math.min(sheetW/baseViewport.width,sheetH/baseViewport.height)*2.5;
-    const viewport=page.getViewport({scale});
-    const canvas=document.createElement('canvas');
-    const ctx=canvas.getContext('2d',{alpha:false});
-    canvas.width=Math.floor(viewport.width);canvas.height=Math.floor(viewport.height);
-    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-    await page.render({canvasContext:ctx,viewport}).promise;
-    box.innerHTML='';box.classList.add('pdf-canvas-ready');
-    canvas.style.width='100%';canvas.style.height='100%';canvas.style.objectFit='contain';canvas.style.display='block';
-    box.appendChild(canvas);
-    return true;
-  }catch(e){console.warn('Falha no preview canvas PDF:',e);return false;}
-}
 
 /* V7.1.1 — no máximo 2 PDFs renderizando por vez (anti-travamento).
    Disparar todos os cards em paralelo congelava a interface quando a coluna
@@ -720,7 +766,16 @@ async function loadOneExpandedPdfCard(box){
     }else{
       const data=await getPdfData(id);
       if(!data){box.innerHTML='<div class="expanded-pdf-empty">Sem PDF anexado</div>';box.dataset.loaded='1';}
-      else{box.style.height='380px';box.innerHTML='<iframe class="fallback-pdf" loading="lazy" src="'+data+'#page=1&zoom=page-fit&toolbar=0&navpanes=0&scrollbar=0"></iframe>';box.dataset.loaded='1';}
+      else{
+        /* V7.2 — o plano B usava src="data:application/pdf;base64,..." (URL de
+           megabytes, lento de montar). Agora vira um blob: curto, como no
+           leitor interno; se o navegador não deixar, cai no data: de antes. */
+        let src=data;
+        try{const blob=await (await fetch(data)).blob();src=URL.createObjectURL(blob);setTimeout(()=>URL.revokeObjectURL(src),120000);}catch(e){}
+        box.style.height='380px';
+        box.innerHTML='<iframe class="fallback-pdf" loading="lazy" src="'+src+'#page=1&zoom=page-fit&toolbar=0&navpanes=0&scrollbar=0"></iframe>';
+        box.dataset.loaded='1';
+      }
     }
   }catch(e){box.innerHTML='<div class="expanded-pdf-empty">Erro ao carregar</div>';box.dataset.loaded='1';}
 }
@@ -763,9 +818,257 @@ function toggleColumnExpand(k){expandedColumn=expandedColumn===k?null:k;renderCa
   };
   if(file)readPdfFile(file,(data,fileName)=>finish(data,fileName));
   else finish(null,null);
-}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){if(!confirm('Excluir ficha?'))return;const o=state.orders.find(x=>x.id===id);if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);deleteFichaData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}
-/* Abre o PDF direto no visualizador padrão do navegador (aba nova) — sem popup customizado */
-async function viewPdf(id){
+}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){const alvo=state.orders.find(x=>x.id===id);if(!alvo)return;const temAnexo=!!(alvo.pdfName||alvo.pdfStored||alvo.fichaData||alvo.fichaInIDB);if(!confirm('Excluir a ficha \"'+(alvo.name||'sem nome')+'\"?'+(temAnexo?'\n\nO PDF e a ficha técnica anexados a ela também serão apagados.':'')+'\n\nEsta ação não tem volta.'))return;const o=alvo;if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);deleteFichaData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}
+/* ═══ V7.2 — LEITOR DE PDF INTERNO (pdf.js) ═══
+   Antes: clicar em "Ver PDF" abria o arquivo numa aba NOVA, fora do sistema
+   (ruim no PWA instalado, que às vezes nem permite). Agora o PDF abre DENTRO
+   da Catalogação, com troca de página, zoom, girar, baixar e imprimir.
+   O visualizador do navegador continua disponível no botão "⧉ Nova aba" e é o
+   plano B automático se o leitor interno falhar. Nada de dados muda de lugar. */
+const _pdfv={aberto:false,orderId:null,nome:'',titulo:'',pdf:null,page:1,total:1,zoom:1,modo:'pagina',escalaAtual:1,rot:0,tarefa:null,token:0,data:null};
+const _pdfvMaxPx=12e6; /* teto de pixels por página: protege máquinas fracas */
+/* chaves de _pdfDocCache que estão em uso pelo leitor e não podem ser descartadas */
+const _pdfvProtegidos=new Set();
+function _pdfvId(x){return document.getElementById(x)}
+
+/* Carrega (ou reaproveita do cache) o documento pdf.js de uma ficha. */
+async function obterDocPdf(id,data){
+  const cache=_pdfDocCache.get(id);
+  if(cache)return cache;
+  const pdfjs=await ensurePdfJs();
+  const pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;
+  _pdfDocCache.set(id,pdf);
+  _capMap(_pdfDocCache,8,true,_pdfvProtegidos);
+  return pdf;
+}
+
+function _pdfvStatus(msg,spin){
+  const st=_pdfvId('pdfvStatus');
+  if(!st)return;
+  if(msg===null){st.hidden=true;return}
+  st.hidden=false;
+  st.innerHTML=(spin?'<div class="pdfv-spin"></div>':'')+'<span>'+msg+'</span>';
+}
+function _pdfvSync(){
+  const p=_pdfvId('pdfvPrev'),n=_pdfvId('pdfvNext'),inp=_pdfvId('pdfvPageInput'),tot=_pdfvId('pdfvPages');
+  if(p)p.disabled=_pdfv.page<=1;
+  if(n)n.disabled=_pdfv.page>=_pdfv.total;
+  if(inp){inp.value=_pdfv.page;inp.max=_pdfv.total}
+  if(tot)tot.textContent=_pdfv.total;
+}
+function _pdfvEscala(base,body){
+  const largura=Math.max(140,(body.clientWidth||820)-36);
+  const altura=Math.max(140,(body.clientHeight||620)-36);
+  let escala;
+  if(_pdfv.modo==='largura')escala=largura/base.width;
+  else if(_pdfv.modo==='zoom')escala=_pdfv.zoom;
+  else escala=Math.min(largura/base.width,altura/base.height);
+  const px=base.width*escala*base.height*escala;
+  if(px>_pdfvMaxPx)escala=escala*Math.sqrt(_pdfvMaxPx/px);
+  return Math.max(0.1,Math.min(escala,8));
+}
+
+async function abrirLeitorPdf(id){
+  const o=state.orders.find(x=>x.id===id);
+  if(!o)return toast('Ficha não encontrada.');
+  const data=await getPdfData(id);
+  if(!data||!String(data).startsWith('data:application/pdf'))return toast('Esta ficha não tem PDF anexado.');
+  const sel=_pdfvId('pdfViewer');
+  if(!sel)return abrirPdfEmNovaAba(id); /* sem o leitor na página: comportamento antigo */
+  _pdfv.orderId=id;_pdfv.data=data;_pdfv.nome=String(o.pdfName||(_nomeArquivo(o.name)+'.pdf')).replace(/[\\/:*?"<>|]+/g,'-').slice(0,120);
+  _pdfv.titulo=o.name||'Ficha';
+  const nm=_pdfvId('pdfvName'),mt=_pdfvId('pdfvMeta');
+  if(nm)nm.textContent=_pdfv.titulo;
+  if(mt)mt.textContent=o.pdfName?('Arquivo: '+o.pdfName):'PDF anexado';
+  sel.classList.add('open');sel.setAttribute('aria-hidden','false');
+  _pdfvProtegidos.add(id);
+  _pdfv.aberto=true;_pdfv.page=1;_pdfv.rot=0;_pdfv.zoom=1;_pdfv.modo='pagina';
+  _pdfvId('pdfvSheet').hidden=true;
+  _pdfvSync();
+  _pdfvStatus('Abrindo o PDF...',true);
+  try{
+    _pdfv.pdf=await obterDocPdf(id,data);
+    _pdfv.total=_pdfv.pdf.numPages||1;
+    _pdfvSync();
+    await _pdfvRender();
+  }catch(err){
+    console.warn('Leitor interno não conseguiu abrir o PDF; usando a aba do navegador.',err);
+    _pdfvErro(err);
+  }
+}
+function _nomeArquivo(s){return String(s||'ficha').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9._-]/g,'').slice(0,60)||'ficha'}
+
+async function _pdfvRender(){
+  const pdf=_pdfv.pdf;if(!pdf)return;
+  const body=_pdfvId('pdfvBody'),sheet=_pdfvId('pdfvSheet'),canvas=_pdfvId('pdfvCanvas');
+  if(!body||!sheet||!canvas)return;
+  const token=++_pdfv.token;
+  if(_pdfv.tarefa){try{_pdfv.tarefa.cancel()}catch(e){}_pdfv.tarefa=null}
+  _pdfvStatus('Desenhando página '+_pdfv.page+' de '+_pdfv.total+'...',true);
+  try{
+    const page=await pdf.getPage(_pdfv.page);
+    if(token!==_pdfv.token)return;
+    const base=page.getViewport({scale:1,rotation:_pdfv.rot});
+    const escala=_pdfvEscala(base,body);
+    const viewport=page.getViewport({scale:escala,rotation:_pdfv.rot});
+    const ctx=canvas.getContext('2d',{alpha:false});
+    canvas.width=Math.max(1,Math.floor(viewport.width));
+    canvas.height=Math.max(1,Math.floor(viewport.height));
+    canvas.style.width=canvas.width+'px';
+    canvas.style.height=canvas.height+'px';
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    const tarefa=page.render({canvasContext:ctx,viewport:viewport});
+    _pdfv.tarefa=tarefa;
+    await tarefa.promise;
+    if(token!==_pdfv.token)return; /* usuário trocou de página no meio: descarta */
+    _pdfv.tarefa=null;_pdfv.escalaAtual=escala;
+    sheet.hidden=false;
+    _pdfvStatus(null);
+    const zl=_pdfvId('pdfvZoomLabel');if(zl)zl.textContent=Math.round(escala*100)+'%';
+    _pdfvSync();
+  }catch(e){
+    if(token!==_pdfv.token)return;
+    if(e&&e.name==='RenderingCancelledException')return; /* cancelamento normal */
+    console.warn('Falha ao desenhar a página do PDF:',e);
+    _pdfvStatus('Não foi possível desenhar esta página. Use “⧉ Nova aba” para ver o PDF.',false);
+  }
+}
+function _pdfvIrPara(p,forcar){
+  if(!_pdfv.pdf)return;
+  p=Math.max(1,Math.min(_pdfv.total,parseInt(p,10)||1));
+  if(p===_pdfv.page&&!forcar){_pdfvSync();return}
+  _pdfv.page=p;
+  _pdfvSync();
+  _pdfvRender();
+}
+function _pdfvMudarPagina(d){_pdfvIrPara(_pdfv.page+d)}
+function _pdfvZoom(fator){
+  if(_pdfv.modo!=='zoom')_pdfv.zoom=_pdfv.escalaAtual||1;
+  _pdfv.modo='zoom';
+  _pdfv.zoom=Math.max(0.25,Math.min(6,fator>0?_pdfv.zoom*1.2:_pdfv.zoom/1.2));
+  _pdfvRender();
+}
+function _pdfvAjustar(modo){_pdfv.modo=modo;_pdfvRender()}
+
+function _pdfvErro(err){
+  const nome=(err&&err.name)||'';
+  let msg='Não foi possível mostrar este PDF no leitor interno.';
+  if(nome==='PasswordException')msg='Este PDF está protegido por senha. Abra na aba do navegador para digitá-la.';
+  else if(nome==='InvalidPDFException')msg='Este arquivo parece corrompido ou não é um PDF válido.';
+  else if(nome==='MissingPDFException')msg='O PDF anexado não foi encontrado no armazenamento deste navegador.';
+  _pdfvStatus('<div class="pdfv-erro"><div style="font-size:26px;margin-bottom:6px">⚠️</div>'+msg+
+    '<div class="pdfv-erro-acoes"><button class="pdfv-btn" style="border-color:var(--line);background:color-mix(in srgb,var(--card) 70%,var(--bg));color:var(--text)" onclick="abrirPdfEmNovaAba(\''+_pdfv.orderId+'\')">⧉ Abrir em nova aba</button></div></div>',false);
+  try{abrirPdfEmNovaAba(_pdfv.orderId)}catch(e){}
+}
+
+function fecharLeitorPdf(silencioso){
+  if(!_pdfv.aberto)return;
+  _pdfv.aberto=false;_pdfv.token++;
+  if(_pdfv.tarefa){try{_pdfv.tarefa.cancel()}catch(e){}_pdfv.tarefa=null}
+  const sel=_pdfvId('pdfViewer');
+  if(sel){sel.classList.remove('open');sel.setAttribute('aria-hidden','true')}
+  const c=_pdfvId('pdfvCanvas');
+  if(c){try{c.width=0;c.height=0;}catch(e){}} /* libera a memória da página desenhada */
+  const sh=_pdfvId('pdfvSheet');if(sh)sh.hidden=true;
+  const area=_pdfvId('pdfvPrintArea');if(area)area.innerHTML='';
+  document.documentElement.classList.remove('pdfv-printing');
+  if(_pdfv.orderId)_pdfvProtegidos.delete(_pdfv.orderId);
+  _pdfv.pdf=null;_pdfv.data=null;
+  if(!silencioso)toast('📄 Leitor de PDF fechado');
+}
+
+async function _pdfvBaixar(){
+  if(!_pdfv.data)return;
+  try{
+    const blob=await (await fetch(_pdfv.data)).blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=_pdfv.nome||'ficha.pdf';a.style.display='none';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    toast('⤓ PDF salvo nos downloads');
+  }catch(e){console.warn('Falha ao baixar o PDF:',e);toast('❌ Não foi possível baixar o PDF.')}
+}
+
+async function _pdfvImprimir(){
+  const pdf=_pdfv.pdf,area=_pdfvId('pdfvPrintArea');
+  if(!pdf||!area)return;
+  area.innerHTML='<div style="padding:12px;font:800 13px sans-serif">Preparando a impressão da página '+_pdfv.page+'...</div>';
+  try{
+    const page=await pdf.getPage(_pdfv.page);
+    const base=page.getViewport({scale:1,rotation:_pdfv.rot});
+    /* mesma densidade usada na Ficha Técnica (2.5x), com teto de pixels */
+    let escala=Math.min(2.5,Math.sqrt(_pdfvMaxPx/(base.width*base.height)));
+    if(escala<1)escala=1;
+    const viewport=page.getViewport({scale:escala,rotation:_pdfv.rot});
+    const cv=document.createElement('canvas');
+    cv.width=Math.floor(viewport.width);cv.height=Math.floor(viewport.height);
+    const ctx=cv.getContext('2d',{alpha:false});
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+    await page.render({canvasContext:ctx,viewport:viewport}).promise;
+    const img=document.createElement('img');
+    img.src=cv.toDataURL('image/jpeg',0.94);
+    area.innerHTML='';area.appendChild(img);
+    await new Promise(r=>{if(img.complete){r()}else{img.onload=r;img.onerror=r;setTimeout(r,800)}});
+    document.documentElement.classList.add('pdfv-printing');
+    window.print();
+  }catch(e){
+    console.warn('Falha ao preparar a impressão:',e);
+    _pdfvStatus('Não foi possível preparar a impressão. Use “⧉ Nova aba” e imprima por lá.',false);
+  }finally{
+    setTimeout(()=>{document.documentElement.classList.remove('pdfv-printing')},600);
+  }
+}
+
+function _pdfvBind(){
+  const on=(id,ev,fn)=>{const el=_pdfvId(id);if(el)el.addEventListener(ev,fn)};
+  on('pdfvClose','click',()=>fecharLeitorPdf());
+  on('pdfvPrev','click',()=>_pdfvMudarPagina(-1));
+  on('pdfvNext','click',()=>_pdfvMudarPagina(1));
+  on('pdfvZoomIn','click',()=>_pdfvZoom(1));
+  on('pdfvZoomOut','click',()=>_pdfvZoom(-1));
+  on('pdfvFitWidth','click',()=>_pdfvAjustar('largura'));
+  on('pdfvFitPage','click',()=>_pdfvAjustar('pagina'));
+  on('pdfvRotate','click',()=>{_pdfv.rot=(_pdfv.rot+90)%360;_pdfvRender()});
+  on('pdfvOpenTab','click',()=>abrirPdfEmNovaAba(_pdfv.orderId));
+  on('pdfvDownload','click',_pdfvBaixar);
+  on('pdfvPrint','click',_pdfvImprimir);
+  const inp=_pdfvId('pdfvPageInput');
+  if(inp){
+    inp.addEventListener('change',()=>_pdfvIrPara(inp.value));
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();_pdfvIrPara(inp.value);inp.blur()}});
+  }
+  const sel=_pdfvId('pdfViewer');
+  if(sel)sel.addEventListener('click',e=>{if(e.target===sel)fecharLeitorPdf(true)});
+  window.addEventListener('afterprint',()=>document.documentElement.classList.remove('pdfv-printing'));
+  /* modos "ajustar" acompanham o tamanho da janela; o modo zoom não é afetado */
+  let t=null;
+  window.addEventListener('resize',()=>{
+    if(!_pdfv.aberto||_pdfv.modo==='zoom')return;
+    clearTimeout(t);t=setTimeout(()=>{if(_pdfv.aberto&&_pdfv.pdf)_pdfvRender()},220);
+  });
+  document.addEventListener('keydown',e=>{
+    if(!_pdfv.aberto)return;
+    const alvo=e.target||{};
+    const digitando=alvo.tagName==='INPUT'||alvo.tagName==='TEXTAREA';
+    if(e.key==='Escape'){e.preventDefault();fecharLeitorPdf();return}
+    if(digitando)return;
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();_pdfvMudarPagina(-1)}
+    else if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();_pdfvMudarPagina(1)}
+    else if(e.key==='Home'){e.preventDefault();_pdfvIrPara(1)}
+    else if(e.key==='End'){e.preventDefault();_pdfvIrPara(_pdfv.total)}
+    else if(e.key==='+'||e.key==='='){e.preventDefault();_pdfvZoom(1)}
+    else if(e.key==='-'||e.key==='_'){e.preventDefault();_pdfvZoom(-1)}
+    else if(e.key==='0'){e.preventDefault();_pdfvAjustar('pagina')}
+  });
+}
+
+/* V7.2 — "Ver PDF" agora abre o leitor interno; o nome antigo continua valendo
+   para qualquer chamada existente (cards, coluna expandida, atalhos). */
+async function viewPdf(id){return abrirLeitorPdf(id)}
+/* Abre o PDF no visualizador padrão do navegador (aba nova) — opção explícita
+   do leitor e plano B quando o pdf.js não consegue renderizar o arquivo. */
+async function abrirPdfEmNovaAba(id){
   const o=state.orders.find(x=>x.id===id);if(!o)return toast('Ficha não encontrada.');
   const data=await getPdfData(id);
   if(!data||!String(data).startsWith('data:application/pdf'))return toast('Esta ficha não tem PDF anexado.');
@@ -824,7 +1127,7 @@ save();load();await loadFichaDataFromDB().catch(()=>{});renderAll();toast('✅ B
 }catch(err){alert('Erro ao importar: '+err.message)}
 };r.readAsText(f);e.target.value=''}
 /* Hover preview desativado a pedido do usuário — visualização só via clique (aba nova do navegador).
-   getThumbLo/getThumbHQ continuam sendo usados pelo modo coluna expandida. */
+   O leitor interno (V7.2) e o modo coluna expandida usam o mesmo cache de documentos. */
 
 function addHistory(type,delta){state.history.push({ts:Date.now(),type,delta,total:Math.max(0,openCount()+delta)});if(state.history.length>160)state.history=state.history.slice(-160)}function label(k){return({baixa:'Baixa',media:'Média',alta:'Alta',concluido:'Concluído'})[normalizeStatusValue(k)]||k}function fmtDate(s){return parseDate(s).toLocaleDateString('pt-BR')}function esc(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2200)}
 
@@ -922,13 +1225,60 @@ window.addEventListener('message',function(e){
   }
 });
 
+/* ══ V7.2 — Feedback de gravação e de armazenamento ══
+   Antes: o catálogo gravava em silêncio (o usuário não sabia se salvou) e nada
+   avisava quanto do navegador já estava ocupado. Os PDFs e as fichas vivem no
+   IndexedDB e podem ser descartados pelo navegador se o disco apertar; agora
+   pedimos armazenamento persistente e mostramos o consumo. Nada muda no
+   formato nem no lugar dos dados. */
+let _v7UsoTs=0;
+function v7MarcarSalvo(){
+  const el=document.getElementById('saveChip');
+  if(!el)return;
+  const d=new Date(),hora=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  el.textContent='💾 Salvo '+hora;
+  el.classList.remove('aviso');
+  el.title='Catálogo gravado neste navegador às '+hora;
+  if(Date.now()-_v7UsoTs>5000)v7UsoArmazenamento();
+}
+function v7MarcarFalha(){
+  const el=document.getElementById('saveChip');
+  if(!el)return;
+  el.textContent='⚠️ Não salvou';
+  el.classList.add('aviso');
+  el.title='Falta espaço no navegador. Exporte um backup e libere espaço.';
+}
+async function v7UsoArmazenamento(){
+  const el=document.getElementById('storageChip');
+  if(!el||!navigator.storage||!navigator.storage.estimate)return;
+  try{
+    const est=await navigator.storage.estimate();
+    _v7UsoTs=Date.now();
+    const mb=(est.usage||0)/1048576;
+    const txt=mb>=1024?(mb/1024).toFixed(2)+' GB':(mb>=10?mb.toFixed(0)+' MB':mb.toFixed(1)+' MB');
+    const n=state.orders.length,comPdf=state.orders.filter(o=>o.pdfName).length;
+    el.textContent='🗄 '+n+(n===1?' ficha':' fichas')+' · '+txt;
+    el.title='Este navegador está usando '+txt+' (PDFs e fichas incluídos). '+comPdf+' PDF(s) anexado(s). Use “Exportar backup” para guardar uma cópia.';
+  }catch(e){}
+}
+async function v7PedirPersistencia(){
+  try{
+    if(!navigator.storage||!navigator.storage.persist)return;
+    let ok=false;
+    if(navigator.storage.persisted)ok=await navigator.storage.persisted();
+    if(!ok)ok=await navigator.storage.persist();
+    const el=document.getElementById('storageChip');
+    if(el&&ok)el.classList.add('protegido');
+  }catch(e){}
+}
+
 function initCatalogView(){
   try{
     switchView('catalogo');
   }catch(e){}
 }
 
-load();loadTheme();initCatalogView();migratePdfsToDB().then(renderAll);
+load();loadTheme();initCatalogView();_pdfvBind();v7PedirPersistencia();v7UsoArmazenamento();migratePdfsToDB().then(renderAll);
 window.addEventListener('DOMContentLoaded',initCatalogView);
 window.addEventListener('load',initCatalogView);
 /* Escuta o localStorage event (disparado SOMENTE quando o Criador salva em outra janela/aba, 0 CPU ocioso) */
@@ -959,7 +1309,4 @@ function v7DayTick(){
 setInterval(v7DayTick,60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)v7DayTick()});
 window.addEventListener('focus',v7DayTick);
-</script></body></html>.addEventListener('visibilitychange',()=>{if(!document.hidden)v7DayTick()});
-window.addEventListener('focus',v7DayTick);
-</script></body></html>stener('focus',v7DayTick);
 </script></body></html>

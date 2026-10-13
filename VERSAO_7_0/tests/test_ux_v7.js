@@ -60,8 +60,13 @@ async function main() {
   const pw = pd.window, pdoc = pd.window.document;
   await new Promise(r => setTimeout(r, 1400));
   const pt = (expr) => { try { return pw.eval(expr); } catch(e) { fail++;console.log('  [ERR]', e.message);return undefined; } };
-  pt(`state.orders.push({id:'a1',name:'Ficha Antiga',clientPhone:'',createdAt:'16/08/2026',createdTs:Date.now()-30*864e5,status:'alta',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false});
-      state.orders.push({id:'b1',name:'Ficha Nova',clientPhone:'',createdAt:'15/09/2026',createdTs:Date.now(),status:'baixa',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false});
+  /* V7.2 — datas relativas a HOJE (antes eram fixas em 2026 e o teste passou a
+     falhar sozinho quando "15/09/2026" completou 22 dias e virou prioridade
+     Alta de verdade). 45 dias = Alta garantida; 3 dias = Baixa garantida. */
+  const v7DiaBR = (dias) => { const d = new Date(); d.setDate(d.getDate() - dias); return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); };
+  const dataAntiga = v7DiaBR(45), dataRecente = v7DiaBR(3);
+  pt(`state.orders.push({id:'a1',name:'Ficha Antiga',clientPhone:'',createdAt:'${dataAntiga}',createdTs:Date.now()-45*864e5,status:'alta',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false});
+      state.orders.push({id:'b1',name:'Ficha Nova',clientPhone:'',createdAt:'${dataRecente}',createdTs:Date.now(),status:'baixa',note:'',medDays:15,highDays:22,fichaData:'D',fichaNum:'',pdfStored:false});
       save(); renderAll(); 'ok'`);
   check('5 chips renderizados', pdoc.querySelectorAll('.prio-chip').length === 5, pdoc.querySelectorAll('.prio-chip').length);
   check('chip Alta count=1', pt(`Array.from(document.querySelectorAll('.prio-chip')).find(b=>b.textContent.includes('Alta')).querySelector('.pc-n').textContent`) === '1');
