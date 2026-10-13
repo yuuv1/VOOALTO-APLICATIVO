@@ -8,7 +8,7 @@ const { spawn } = require('child_process');
 const ROOT = path.resolve(__dirname);
 const HOST = '127.0.0.1';
 const APP_ID = 'vooalto-v7';
-const APP_VERSION = '7.5.0';
+const APP_VERSION = '7.6.0';
 const HEALTH_PATH = '/__vooalto_health';
 const requestedPort = Number(process.env.PORT);
 const PORT = Number.isInteger(requestedPort) && requestedPort > 0 && requestedPort <= 65535

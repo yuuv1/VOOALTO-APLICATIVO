@@ -297,7 +297,7 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
     <ul>
       <li>Arraste um PDF para uma coluna ou use <b>＋ Nova ficha</b> para anexar.</li>
       <li><b>📄 Visualizar PDF</b> abre o <b>leitor dentro do sistema</b>: setas para trocar de página, zoom, girar, imprimir, baixar e <b>⧉ Nova aba</b> se preferir.</li>
-      <li>O PDF fica guardado <b>neste navegador</b> (não sobe para a internet). Por isso, exporte backup de vez em quando.</li>
+      <li>O PDF fica guardado <b>neste navegador</b> (não sobe para a internet), no tamanho original do arquivo. Por isso, exporte backup de vez em quando.</li>
     </ul>
     <h4>Ações de cada ficha</h4>
     <ul>
@@ -308,6 +308,7 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
     <ul>
       <li><b>Exportar backup</b> baixa um <b>.json</b> com tudo; <b>Importar</b> pergunta se quer <b>mesclar</b> ou <b>substituir</b>.</li>
       <li>O selo <b>💾 Salvo HH:MM</b> mostra a última gravação; o chip de armazenamento mostra quantas fichas e quantos MB estão neste navegador.</li>
+      <li>Ao abrir o sistema, arquivos de PDF que ficaram <b>sem ficha</b> (ficha excluída ou importação que substituiu tudo) são liberados automaticamente — nada de ficha em uso é apagado.</li>
     </ul>
     <h4>Atalhos</h4>
     <ul>
@@ -357,14 +358,58 @@ html,body,.app{background:var(--bg)!important;background-image:none!important;co
 const KEY='vooalto_main_catalog_v2';let state={thresholds:{low:0,med:15,high:22},orders:[],history:[]};let expandedColumn=null;const cols=[['baixa','Baixa','Antes do limite médio','var(--green)'],['media','Média','A partir do limite médio','var(--yellow)'],['alta','Alta','A partir do limite alto','var(--red)'],['concluido','Concluídos','Só entra pelo botão Concluído','var(--gray)']];const $=id=>document.getElementById(id);
 /* V7.3 — dois temas (claro/escuro); nomes antigos são convertidos. */
 const V7_TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
-function v7TemaValido(t){if(t==='escuro')return 'escuro';if(t==='claro')return 'claro';return V7_TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro'}const PDF_DB='vooalto_pdf_store_v2',PDF_STORE='pdfs',FICHA_STORE='fichaData',PDF_DB_VERSION=2;
+function v7TemaValido(t){if(t==='escuro')return 'escuro';if(t==='claro')return 'claro';return V7_TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro'}const PDF_DB='vooalto_pdf_store_v2',PDF_STORE='pdfs',FICHA_STORE='fichaData',PDF_DB_VERSION=3;/* V7.6 (Onda 4): v3 guarda o PDF como Blob (antes: dataURL base64, ~33% maior). O NOME do banco continua o mesmo de propósito — renomear deixaria os dados de quem já usa para trás. */
 /* V7.3 — o seletor de tema agora é só o do topo do sistema (shell).
    Esta função continua porque é ela que recebe o tema vindo do shell. */
 function setTheme(t,fromParent){t=v7TemaValido(t);document.documentElement.dataset.theme=t==='escuro'?'escuro':'';localStorage.setItem('vooalto_theme_v5',t);document.documentElement.style.colorScheme=(t==='escuro'?'dark':'light');/* só notifica o shell se a troca foi iniciada NO iframe (select local), não se veio do shell (evita loop) */if(!fromParent){try{parent.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}}}
 function loadTheme(){setTheme(localStorage.getItem('vooalto_theme_v5')||'claro')}
 window.addEventListener('message',e=>{if(e.data&&e.data.type==='vooalto-theme')setTheme(e.data.theme,true)});
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}function uid(){return'o_'+Math.random().toString(36).slice(2,9)+'_'+Date.now().toString(36)}function toISODate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}function parseDate(s){if(s instanceof Date&&!isNaN(s))return s;if(typeof s==='number')return new Date(s);s=String(s==null?'':s).trim();if(!s)return new Date();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);const t=Date.parse(s);if(!isNaN(t))return new Date(t);return new Date()}function daysSince(s){const a=parseDate(s),b=new Date();b.setHours(0,0,0,0);a.setHours(0,0,0,0);return Math.max(0,Math.floor((b-a)/86400000))}function normalizeStatusValue(v){v=String(v||'baixa').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();if(['concluido','concluidos','finalizado','done','completed'].includes(v))return'concluido';if(['alta','high'].includes(v))return'alta';if(['media','medio','medium'].includes(v))return'media';return'baixa'}function getLimits(o){return{med:parseInt(o?.medDays??state.thresholds.med)||15,high:parseInt(o?.highDays??state.thresholds.high)||22}}function autoStatus(o){if(normalizeStatusValue(o.status)==='concluido')return'concluido';const d=daysSince(o.createdAt),l=getLimits(o);if(d>=l.high)return'alta';if(d>=l.med)return'media';return'baixa'}function priorityRank(st){return({baixa:1,media:2,alta:3,concluido:4})[normalizeStatusValue(st)]||1}function openCount(){return state.orders.filter(o=>normalizeStatusValue(o.status)!=='concluido').length}
-function openPdfDB(){return new Promise((res,rej)=>{const r=indexedDB.open(PDF_DB,PDF_DB_VERSION);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(PDF_STORE))r.result.createObjectStore(PDF_STORE);if(!r.result.objectStoreNames.contains(FICHA_STORE))r.result.createObjectStore(FICHA_STORE)};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}async function storePdfData(id,data){const db=await openPdfDB();return new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).put(data,id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}const _pdfDataCache=new Map();async function getPdfData(id){if(_pdfDataCache.has(id))return _pdfDataCache.get(id);const mem=state.orders.find(o=>o.id===id)?.pdfData;if(mem){_pdfDataCache.set(id,mem);return mem;}try{const db=await openPdfDB();const data=await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readonly'),rq=tx.objectStore(PDF_STORE).get(id);rq.onsuccess=()=>{db.close();res(rq.result||null)};rq.onerror=()=>{db.close();rej(rq.error)}});if(data){_pdfDataCache.set(id,data);_capMap(_pdfDataCache,20);}return data}catch(e){return null}}async function deletePdfData(id){try{const db=await openPdfDB();return await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).delete(id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}catch(e){}}
+/* ═══ V7.6 (Onda 4) — o PDF é guardado como Blob, não como base64 ═══
+   Antes: o arquivo virava 'data:application/pdf;base64,...' — 33% mais pesado no disco e uma
+   string gigante na memória. Agora o IndexedDB guarda os bytes do próprio arquivo.
+   TODA leitura aceita os dois formatos (Blob novo / base64 antigo): se a migração do banco não
+   puder rodar por qualquer motivo, o sistema continua funcionando como antes, sem perder nada. */
+function dataUrlParaBlob(d){/* base64 → Blob (síncrono, para usar dentro da migração do banco) */
+  try{const txt=String(d),c=txt.indexOf(',');if(c<0)return null;
+    const tipo=(txt.slice(5,c).split(';')[0])||'application/pdf';
+    const bin=atob(txt.slice(c+1)),u=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    return new Blob([u],{type:tipo});
+  }catch(e){return null}}
+function paraBlobPdf(d){/* normaliza o que chega (File, Blob, base64 antigo, Uint8Array) para Blob */
+  if(!d)return d;
+  if(typeof Blob!=='undefined'&&d instanceof Blob)return d;
+  if(typeof d==='string')return d.indexOf('data:')===0?(dataUrlParaBlob(d)||d):d;
+  if(d.buffer instanceof ArrayBuffer)return new Blob([d],{type:'application/pdf'});
+  return d}
+function pdfTemArquivo(d){/* aceita Blob (novo) e dataURL (antigo) — usado por leitor, miniatura e "Nova aba" */
+  if(!d)return false;
+  if(typeof Blob!=='undefined'&&d instanceof Blob)return d.size>0&&!(d.type&&d.type.indexOf('image/')===0);
+  const s=String(d);return s.indexOf('data:application/pdf')===0||s.indexOf('data:application/octet-stream')===0}
+async function pdfBytes(d){/* bytes para o pdf.js — de Blob, de base64 ou de ArrayBuffer */
+  if(typeof d==='string')return dataUrlToUint8Array(d);
+  if(d&&typeof d.arrayBuffer==='function')return new Uint8Array(await d.arrayBuffer());
+  if(d&&d.buffer instanceof ArrayBuffer)return new Uint8Array(d.buffer,d.byteOffset||0,d.byteLength||d.buffer.byteLength);
+  if(d&&typeof FileReader!=='undefined')return await new Promise((res,rej)=>{/* navegador sem Blob.arrayBuffer (Safari antigo) */
+    const r=new FileReader();r.onload=()=>res(new Uint8Array(r.result));r.onerror=()=>rej(r.error||new Error('falha ao ler o arquivo'));r.readAsArrayBuffer(d)});
+  throw new Error('PDF em formato desconhecido')}
+function pdfParaDataURL(d){/* Blob → base64 (só para o backup .json, que precisa ser um arquivo de texto) */
+  return new Promise(res=>{
+    if(!d)return res(null);
+    if(typeof d==='string')return res(d);
+    try{const r=new FileReader();r.onload=()=>res(r.result||null);r.onerror=()=>res(null);r.readAsDataURL(d)}catch(e){res(null)}})}
+/* Migração dos PDFs antigos (base64) para Blob, dentro da mesma transação de upgrade do banco. */
+function migrarPdfsParaBlob(store){
+  try{
+    const rq=store.openCursor();
+    rq.onsuccess=()=>{const cur=rq.result;if(!cur)return;
+      try{if(typeof cur.value==='string'&&cur.value.indexOf('data:')===0){const blob=dataUrlParaBlob(cur.value);if(blob)cur.update(blob)}}catch(e){/* registro problemático: fica como está e o leitor converte na hora */}
+      cur.continue()};
+    rq.onerror=()=>{};
+  }catch(e){}
+}
+function openPdfDB(){return new Promise((res,rej)=>{const r=indexedDB.open(PDF_DB,PDF_DB_VERSION);r.onupgradeneeded=(ev)=>{const db=r.result;if(!db.objectStoreNames.contains(PDF_STORE))db.createObjectStore(PDF_STORE);if(!db.objectStoreNames.contains(FICHA_STORE))db.createObjectStore(FICHA_STORE);if((ev.oldVersion||0)<3&&r.transaction){try{migrarPdfsParaBlob(r.transaction.objectStore(PDF_STORE))}catch(e){}}};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}async function storePdfData(id,data){const db=await openPdfDB();return new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).put(paraBlobPdf(data),id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}const _pdfDataCache=new Map();async function getPdfData(id){if(_pdfDataCache.has(id))return _pdfDataCache.get(id);const mem=state.orders.find(o=>o.id===id)?.pdfData;if(mem){_pdfDataCache.set(id,mem);return mem;}try{const db=await openPdfDB();const data=await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readonly'),rq=tx.objectStore(PDF_STORE).get(id);rq.onsuccess=()=>{db.close();res(rq.result||null)};rq.onerror=()=>{db.close();rej(rq.error)}});if(data){_pdfDataCache.set(id,data);_capMap(_pdfDataCache,20);}return data}catch(e){return null}}async function deletePdfData(id){try{const db=await openPdfDB();return await new Promise((res,rej)=>{const tx=db.transaction(PDF_STORE,'readwrite');tx.objectStore(PDF_STORE).delete(id);tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}})}catch(e){}}
 /* ══ V7.1.1 — fichaData (Criador) fora do localStorage (anti-travamento + anti-perda) ══
    A ficha com fotos (MBs em base64) era gravada no localStorage a cada save():
    travava a interface nas serializações e estourava a cota (~5MB), quebrando o
@@ -383,6 +428,30 @@ function persistFichaDataAsync(o){if(!o||!o.fichaData||o.fichaInIDB)return;try{s
 async function migrateFichaDataToDB(){let ch=false;for(const o of state.orders){if(o.fichaData&&!o.fichaInIDB){try{await storeFichaData(o.id,o.fichaData);o.fichaInIDB=true;ch=true}catch(e){}}}if(ch)save()}
 async function loadFichaDataFromDB(){for(const o of state.orders){if(!o.fichaData&&o.fichaInIDB){try{const fd=await getFichaData(o.id);if(fd)o.fichaData=fd}catch(e){}}}}
 function normalizeImportedData(data){data=data||{};data.thresholds={low:0,med:15,high:22,...(data.thresholds||{})};data.orders=(data.orders||[]).map(o=>({id:/^[A-Za-z0-9_-]+$/.test(String(o.id||''))?o.id:uid(),name:o.name||'Ficha sem nome',clientPhone:o.clientPhone||o.whatsapp||o.phone||'',createdAt:toISODate(parseDate(o.createdAt||today())),createdTs:o.createdTs||Date.now(),status:normalizeStatusValue(o.status),note:o.note||'',medDays:o.medDays??data.thresholds.med,highDays:o.highDays??data.thresholds.high,pdfData:o.pdfData,pdfName:o.pdfName,completedAt:o.completedAt,manual:o.manual,pdfStored:o.pdfStored||!!o.pdfName,...(o.fichaData!==undefined?{fichaData:o.fichaData}:{}),...(o.fichaNum!==undefined?{fichaNum:o.fichaNum}:{}),...(o.fichaInIDB?{fichaInIDB:true}:{})}));data.history=data.history||[];return data}function load(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem('vooalto_main_catalog_v1');if(raw)state=normalizeImportedData(JSON.parse(raw))}catch(e){}state=normalizeImportedData(state);$('thMed').value=state.thresholds.med;$('thHigh').value=state.thresholds.high}function save(){try{const orders=(state.orders||[]).map(o=>{const c=Object.assign({},o);if(c.pdfData&&c.pdfStored)delete c.pdfData;if(c.fichaInIDB&&c.fichaData)delete c.fichaData;return c});localStorage.setItem(KEY,JSON.stringify({thresholds:state.thresholds,orders:orders,history:state.history}));v7MarcarSalvo();return true}catch(e){v7MarcarFalha();console.warn('Catalogação: falha ao salvar no armazenamento local',e);try{toast('⚠️ Espaço cheio: parte dos dados pode não ter sido salva. Exporte um backup.')}catch(_){}return false}}function refreshAutomaticStages(){let ch=false;state.orders.forEach(o=>{o.status=normalizeStatusValue(o.status);if(o.status==='concluido')return;const due=autoStatus(o);if(priorityRank(due)>priorityRank(o.status)){o.status=due;ch=true}});if(ch)save()}async function migratePdfsToDB(){let ch=false,failed=0;for(const o of state.orders){if(o.pdfData){o.pdfStored=false;try{await storePdfData(o.id,o.pdfData);_pdfDataCache.delete(o.id);delete o.pdfData;o.pdfStored=true;ch=true}catch(e){failed++}}}if(ch)save();if(failed)toast('⚠️ '+failed+' PDF(s) continuam no backup local porque o navegador não conseguiu migrá-los para IndexedDB. Exporte um backup e libere espaço.')}
+/* ═══ V7.6 (Onda 4) — limpeza de arquivos órfãos ═══
+   PDFs e fichas técnicas ficam no IndexedDB com a chave = id da ficha. Quando uma ficha some
+   (importação substituindo tudo, exclusão que falhou no meio, versão antiga), o arquivo pode
+   ficar para trás ocupando espaço. Esta varredura libera o que não pertence a nenhuma ficha.
+   Regra de segurança: SÓ roda quando o catálogo foi lido do localStorage — se o localStorage
+   estiver vazio, o que está no banco pode ser a única cópia e nada é apagado. */
+async function limparPdfsOrfaos(){
+  let bruto=null;try{bruto=localStorage.getItem(KEY)}catch(e){}
+  if(!bruto)return 0;
+  let ids;try{ids=new Set((state.orders||[]).map(o=>o.id))}catch(e){return 0}
+  const chavesDe=async(db,nome)=>new Promise((res,rej)=>{const tx=db.transaction(nome,'readonly');const rq=tx.objectStore(nome).getAllKeys();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>rej(rq.error)});
+  const apagar=async(db,nome,chaves)=>new Promise((res,rej)=>{const tx=db.transaction(nome,'readwrite');const st=tx.objectStore(nome);chaves.forEach(k=>st.delete(k));tx.oncomplete=()=>{db.close();res(true)};tx.onerror=()=>{db.close();rej(tx.error)}});
+  try{
+    const db=await openPdfDB();
+    const orfaosP=(await chavesDe(db,PDF_STORE)).filter(k=>!ids.has(k));
+    const orfaosF=(await chavesDe(db,FICHA_STORE)).filter(k=>!ids.has(k));
+    if(orfaosP.length)await apagar(db,PDF_STORE,orfaosP);
+    if(orfaosF.length)await apagar(db,FICHA_STORE,orfaosF);
+    db.close();
+    orfaosP.forEach(k=>{_pdfDataCache.delete(k);_thumbCacheHQ.delete(k);try{_pdfDocCache.delete(k)}catch(e){}});
+    orfaosF.forEach(k=>{_fichaDataCache.delete(k)});
+    return orfaosP.length+orfaosF.length;
+  }catch(e){return 0}
+}
 function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',(b.getAttribute('onclick')||'').includes("'"+id+"'")));renderAll()}/* V7.4: a busca re-renderizava a tela inteira a cada tecla. Agora espera a
    digitacao parar 150 ms (o resultado e' o mesmo, sem piscar a tela). */
 let _renderSoonTimer=null;
@@ -448,7 +517,7 @@ setTimeout(()=>ensurePdfJs().catch(()=>{}),500);
 async function getThumbHQ(id){
   if(_thumbCacheHQ.has(id)) return _thumbCacheHQ.get(id);
   const data=await getPdfData(id);
-  if(!data||!String(data).startsWith('data:application/pdf')){return null;}
+  if(!data||!pdfTemArquivo(data)){return null;}
   const pdf=await obterDocPdf(id,data);
   const page=await pdf.getPage(1);
   const vp=page.getViewport({scale:1.5});
@@ -531,7 +600,7 @@ function toggleColumnExpand(k){const fechando=(expandedColumn===k);expandedColum
   };
   if(file)readPdfFile(file,(data,fileName)=>finish(data,fileName));
   else finish(null,null);
-}function readPdfFile(file,cb){if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');const r=new FileReader();r.onload=e=>cb(e.target.result,file.name);r.readAsDataURL(file)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){const alvo=state.orders.find(x=>x.id===id);if(!alvo)return;const temAnexo=!!(alvo.pdfName||alvo.pdfStored||alvo.fichaData||alvo.fichaInIDB);if(!confirm('Excluir a ficha \"'+(alvo.name||'sem nome')+'\"?'+(temAnexo?'\n\nO PDF e a ficha técnica anexados a ela também serão apagados.':'')+'\n\nEsta ação não tem volta.'))return;const o=alvo;if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);deleteFichaData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}
+}function readPdfFile(file,cb){/* V7.6: entrega o próprio arquivo (Blob) — antes virava base64 (33% mais pesado) */if(!(file&&(file.type==='application/pdf'||/\.pdf$/i.test(file.name))))return toast('Anexe apenas PDF.');cb(file,file.name)}function markDone(id){const o=state.orders.find(x=>x.id===id);if(!o)return;o.status='concluido';o.completedAt=today();addHistory('done',-1);save();renderAll()}function deleteOrder(id){const alvo=state.orders.find(x=>x.id===id);if(!alvo)return;const temAnexo=!!(alvo.pdfName||alvo.pdfStored||alvo.fichaData||alvo.fichaInIDB);if(!confirm('Excluir a ficha \"'+(alvo.name||'sem nome')+'\"?'+(temAnexo?'\n\nO PDF e a ficha técnica anexados a ela também serão apagados.':'')+'\n\nEsta ação não tem volta.'))return;const o=alvo;if(o&&o.status!=='concluido')addHistory('delete',-1);deletePdfData(id);deleteFichaData(id);state.orders=state.orders.filter(x=>x.id!==id);save();renderAll()}
 /* ═══ V7.2 — LEITOR DE PDF INTERNO (pdf.js) ═══
    Antes: clicar em "Ver PDF" abria o arquivo numa aba NOVA, fora do sistema
    (ruim no PWA instalado, que às vezes nem permite). Agora o PDF abre DENTRO
@@ -549,7 +618,7 @@ async function obterDocPdf(id,data){
   const cache=_pdfDocCache.get(id);
   if(cache)return cache;
   const pdfjs=await ensurePdfJs();
-  const pdf=await pdfjs.getDocument({data:dataUrlToUint8Array(data)}).promise;
+  const pdf=await pdfjs.getDocument({data:await pdfBytes(data)}).promise;
   _pdfDocCache.set(id,pdf);
   _capMap(_pdfDocCache,8,true,_pdfvProtegidos);
   return pdf;
@@ -585,7 +654,7 @@ async function abrirLeitorPdf(id){
   const o=state.orders.find(x=>x.id===id);
   if(!o)return toast('Ficha não encontrada.');
   const data=await getPdfData(id);
-  if(!data||!String(data).startsWith('data:application/pdf'))return toast('Esta ficha não tem PDF anexado.');
+  if(!data||!pdfTemArquivo(data))return toast('Esta ficha não tem PDF anexado.');
   const sel=_pdfvId('pdfViewer');
   if(!sel)return abrirPdfEmNovaAba(id); /* sem o leitor na página: comportamento antigo */
   _pdfv.orderId=id;_pdfv.data=data;_pdfv.nome=String(o.pdfName||(_nomeArquivo(o.name)+'.pdf')).replace(/[\\/:*?"<>|]+/g,'-').slice(0,120);
@@ -784,7 +853,7 @@ async function viewPdf(id){return abrirLeitorPdf(id)}
 async function abrirPdfEmNovaAba(id){
   const o=state.orders.find(x=>x.id===id);if(!o)return toast('Ficha não encontrada.');
   const data=await getPdfData(id);
-  if(!data||!String(data).startsWith('data:application/pdf'))return toast('Esta ficha não tem PDF anexado.');
+  if(!data||!pdfTemArquivo(data))return toast('Esta ficha não tem PDF anexado.');
   try{
     // Converte dataURL em Blob e abre em nova aba usando link <a target="_blank"> clicado programaticamente.
     // Esse método é o único que funciona 100% em PWA/webview: NUNCA substitui a página do app,
@@ -821,7 +890,7 @@ document.addEventListener('click',e=>{
     try{save();renderAll()}catch(error){toast('❌ O catálogo não foi salvo. Exporte um backup e confira o espaço disponível.');console.error(error)}
   }))
 }
-async function exportData(){const ex=JSON.parse(JSON.stringify(state));for(const o of ex.orders){const d=await getPdfData(o.id);if(d)o.pdfData=d}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({...ex,_version:'vooalto_catalog_v7'},null,2)],{type:'application/json'}));a.download='backup_catalogo_fichas_vooalto.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}async function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{
+async function exportData(){const ex=JSON.parse(JSON.stringify(state));for(const o of ex.orders){const d=await getPdfData(o.id);const b=d?await pdfParaDataURL(d):null;if(b)o.pdfData=b;else delete o.pdfData}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({...ex,_version:'vooalto_catalog_v7'},null,2)],{type:'application/json'}));a.download='backup_catalogo_fichas_vooalto.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}async function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async ev=>{
 try{
 const data=normalizeImportedData(JSON.parse(ev.target.result));
 const nNovos=data.orders.filter(o=>!state.orders.some(x=>x.id===o.id)).length;
@@ -991,7 +1060,7 @@ function initCatalogView(){
   }catch(e){}
 }
 
-load();loadTheme();initCatalogView();_pdfvBind();v7PedirPersistencia();v7UsoArmazenamento();migratePdfsToDB().then(renderAll);
+load();loadTheme();initCatalogView();_pdfvBind();v7PedirPersistencia();v7UsoArmazenamento();migratePdfsToDB().then(()=>{renderAll();limparPdfsOrfaos().then(n=>{if(n)toast('🧹 '+n+' arquivo(s) antigo(s) sem ficha foram liberados')})});
 window.addEventListener('DOMContentLoaded',initCatalogView);
 window.addEventListener('load',initCatalogView);
 /* Escuta o localStorage event (disparado SOMENTE quando o Criador salva em outra janela/aba, 0 CPU ocioso) */
