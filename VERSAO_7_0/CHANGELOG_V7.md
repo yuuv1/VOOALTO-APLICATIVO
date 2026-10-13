@@ -49,8 +49,12 @@ zero — daí o "piscar"). Agora a busca espera **150 ms** de pausa e faz **um**
   `python tests/_gerar_fixture_css_v7.py` para regravar os valores esperados.
 
 ### Peso
-Catalogação: **−8,5 KB** (−457 → 184 `!important` no arquivo todo). Somado às ondas 1 e 3 de
-limpeza (temas), o app está **~80 KB** mais leve que a versão publicada antes da V7.2.0.
+Catalogação: **−8,5 KB** (−457 → 184 `!important` no arquivo todo).
+
+**Total do app (medido nas 4 telas, comparando com a última versão publicada na `main`):**
+shell −5 KB · Catalogação **+1 KB** · Ficha −44 KB · Orçamento −12 KB ≈ **−60 KB** — e isso
+**já contando** o leitor de PDF interno e o resto da Onda 1, que somaram uns 6 KB à Catalogação.
+Ou seja: o app ficou ~60 KB mais leve mesmo ganhando a função nova de ver PDF dentro do sistema.
 
 > Detalhe preservado de propósito: na faixa ≤900 px o card tem `width:210px` mas
 > `flex-basis:190px`, como no original. Não é incoerência visível (na grade expandida o
