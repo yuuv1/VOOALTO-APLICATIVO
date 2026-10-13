@@ -1413,7 +1413,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       el.style.color='';el.style.background='';el.style.borderColor='';
       try{localStorage.setItem(ORC_SAVE_HORA_KEY,h)}catch(e){}
     }
-    function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento');if(el)el.classList.add('open')}
+    function abrirManualVooalto(){/* V7.6.1 — se o navegador bloquear a janela nova (prévia/PWA), o manual abre na mesma aba; dentro do sistema, na aba de cima */try{const w=window.open('../manual.html','_blank');if(w)return}catch(e){}try{if(window.top&&window.top!==window){window.top.location.href='../manual.html';return}}catch(e){}try{location.href='../manual.html'}catch(e){}}
+function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento');if(el)el.classList.add('open')}
     function fecharAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento');if(el)el.classList.remove('open')}
     function saveOrcautosaveNow(){
       clearTimeout(orcSaveTimer);orcSaveTimer=null;
@@ -2796,7 +2797,7 @@ function printProposal() {
     </ul>
     <div class="ajuda-orc-foot">
       <button class="orc-help-btn" onclick="fecharAjudaOrcamento()">Entendi</button>
-      <button class="orc-help-btn" onclick="window.open('../manual.html','_blank')" title="Abrir o manual completo do Vooalto V7">📖 Ver manual completo</button>
+      <button class="orc-help-btn" onclick="abrirManualVooalto()" title="Abrir o manual completo do Vooalto V7">📖 Ver manual completo</button>
     </div>
   </div>
 </div>

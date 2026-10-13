@@ -4440,6 +4440,7 @@ function v7MarcarSalvo(ok){
   try{localStorage.setItem(V7_SAVE_HORA_KEY,h)}catch(e){}
 }
 function abrirAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(el)el.classList.add('open')}
+function abrirManualVooalto(){/* V7.6.1 — se o navegador bloquear a janela nova (prévia/PWA), o manual abre na mesma aba; dentro do sistema, na aba de cima */try{const w=window.open('../manual.html','_blank');if(w)return}catch(e){}try{if(window.top&&window.top!==window){window.top.location.href='../manual.html';return}}catch(e){}try{location.href='../manual.html'}catch(e){}}
 function fecharAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(el)el.classList.remove('open')}
 function v7MostrarHoraSalva(){try{const h=localStorage.getItem(V7_SAVE_HORA_KEY);const el=document.getElementById('v7SaveChip');
   if(h&&el){el.textContent='💾 Salvo '+h;el.title='Última gravação automática às '+h+' (sessão anterior).'}}catch(e){}}
@@ -5241,7 +5242,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ try{ applyGlobalTheme(localSto
     </ul>
     <div class="v7-ajuda-foot">
       <button class="primary" onclick="fecharAjudaFicha()" title="Fechar a ajuda">Entendi</button>
-      <button onclick="window.open('../manual.html','_blank')" title="Abrir o manual completo do Vooalto V7">📖 Ver manual completo</button>
+      <button onclick="abrirManualVooalto()" title="Abrir o manual completo do Vooalto V7">📖 Ver manual completo</button>
     </div>
   </div>
 </div>

@@ -38,10 +38,31 @@ statik('GC: coletor existe e só apaga chave que não é de nenhuma ficha',
 statik('GC: trava de segurança — sem catálogo no localStorage não apaga nada',
   /async function limparPdfsOrfaos\(\)\{[\s\S]{0,400}?bruto=localStorage\.getItem\(KEY\)[\s\S]{0,120}?if\(!bruto\)return 0/.test(dash));
 statik('GC: roda uma vez no boot, depois de migrar os PDFs',
-  dash.includes('migratePdfsToDB().then(()=>{renderAll();limparPdfsOrfaos()'));
+  dash.includes('.then(()=>migratePdfsToDB())') && dash.includes('.then(()=>{renderAll();limparPdfsOrfaos()'));
+statik('V7.6.1: a tela é desenhada mesmo se a conversão dos PDFs falhar',
+  /migratePdfsToDB\(\)\)\.catch\(/.test(dash) && dash.includes('then(()=>{renderAll();'));
+statik('V7.6.1: upgrade bloqueado por outra aba não pendura o banco (abre sem versão)',
+  dash.includes('r.onblocked=()=>{') && /onblocked[\s\S]{0,400}?tentar\(null,false\)/.test(dash));
+statik('V7.6.1: registro problemático não aborta a migração inteira (update tratado)',
+  /cur\.update\(blob\)[\s\S]{0,160}?ur\.onerror=/.test(dash));
+statik('V7.6.1: coletor exige catálogo REALMENTE lido (não só chave existente)',
+  dash.includes('let _catalogoLido=false') && /if\(!bruto\)return 0;[\s\S]{0,60}?if\(!_catalogoLido\)return 0/.test(dash));
+statik('V7.6.1: manual abre mesmo com janela nova bloqueada (plano B na mesma aba)',
+  dash.includes('function abrirManualVooalto()') && dash.includes("location.href='../manual.html'"));
 
-async function abrir({ seed = {}, orders = [], semCatalogo = false } = {}) {
+async function abrir({ seed = {}, orders = [], semCatalogo = false, catalogoCru = false, bloqueiaUpgrade = false } = {}) {
   const { indexedDB, bancos } = criarIDBFalso(seed);
+  if (bloqueiaUpgrade) { // simula o navegador RECUSANDO subir o banco para a versão 3
+    const abrirOriginal = indexedDB.open.bind(indexedDB);
+    indexedDB.open = (nome, versao) => {
+      if (versao === 3) { // recusa sempre: é o pior caso (aba travando o banco)
+        const rq = { onupgradeneeded: null, onsuccess: null, onerror: null, onblocked: null, result: null, transaction: null };
+        setTimeout(() => { if (rq.onerror) rq.onerror({ target: rq }); }, 0);
+        return rq;
+      }
+      return abrirOriginal(nome, versao);
+    };
+  }
   const erros = [];
   const dom = new JSDOM(dash, {
     url: 'http://localhost:4700/principal_dashboard/', runScripts: 'dangerously', pretendToBeVisual: true,
@@ -57,6 +78,7 @@ async function abrir({ seed = {}, orders = [], semCatalogo = false } = {}) {
       };
       try {
         if (semCatalogo) w.localStorage.removeItem(KEY);
+        else if (catalogoCru) w.localStorage.setItem(KEY, '{isto-nao-e-um-catalogo');
         else w.localStorage.setItem(KEY, JSON.stringify({ thresholds: { low: 0, med: 15, high: 22 }, orders, history: [] }));
       } catch (e) { erros.push('localStorage: ' + e.message); }
     }
@@ -148,6 +170,38 @@ const blobDoBanco = (bancos, id, store = 'pdfs') => bancos.get('vooalto_pdf_stor
     const apagados = await w.limparPdfsOrfaos();
     t('sem catálogo no localStorage o coletor não roda', apagados === 0);
     t('o único PDF que existe continua no banco', pdfs().join(',') === 'sozinho', pdfs().join(','));
+    dom.window.close();
+  }
+
+  console.log('\n===== V7.6.1 — banco recusando o upgrade (o sistema não pode ficar sem os PDFs) =====');
+  {
+    const { dom, w, bancos } = await abrir({
+      seed: { vooalto_pdf_store_v2: { version: 2, stores: { pdfs: { o1: PDF_ANTIGO }, fichaData: { o1: '{}' } } } },
+      orders: [ficha('o1')], bloqueiaUpgrade: true
+    });
+    const versao = bancos.get('vooalto_pdf_store_v2').version;
+    t('o banco continua na versão 2 (upgrade recusado)', versao === 2, 'versão ' + versao);
+    const lido = await w.getPdfData('o1');
+    t('a leitura do PDF responde (não fica pendurada esperando o upgrade)',
+      typeof lido === 'string' && lido.startsWith('data:application/pdf'), typeof lido + '/' + (lido && lido.constructor && lido.constructor.name));
+    t('pdfBytes converte o base64 antigo quando precisa', (await w.pdfBytes(lido)).length === Buffer.byteLength(TEXTO_PDF, 'utf8'));
+    t('pdfTemArquivo segue aceitando o arquivo', w.pdfTemArquivo(lido) === true);
+    t('a tela foi desenhada mesmo com o upgrade recusado', typeof w.renderAll === 'function' && !!w.document.getElementById('columns'));
+    dom.window.close();
+  }
+
+  console.log('\n===== V7.6.1 — catálogo corrompido: o coletor NÃO pode apagar nada =====');
+  {
+    const { dom, w, bancos } = await abrir({
+      seed: { vooalto_pdf_store_v2: { version: 3, stores: { pdfs: { sozinho: PDF_ANTIGO }, fichaData: { sozinho: '{}' } } } },
+      catalogoCru: true
+    });
+    const pdfs = () => [...bancos.get('vooalto_pdf_store_v2').stores.get('pdfs').keys()];
+    const fichas = () => [...bancos.get('vooalto_pdf_store_v2').stores.get('fichaData').keys()];
+    const apagados = await w.limparPdfsOrfaos();
+    t('catálogo ilegível: o coletor não roda', apagados === 0);
+    t('o PDF continua no banco (não é tratado como órfão)', pdfs().join(',') === 'sozinho', pdfs().join(','));
+    t('a ficha técnica também continua', fichas().join(',') === 'sozinho', fichas().join(','));
     dom.window.close();
   }
 

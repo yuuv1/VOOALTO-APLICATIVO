@@ -1,6 +1,6 @@
-// Service Worker Vooalto V7 — gerado em 20261013-1315 (hash 0cdc206555c3)
+// Service Worker Vooalto V7 — gerado em 20261013-1352 (hash 05f3ab283fa5)
 const CACHE_PREFIX = 'vooalto-v7-';
-const CACHE = 'vooalto-v7-0cdc206555c3';
+const CACHE = 'vooalto-v7-05f3ab283fa5';
 const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","manual.html","principal_dashboard/index.html","criador_ficha_tecnica/index.html","criador_orcamento/index.html","assets/cropper.min.css","assets/cropper.min.js","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/pdf.min.js","assets/pdf.worker.min.js","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png"];
 
 self.addEventListener('install', event => {
