@@ -26,6 +26,7 @@ CORE_FILES = [
     'instalar_e_abrir_V7.bat',
     'limpar_cache.html',
     'zerar_dados.html',
+    'manual.html',
     'README.txt',
     'principal_dashboard/index.html',
     'criador_ficha_tecnica/index.html',

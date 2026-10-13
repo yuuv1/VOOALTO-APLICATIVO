@@ -1,6 +1,6 @@
 # VOOALTO V7 — Análise técnica e plano de melhorias
 
-> **Status:** análise concluída e **Ondas 1 e 2 entregues** (V7.2.0, V7.3.0 e V7.4.0)
+> **Status:** análise concluída e **Ondas 1, 2 e 3 entregues** (V7.2.0, V7.3.0, V7.4.0 e V7.5.0)
 > (`VERSAO_7_0/`, suíte de testes verde: JS 12 arquivos + 3 arquivos de teste Python/9 casos).
 > **Base analisada:** `VERSAO_7_0/ATUALIZACAO_V7` (a versão que está publicada na `main`).
 > **Foco principal do pedido:** conseguir **ver os PDFs dentro do próprio sistema**, sem quebrar nada.
@@ -304,17 +304,22 @@ de CSS a menos no app (e no ZIP da PWA).
 valores ficaram travados em `tests/test_css_expandido_v7.py` (+ fixture), e a memória/debounce em
 `tests/test_onda2_v7.js`. Visual público: **nenhuma mudança** (era o requisito da onda).
 
-### Onda 3 — Experiência do usuário (itens já mapeados no `SUGESTOES_UX_V7.md`, que continua válido)
+### Onda 3 — Experiência do usuário ✅ **concluída na V7.5.0** (itens do `SUGESTOES_UX_V7.md`)
 
-| # | Melhoria |
-|---|---|
-| 14 | Tour de boas-vindas na primeira abertura (A1 do documento de UX) |
-| 15 | Ajuda específica em cada módulo + tooltips que faltam |
-| 16 | Legenda fixa das prioridades (🟢 → 🟡 15d → 🔴 22d) |
-| 17 | Estados vazios que ensinam ("arraste um PDF para esta coluna") |
-| 18 | Lista de atalhos de teclado na Ajuda |
-| 19 | Renomear o cabeçalho interno para "Catalogação — fichas em produção" (confunde com "Ficha Técnica") |
-| 20 | Manual dentro do app (`manual.html`) em vez de só `README.txt` |
+| # | Melhoria | Status |
+|---|---|---|
+| 14 | Tour de boas-vindas na primeira abertura (A1 do documento de UX) | ✅ entregue |
+| 15 | Ajuda específica em cada módulo + tooltips que faltam | ✅ entregue (3 ajudas novas; 146 + 20 botões ganharam dica) |
+| 16 | Legenda fixa das prioridades (🟢 → 🟡 15d → 🔴 22d) | ✅ entregue (acompanha os dias configurados) |
+| 17 | Estados vazios que ensinam ("arraste um PDF para esta coluna") | ✅ entregue |
+| 18 | Lista de atalhos de teclado na Ajuda | ✅ entregue (só atalhos que existem no código) |
+| 19 | Renomear o cabeçalho interno para "Catalogação — fichas em produção" | ✅ entregue (h1 passou de "Fichas Técnicas" para "Catalogação", com o subtítulo "fichas em produção · prioridade, PDF e acompanhamento") |
+| 20 | Manual dentro do app (`manual.html`) em vez de só `README.txt` | ✅ entregue (`manual.html`, 23 KB, offline, no precache do SW) |
+
+**O que ficou de fora da Onda 3:** os itens **D2–D4** do documento de UX (revisão geral de
+textos, GIFs de 5–10 s no manual e ficha de referência para imprimir) — são acabamento e material
+de treino, não mudam a experiência de quem já usa. O item **D1** (typo "Abrendo" no instalador)
+já estava corrigido no `.bat` atual.
 
 ### Onda 4 — Estrutura de dados (fazer só se você quiser)
 

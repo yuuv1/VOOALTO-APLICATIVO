@@ -1,5 +1,18 @@
 # VOOALTO V7 — Sugestões de melhoria de experiência (sem alterar o sistema)
 
+> **Status (2026-10-13):** entregues na V7.5.0 — **A1** (tour de boas-vindas), **A3** (a tela e a
+> aba passaram a se chamar "Catalogação", com o subtítulo "fichas em produção"), **B1** (ajuda
+> dentro da Catalogação, da Ficha e do Orçamento), **B2** (146 botões da Ficha e 20 do Orçamento
+> ganharam dica — nenhum ficou sem), **B3** (legenda fixa das prioridades, com os dias
+> configurados), **B4** (estado vazio que ensina) e **C1** (selo `💾 Salvo HH:MM` na Ficha e no
+> Orçamento) e **C4** (listas de atalhos na ajuda, só com atalhos que existem no código). Também
+> entrou o **manual offline** (`manual.html`) que os botões de ajuda já apontavam.
+> **A2** (numerar as abas) ficou só onde não mexe no visual: o fluxo aparece numerado 1·2·3 no
+> tour e nas ajudas, e a barra de abas do topo segue igual (ordem atual preservada).
+> O **D1** já estava correto no instalador. Seguem em aberto **C2/C3** (confirmações mostrando o
+> que será afetado e destaque dos botões destrutivos — mexem em fluxo) e **D2–D4** (revisão geral
+> de textos, GIFs no manual e ficha de referência para imprimir).
+
 > **Princípio deste documento:** nenhuma sugestão abaixo mexe em lógica, dados, fluxo de trabalho
 > ou regra de negócio. Todas são **camadas de orientação e feedback** (textos, dicas, rótulos,
 > indicadores visuais) para tornar o dia a dia de quem opera o sistema mais fácil e didático.

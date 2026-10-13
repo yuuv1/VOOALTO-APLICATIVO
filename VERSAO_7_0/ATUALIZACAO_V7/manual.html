@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manual — Vooalto V7</title>
+<script>
+/* Aplica o tema salvo ANTES de desenhar (evita o flash branco no tema escuro). */
+(function(){
+  try{
+    var t=localStorage.getItem('vooalto_theme_v5')||'claro';
+    var dark=/escur|noite|dark|night|preto/i.test(t);
+    document.documentElement.dataset.theme=dark?'escuro':'';
+    document.documentElement.style.colorScheme=dark?'dark':'light';
+  }catch(e){}
+})();
+</script>
+<style>
+*{box-sizing:border-box}
+:root{
+  --blue:#1D4ED8;--blue2:#2563EB;--green:#059669;--yellow:#D97706;--red:#DC2626;
+  --bg:#F1F5F9;--card:#FFFFFF;--text:#0F172A;--muted:#526175;--bd:#DBE3EC;--soft:#F8FAFC;--code:#EEF2F7;
+  --sb:#0F1729;
+}
+[data-theme="escuro"]{
+  --bg:#0B0F17;--card:#141A26;--text:#E8EDF6;--muted:#9AA6BA;--bd:#262F40;--soft:#1A2130;--code:#1E2634;
+}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Poppins","Segoe UI",system-ui,-apple-system,Arial,sans-serif;font-size:15px;line-height:1.62}
+a{color:var(--blue2)}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px 60px}
+header.top{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--bd);box-shadow:0 2px 14px rgba(15,23,42,.05)}
+.top-in{max-width:1000px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top-in h1{font-size:17px;margin:0;font-weight:800;letter-spacing:.2px}
+.top-in .sub{font-size:11.5px;color:var(--muted);font-weight:700}
+.top-in .sp{flex:1}
+button.tb,a.tb{border:1px solid var(--bd);background:var(--soft);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block}
+button.tb:hover,a.tb:hover{border-color:var(--blue2)}
+button.tb.primary,a.tb.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.hero{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px 22px;margin:22px 0 14px}
+.hero h2{margin:0 0 6px;font-size:20px}
+.hero p{margin:6px 0 0;color:var(--muted)}
+.flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.flow div{flex:1 1 210px;background:var(--soft);border:1px solid var(--bd);border-radius:12px;padding:12px 14px}
+.flow b{display:block;font-size:13.5px}
+.flow span{font-size:12.5px;color:var(--muted)}
+nav.idx{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 16px;margin:14px 0 22px}
+nav.idx b{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+nav.idx a{display:inline-block;margin:6px 12px 0 0;font-weight:700;font-size:13px;text-decoration:none}
+section.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px 22px;margin:0 0 18px}
+section.card h2{margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px}
+section.card h3{margin:18px 0 6px;font-size:14.5px;color:var(--blue2);text-transform:uppercase;letter-spacing:.5px}
+section.card p{margin:8px 0}
+section.card ul,section.card ol{margin:8px 0 0 20px;padding:0}
+section.card li{margin:5px 0}
+kbd{background:var(--code);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;font-weight:900;font-size:12px;font-family:inherit}
+.tag{display:inline-block;background:var(--code);border:1px solid var(--bd);border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:800}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+.dg{background:var(--green)}.dy{background:var(--yellow)}.dr{background:var(--red)}
+.tip{background:var(--soft);border-left:4px solid var(--blue2);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.warn{border-left-color:var(--yellow)}
+.danger{border-left-color:var(--red)}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}
+th,td{border-bottom:1px solid var(--bd);padding:8px 6px;text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+details{background:var(--soft);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;margin:8px 0}
+details summary{cursor:pointer;font-weight:800;font-size:13.5px}
+details p,details ul{font-size:13.5px}
+footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0}
+.badge{background:var(--code);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:800;color:var(--muted)}
+@media (max-width:640px){body{font-size:14.5px}.top-in h1{font-size:15px}}
+@media print{
+  header.top,nav.idx,.hero .flow,.no-print{display:none!important}
+  body{background:#fff;color:#000;font-size:12px}
+  section.card,.hero{border:none;padding:0;margin:0 0 14px;break-inside:avoid}
+  a{color:#000;text-decoration:none}
+  details{break-inside:avoid}
+  details[open] summary{font-weight:800}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div>
+      <h1>📖 Manual — Vooalto V7</h1>
+      <div class="sub">Ficha Técnica · Catalogação · Orçamento — funciona offline</div>
+    </div>
+    <div class="sp"></div>
+    <button class="tb" id="btnTema" onclick="alternarTema()" title="Trocar entre tema claro e escuro">🎨 Tema</button>
+    <button class="tb" onclick="window.print()" title="Imprimir este manual ou salvar em PDF">🖨️ Imprimir / PDF</button>
+    <a class="tb primary" href="index.html" title="Voltar para o sistema Vooalto V7">← Voltar ao sistema</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h2>Bem-vindo ao Vooalto V7</h2>
+    <p>O sistema tem <b>três módulos</b> que trabalham em sequência: você cria a ficha, acompanha a produção e monta o orçamento — sem sair do mesmo programa.</p>
+    <div class="flow">
+      <div>
+        <b>1 · 📋 Ficha Técnica</b>
+        <span>Dados do cliente, modelos, valores, cores e imagens. Ao terminar, <b>Enviar para Catalogação</b>.</span>
+      </div>
+      <div>
+        <b>2 · 🏠 Catalogação</b>
+        <span>Todas as fichas em produção, por prioridade. Abra o PDF, marque <b>✔ Concluído</b> ou <b>✏️ Modificar Ficha</b>.</span>
+      </div>
+      <div>
+        <b>3 · 💰 Orçamento</b>
+        <span>Proposta com itens, valores e assinatura. Imprime só a folha A4 e exporta em PNG.</span>
+      </div>
+    </div>
+    <div class="tip">🔒 <b>Nada sai deste computador.</b> O Vooalto roda em um servidor local (<span class="tag">http://localhost:4700</span>) e seus dados ficam guardados <b>neste navegador</b>. Nenhuma ficha, PDF ou orçamento é enviado para a internet.</div>
+  </div>
+
+  <nav class="idx">
+    <b>Neste manual</b><br>
+    <a href="#ficha">1 · Ficha Técnica</a>
+    <a href="#catalogo">2 · Catalogação</a>
+    <a href="#dashboard">3 · Dashboard</a>
+    <a href="#orcamento">4 · Orçamento</a>
+    <a href="#salvar">5 · Salvamento e backup</a>
+    <a href="#tema">6 · Tema, impressão e PDF</a>
+    <a href="#atalhos">7 · Atalhos</a>
+    <a href="#duvidas">8 · Dúvidas frequentes</a>
+  </nav>
+
+  <!-- ══════════ FICHA ══════════ -->
+  <section class="card" id="ficha">
+    <h2>📋 1 · Ficha Técnica</h2>
+    <p>É o começo do fluxo. Ela abre <b>por cima da Catalogação</b> (numa janela sobre o sistema) pelo botão <b>📋 Ficha Técnica</b> no topo da tela ou pelo atalho <b>＋ Nova ficha</b> de uma coluna.</p>
+
+    <h3>Passo a passo</h3>
+    <ol>
+      <li><b>Número da ficha:</b> segue a numeração da empresa e <b>avança +1 sozinho</b> cada vez que uma ficha é enviada para a produção.</li>
+      <li><b>Dados do cliente:</b> use o <b>preenchimento rápido</b> para digitar telefone/nome e pular de campo em campo com <kbd>Enter</kbd>; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> aplica tudo de uma vez.</li>
+      <li><b>Modelos e valores:</b> clique em <b>+ Adicionar modelo na produção</b> (embaixo, na tabela de modelos) para incluir linhas; cada linha tem modelo, quantidade e valor.</li>
+      <li><b>Imagens:</b> em <b>🖼 Adicionar Imagem</b> escolha a foto do computador (o item entra na página). Clique nele para selecionar.</li>
+      <li><b>Com o item selecionado</b> aparece a barrinha de ferramentas: <b>⬆/⬇</b> (frente/trás), <b>⊕ Centro</b>, <b>⤢ Fill</b> (preenche a página), <b>🧩 Aninhar</b> (encaixa a imagem dentro da outra — escudo na camisa, por exemplo), <b>✂️</b> recortar, <b>🔒</b> travar e <b>🗑</b> apagar.</li>
+      <li><b>Texto, setas e formas:</b> <b>✍ Adicionar Texto</b>, <b>➜ Desenhar Seta</b>, <b>▭ Retângulo</b>, <b>● Círculo</b>. No texto dá para mudar tamanho, negrito, itálico e cores.</li>
+      <li><b>Cores:</b> o <b>conta-gotas (🔬 Gotas)</b> pega uma cor pronta da própria imagem; <b>🎨 Adicionar Cor</b> cria cores suas na paleta.</li>
+      <li><b>Camadas:</b> o <b>☰ Painel de Camadas</b> mostra o que está na frente e atrás — útil quando um item “some” atrás do outro.</li>
+      <li><b>Páginas:</b> <b>＋ Adicionar Página</b> (com o layout padrão) ou <b>🗋 página em branco</b>. Arraste as miniaturas na faixa inferior para mudar a ordem e use <b>✕ Remover</b> para apagar uma página.</li>
+      <li><b>Salvar:</b> a ficha é <b>salva sozinha</b> enquanto você edita — o selo <b>💾 Salvo HH:MM</b> mostra a hora da última gravação. Para versões separadas use <b>💾 Salvar rascunho</b>; para uma cópia em arquivo, <b>📤 Exportar backup (.json)</b>.</li>
+      <li><b>Enviar:</b> o botão <b>📋 Enviar para Catalogação</b> coloca a ficha na produção e fecha esta janela. Se fechar antes com <b>✕ Fechar</b> (ou <kbd>Esc</kbd>), o que já foi preenchido continua salvo.</li>
+    </ol>
+
+    <h3>Exportar em PDF ou imagem</h3>
+    <ul>
+      <li><b>⬇ Baixar (escolher páginas):</b> monta um PDF só com as páginas que você marcar.</li>
+      <li><b>🖨 Exportar PDF:</b> usa a impressão do navegador (também pode usar <kbd>Ctrl</kbd>+<kbd>P</kbd> e escolher “Salvar como PDF”).</li>
+      <li><b>📸 Exportar PNG:</b> baixa a página atual como imagem — bom para mandar no WhatsApp.</li>
+    </ul>
+    <div class="tip">💡 Se aparecer <b>“⚠️ não salvou”</b> no selo, o navegador ficou sem espaço para guardar. Exporte o <b>backup (.json)</b> e libere espaço (veja o item <a href="#salvar">5 · Salvamento e backup</a>).</div>
+  </section>
+
+  <!-- ══════════ CATALOGAÇÃO ══════════ -->
+  <section class="card" id="catalogo">
+    <h2>🏠 2 · Catalogação</h2>
+    <p>É a tela inicial do sistema: mostra <b>todas as fichas em produção</b>, organizadas por prioridade.</p>
+
+    <h3>As colunas e a prioridade</h3>
+    <ul>
+      <li><span class="dot dg"></span><b>Baixa</b> &nbsp;→&nbsp; <span class="dot dy"></span><b>Média</b> &nbsp;→&nbsp; <span class="dot dr"></span><b>Alta</b> — a prioridade <b>sobe sozinha</b> conforme os dias passam. A legenda fica acima das colunas, sempre mostrando os dias configurados.</li>
+      <li>Na barra de ferramentas dá para ajustar <b>a partir de quantos dias</b> a ficha vira <b>Média</b> e <b>Alta</b> e clicar em <b>Reclassificar</b> para aplicar em todas agora.</li>
+      <li>Os <b>chips de prioridade</b> filtram a tela (Todas · 🚨 Alta · ⚠️ Média …). Clique em <b>Todas</b> para voltar a ver tudo.</li>
+      <li>O botão <b>⛶</b> expande uma coluna e mostra a <b>página 1</b> de cada ficha, em miniatura.</li>
+    </ul>
+
+    <h3>O PDF de cada ficha</h3>
+    <ul>
+      <li>Arraste um PDF para dentro de uma coluna para anexá-lo à ficha, ou use <b>＋ Nova ficha</b> para criar/anexar.</li>
+      <li><b>📄 Visualizar PDF</b> abre o leitor <b>dentro do próprio sistema</b>: <kbd>←</kbd> <kbd>→</kbd> trocam de página, tem zoom, girar, imprimir, baixar e <b>⧉ Nova aba</b> se preferir.</li>
+      <li>Os PDFs ficam guardados <b>neste navegador</b> (não sobem para a internet).</li>
+    </ul>
+
+    <h3>Ações de cada ficha</h3>
+    <ul>
+      <li><b>✔ Concluído:</b> tira a ficha da produção (dá para voltar atrás).</li>
+      <li><b>✏️ Modificar Ficha:</b> reabre o editor e <b>atualiza a mesma ficha</b> — não cria uma segunda.</li>
+      <li><b>Excluir:</b> pede o nome da ficha para confirmar e apaga também o PDF anexado.</li>
+    </ul>
+
+    <h3>Backup e espaço</h3>
+    <ul>
+      <li><b>Exportar backup (.json)</b> baixa um arquivo com tudo; <b>Importar</b> pergunta se você quer <b>mesclar</b> (juntar) ou <b>substituir</b> (trocar tudo).</li>
+      <li>Os chips do topo mostram <b>quantas fichas</b>, <b>quantos MB</b> e a <b>hora da última gravação</b> (💾 Salvo HH:MM).</li>
+    </ul>
+  </section>
+
+  <!-- ══════════ DASHBOARD ══════════ -->
+  <section class="card" id="dashboard">
+    <h2>📊 3 · Dashboard</h2>
+    <p>A segunda aba mostra as <b>métricas da produção</b> — útil para ver o mês inteiro de relance:</p>
+    <ul>
+      <li><b>Fichas por semana</b> e <b>divisão por prioridade</b> (gráfico de pizza com legenda).</li>
+      <li><b>Idade dos pedidos</b> — quantos dias as fichas estão esperando.</li>
+      <li><b>Mais urgentes</b> — as que estão há mais tempo na fila.</li>
+      <li><b>Clientes frequentes</b> — quem mais manda ficha, agrupado pelo telefone.</li>
+    </ul>
+    <div class="tip">💡 O Dashboard é só leitura: nada lá altera ou apaga suas fichas.</div>
+  </section>
+
+  <!-- ══════════ ORÇAMENTO ══════════ -->
+  <section class="card" id="orcamento">
+    <h2>💰 4 · Orçamento</h2>
+    <p>Monta a <b>proposta de venda</b> em uma folha A4, com os itens, o total e a sua assinatura.</p>
+
+    <h3>Itens e valores</h3>
+    <ul>
+      <li><b>➕ Adicionar Item (ou Enter):</b> cria uma linha. Preencha descrição, quantidade e valor; o <b>total geral</b> é calculado sozinho.</li>
+      <li>A barra de formatação deixa o texto <b>N</b>egrito, <i>I</i>tálico, <u>U</u>sublinhado, com outras cores e tamanhos (<b>A+ / A−</b>); <b>🧹 Limpar</b> tira a formatação.</li>
+      <li><b>🖍️ Amarelo · Vermelho · Azul:</b> destaca um trecho para o cliente reparar. <b>❌</b> remove o destaque.</li>
+      <li>Clique em <b>⚙️</b> para abrir as configurações e <b>Itens</b> para ver os itens e valores da página.</li>
+    </ul>
+
+    <h3>Páginas</h3>
+    <ul>
+      <li><b>➕ Add Página</b> cria uma página em branco, <b>⧉ Duplicar</b> copia a página atual (com os mesmos itens, para ajustar) e <b>❌ Rem. Página</b> apaga a última.</li>
+    </ul>
+
+    <h3>Assinatura</h3>
+    <ul>
+      <li><b>✍️ Desenhar Assinatura:</b> assine com o mouse ou o dedo e clique em <b>💾 Aplicar</b>.</li>
+      <li><b>📤 Upload Imagem:</b> use uma foto/arquivo PNG ou JPG da assinatura.</li>
+      <li><b>🔄 Restaurar Padrão original:</b> volta para a assinatura padrão do sistema.</li>
+    </ul>
+
+    <h3>Salvar e enviar ao cliente</h3>
+    <ul>
+      <li><b>💾 Rascunho</b> guarda este orçamento na lista <b>📂 Rascunhos</b> (dentro do sistema, para reaproveitar depois).</li>
+      <li><b>📤 Salvar .json</b> baixa uma cópia em arquivo e <b>📂 Abrir .json</b> traz de volta.</li>
+      <li><b>📄 Imprimir / Salvar PDF Vetorial:</b> imprime <b>somente a folha A4 da proposta</b> (o resto da tela não sai). Escolha “Salvar como PDF” na janela de impressão para gerar o arquivo.</li>
+      <li><b>📸 Exportar Imagem (PNG):</b> baixa a proposta como imagem, pronta para mandar no WhatsApp.</li>
+      <li>Enquanto você edita, o orçamento é <b>salvo sozinho</b> neste navegador (chip <b>💾 Salvo HH:MM</b>).</li>
+    </ul>
+  </section>
+
+  <!-- ══════════ SALVAMENTO ══════════ -->
+  <section class="card" id="salvar">
+    <h2>💾 5 · Salvamento e backup</h2>
+    <h3>Onde ficam os dados</h3>
+    <p>Fichas, PDFs, rascunhos e orçamentos ficam <b>no seu navegador</b> (armazenamento local do próprio computador). A pasta de instalação guarda só o programa.</p>
+    <div class="tip warn">⚠️ <b>Por isso a regra de ouro:</b> de vez em quando exporte o backup <b>.json</b> da Catalogação. Se o navegador for limpo (ou o espaço encher), os dados vão junto com ele.</div>
+
+    <h3>Os sinais de “salvou”</h3>
+    <table>
+      <tr><th>Selo / chip</th><th>O que significa</th></tr>
+      <tr><td><b>💾 Salvo HH:MM</b></td><td>Última gravação automática (aparece na Catalogação, na Ficha e no Orçamento).</td></tr>
+      <tr><td><b>⚠️ não salvou</b></td><td>O navegador recusou a gravação (quase sempre por falta de espaço): exporte o backup e libere espaço.</td></tr>
+      <tr><td><b>Chip de armazenamento</b></td><td>Quantas fichas e quantos MB estão guardados neste navegador.</td></tr>
+    </table>
+
+    <h3>Tipos de cópia</h3>
+    <ul>
+      <li><b>Rascunho</b> (Catalogação/Ficha/Orçamento): versões nomeadas, guardadas dentro do sistema.</li>
+      <li><b>Exportar backup (.json)</b>: um arquivo único com tudo — o jeito mais seguro de guardar.</li>
+      <li><b>Pasta padrão</b> (Ficha Técnica): em navegadores compatíveis (Edge/Chrome) você pode escolher uma pasta do computador para salvar os arquivos direto nela.</li>
+    </ul>
+  </section>
+
+  <!-- ══════════ TEMA/IMPRESSÃO ══════════ -->
+  <section class="card" id="tema">
+    <h2>🎨 6 · Tema, impressão e PDF</h2>
+    <ul>
+      <li><b>Tema:</b> o seletor no topo do sistema alterna entre <b>Claro</b> e <b>Escuro</b> e vale para todos os módulos. A folha A4 continua <b>branca</b> nos dois — é assim que ela será impressa.</li>
+      <li><b>Imprimir:</b> cada tela imprime só o que interessa — a folha do orçamento, a ficha técnica ou a lista de fichas. O resto da interface (menus, botões, barras) não sai no papel.</li>
+      <li><b>Salvar em PDF:</b> use <kbd>Ctrl</kbd>+<kbd>P</kbd> (ou o botão de imprimir) e escolha <b>Destino: Salvar como PDF</b>.</li>
+      <li><b>Ler um PDF:</b> na Catalogação, <b>📄 Visualizar PDF</b> abre o documento dentro do sistema, sem depender de outro programa.</li>
+    </ul>
+  </section>
+
+  <!-- ══════════ ATALHOS ══════════ -->
+  <section class="card" id="atalhos">
+    <h2>⌨️ 7 · Atalhos do teclado</h2>
+    <table>
+      <tr><th>Tecla</th><th>O que faz</th><th>Onde</th></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Fecha a ferramenta/seleção, a janela da ficha, o leitor de PDF e as janelas de ajuda</td><td>Todo o sistema</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Desfazer</td><td>Ficha Técnica</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Y</kbd> ou <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Refazer</td><td>Ficha Técnica</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>Apaga o item selecionado na página</td><td>Ficha Técnica</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Aplica tudo no preenchimento rápido</td><td>Ficha Técnica</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>Pula para o próximo campo · adiciona item no orçamento · confirma a página digitada no leitor</td><td>Ficha · Orçamento · Leitor de PDF</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> ou <kbd>PageUp</kbd>/<kbd>PageDown</kbd></td><td>Trocar de página</td><td>Leitor de PDF</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>Imprimir / salvar em PDF</td><td>Todo o sistema</td></tr>
+    </table>
+  </section>
+
+  <!-- ══════════ DÚVIDAS ══════════ -->
+  <section class="card" id="duvidas">
+    <h2>❓ 8 · Dúvidas frequentes</h2>
+
+    <details><summary>Fechei o sistema sem salvar. Perdi o que fiz?</summary>
+      <p>Não. O Vooalto salva sozinho enquanto você trabalha (o selo <b>💾 Salvo HH:MM</b> comprova). Ao abrir de novo, a ficha e o orçamento voltam de onde pararam.</p>
+    </details>
+
+    <details><summary>Abri no outro computador e as fichas não estão lá.</summary>
+      <p>Os dados ficam no navegador de <b>cada</b> computador — não existe conta nem nuvem. Para levar de um para o outro, use <b>Exportar backup (.json)</b> em um e <b>Importar</b> no outro.</p>
+    </details>
+
+    <details><summary>A tela ficou estranha, faltando botão ou mostrando versão antiga.</summary>
+      <p>Abra <a href="limpar_cache.html">limpar_cache.html</a> (está na pasta do sistema), clique para limpar o cache e recarregue. <b>Isso não apaga suas fichas.</b></p>
+    </details>
+
+    <details><summary>Quero começar do zero (apagar tudo).</summary>
+      <p>Use <a href="zerar_dados.html">zerar_dados.html</a>. <b>Atenção:</b> ele apaga fichas, PDFs, rascunhos e orçamentos deste navegador. Exporte o backup <b>.json</b> antes.</p>
+    </details>
+
+    <details><summary>O PDF não abre quando clico em “Visualizar PDF”.</summary>
+      <p>O leitor interno precisa do arquivo salvo. Se a ficha foi importada sem o PDF, reanexe o arquivo arrastando-o para a coluna. Você também pode abrir em <b>⧉ Nova aba</b>, dentro do próprio leitor.</p>
+    </details>
+
+    <details><summary>O papel saiu com a tela inteira em vez de só a proposta.</summary>
+      <p>Use os botões de impressão de <b>dentro</b> do módulo (Ficha e Orçamento), que escondem o resto da interface automaticamente. Se imprimir pelo menu do navegador, confira se está no módulo certo.</p>
+    </details>
+
+    <details><summary>Apareceu “⚠️ não salvou” ou o sistema ficou lento.</summary>
+      <p>O armazenamento do navegador encheu. Exporte o backup <b>.json</b>, apague fichas antigas (e os PDFs anexados) e use <a href="limpar_cache.html">limpar_cache.html</a>.</p>
+    </details>
+
+    <details><summary>Consigo usar no celular ou tablet?</summary>
+      <p>Sim, o Vooalto é um PWA (aplicativo web): instalado no computador ele abre como programa de janela própria. Para usar em outro aparelho, ele precisa do arquivo/mesma pasta servida — o caminho mais simples segue sendo o backup <b>.json</b>.</p>
+    </details>
+  </section>
+
+  <footer class="ft">
+    <span class="badge">Vooalto V7 · versão 7.5.0</span><br>
+    Manual offline — abre dentro do próprio sistema, sem internet.
+  </footer>
+</div>
+
+<script>
+function alternarTema(){
+  var t=(document.documentElement.dataset.theme==='escuro')?'claro':'escuro';
+  document.documentElement.dataset.theme=(t==='escuro')?'escuro':'';
+  document.documentElement.style.colorScheme=(t==='escuro')?'dark':'light';
+  try{localStorage.setItem('vooalto_theme_v5',t)}catch(e){}
+  var b=document.getElementById('btnTema');
+  if(b)b.title='Tema atual: '+t+' — clique para trocar';
+}
+window.addEventListener('DOMContentLoaded',function(){
+  var b=document.getElementById('btnTema');
+  if(b)b.title='Tema atual: '+(document.documentElement.dataset.theme==='escuro'?'escuro':'claro')+' — clique para trocar';
+});
+</script>
+</body>
+</html>

@@ -1,5 +1,82 @@
 # VOOALTO V7 — Registro de alterações
 
+## V7.5.0 — Onda 3: experiência do usuário (2026-10-13)
+
+Terceira onda, agora de **experiência** (`SUGESTOES_UX_V7.md`). As ferramentas continuam
+**exatamente** as mesmas: nada mudou em cálculo, fluxo, formato de dados ou visual principal.
+O que entrou foi orientação — quem abre o sistema pela primeira vez já sabe por onde começar,
+e quem tem dúvida no meio do trabalho encontra a resposta **dentro** do próprio módulo.
+
+### A1 — Tour de boas-vindas (novo)
+Janela com os **3 passos do fluxo** (Ficha → Catalogação → Orçamento) na primeira abertura, com
+a opção **“não mostrar novamente”** e a hora da última gravação. Dá para reabrir quando quiser
+pelo **? Ajuda** do topo. Enquanto a primeira ficha não é aberta, um chip **“comece aqui”**
+aponta o caminho; depois ele desaparece sozinho.
+
+### B1 — Ajuda específica em cada módulo (novo em 3 módulos)
+* **Catalogação** — `? Ajuda` no cabeçalho: colunas e prioridade, PDF interno, ações da ficha,
+  backup e atalhos.
+* **Ficha Técnica** — `❓ Ajuda da ficha` na barra lateral: ferramentas, páginas, salvar,
+  enviar/exportar e atalhos.
+* **Orçamento** — `? Ajuda` no cabeçalho do editor: itens/total/destaques, páginas, rascunho ×
+  autosave × `.json`, assinatura, impressão e atalhos.
+
+Todas fecham com <kbd>Esc</kbd>, com o botão **Entendi** e um atalho para o **manual completo**.
+
+### B2 — Dicas (tooltips) onde faltavam
+O recon encontrou **146 botões sem dica na Ficha Técnica** e **20 no Orçamento** — a maioria
+ícones (✂️, 🔒, 🗑, ⬆/⬇, ⛶) que só quem já usava o sistema entendia. Agora **0 sem dica** nos
+dois módulos, com textos que dizem a consequência e não só o nome:
+“Duplicar a página atual (mesmos itens, para ajustar)”, “Travar/destravar a posição”,
+“Espessura da seta: 4 px”, “Pular as imagens que não foram encontradas”, “Baixar em PDF
+(escolher as páginas)”.
+
+### C1 — Selo visível de “salvo automaticamente” (novo)
+O medo de perder o trabalho era o ponto mais citado: o autosave existia, mas era invisível.
+* **Orçamento:** chip **`💾 Salvo HH:MM`** no topo do editor (hora guardada em
+  `vooalto_orcamento_autosave_hora`).
+* **Ficha Técnica:** selo **`💾 Salvo HH:MM`** na lateral, ao lado dos rascunhos
+  (`vooalto_v7_ficha_ativa_hora`), que também mostra a hora da sessão anterior ao abrir.
+
+Se a gravação falhar (navegador sem espaço), o selo passa a **`⚠️ não salvou`** com a instrução
+de exportar backup — antes a falha só aparecia depois, num aviso passageiro.
+
+### B3 + B4 + C4 — Legenda, estado vazio e atalhos
+* **Legenda fixa das prioridades** acima das colunas: 🟢 Baixa → 🟡 Média a partir de N dias →
+  🔴 Alta a partir de N dias, sempre com os dias configurados de verdade (acompanha o
+  “Reclassificar”).
+* **Estado vazio que ensina:** coluna sem fichas passa a explicar o que fazer
+  (“arraste um PDF para esta coluna”).
+* **Lista de atalhos reais** em cada ajuda — conferida no código: <kbd>Esc</kbd>,
+  <kbd>Ctrl</kbd>+<kbd>Z</kbd>, <kbd>Ctrl</kbd>+<kbd>Y</kbd>/<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>,
+  <kbd>Delete</kbd>, <kbd>Ctrl</kbd>+<kbd>Enter</kbd>, <kbd>Enter</kbd>,
+  <kbd>←</kbd>/<kbd>→</kbd>/<kbd>PageUp</kbd>/<kbd>PageDown</kbd> e <kbd>Ctrl</kbd>+<kbd>P</kbd>.
+  (Atalhos que não existem no código não foram documentados.)
+
+### A4 — Manual completo offline (`manual.html`, novo arquivo)
+Os botões de ajuda apontavam para um manual que **ainda não existia** (link quebrado). Agora
+existe: **23 KB, um arquivo só, funciona offline**, com passo a passo dos 3 módulos + Dashboard,
+salvamento e backup, tema/impressão/PDF, tabela de atalhos e **8 dúvidas frequentes** (cada uma
+com o caminho da solução, incluindo `limpar_cache.html` e `zerar_dados.html`). Segue o tema
+**Claro/Escuro** já salvo e tem CSS de impressão próprio. Entrou no pacote e no *precache* do
+service worker (abre sem internet).
+
+### Verificação
+* Suíte completa verde: **JS 12 arquivos** (`npm test`) e **Python** (`npm run test:python`),
+  incluindo os testes das ondas anteriores (leitor de PDF, temas, desempenho).
+* Simulações jsdom conferiram: ajuda abre/fecha por clique e por <kbd>Esc</kbd>, selo de autosave
+  mostra `💾 Salvo HH:MM`, **nenhum erro de JS** e **0 botões sem dica** nos módulos.
+* Peso: shell **25 156 → 31 589 B** · Catalogação **86 114 → 92 760 B** ·
+  Ficha Técnica **400 040 → 411 161 B** · Orçamento **121 000 → 127 681 B** ·
+  **+ 23 073 B** do manual novo. Nenhuma linha de cálculo ou de salvamento foi alterada — as
+  mudanças são texto, markup aditivo, CSS novo e funções de interface.
+
+### Observação
+O item **D1** do documento de UX (typo “Abrendo” → “Abrindo” no instalador) **já estava
+corrigido** no `instalar_e_abrir_V7.bat` atual — não havia o que alterar. Os acabamentos
+**D2–D4** (revisão geral de textos, GIFs no manual e ficha de referência para imprimir) ficam
+para o próximo passo, junto com a **Onda 4** (item 21: PDF como `Blob` no IndexedDB).
+
 ## V7.4.0 — Onda 2: desempenho e estrutura (2026-10-13)
 
 Segunda onda da análise técnica (`ANALISE_TECNICA_V7.md`), focada em **peso, memória e
