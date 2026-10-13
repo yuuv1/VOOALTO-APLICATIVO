@@ -1,5 +1,43 @@
 # VOOALTO V7 — Registro de alterações
 
+## V7.3.0 — Só dois temas: Claro e Escuro (2026-10-13)
+
+Pedido: **retirar os temas e deixar só claro e escuro, bem adaptados**. Antes existiam
+**24 paletas** (Neo Glass, Dark, Oxford, Butter, Givry, Neon, Tech, Coral…) espalhadas
+em 24 blocos de CSS no shell, 23 na Catalogação, **23 × 11 na Ficha Técnica** e 23 no
+Orçamento — muitos deles com regras conflitantes.
+
+### O que mudou
+
+1. **Um seletor, dois temas.** O seletor no topo do sistema agora tem só
+   **☀️ Claro** (padrão) e **🌙 Escuro**. O seletor duplicado que existia dentro da
+   Catalogação foi removido (menos uma fonte de confusão).
+2. **Conversão automática.** Quem já usava um tema antigo cai no mais parecido na
+   primeira abertura (Oxford/Neon/Tech… → **Escuro**; Butter/Pastel/Cherry…
+   → **Claro**), inclusive o anti-flash, que agora já pinta a cor certa antes do
+   primeiro quadro. O valor salvo é normalizado.
+3. **Bugs de tema corrigidos de verdade:**
+   - Catalogação: no escuro o **cabeçalho ficava claro** (o `--header-bg` não era
+     redefinido) e o fundo mantinha um brilho branco — agora ambos acompanham o tema.
+   - Ficha Técnica: os temas escureciam textos e células **dentro da folha A4**
+     (o documento que vai para a impressão). Agora o escuro vale só para o painel e
+     para as barras de ferramentas que a própria impressão já esconde — **a folha
+     continua sempre branca**.
+   - Orçamento: os 23 blocos de tema não mudavam nada na interface (que é escura por
+     natureza) e podiam desalinhar o shell — removidos.
+4. **Menos código para manter:** ~**72 KB a menos** no app (Ficha −44 KB,
+   Orçamento −12 KB, Catalogação −11 KB, shell −5 KB), menos regras conflitantes e
+   menos `!important` brigando. Isso também ajuda a diagnosticar o CSS do modo
+   coluna expandida na próxima onda.
+5. **Documentação:** `README.txt` e a Ajuda do sistema continuam válidos (o tema
+   continua mudando o sistema inteiro); `tests/test_temas_v7.js` entra no `npm test`,
+   garantindo que nenhuma paleta antiga volte e que a folha A4 siga branca.
+
+### O que **não** mudou
+
+Ficha Técnica, Orçamento, Catalogação, servidor local, PWA, portas, chaves de dados e o
+IndexedDB seguem iguais. Nenhum dado é apagado: só a aparência (e a lista de temas).
+
 ## V7.2.0 — PDF dentro do sistema + polimento (2026-10-13)
 
 Pedido: **ver os PDFs pelo próprio sistema**, sem quebrar nada. Nenhuma ferramenta

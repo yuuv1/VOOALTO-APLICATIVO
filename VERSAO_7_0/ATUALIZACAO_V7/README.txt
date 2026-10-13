@@ -84,6 +84,13 @@ MÓDULOS
 • Orçamento: salva automaticamente neste navegador. Salve um .json ou rascunho
   antes de iniciar outro orçamento se quiser manter uma cópia independente.
 
+TEMA
+----
+O seletor no topo do sistema tem dois temas: Claro (padrão) e Escuro. A escolha
+vale para o sistema inteiro e fica salva neste navegador. Se você usava um dos
+temas antigos (Neon, Tech, Butter...), o V7.3 abre no mais próximo e passa a usar
+só claro/escuro a partir de então.
+
 ARQUIVOS PRINCIPAIS
 -------------------
 index.html                    Aplicativo principal
