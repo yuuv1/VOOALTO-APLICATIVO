@@ -33,7 +33,11 @@ function jsdomStubs(w, perr) {
   statik('dash: store fichaData em IndexedDB', dashSrc.includes("FICHA_STORE='fichaData'") && dashSrc.includes('async function storeFichaData'));
   statik('dash: save() não propaga exceção', /function save\(\)\{try\{/.test(dashSrc));
   statik('dash: save() tira fichaData do localStorage', dashSrc.includes('if(c.fichaInIDB&&c.fichaData)delete c.fichaData'));
-  statik('dash: preview usa drawImage (não cloneNode)', dashSrc.includes('dctx.drawImage(thumb,0,0)'));
+  /* V7.4 (A4): o card expandido mostra o proprio canvas do cache — nada de
+     cloneNode (que sairia em branco) nem copia de pixels para um canvas novo. */
+  statik('dash: preview usa o canvas do cache (sem cloneNode/cópia)',
+    dashSrc.includes('box.appendChild(thumb);box.dataset.loaded=\'1\'') && !dashSrc.includes('dctx.drawImage(thumb,0,0)'));
+  statik('dash: miniatura em escala 1.5 com teto de 8 (V7.4)', dashSrc.includes('getViewport({scale:1.5})') && dashSrc.includes('_capMap(_thumbCacheHQ,8)'));
   statik('dash: PDFs expandidos com concorrência limitada', dashSrc.includes('Math.min(2,boxes.length)'));
   statik('dash: caches com teto (LRU)', /_capMap\(_pdfDocCache,8,true[,)]/.test(dashSrc) && dashSrc.includes('_capMap(_pdfDataCache,20)'));
   statik('dash: PDF aberto no leitor não é descartado do cache', dashSrc.includes('_capMap(_pdfDocCache,8,true,_pdfvProtegidos)'));
