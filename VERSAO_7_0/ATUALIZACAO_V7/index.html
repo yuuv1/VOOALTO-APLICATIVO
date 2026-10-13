@@ -40,6 +40,23 @@ html.theme-animating body,html.theme-animating .app-shell,html.theme-animating .
 :root{--top-grad:linear-gradient(135deg,rgba(255,255,255,.78),rgba(223,226,255,.72));--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
 /* -- V7.3 - dois temas: Claro (padrao, sem atributo) e Escuro --
    As antigas 24 paletas foram removidas; o valor salvo e convertido no boot. */
+.start-chip{margin-left:6px;background:#DC2626;color:#fff;font-size:9.5px;font-weight:900;border-radius:999px;padding:2px 7px;letter-spacing:.2px}
+.tour-modal{position:fixed;inset:0;background:rgba(5,5,10,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px}
+.tour-modal.open{display:flex}
+.tour-card{background:#fff;color:#111827;border-radius:20px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:24px 26px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.tour-card h3{margin:0;font-size:22px}
+.tour-card .sub{color:#4b5563;font-size:13px;font-weight:600;margin:6px 0 14px}
+.tour-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.tour-step{border:1px solid #e5e7eb;border-radius:14px;padding:14px;background:#fafbff}
+.tour-step .num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#050505;color:#fff;font-weight:900;font-size:12px;align-items:center;justify-content:center;margin-bottom:8px}
+.tour-step b{font-size:14px}
+.tour-step p{font-size:12.5px;line-height:1.6;color:#374151;margin:6px 0 0}
+.tour-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px;border-top:1px solid #eef0f3;padding-top:14px}
+.tour-btn{border:0;border-radius:12px;padding:11px 16px;font-weight:900;font-size:13px;cursor:pointer}
+.tour-btn.primary{background:#050505;color:#fff}
+.tour-btn.ghost{background:#f3f4f6;color:#111827}
+.tour-remember{font-size:12px;color:#4b5563;font-weight:700;display:flex;gap:6px;align-items:center;margin-left:auto}
+@media print{.tour-modal{display:none!important}}
 html[data-theme="escuro"],body[data-theme="escuro"]{--top-grad:linear-gradient(135deg,#171b24,#050505);--bar-text:#fff;--shell-bg:#0b0f17;--top-solid:#0b0f17}
 /* controles do topo no escuro: fundo escuro com texto claro (antes ficavam
    claros com texto claro, difícil de ler na barra escura) */
@@ -93,7 +110,7 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
 .help-item .ico{font-size:22px;flex:0 0 30px}
 .help-item b{font-size:13px}
 .help-item p{font-size:12px;color:#4b5563;margin-top:3px;line-height:1.45}
-.help-x{float:right;border:0;background:#f3f4f6;border-radius:999px;padding:7px 13px;font-weight:800;cursor:pointer;font-size:12px}
+.help-keys{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}.help-keys td{padding:5px 8px 5px 0;vertical-align:top;border-top:1px solid #eef0f3}.help-keys td:first-child{white-space:nowrap;color:#111827}.help-x{float:right;border:0;background:#f3f4f6;border-radius:999px;padding:7px 13px;font-weight:800;cursor:pointer;font-size:12px}
 @media(max-width:860px){
   .topbar{gap:8px}
   .brand-logo{height:30px}
@@ -111,7 +128,7 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
     </div>
     <nav class="switcher">
       <button class="switch-btn active" id="btn-principal" onclick="showProject('principal')" title="Fichas em produção, prioridades e PDFs">🏠 Catalogação<span class="badge" id="badgeAlta">0</span></button>
-      <button class="switch-btn" id="btn-ficha" onclick="toggleFichaPopup()" title="Abre a Ficha Técnica em janela sobre o sistema (Esc fecha)">📋 Ficha Técnica</button>
+      <button class="switch-btn" id="btn-ficha" onclick="toggleFichaPopup()" title="Abre a Ficha Técnica em janela sobre o sistema (Esc fecha)">📋 Ficha Técnica<span class="start-chip" id="startChip" style="display:none" title="Comece por aqui: a ficha é o começo do fluxo">comece aqui</span></button>
       <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
     </nav>
     <div class="controls">
@@ -129,6 +146,35 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
     <iframe class="project-frame active" id="frame-principal" src="principal_dashboard/index.html"></iframe>
     <iframe class="project-frame" id="frame-orcamento" src="criador_orcamento/index.html"></iframe>
   </main>
+</div>
+
+<div class="tour-modal" id="tourV7">
+  <div class="tour-card">
+    <h3>👋 Bem-vindo ao Vooalto V7</h3>
+    <div class="sub">Três módulos, um fluxo só: monte a ficha, acompanhe a produção e faça o orçamento.</div>
+    <div class="tour-steps">
+      <div class="tour-step">
+        <div class="num">1</div>
+        <b>📋 Ficha Técnica</b>
+        <p>Dados do cliente, modelos, cores e imagens. Ao terminar, clique em <b>Enviar para Catalogação</b>. O número da ficha avança sozinho.</p>
+      </div>
+      <div class="tour-step">
+        <div class="num">2</div>
+        <b>🏠 Catalogação</b>
+        <p>As fichas em produção, por prioridade (a cor sobe sozinha com os dias). Abra o PDF, marque <b>✔ Concluído</b> ou <b>✏️ Modificar Ficha</b>.</p>
+      </div>
+      <div class="tour-step">
+        <div class="num">3</div>
+        <b>💰 Orçamento</b>
+        <p>Monte a proposta com itens e assinatura. Salva automaticamente neste navegador — use <b>Salvar .json</b> para guardar uma cópia.</p>
+      </div>
+    </div>
+    <div class="tour-foot">
+      <button class="tour-btn primary" onclick="fecharTour()">Começar a usar</button>
+      <button class="tour-btn ghost" onclick="abrirManual()">📖 Ver manual completo</button>
+      <label class="tour-remember"><input type="checkbox" id="tourNaoMostrar" checked> não mostrar novamente</label>
+    </div>
+  </div>
 </div>
 
 <div class="help-modal" id="helpModal">
@@ -155,6 +201,23 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
     <div class="help-item"><div class="ico">💾</div><div>
       <b>Backup</b>
       <p>Em <b>Catalogação</b> use <b>Exportar backup</b> / <b>Importar</b>. O import pergunta se quer mesclar ou substituir — nada é apagado sem sua confirmação.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">⌨️</div><div>
+      <b>Atalhos de teclado</b>
+      <table class="help-keys">
+        <tr><td><b>Esc</b></td><td>fecha a janela da Ficha Técnica, o leitor de PDF, as janelas e esta ajuda</td></tr>
+        <tr><td><b>Enter</b></td><td>no Orçamento, pula para o próximo campo do item; no leitor de PDF, confirma a página digitada</td></tr>
+        <tr><td><b>← →</b></td><td>no leitor de PDF, trocam de página (PageUp/PageDown também)</td></tr>
+        <tr><td><b>Ctrl + Z</b> / <b>Ctrl + Y</b></td><td>na Ficha Técnica, desfazer e refazer (Ctrl+Shift+Z também refaz)</td></tr>
+        <tr><td><b>Delete</b></td><td>na Ficha Técnica, apaga a imagem/texto/forma selecionada</td></tr>
+        <tr><td><b>Ctrl + P</b></td><td>imprimir ou salvar em PDF (do navegador)</td></tr>
+      </table>
+    </div></div>
+    <div class="help-item"><div class="ico">📖</div><div>
+      <b>Precisa de mais detalhe?</b>
+      <p style="margin-bottom:8px">O manual completo abre dentro do sistema, com o passo a passo dos três módulos.</p>
+      <button class="tour-btn ghost" onclick="abrirManual()" title="Abrir o manual completo do Vooalto V7">📖 Abrir o manual</button>
+      <button class="tour-btn ghost" onclick="reabrirTour()" title="Mostrar de novo o tour de boas-vindas">👋 Ver o tour de novo</button>
     </div></div>
   </div>
 </div>
@@ -303,6 +366,8 @@ function updateBadge(n){
   n=parseInt(n)||0;
   b.textContent=n;
   b.classList.toggle('show',n>0);
+  /* V7.5: a dica do selo diz o que ele significa */
+  b.title=n>0?(n===1?'1 ficha em prioridade ALTA — clique para abrir a Catalogação':n+' fichas em prioridade ALTA — clique para abrir a Catalogação'):'Nenhuma ficha em prioridade Alta agora';
 }
 /* Sem polling: a catalogação envia os counts quando renderiza, evita setInterval de 3s */
 function vooaltoCountsFrom(e){try{return e&&e.data&&e.data.type==='vooalto-counts';}catch(_){return false;}}
@@ -354,7 +419,7 @@ function closeFichaPopup(silent){
   }
   if(!silent)toast('Ficha Técnica fechada — o preenchido continua salvo nela');
 }
-function toggleFichaPopup(){fichaPopupOpen?closeFichaPopup():openFichaPopup()}
+function toggleFichaPopup(){fichaPopupOpen?closeFichaPopup():(v7MarcarFichaAberta(),openFichaPopup())}
 document.getElementById('fichaPopup').addEventListener('click',e=>{if(e.target.id==='fichaPopup')closeFichaPopup()});
 function reloadActive(){
   const key=fichaPopupOpen?'ficha':activeProject;
@@ -419,6 +484,30 @@ async function installPWA(){
   }
 }
 
+/* ══ V7.5 (Onda 3) — tour de boas-vindas, chip "comece aqui" e manual ══ */
+const TOUR_KEY='vooalto_tour_v7', FICHA_ABERTA_KEY='vooalto_ficha_aberta';
+function abrirManual(){window.open('manual.html','_blank')}
+function mostrarTour(){const el=document.getElementById('tourV7');if(el)el.classList.add('open')}
+function fecharTour(){
+  const el=document.getElementById('tourV7');if(el)el.classList.remove('open');
+  const cb=document.getElementById('tourNaoMostrar');
+  if(!cb||cb.checked){try{localStorage.setItem(TOUR_KEY,'visto')}catch(e){}}
+}
+function reabrirTour(){closeHelp();const cb=document.getElementById('tourNaoMostrar');if(cb)cb.checked=true;mostrarTour()}
+function v7PromoverComeco(){
+  const chip=document.getElementById('startChip');if(!chip)return;
+  let visto=false;try{visto=localStorage.getItem(FICHA_ABERTA_KEY)==='1'}catch(e){}
+  chip.style.display=visto?'none':'';
+}
+function v7MarcarFichaAberta(){
+  try{localStorage.setItem(FICHA_ABERTA_KEY,'1')}catch(e){}
+  const chip=document.getElementById('startChip');if(chip)chip.style.display='none';
+}
+function v7TourDecidir(){
+  v7PromoverComeco();
+  let visto=false;try{visto=localStorage.getItem(TOUR_KEY)==='visto'}catch(e){}
+  if(!visto)setTimeout(mostrarTour,600);   // deixa a tela carregar antes de aparecer
+}
 function initVooalto(){
   // Aplica tema SALVO SEM animação no boot (evita flash de cor padrão→tema)
   try{setShellTheme(localStorage.getItem('vooalto_theme_v5')||'claro',{animate:false})}catch(e){}
@@ -446,6 +535,7 @@ function initVooalto(){
   setTimeout(ensureCatalog,1500);
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initVooalto)}else{initVooalto()}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',v7TourDecidir)}else{v7TourDecidir()}
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').then(reg=>{

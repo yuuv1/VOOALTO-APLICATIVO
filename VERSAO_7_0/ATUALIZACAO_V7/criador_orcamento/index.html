@@ -1077,11 +1077,15 @@
       <div class="editor-header">
         <h1>🛠️ Painel do Orçamento</h1>
         <p>Crie orçamentos multi-páginas e edite clicando na própria folha.</p>
+        <div class="orc-toprow">
+          <span class="orc-save-chip" id="orcSaveChip" title="Este orçamento é salvo automaticamente neste navegador — aqui aparece a hora da última gravação">💾 —</span>
+          <button class="orc-help-btn" onclick="abrirAjudaOrcamento()" title="Ajuda do Orçamento: itens, páginas, rascunhos, assinatura, impressão e atalhos">? Ajuda</button>
+        </div>
       </div>
 
       <!-- Tab Buttons -->
       <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('itens')">Itens</button>
+        <button title="Ver os itens e valores desta página" class="tab-btn active" onclick="switchTab('itens')">Itens</button>
         <button class="tab-btn" style="flex:0 0 56px;font-size:18px;" onclick="openBudgetSettings()" title="Configurações gerais, termos e assinatura">⚙️</button>
       </div>
 
@@ -1156,9 +1160,9 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
           <div class="form-group">
             <label>Gerenciamento de Páginas</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 18px;">
-              <button class="btn btn-primary" onclick="addDocumentPage()" style="padding:9px 6px;font-size:11.5px;">➕ Add Página</button>
-              <button class="btn btn-secondary" onclick="duplicateDocumentPage()" style="padding:9px 6px;font-size:11.5px;">⧉ Duplicar</button>
-              <button class="btn btn-danger-outline" onclick="removeLastDocumentPage()" style="padding:9px 6px;font-size:11.5px;">❌ Rem. Página</button>
+              <button title="Adicionar uma página em branco ao orçamento" class="btn btn-primary" onclick="addDocumentPage()" style="padding:9px 6px;font-size:11.5px;">➕ Add Página</button>
+              <button title="Duplicar a página atual (mesmos itens, para ajustar)" class="btn btn-secondary" onclick="duplicateDocumentPage()" style="padding:9px 6px;font-size:11.5px;">⧉ Duplicar</button>
+              <button title="Remover a última página" class="btn btn-danger-outline" onclick="removeLastDocumentPage()" style="padding:9px 6px;font-size:11.5px;">❌ Rem. Página</button>
             </div>
           </div>
           <div class="form-group">
@@ -1168,10 +1172,10 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
           <div class="form-group">
             <label>Assinatura Digital</label>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button class="btn btn-secondary" onclick="openSignaturePad()">✍️ Desenhar Assinatura</button>
-              <button class="btn btn-secondary" onclick="triggerSignatureUpload()">📤 Upload Imagem</button>
+              <button title="Desenhar a assinatura com o mouse/dedo" class="btn btn-secondary" onclick="openSignaturePad()">✍️ Desenhar Assinatura</button>
+              <button title="Enviar uma imagem de assinatura (PNG/JPG)" class="btn btn-secondary" onclick="triggerSignatureUpload()">📤 Upload Imagem</button>
               <input type="file" id="signature-upload-input" accept="image/*" style="display: none;" onchange="handleSignatureUpload(event)">
-              <button class="btn btn-danger-outline" onclick="restoreDefaultSignature()">🔄 Restaurar Padrão original</button>
+              <button title="Voltar para a assinatura padrão original" class="btn btn-danger-outline" onclick="restoreDefaultSignature()">🔄 Restaurar Padrão original</button>
             </div>
           </div>
           <div class="form-group" style="margin-top: 25px;">
@@ -1184,8 +1188,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
       <!-- Footer Buttons Panel (Only native high-fidelity printing is left) -->
       <div class="editor-actions">
-        <button class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
-        <button class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
+        <button title="Baixar a proposta como imagem (PNG)" class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
+        <button title="Imprimir ou salvar em PDF (sai só a folha A4 da proposta)" class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
         <div style="display:flex;gap:6px;width:100%">
           <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (campos de volta ao padrão)">🗋 Novo</button>
           <button class="btn btn-secondary" style="flex:1.2;padding:7px 6px;font-size:11px;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
@@ -1314,7 +1318,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     <div class="modal-content settings-modal-content" style="width:740px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
         <h3 style="color:white;font-size:16px;">⚙️ Configurações do Orçamento</h3>
-        <button class="btn btn-danger-outline" style="width:auto;padding:8px 12px;" onclick="closeBudgetSettings()">Fechar</button>
+        <button title="Fechar as configurações" class="btn btn-danger-outline" style="width:auto;padding:8px 12px;" onclick="closeBudgetSettings()">Fechar</button>
       </div>
       <div id="budget-settings-content"></div>
     </div>
@@ -1325,15 +1329,15 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     <div class="modal-content settings-modal-content" style="width:580px;background:#0F172A;border:1px solid #334155;border-radius:12px;padding:20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1E293B;padding-bottom:12px;margin-bottom:14px;">
         <h3 style="margin:0;color:#F8FAFC;font-size:16px;display:flex;align-items:center;gap:8px;">📁 Rascunhos de Orçamentos</h3>
-        <button class="btn btn-danger-outline" style="width:auto;padding:6px 12px;font-size:12px;" onclick="fecharOrcDraftsModal()">Fechar</button>
+        <button title="Fechar a lista de rascunhos" class="btn btn-danger-outline" style="width:auto;padding:6px 12px;font-size:12px;" onclick="fecharOrcDraftsModal()">Fechar</button>
       </div>
       <p style="font-size:12px;color:#94A3B8;margin-top:0;margin-bottom:12px;">Orçamentos guardados no seu navegador. Você pode abrir qualquer rascunho salvo para continuar a edição.</p>
       <div id="orcDraftsList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;">
         <!-- Draft cards rendered here -->
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid #1E293B;padding-top:12px;">
-        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="salvarRascunhoOrcamento()">💾 Salvar Atual Como Rascunho</button>
-        <button class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="fecharOrcDraftsModal()">Fechar</button>
+        <button title="Guardar este orçamento como rascunho (lista dentro do sistema)" class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="salvarRascunhoOrcamento()">💾 Salvar Atual Como Rascunho</button>
+        <button title="Fechar a lista de rascunhos" class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="fecharOrcDraftsModal()">Fechar</button>
       </div>
     </div>
   </div>
@@ -1349,9 +1353,9 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       </div>
 
       <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="clearSignaturePad()">🗑️ Limpar</button>
-        <button class="btn btn-primary" onclick="saveSignaturePad()">💾 Aplicar</button>
-        <button class="btn btn-danger-outline" style="border: none;" onclick="closeSignaturePad()">❌ Cancelar</button>
+        <button title="Limpar o desenho da assinatura" class="btn btn-secondary" onclick="clearSignaturePad()">🗑️ Limpar</button>
+        <button title="Usar esta assinatura" class="btn btn-primary" onclick="saveSignaturePad()">💾 Aplicar</button>
+        <button title="Cancelar" class="btn btn-danger-outline" style="border: none;" onclick="closeSignaturePad()">❌ Cancelar</button>
       </div>
     </div>
   </div>
@@ -1397,11 +1401,27 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
     }
 
     let orcSaveTimer = null;
+    /* V7.5 (Onda 3) — selo "💾 Salvo HH:MM": mostra que o salvamento automático aconteceu. */
+    const ORC_SAVE_HORA_KEY='vooalto_orcamento_autosave_hora';
+    function orcHoraAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+    function orcMarcarSalvo(ok){
+      const el=document.getElementById('orcSaveChip');if(!el)return;
+      if(ok===false){el.textContent='⚠️ não salvou';el.title='O navegador recusou a gravação (espaço cheio?). Baixe o .json para não perder.';el.style.color='#b91c1c';el.style.background='#fef2f2';el.style.borderColor='#fecaca';return}
+      const h=orcHoraAgora();
+      el.textContent='💾 Salvo '+h;
+      el.title='Última gravação automática às '+h+' (hoje). O orçamento fica salvo neste navegador.';
+      el.style.color='';el.style.background='';el.style.borderColor='';
+      try{localStorage.setItem(ORC_SAVE_HORA_KEY,h)}catch(e){}
+    }
+    function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento');if(el)el.classList.add('open')}
+    function fecharAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento');if(el)el.classList.remove('open')}
     function saveOrcautosaveNow(){
       clearTimeout(orcSaveTimer);orcSaveTimer=null;
-      try{localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(orcCollectState()));return true}
-      catch(e){console.warn('Autosave do orçamento falhou',e);return false}
+      try{localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(orcCollectState()));orcMarcarSalvo(true);return true}
+      catch(e){console.warn('Autosave do orçamento falhou',e);orcMarcarSalvo(false);return false}
     }
+    /* ao abrir, mostra a hora do último salvamento guardado */
+    try{const h=localStorage.getItem(ORC_SAVE_HORA_KEY);if(h){const el=document.getElementById('orcSaveChip');if(el){el.textContent='💾 Salvo '+h;el.title='Última gravação automática às '+h+' (sessão anterior).'}}}catch(e){}
     function scheduleOrcautosave(){
       clearTimeout(orcSaveTimer);
       orcSaveTimer=setTimeout(saveOrcautosaveNow,700);
@@ -1624,6 +1644,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       /* Enter avança entre campos do formulário geral */
       const tg = document.getElementById('tab-geral');
       if (tg) tg.addEventListener('keydown', e => {
+        if (e.key === 'Escape') fecharAjudaOrcamento();
         if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
         e.preventDefault();
         const inputs = Array.from(tg.querySelectorAll('input'));
@@ -1954,7 +1975,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
             </div>
           </div>
           <div style="display:flex; gap:6px; flex-shrink:0;">
-            <button type="button" class="btn btn-primary" style="padding:6px 11px; font-size:11px; width:auto;" onclick="orcCarregarRascunho('${d.id}')">Abrir</button>
+            <button title="Abrir este rascunho" type="button" class="btn btn-primary" style="padding:6px 11px; font-size:11px; width:auto;" onclick="orcCarregarRascunho('${d.id}')">Abrir</button>
             <button type="button" class="btn btn-danger-outline" style="padding:6px 9px; font-size:11px; width:auto; color:#EF4444; border-color:rgba(239,68,68,0.4);" onclick="orcExcluirRascunho('${d.id}')" title="Excluir rascunho">🗑</button>
           </div>
         </div>
@@ -2663,7 +2684,7 @@ function printProposal() {
     const drag=document.createElement('div');drag.className='v5-drag-tool';drag.textContent='☰ mover';tb.prepend(drag);makeDraggable(tb,drag);
     const font=document.createElement('select');font.className='v5-tool-select';font.innerHTML='<option value="Arial,sans-serif">Arial</option><option value="Poppins,Arial,sans-serif">Poppins</option><option value="Montserrat,Arial,sans-serif">Montserrat</option><option value="Georgia,serif">Georgia</option><option value="Arial Black,Arial,sans-serif">Arial Black</option><option value="Impact,sans-serif">Impact</option>';font.onchange=()=>v5OrcFont(font.value);tb.appendChild(font);
     const size=document.createElement('input');size.className='v5-tool-input';size.value='14';size.type='number';size.min='6';size.max='80';size.onchange=()=>applyFontSize(size.value);tb.appendChild(size);
-    const grp=document.createElement('div');grp.className='v5-highlight-group';grp.innerHTML='<button class="v5-hl yellow" onclick="v5OrcHighlight(\'#FFE066\')">Amarelo</button><button class="v5-hl red" onclick="v5OrcHighlight(\'#FF6B6B\')">Vermelho</button><button class="v5-hl blue" onclick="v5OrcHighlight(\'#74C0FC\')">Azul</button>';tb.appendChild(grp);
+    const grp=document.createElement('div');grp.className='v5-highlight-group';grp.innerHTML='<button title="Marcar o trecho selecionado com esta cor" class="v5-hl yellow" onclick="v5OrcHighlight(\'#FFE066\')">Amarelo</button><button title="Marcar o trecho selecionado com esta cor" class="v5-hl red" onclick="v5OrcHighlight(\'#FF6B6B\')">Vermelho</button><button title="Marcar o trecho selecionado com esta cor" class="v5-hl blue" onclick="v5OrcHighlight(\'#74C0FC\')">Azul</button>';tb.appendChild(grp);
     restoreToolbarPos(tb);
   }
   function restoreToolbarPos(tb){try{const p=JSON.parse(localStorage.getItem(TOOL_POS_KEY)||'null');if(p){tb.style.left=p.left+'px';tb.style.top=p.top+'px';tb.style.right='auto';tb.style.maxWidth='calc(100vw - 20px)';}}catch(e){}}
@@ -2721,8 +2742,64 @@ function printProposal() {
 @media(max-width:900px){.formatting-toolbar,.formatting-toolbar.v5-movable{right:8px!important;top:72px!important;width:104px!important;max-width:104px!important;}}
 @media print{.editor-sidebar,.editor-actions,.editor-header,.editor-content,.tabs-nav,.modal,.formatting-toolbar,.formatting-toolbar.v5-movable,.v5-drag-tool,.v5-tool-select,.v5-tool-input,.v5-highlight-group,.v5-hl,#budget-settings-modal,#signature-modal{display:none!important}}
 
+
+.orc-toprow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.orc-save-chip{font-size:11px;font-weight:800;color:#0f766e;background:#ecfdf5;border:1px solid #99f6e4;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.orc-help-btn{border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:800;cursor:pointer}
+.orc-help-btn:hover{background:#eef2f7}
+.ajuda-orc-bg{position:fixed;inset:0;background:rgba(5,8,15,.55);display:none;align-items:center;justify-content:center;z-index:4000;padding:16px}
+.ajuda-orc-bg.open{display:flex}
+.ajuda-orc-card{background:#fff;color:#111827;border-radius:18px;max-width:780px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.ajuda-orc-card h3{margin:0 0 4px;font-size:19px}
+.ajuda-orc-card .ajuda-sub{color:#4b5563;font-size:12.5px;font-weight:700;margin-bottom:6px}
+.ajuda-orc-card h4{margin:15px 0 4px;font-size:12px;color:#1d4ed8;letter-spacing:.5px;text-transform:uppercase}
+.ajuda-orc-card p,.ajuda-orc-card li{font-size:12.5px;line-height:1.65}
+.ajuda-orc-card ul{margin:4px 0 0 18px;padding:0}
+.ajuda-orc-card kbd{background:#eef2f7;border:1px solid #d1d5db;border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px}
+.ajuda-orc-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+@media print{.ajuda-orc-bg,.orc-save-chip,.orc-help-btn{display:none!important}}
 </style>
 
+
+<div class="ajuda-orc-bg" id="ajudaOrcamento" onclick="if(event.target===this)fecharAjudaOrcamento()">
+  <div class="ajuda-orc-card">
+    <h3>💰 Ajuda — Orçamento</h3>
+    <div class="ajuda-sub">Monte a proposta clicando na própria folha. Tudo é salvo automaticamente neste navegador.</div>
+    <h4>Itens e valores</h4>
+    <ul>
+      <li>Preencha os campos do item na lista à esquerda (descrição, quantidade, valor). <kbd>Enter</kbd> pula para o próximo campo.</li>
+      <li>O <b>Total geral</b> (acima da lista) soma os itens de <b>todas</b> as páginas.</li>
+      <li>Para marcar um trecho, selecione o texto e use <b>Amarelo / Vermelho / Azul</b>.</li>
+    </ul>
+    <h4>Páginas</h4>
+    <ul>
+      <li><b>➕ Add Página</b> cria uma página nova · <b>⧉ Duplicar</b> copia a atual (ótimo para propostas parecidas) · <b>❌ Rem. Página</b> tira a última.</li>
+    </ul>
+    <h4>Rascunho e arquivo</h4>
+    <ul>
+      <li><b>💾 Salvar Atual Como Rascunho</b> guarda uma cópia <b>dentro do sistema</b> (lista de rascunhos) — use para comparar versões.</li>
+      <li>O que você está editando é salvo <b>sozinho</b> a cada alteração (veja o selo <b>💾 Salvo HH:MM</b> no topo).</li>
+      <li>Para levar o orçamento para outro computador, use o <b>.json</b> — é o jeito de o arquivo sair deste navegador.</li>
+    </ul>
+    <h4>Assinatura</h4>
+    <ul>
+      <li><b>✍️ Desenhar</b> (mouse/dedo), <b>📤 Upload Imagem</b> (PNG/JPG) ou <b>🔄 Restaurar Padrão</b> para voltar à assinatura original.</li>
+    </ul>
+    <h4>Impressão</h4>
+    <ul>
+      <li><b>📄 Imprimir / Salvar PDF</b>: saem <b>só as folhas A4</b> da proposta (painel e botões não imprimem).</li>
+      <li><b>📸 Exportar Imagem (PNG)</b> gera uma imagem da proposta para enviar no WhatsApp.</li>
+    </ul>
+    <h4>Atalhos</h4>
+    <ul>
+      <li><kbd>Enter</kbd> próximo campo do item · <kbd>Ctrl</kbd>+<kbd>P</kbd> imprimir/salvar PDF · <kbd>Esc</kbd> fecha as janelas.</li>
+    </ul>
+    <div class="ajuda-orc-foot">
+      <button class="orc-help-btn" onclick="fecharAjudaOrcamento()">Entendi</button>
+      <button class="orc-help-btn" onclick="window.open('../manual.html','_blank')" title="Abrir o manual completo do Vooalto V7">📖 Ver manual completo</button>
+    </div>
+  </div>
+</div>
 <div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.92);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;font-family:'Poppins',sans-serif"></div>
 <script>
 /* ══ Tema global V7 (shell -> módulo) ══ */

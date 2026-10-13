@@ -811,31 +811,31 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <span>Página 1</span>
 </div>
 <div class="sb-page-actions">
-<button class="sb-btn" onclick="$('canvasInput').click()">
+<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput').click()">
 <div class="sb-btn-icon">🖼</div>
 <span class="sb-btn-label">Adicionar Imagem</span>
 </button>
-<button class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
+<button title="Adicionar uma caixa de texto" class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
 <div class="sb-btn-icon">✍</div>
 <span class="sb-btn-label">Adicionar Texto</span>
 </button>
-<button class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
+<button title="Desenhar seta/anotação" class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
 <div class="sb-btn-icon">➜</div>
 <span class="sb-btn-label">Desenhar Seta</span>
 </button>
-<button class="sb-btn" onclick="criarRetangulo()">
+<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetangulo()">
 <div class="sb-btn-icon">▭</div>
 <span class="sb-btn-label">Retângulo</span>
 </button>
-<button class="sb-btn" onclick="criarCirculo()">
+<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculo()">
 <div class="sb-btn-icon">●</div>
 <span class="sb-btn-label">Círculo</span>
 </button>
-<button class="sb-btn" onclick="toggleLayersPanel()">
+<button title="Painel de camadas: o que está na frente e nos fundos" class="sb-btn" onclick="toggleLayersPanel()">
 <div class="sb-btn-icon">☰</div>
 <span class="sb-btn-label">Painel de Camadas</span>
 </button>
-<button class="sb-btn" onclick="adicionarCor()">
+<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCor()">
 <div class="sb-btn-icon">🎨</div>
 <span class="sb-btn-label">Adicionar Cor</span>
 </button>
@@ -846,12 +846,12 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div id="extraPagesNav"></div>
 
 <!-- Botão adicionar página normal -->
-<button class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
+<button title="Adicionar uma página (com o layout padrão)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
 <span class="sb-add-page-icon">＋</span>
 <span>Adicionar Página</span>
 </button>
 <!-- Botão adicionar página branca -->
-<button class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')" style="border-color:rgba(255,255,255,.35);margin-top:2px;">
+<button title="Adicionar uma página em branco" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')" style="border-color:rgba(255,255,255,.35);margin-top:2px;">
 <span class="sb-add-page-icon">🗋</span>
 <span>Adicionar Página Branca</span>
 </button>
@@ -869,7 +869,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 </div>
 <div style="padding:2px 14px 0;font-size:6.5px;color:rgba(255,255,255,.25);font-style:italic;margin-bottom:6px">Ao finalizar uma ficha, o número incrementa +1 automaticamente</div>
 
-<button class="sb-btn" onclick="escolherPastaPadrao()">
+<button title="Escolher a pasta padrão para salvar os arquivos" class="sb-btn" onclick="escolherPastaPadrao()">
 <div class="sb-btn-icon">📁</div>
 <span class="sb-btn-label" id="lblPastaPadrao">Escolher Pasta Padrão</span>
 </button>
@@ -885,17 +885,22 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="sb-section" style="margin-top:4px;">
 <div class="sb-section-title">Salvar &amp; Recuperar</div>
 <div class="sb-section-desc">Guarde o rascunho agora e continue depois</div>
-<button class="sb-btn" onclick="v4SalvarRascunho()" style="margin-top:2px;">
+<div class="v7-save-chip" id="v7SaveChip" title="A ficha é salva sozinha neste navegador — aqui aparece a hora da última gravação">💾 —</div>
+<button class="sb-btn" onclick="abrirAjudaFicha()" title="Ajuda da Ficha Técnica: ferramentas, páginas, salvar, enviar e atalhos">
+<div class="sb-btn-icon">❓</div>
+<span class="sb-btn-label">Ajuda da ficha</span>
+</button>
+<button title="Salvar um rascunho desta ficha para continuar depois" class="sb-btn" onclick="v4SalvarRascunho()" style="margin-top:2px;">
 <div class="sb-btn-icon">💾</div>
 <span class="sb-btn-label">Salvar rascunho</span>
 </button>
 <div id="v4DraftList" style="max-height:160px;overflow-y:auto;padding:4px 6px 2px;"></div>
 <div class="sb-divider"></div>
-<button class="sb-btn" onclick="exportarFichaJSON()">
+<button title="Baixar esta ficha em .json (backup)" class="sb-btn" onclick="exportarFichaJSON()">
 <div class="sb-btn-icon">📤</div>
 <span class="sb-btn-label">Exportar backup (.json)</span>
 </button>
-<button class="sb-btn" onclick="$('fichaJsonInput').click()">
+<button title="Abrir uma ficha salva em .json (backup)" class="sb-btn" onclick="$('fichaJsonInput').click()">
 <div class="sb-btn-icon">📂</div>
 <span class="sb-btn-label">Abrir backup (.json)</span>
 </button>
@@ -911,23 +916,23 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <button id="btnUndo" onclick="undo()" disabled title="Desfazer Ctrl+Z">↩ Desfazer</button>
 <button id="btnRedo" onclick="redo()" disabled title="Refazer Ctrl+Y">↪ Refazer</button>
 </div>
-<button class="sb-footer-btn sb-catalog" onclick="enviarParaCatalogacao()">
+<button title="Enviar para a Catalogação (fecha esta janela)" class="sb-footer-btn sb-catalog" onclick="enviarParaCatalogacao()">
 <span class="qa-ico-big">📋</span>
 <span style="font-size:13px;font-weight:900">Enviar para Catalogação</span>
 <span class="ficha-readiness" id="fichaReadiness">verificando…</span>
 </button>
 <div class="sb-export-row" style="margin-bottom:6px">
-<button class="sb-footer-btn sb-pdf" onclick="abrirV7Download()" style="width:100%;background:linear-gradient(135deg,#2563EB,#1D4ED8);box-shadow:0 4px 16px rgba(37,99,235,.35);">
+<button title="Baixar em PDF (escolher as páginas)" class="sb-footer-btn sb-pdf" onclick="abrirV7Download()" style="width:100%;background:linear-gradient(135deg,#2563EB,#1D4ED8);box-shadow:0 4px 16px rgba(37,99,235,.35);">
 <span style="font-size:14px">⬇</span>
 <span>Baixar (escolher páginas)</span>
 </button>
 </div>
 <div class="sb-export-row">
-<button class="sb-footer-btn sb-pdf sb-export-half" onclick="exportarPDF()">
+<button title="Imprimir ou salvar em PDF pelo navegador (Ctrl+P)" class="sb-footer-btn sb-pdf sb-export-half" onclick="exportarPDF()">
 <span style="font-size:14px">🖨</span>
 <span>Exportar PDF</span>
 </button>
-<button class="sb-footer-btn sb-png sb-export-half" onclick="exportarPNG()">
+<button title="Baixar a página atual como imagem (PNG)" class="sb-footer-btn sb-png sb-export-half" onclick="exportarPNG()">
 <span style="font-size:14px">📸</span>
 <span>Exportar PNG</span>
 </button>
@@ -950,10 +955,10 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="rb-sep"></div>
 <span class="rb-label">Marcador:</span>
 <input type="color" class="rb-color" id="rbHL" value="#FFE066" onchange="rfHL()">
-<button class="rb-btn" onclick="rfHL()">🖊</button>
-<button class="rb-btn" onclick="rfHLClear()" style="color:var(--vm)">✕</button>
+<button title="Destacar o trecho selecionado" class="rb-btn" onclick="rfHL()">🖊</button>
+<button title="Tirar o destaque do trecho" class="rb-btn" onclick="rfHLClear()" style="color:var(--vm)">✕</button>
 <div class="rb-sep"></div>
-<button class="rb-btn" onclick="rfClear()" style="color:var(--txl)">Limpar</button>
+<button title="Limpar a formatação do texto" class="rb-btn" onclick="rfClear()" style="color:var(--txl)">Limpar</button>
 <span class="rb-hint">· Selecione o texto para formatar</span>
 </div>
 
@@ -1154,10 +1159,10 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <div class="cores-hdr">
 <div class="cores-hdr-dot"></div>
 <input class="cores-hdr-txt" id="coresTitulo" type="text" value="CORES DO TECIDO">
-<button class="ed-btn" id="edBtn" onclick="toggleEyedropper()">🔬 Gotas</button>
+<button title="Conta-gotas: pegar uma cor da imagem" class="ed-btn" id="edBtn" onclick="toggleEyedropper()">🔬 Gotas</button>
 </div>
 <div class="cores-lista" id="coresList"></div>
-<button class="btn-add-cor" onclick="adicionarCor()">+ Adicionar Cor</button>
+<button title="Adicionar uma cor à paleta" class="btn-add-cor" onclick="adicionarCor()">+ Adicionar Cor</button>
 </div>
 <div class="tipo-bloco">
 <div class="tipo-hdr">
@@ -1226,16 +1231,16 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="canvas-tb" id="canvasTb">
 <span style="font-size:7.5px;font-weight:700;color:var(--txl)" id="tbNome">Imagem</span>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrente()">⬆</button>
-<button class="ct-btn" onclick="lTras()">⬇</button>
-<button class="ct-btn" onclick="lCentro()">⊕ Centro</button>
-<button class="ct-btn" onclick="lFill()">⤢ Fill</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrente()">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTras()">⬇</button>
+<button title="Centralizar na página" class="ct-btn" onclick="lCentro()">⊕ Centro</button>
+<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFill()">⤢ Fill</button>
 <button class="ct-btn" onclick="aninharImagens()" title="Aninhar/encaixar imagens (aproxima aproveitando os espaços)">🧩 Aninhar</button>
-<button class="ct-btn" onclick="abrirCrop('layer')">✂️</button>
-<button class="ct-btn" id="propBtn" onclick="toggleProp()">🔒</button>
+<button title="Recortar a imagem" class="ct-btn" onclick="abrirCrop('layer')">✂️</button>
+<button title="Travar/destravar a posição (evita mexer sem querer)" class="ct-btn" id="propBtn" onclick="toggleProp()">🔒</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
 </div>
 <div class="text-tb" id="textTb">
 <span class="tt-label">Fonte:</span>
@@ -1251,14 +1256,14 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 </select>
 <input class="tt-num" id="ttSize" type="number" value="20" min="6" max="300" onchange="applyTxtProps()">
 <input type="color" class="tt-color" id="ttColor" value="#1a1a2e" oninput="applyTxtProps()">
-<button class="tt-toggle" id="ttBold" onclick="toggleBold()"><b>N</b></button>
-<button class="tt-toggle" id="ttItalic" onclick="toggleItalic()" style="font-style:italic">I</button>
+<button title="Negrito" class="tt-toggle" id="ttBold" onclick="toggleBold()"><b>N</b></button>
+<button title="Itálico" class="tt-toggle" id="ttItalic" onclick="toggleItalic()" style="font-style:italic">I</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrente()">⬆</button>
-<button class="ct-btn" onclick="lTras()">⬇</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrente()">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTras()">⬇</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
 </div>
 <div class="arr-tb" id="arrTb">
 <span class="tt-label">Cor:</span>
@@ -1268,15 +1273,15 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <input class="tt-num" id="arStroke" type="number" value="3" min="1" max="20" onchange="applyArrProps()" style="width:42px">
 <div class="ct-sep"></div>
 <span class="tt-label">Ponta:</span>
-<button class="arr-style-btn on" id="arStyleFull" onclick="setArrStyle('full')">➤</button>
-<button class="arr-style-btn" id="arStyleOpen" onclick="setArrStyle('open')">➢</button>
-<button class="arr-style-btn" id="arStyleNone" onclick="setArrStyle('none')">─</button>
+<button title="Ponta cheia" class="arr-style-btn on" id="arStyleFull" onclick="setArrStyle('full')">➤</button>
+<button title="Ponta vazada" class="arr-style-btn" id="arStyleOpen" onclick="setArrStyle('open')">➢</button>
+<button title="Sem ponta (linha)" class="arr-style-btn" id="arStyleNone" onclick="setArrStyle('none')">─</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrente()">⬆</button>
-<button class="ct-btn" onclick="lTras()">⬇</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrente()">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTras()">⬇</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
 </div>
 <div class="shape-tb" id="shapeTb">
 <input type="color" class="tt-color" id="shFillColor" value="#E5E7EB" oninput="applyShapeProps()">
@@ -1288,21 +1293,21 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <input class="tt-num" id="shStrokeWidth" type="number" value="2" min="0" max="20" onchange="applyShapeProps()" style="width:42px">
 <span class="tt-label">Esp</span>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrente()">⬆</button>
-<button class="ct-btn" onclick="lTras()">⬇</button>
-<button class="ct-btn" onclick="lCentro()">⊕ Centro</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrente()">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTras()">⬇</button>
+<button title="Centralizar na página" class="ct-btn" onclick="lCentro()">⊕ Centro</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
 </div>
 <div class="layers-panel" id="layersPanel">
 <div class="lp-hdr">
 <span>Camadas P1</span>
-<button onclick="toggleLayersPanel()" style="background:none;border:none;cursor:pointer;font-size:9px;color:var(--az)">✕</button>
+<button title="Fechar o painel de camadas" onclick="toggleLayersPanel()" style="background:none;border:none;cursor:pointer;font-size:9px;color:var(--az)">✕</button>
 </div>
 <div class="lp-list" id="layersList"></div>
 </div>
-<button class="canvas-add-img" onclick="$('canvasInput').click()">+ Imagem</button>
+<button title="Inserir imagem na página" class="canvas-add-img" onclick="$('canvasInput').click()">+ Imagem</button>
 </div>
 </div>
 <div class="aviso" id="avisoEl">
@@ -1328,7 +1333,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div id="pageStripWrap"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('normal')" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('branca')" title="Adicionar página em branco">🗋</button></div>
 
 <!-- ═══ V7 — MODAL BAIXAR COM SELEÇÃO DE PÁGINAS ═══ -->
-<div id="v7DownloadModal"><div class="v7-dl-card"><div class="v7-dl-head"><h3>⬇ Baixar ficha</h3><button class="v7-btn sec" onclick="fecharV7Download()">✕</button></div><div class="v7-dl-body"><div style="font-size:11px;color:#6B7280;margin-bottom:10px">Selecione as páginas que quer baixar (todas marcadas por padrão):</div><div class="v7-dl-pages" id="v7DlPages"></div><div class="v7-dl-fmt"><span>Formato:</span><label><input type="radio" name="v7DlFmt" value="png" checked> 📸 PNG (imagens)</label><label><input type="radio" name="v7DlFmt" value="pdf"> 🖨 PDF (imprimir)</label></div></div><div class="v7-dl-foot"><button class="v7-btn sec" onclick="fecharV7Download()">Cancelar</button><button class="v7-btn primary" onclick="v7Baixar()">Baixar selecionadas</button></div></div></div>
+<div id="v7DownloadModal"><div class="v7-dl-card"><div class="v7-dl-head"><h3>⬇ Baixar ficha</h3><button title="Fechar" class="v7-btn sec" onclick="fecharV7Download()">✕</button></div><div class="v7-dl-body"><div style="font-size:11px;color:#6B7280;margin-bottom:10px">Selecione as páginas que quer baixar (todas marcadas por padrão):</div><div class="v7-dl-pages" id="v7DlPages"></div><div class="v7-dl-fmt"><span>Formato:</span><label><input type="radio" name="v7DlFmt" value="png" checked> 📸 PNG (imagens)</label><label><input type="radio" name="v7DlFmt" value="pdf"> 🖨 PDF (imprimir)</label></div></div><div class="v7-dl-foot"><button title="Cancelar" class="v7-btn sec" onclick="fecharV7Download()">Cancelar</button><button title="Baixar as páginas selecionadas" class="v7-btn primary" onclick="v7Baixar()">Baixar selecionadas</button></div></div></div>
 
 
 <!-- INPUTS FILE -->
@@ -1346,13 +1351,13 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <h3 style="font-size:14px;font-weight:800;color:#1E2937;margin:0">🖼 Revincular Imagens</h3>
 <p style="font-size:9px;color:#6b7280;margin:3px 0 0">Selecione as imagens que estavam na ficha original</p>
 </div>
-<button onclick="fecharRelinkModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
+<button title="Fechar" onclick="fecharRelinkModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
 </div>
 <div id="relinkBody" style="flex:1;overflow-y:auto;padding:12px 16px"></div>
 <div style="padding:10px 16px;border-top:1px solid #D1D5DB;display:flex;gap:6px;justify-content:flex-end;align-items:center;background:#F9FAFB">
 <span id="relinkStatus" style="flex:1;font-size:9px;color:#6b7280;font-style:italic"></span>
-<button onclick="fecharRelinkModal()" style="padding:6px 14px;border:1px solid #D1D5DB;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;font-weight:600;font-family:inherit;color:#6b7280">Pular Imagens</button>
-<button onclick="aplicarRelink()" style="padding:6px 14px;border:none;border-radius:6px;background:linear-gradient(135deg,#059669,#047857);color:#fff;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit">✔ Aplicar</button>
+<button title="Pular as imagens que não foram encontradas" onclick="fecharRelinkModal()" style="padding:6px 14px;border:1px solid #D1D5DB;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;font-weight:600;font-family:inherit;color:#6b7280">Pular Imagens</button>
+<button title="Reconectar as imagens escolhidas" onclick="aplicarRelink()" style="padding:6px 14px;border:none;border-radius:6px;background:linear-gradient(135deg,#059669,#047857);color:#fff;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit">✔ Aplicar</button>
 </div>
 </div>
 </div>
@@ -1362,18 +1367,18 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="crop-inner">
 <div class="crop-hdr">
 <h3>✂️ Recortar Imagem</h3>
-<button class="lt-btn" style="color:var(--vm)" onclick="fecharCrop()">✕ Fechar</button>
+<button title="Cancelar o recorte" class="lt-btn" style="color:var(--vm)" onclick="fecharCrop()">✕ Fechar</button>
 </div>
 <div class="crop-body"><img id="cropImg" src="" alt="crop"></div>
 <div class="crop-foot">
 <span style="font-size:8.5px;font-weight:700;color:var(--txl)">Proporção:</span>
-<button class="ar-btn ar-on" onclick="setAR(this,'livre')">Livre</button>
-<button class="ar-btn" onclick="setAR(this,1)">1:1</button>
-<button class="ar-btn" onclick="setAR(this,4/3)">4:3</button>
-<button class="ar-btn" onclick="setAR(this,16/9)">16:9</button>
+<button title="Proporção livre" class="ar-btn ar-on" onclick="setAR(this,'livre')">Livre</button>
+<button title="Quadrado (1:1)" class="ar-btn" onclick="setAR(this,1)">1:1</button>
+<button title="Proporção 4:3" class="ar-btn" onclick="setAR(this,4/3)">4:3</button>
+<button title="Proporção 16:9" class="ar-btn" onclick="setAR(this,16/9)">16:9</button>
 <div style="flex:1"></div>
-<button class="ct-btn" style="background:#6B7280;color:#fff;padding:4px 11px" onclick="fecharCrop()">Cancelar</button>
-<button class="ct-btn" style="background:#059669;color:#fff;padding:4px 11px" onclick="aplicarCrop()">✔ Aplicar</button>
+<button title="Cancelar o recorte" class="ct-btn" style="background:#6B7280;color:#fff;padding:4px 11px" onclick="fecharCrop()">Cancelar</button>
+<button title="Aplicar o recorte" class="ct-btn" style="background:#059669;color:#fff;padding:4px 11px" onclick="aplicarCrop()">✔ Aplicar</button>
 </div>
 </div>
 </div>
@@ -1545,14 +1550,14 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <div class="canvas-tb" id="canvasTb_${pid}">
 <span style="font-size:7.5px;font-weight:700;color:var(--txl)" id="tbNome_${pid}">Imagem</span>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
-<button class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
-<button class="ct-btn" onclick="lCentroExtra('${pid}')">⊕ Centro</button>
-<button class="ct-btn" onclick="lFillExtra('${pid}')">⤢ Fill</button>
-<button class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
+<button title="Centralizar na página" class="ct-btn" onclick="lCentroExtra('${pid}')">⊕ Centro</button>
+<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFillExtra('${pid}')">⤢ Fill</button>
+<button title="Travar/destravar a posição (evita mexer sem querer)" class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
 </div>
 <div class="text-tb" id="textTb_${pid}">
 <span class="tt-label">Fonte:</span>
@@ -1564,14 +1569,14 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 </select>
 <input class="tt-num" id="ttSize_${pid}" type="number" value="20" min="6" max="300" onchange="applyTxtPropsExtra('${pid}')">
 <input type="color" class="tt-color" id="ttColor_${pid}" value="#1a1a2e" oninput="applyTxtPropsExtra('${pid}')">
-<button class="tt-toggle" id="ttBold_${pid}" onclick="toggleBoldExtra('${pid}')"><b>N</b></button>
-<button class="tt-toggle" id="ttItalic_${pid}" onclick="toggleItalicExtra('${pid}')" style="font-style:italic">I</button>
+<button title="Negrito" class="tt-toggle" id="ttBold_${pid}" onclick="toggleBoldExtra('${pid}')"><b>N</b></button>
+<button title="Itálico" class="tt-toggle" id="ttItalic_${pid}" onclick="toggleItalicExtra('${pid}')" style="font-style:italic">I</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
-<button class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
 </div>
 <div class="arr-tb" id="arrTb_${pid}">
 <span class="tt-label">Cor:</span>
@@ -1581,17 +1586,17 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <input class="tt-num" id="arStroke_${pid}" type="number" value="3" min="1" max="20" onchange="applyArrPropsExtra('${pid}')" style="width:42px">
 <div class="ct-sep"></div>
 <span class="tt-label">Ponta:</span>
-<button class="arr-style-btn on" id="arStyleFull_${pid}" onclick="setArrStyleExtra('${pid}','full')">➤</button>
-<button class="arr-style-btn" id="arStyleOpen_${pid}" onclick="setArrStyleExtra('${pid}','open')">➢</button>
-<button class="arr-style-btn" id="arStyleNone_${pid}" onclick="setArrStyleExtra('${pid}','none')">─</button>
+<button title="Ponta cheia" class="arr-style-btn on" id="arStyleFull_${pid}" onclick="setArrStyleExtra('${pid}','full')">➤</button>
+<button title="Ponta vazada" class="arr-style-btn" id="arStyleOpen_${pid}" onclick="setArrStyleExtra('${pid}','open')">➢</button>
+<button title="Sem ponta (linha)" class="arr-style-btn" id="arStyleNone_${pid}" onclick="setArrStyleExtra('${pid}','none')">─</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
-<button class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
 </div>
-<button class="canvas-add-img" onclick="$('canvasInput_${pid}').click()">+ Imagem</button>
+<button title="Inserir imagem na página" class="canvas-add-img" onclick="$('canvasInput_${pid}').click()">+ Imagem</button>
 </div>
 </div>
 <div class="fb-rodape rodape">
@@ -1631,30 +1636,30 @@ grp.innerHTML=`
 <div class="sb-page-header">
 <div class="sb-page-num">${p.num}</div>
 <span>Página ${p.num}${isBranca?' 🗋':''}</span>
-<button class="sb-remove-page" onclick="removerPagina('${p.id}')">✕ Remover</button>
+<button title="Remover esta página" class="sb-remove-page" onclick="removerPagina('${p.id}')">✕ Remover</button>
 </div>
 <div class="sb-page-actions">
-<button class="sb-btn" onclick="$('canvasInput_${p.id}').click()">
+<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput_${p.id}').click()">
 <div class="sb-btn-icon">🖼</div>
 <span class="sb-btn-label">Adicionar Imagem</span>
 </button>
-<button class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">
+<button title="Adicionar uma caixa de texto" class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">
 <div class="sb-btn-icon">✍</div>
 <span class="sb-btn-label">Adicionar Texto</span>
 </button>
-<button class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">
+<button title="Desenhar seta/anotação" class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">
 <div class="sb-btn-icon">➜</div>
 <span class="sb-btn-label">Desenhar Seta</span>
 </button>
-<button class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">
+<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">
 <div class="sb-btn-icon">▭</div>
 <span class="sb-btn-label">Retângulo</span>
 </button>
-<button class="sb-btn" onclick="criarCirculoExtra('${p.id}')">
+<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculoExtra('${p.id}')">
 <div class="sb-btn-icon">●</div>
 <span class="sb-btn-label">Círculo</span>
 </button>
-${!isBranca?`<button class="sb-btn" onclick="adicionarCorExtra('${p.id}')">
+${!isBranca?`<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCorExtra('${p.id}')">
 <div class="sb-btn-icon">🎨</div>
 <span class="sb-btn-label">Adicionar Cor</span>
 </button>`:''}
@@ -1769,7 +1774,7 @@ ${[...Array(7)].map(()=>`<td><input class="gi" data-g="${pid}i" type="text" inpu
 <input class="cores-hdr-txt" id="coresTitulo_${pid}" type="text" value="CORES DO TECIDO">
 </div>
 <div class="cores-lista" id="coresList_${pid}"></div>
-<button class="btn-add-cor" onclick="adicionarCorExtra('${pid}')">+ Adicionar Cor</button>
+<button title="Adicionar uma cor à paleta" class="btn-add-cor" onclick="adicionarCorExtra('${pid}')">+ Adicionar Cor</button>
 </div>
 <div class="tipo-bloco">
 <div class="tipo-hdr"><div class="tipo-hdr-dot"></div>
@@ -1815,14 +1820,14 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <div class="canvas-tb" id="canvasTb_${pid}">
 <span style="font-size:7.5px;font-weight:700;color:var(--txl)" id="tbNome_${pid}">Imagem</span>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
-<button class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
-<button class="ct-btn" onclick="lCentroExtra('${pid}')">⊕ Centro</button>
-<button class="ct-btn" onclick="lFillExtra('${pid}')">⤢ Fill</button>
-<button class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
+<button title="Centralizar na página" class="ct-btn" onclick="lCentroExtra('${pid}')">⊕ Centro</button>
+<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFillExtra('${pid}')">⤢ Fill</button>
+<button title="Travar/destravar a posição (evita mexer sem querer)" class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
 </div>
 <div class="text-tb" id="textTb_${pid}">
 <span class="tt-label">Fonte:</span>
@@ -1834,14 +1839,14 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 </select>
 <input class="tt-num" id="ttSize_${pid}" type="number" value="20" min="6" max="300" onchange="applyTxtPropsExtra('${pid}')">
 <input type="color" class="tt-color" id="ttColor_${pid}" value="#1a1a2e" oninput="applyTxtPropsExtra('${pid}')">
-<button class="tt-toggle" id="ttBold_${pid}" onclick="toggleBoldExtra('${pid}')"><b>N</b></button>
-<button class="tt-toggle" id="ttItalic_${pid}" onclick="toggleItalicExtra('${pid}')" style="font-style:italic">I</button>
+<button title="Negrito" class="tt-toggle" id="ttBold_${pid}" onclick="toggleBoldExtra('${pid}')"><b>N</b></button>
+<button title="Itálico" class="tt-toggle" id="ttItalic_${pid}" onclick="toggleItalicExtra('${pid}')" style="font-style:italic">I</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
-<button class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
 </div>
 <div class="arr-tb" id="arrTb_${pid}">
 <span class="tt-label">Cor:</span>
@@ -1851,17 +1856,17 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <input class="tt-num" id="arStroke_${pid}" type="number" value="3" min="1" max="20" onchange="applyArrPropsExtra('${pid}')" style="width:42px">
 <div class="ct-sep"></div>
 <span class="tt-label">Ponta:</span>
-<button class="arr-style-btn on" id="arStyleFull_${pid}" onclick="setArrStyleExtra('${pid}','full')">➤</button>
-<button class="arr-style-btn" id="arStyleOpen_${pid}" onclick="setArrStyleExtra('${pid}','open')">➢</button>
-<button class="arr-style-btn" id="arStyleNone_${pid}" onclick="setArrStyleExtra('${pid}','none')">─</button>
+<button title="Ponta cheia" class="arr-style-btn on" id="arStyleFull_${pid}" onclick="setArrStyleExtra('${pid}','full')">➤</button>
+<button title="Ponta vazada" class="arr-style-btn" id="arStyleOpen_${pid}" onclick="setArrStyleExtra('${pid}','open')">➢</button>
+<button title="Sem ponta (linha)" class="arr-style-btn" id="arStyleNone_${pid}" onclick="setArrStyleExtra('${pid}','none')">─</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
-<button class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
+<button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
+<button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
 <div class="ct-sep"></div>
-<button class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
-<button class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
+<button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
 </div>
-<button class="canvas-add-img" onclick="$('canvasInput_${pid}').click()">+ Imagem</button>
+<button title="Inserir imagem na página" class="canvas-add-img" onclick="$('canvasInput_${pid}').click()">+ Imagem</button>
 </div></div>
 <div class="aviso"><input id="avisoTxt_${pid}" type="text" value="⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!"></div>
 </div></div>
@@ -1942,7 +1947,7 @@ tr.innerHTML=`<td><div class="n-cel">${id}</div></td>
 <td><input class="field" type="text" value="${qtd}" placeholder="0" style="width:26px;text-align:center" oninput="recalcLExtra('${pid}',${id})"></td>
 <td style="text-align:center;color:var(--txl);font-size:10px">=</td>
 <td style="text-align:right"><span id="vt_${pid}_${id}" style="font-size:10px;font-weight:800;color:var(--az)">—</span></td>
-<td><button class="del-btn" onclick="removerLExtra('${pid}',${id})">✕</button></td>`;
+<td><button title="Remover esta camada" class="del-btn" onclick="removerLExtra('${pid}',${id})">✕</button></td>`;
 const tb=$('prodLinhas_'+pid);if(tb)tb.appendChild(tr);
 }
 function getTotalLinhasExtra(p){
@@ -2002,7 +2007,7 @@ const div=document.createElement('div');div.className='cor-item';div.id=`ci_${id
 div.innerHTML=`<div class="cor-rect" id="cr_${id}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${id}" oninput="onCorPickerExtra('${id}',this.value)"><span class="cor-nome-disp" id="cn_${id}" style="color:${tc}">${nm.toUpperCase()}</span></div>
 <div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${id}" value="${nm}" placeholder="NOME" oninput="onCorNomeExtra('${id}',this.value)">
 <div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${id}" value="${hx.toUpperCase()}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHexExtra('${id}',this.value)">
-<button class="cor-del" onclick="excluirCorExtra('${id}')">✕ del</button></div>`;
+<button title="Remover esta cor da paleta" class="cor-del" onclick="excluirCorExtra('${id}')">✕ del</button></div>`;
 const lista=$('coresList_'+p.id);if(lista)lista.appendChild(div);
 }
 function onCorPickerExtra(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const chi=$(`chi_${id}`);if(chi)chi.value=hex.toUpperCase();}
@@ -2406,7 +2411,7 @@ document.addEventListener('keydown',e=>{
 if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key==='z'){e.preventDefault();undo();}
 if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
 if(e.key==='Escape'){
-rfHide();deselecionarTudo();fecharLogo();
+fecharAjudaFicha();rfHide();deselecionarTudo();fecharLogo();
 if(eyeAtivo)desativarEye();
 if(modoSeta)desativarModoSeta();
 paginas.forEach(p=>{if(p.modoSeta)desativarModoSetaExtra(p);deselecionarTudoExtra(p.id);});
@@ -2941,7 +2946,7 @@ function excluirId(id){const el=document.getElementById('ly_'+id);if(el)el.remov
 function toggleLayersPanel(){$('layersPanel').classList.toggle('vis');}
 function updList(){
 const ll=$('layersList');if(!ll)return;ll.innerHTML='';
-[...layers].reverse().forEach((l,i)=>{const row=document.createElement('div');row.className='lp-row'+(l.id===selId?' sel-row':'');row.onclick=()=>selLayer(l.id);const icon=l.type==='txt'?`<div class="lp-icon" style="font-size:10px;font-weight:900;color:var(--az)">T</div>`:l.type==='arr'?`<div class="lp-icon" style="font-size:11px">➜</div>`:`<img class="lp-thumb" src="${l.src}" alt="">`;const name=l.type==='txt'?`Texto: "${(l.txt||'').slice(0,8)}"`:l.type==='arr'?'Seta':`Img ${layers.length-i}`;row.innerHTML=`${icon}<span class="lp-name">${name}</span><button class="lp-del" onclick="event.stopPropagation();excluirId('${l.id}')">✕</button>`;ll.appendChild(row);});
+[...layers].reverse().forEach((l,i)=>{const row=document.createElement('div');row.className='lp-row'+(l.id===selId?' sel-row':'');row.onclick=()=>selLayer(l.id);const icon=l.type==='txt'?`<div class="lp-icon" style="font-size:10px;font-weight:900;color:var(--az)">T</div>`:l.type==='arr'?`<div class="lp-icon" style="font-size:11px">➜</div>`:`<img class="lp-thumb" src="${l.src}" alt="">`;const name=l.type==='txt'?`Texto: "${(l.txt||'').slice(0,8)}"`:l.type==='arr'?'Seta':`Img ${layers.length-i}`;row.innerHTML=`${icon}<span class="lp-name">${name}</span><button title="Remover esta camada" class="lp-del" onclick="event.stopPropagation();excluirId('${l.id}')">✕</button>`;ll.appendChild(row);});
 }
 function updPh(){canvasPh.style.display=layers.length?'none':'flex';}
 function savLayers(){try{localStorage.setItem('va3_layers',JSON.stringify(layers.map(serLayer)));}catch(e){}}
@@ -2972,7 +2977,7 @@ function iniciarCores(){const saved=localStorage.getItem('va3_cores');if(saved){
 function adicionarCor(hex,nome){
 corId++;const id=corId,hx=hex||'#3B82F6',nm=nome||'COR',tc=contraste(hx);
 const div=document.createElement('div');div.className='cor-item';div.id=`ci_${id}`;
-div.innerHTML=`<div class="cor-rect" id="cr_${id}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${id}" oninput="onCorPicker(${id},this.value)"><span class="cor-nome-disp" id="cn_${id}" style="color:${tc}">${nm.toUpperCase()}</span></div><div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${id}" value="${nm}" placeholder="NOME" oninput="onCorNome(${id},this.value)"><div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${id}" value="${hx.toUpperCase()}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHex(${id},this.value)"><button class="cor-del" onclick="excluirCor(${id})">✕ del</button></div>`;
+div.innerHTML=`<div class="cor-rect" id="cr_${id}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${id}" oninput="onCorPicker(${id},this.value)"><span class="cor-nome-disp" id="cn_${id}" style="color:${tc}">${nm.toUpperCase()}</span></div><div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${id}" value="${nm}" placeholder="NOME" oninput="onCorNome(${id},this.value)"><div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${id}" value="${hx.toUpperCase()}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHex(${id},this.value)"><button title="Remover esta cor da paleta" class="cor-del" onclick="excluirCor(${id})">✕ del</button></div>`;
 $('coresList').appendChild(div);savCores();
 }
 function updCorVisual(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;savCores();}
@@ -2987,7 +2992,7 @@ let linhaId=0;
 function iniciarProd(){criarLinha();criarLinha();criarLinha();calcTotal();}
 function criarLinha(modelo='',valor='',qtd=''){
 linhaId++;const id=linhaId;const tr=document.createElement('tr');tr.id=`ln_${id}`;
-tr.innerHTML=`<td><div class="n-cel">${id}</div></td><td><input class="field" type="text" value="${modelo}" placeholder="Descrição do produto" style="min-width:60px"></td><td style="text-align:right"><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end"><span style="font-size:8px;color:var(--txl)">R$</span><input class="field" type="text" value="${valor}" placeholder="0,00" style="width:48px;text-align:right" oninput="recalcL(${id})"></div></td><td style="text-align:center;color:var(--txl);font-size:10px">×</td><td><input class="field" type="text" value="${qtd}" placeholder="0" style="width:26px;text-align:center" oninput="recalcL(${id})"></td><td style="text-align:center;color:var(--txl);font-size:10px">=</td><td style="text-align:right"><span id="vt_${id}" style="font-size:10px;font-weight:800;color:var(--az)">—</span></td><td><button class="del-btn" onclick="removerL(${id})">✕</button></td>`;
+tr.innerHTML=`<td><div class="n-cel">${id}</div></td><td><input class="field" type="text" value="${modelo}" placeholder="Descrição do produto" style="min-width:60px"></td><td style="text-align:right"><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end"><span style="font-size:8px;color:var(--txl)">R$</span><input class="field" type="text" value="${valor}" placeholder="0,00" style="width:48px;text-align:right" oninput="recalcL(${id})"></div></td><td style="text-align:center;color:var(--txl);font-size:10px">×</td><td><input class="field" type="text" value="${qtd}" placeholder="0" style="width:26px;text-align:center" oninput="recalcL(${id})"></td><td style="text-align:center;color:var(--txl);font-size:10px">=</td><td style="text-align:right"><span id="vt_${id}" style="font-size:10px;font-weight:800;color:var(--az)">—</span></td><td><button title="Remover esta camada" class="del-btn" onclick="removerL(${id})">✕</button></td>`;
 $('prodLinhas').appendChild(tr);
 }
 function getTotalLinhas(){let t=0;document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const inps=tr.querySelectorAll('input');t+=parseBRL(inps[1]?inps[1].value:'0')*(parseFloat(inps[2]?inps[2].value:'0')||0);});return t;}
@@ -3538,7 +3543,7 @@ function createQuickModal(){
   const gradeCard=(prefix,titulo,cls,arr)=>`<div class="v4-grade-card ${cls||''}"><h4>${titulo}</h4><div class="v4-grade-grid">${gradeInputs(prefix,arr)}</div></div>`;
   m.innerHTML=`
   <div class="v4-modal-card">
-    <div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div>
+    <div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button title="Cancelar o preenchimento rápido" class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div>
     <div class="v4-modal-body">
       <p class="v4-hint">Preencha o que souber e clique em <b>Aplicar tudo</b> no final. <b>Enter</b> pula para o próximo campo · <b>Esc</b> fecha · <b>Ctrl+Enter</b> aplica.</p>
       <div class="v4-step"><span class="n">1</span> Dados do pedido <small>cliente, prazo e tecido</small></div>
@@ -3552,7 +3557,7 @@ function createQuickModal(){
       </div>
       <div class="v4-step"><span class="n">2</span> Modelos da produção <small>valor × quantidade — o total aparece sozinho</small></div>
       <table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:110px">Valor unit.</th><th style="width:80px">Qtd</th><th style="width:92px">Total</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows"></tbody></table>
-      <button class="v4-mini-btn" style="margin-top:6px" onclick="v4AddModeloRow()">+ Adicionar modelo</button>
+      <button title="Adicionar uma linha na tabela de modelos" class="v4-mini-btn" style="margin-top:6px" onclick="v4AddModeloRow()">+ Adicionar modelo</button>
       <div class="v4-step"><span class="n">3</span> Grade de tamanhos <small>preencha só os tamanhos usados</small></div>
       <div class="v4-grade-box">
         ${gradeCard('m','Masculino','',V4Q_SIZES_M)}
@@ -3564,8 +3569,8 @@ function createQuickModal(){
     </div>
     <div class="v4-actions">
       <div class="v4-summary"><span class="v4-total-line">Total dos modelos: <b id="v4qTotal">R$ 0,00</b></span><span class="v4-total-line">Peças na grade: <b id="v4qPecas">0</b></span></div>
-      <button class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button>
-      <button class="v4-apply" onclick="aplicarPreenchimentoRapido()">✅ Aplicar tudo</button>
+      <button title="Cancelar o preenchimento rápido" class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button>
+      <button title="Aplicar tudo nos campos" class="v4-apply" onclick="aplicarPreenchimentoRapido()">✅ Aplicar tudo</button>
     </div>
   </div>`;
   document.body.appendChild(m);
@@ -3796,7 +3801,7 @@ function abrirRelinkModal(data, imgLayers) {
   imgLayers.forEach((l, idx) => {
     const nome = l.imgName || ('Imagem '+(idx+1));
     const div = document.createElement('div'); div.className = 'relink-item pending'; div.id = 'relink_'+l.id;
-    div.innerHTML = '<div class="relink-thumb" id="rthumb_'+l.id+'">🖼</div><div class="relink-info"><div class="relink-name">'+nome.replace(/</g,'&lt;')+'</div><div class="relink-detail" id="rdetail_'+l.id+'">⚠ Aguardando...</div></div><button class="relink-btn" id="rbtn_'+l.id+'" onclick="selecionarImgRelink(\''+l.id+'\')">Selecionar</button>';
+    div.innerHTML = '<div class="relink-thumb" id="rthumb_'+l.id+'">🖼</div><div class="relink-info"><div class="relink-name">'+nome.replace(/</g,'&lt;')+'</div><div class="relink-detail" id="rdetail_'+l.id+'">⚠ Aguardando...</div></div><button title="Escolher a imagem deste computador" class="relink-btn" id="rbtn_'+l.id+'" onclick="selecionarImgRelink(\''+l.id+'\')">Selecionar</button>';
     body.appendChild(div);
   });
   atualizarRelinkStatus(); $('relinkModal').style.display = 'flex';
@@ -3923,7 +3928,7 @@ function v7EnhanceTxtTb(tbId){
   const slider=document.createElement('input'); slider.type='range'; slider.min='6'; slider.max='120'; slider.value=sizeIn?.value||20; slider.className='v4-font-slider';
   slider.oninput=()=>{if(sizeIn){sizeIn.value=slider.value;} if(isExtra){const pid=suf.replace('_',''); if(typeof applyTxtPropsExtra==='function')applyTxtPropsExtra(pid);} else if(typeof applyTxtProps==='function')applyTxtProps();};
   const presets=document.createElement('div'); presets.className='v4-font-presets';
-  presets.innerHTML='<button onclick="v7SetTextSize(14,\''+suf+'\')">14</button><button onclick="v7SetTextSize(20,\''+suf+'\')">20</button><button onclick="v7SetTextSize(32,\''+suf+'\')">32</button><button onclick="v7SetTextSize(48,\''+suf+'\')">48</button>';
+  presets.innerHTML='<button title="Colocar o texto em 14 pontos" onclick="v7SetTextSize(14,\''+suf+'\')">14</button><button title="Colocar o texto em 20 pontos" onclick="v7SetTextSize(20,\''+suf+'\')">20</button><button title="Colocar o texto em 32 pontos" onclick="v7SetTextSize(32,\''+suf+'\')">32</button><button title="Colocar o texto em 48 pontos" onclick="v7SetTextSize(48,\''+suf+'\')">48</button>';
   tb.insertBefore(slider, tb.querySelector('.ct-sep')||null);
   tb.insertBefore(presets, tb.querySelector('.ct-sep')||null);
 }
@@ -4002,7 +4007,7 @@ function v7EnhanceTxtTbExtra(){
   window.v4ArrowDash=function(){const l=getSelectedLayer();if(!l||l.type!=='arr')return;l.dashed=!l.dashed;refreshArrSVG(l);savLayers();snap();};
   window.v4ArrowStroke=function(v){setArrow('stroke',v)};
   window.v4ArrowStyle=function(v){setArrow('arStyle',v)};
-  function enhanceArrowToolbar(){const tb=$id('arrTb');if(!tb||tb.dataset.v4FinalReady)return;tb.dataset.v4FinalReady='1';const group=document.createElement('div');group.className='v4-tb-group';group.innerHTML=`<button class="v4-tb-btn" onclick="v4ArrowStroke(2)">2px</button><button class="v4-tb-btn" onclick="v4ArrowStroke(4)">4px</button><button class="v4-tb-btn" onclick="v4ArrowStroke(7)">7px</button><button class="v4-tb-btn" onclick="v4ArrowDash()">- - Tracejada</button><button class="v4-tb-btn" onclick="v4ArrowStyle('full')">➤</button><button class="v4-tb-btn" onclick="v4ArrowStyle('open')">➢</button><button class="v4-tb-btn" onclick="v4ArrowStyle('none')">—</button>`;tb.appendChild(group);}
+  function enhanceArrowToolbar(){const tb=$id('arrTb');if(!tb||tb.dataset.v4FinalReady)return;tb.dataset.v4FinalReady='1';const group=document.createElement('div');group.className='v4-tb-group';group.innerHTML=`<button title="Espessura da seta: 2 px" class="v4-tb-btn" onclick="v4ArrowStroke(2)">2px</button><button title="Espessura da seta: 4 px" class="v4-tb-btn" onclick="v4ArrowStroke(4)">4px</button><button title="Espessura da seta: 7 px" class="v4-tb-btn" onclick="v4ArrowStroke(7)">7px</button><button title="Linha tracejada" class="v4-tb-btn" onclick="v4ArrowDash()">- - Tracejada</button><button title="Ponta cheia da seta" class="v4-tb-btn" onclick="v4ArrowStyle('full')">➤</button><button title="Ponta vazada da seta" class="v4-tb-btn" onclick="v4ArrowStyle('open')">➢</button><button title="Sem ponta (linha)" class="v4-tb-btn" onclick="v4ArrowStyle('none')">—</button>`;tb.appendChild(group);}
 
   const oldSel=window.selLayer; if(typeof oldSel==='function'){window.selLayer=function(id){oldSel(id);setTimeout(()=>{const l=getTextLayer(),el=getSelectedEl();if(l&&el)applyTxtLayerStyle(l,el);enhanceTextToolbarFinal();enhanceArrowToolbar();},60);};}
   document.addEventListener('click',()=>setTimeout(()=>{enhanceTextToolbarFinal();enhanceArrowToolbar();},120));
@@ -4117,7 +4122,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   function enhanceToolbar(){const tb=$id('textTb');if(!tb)return;removeObjectMoveButtons(tb);
     const font=$id('ttFont');if(font&&!font.dataset.v4SelectAware){font.dataset.v4SelectAware='1';font.onchange=()=>v4SelectionFont(font.value);}
     const bold=$id('ttBold');if(bold&&!bold.dataset.v4SelectAware){bold.dataset.v4SelectAware='1';bold.onclick=(e)=>{e.preventDefault();v4SelectionBold();};}
-    if(!tb.querySelector('.v4-highlight-presets')){const g=document.createElement('div');g.className='v4-highlight-presets';g.innerHTML='<button class="v4-hl-btn v4-hl-yellow" onclick="v4SelectionHighlight(\'#FFE066\')">Amarelo</button><button class="v4-hl-btn v4-hl-red" onclick="v4SelectionHighlight(\'#FF6B6B\')">Vermelho</button><button class="v4-hl-btn v4-hl-blue" onclick="v4SelectionHighlight(\'#74C0FC\')">Azul</button>';tb.appendChild(g);} 
+    if(!tb.querySelector('.v4-highlight-presets')){const g=document.createElement('div');g.className='v4-highlight-presets';g.innerHTML='<button title="Destacar o trecho em amarelo" class="v4-hl-btn v4-hl-yellow" onclick="v4SelectionHighlight(\'#FFE066\')">Amarelo</button><button title="Destacar o trecho em vermelho" class="v4-hl-btn v4-hl-red" onclick="v4SelectionHighlight(\'#FF6B6B\')">Vermelho</button><button title="Destacar o trecho em azul" class="v4-hl-btn v4-hl-blue" onclick="v4SelectionHighlight(\'#74C0FC\')">Azul</button>';tb.appendChild(g);} 
     if(!tb.querySelector('.v4-toolbar-drag')){const h=document.createElement('div');h.className='v4-toolbar-drag';h.textContent='☰ mover';tb.prepend(h);makeToolbarDraggable(tb,h);}restoreToolbarPos(tb);
   }
   function restoreToolbarPos(tb){if(tb.dataset.posRestored)return;tb.dataset.posRestored='1';try{const p=JSON.parse(localStorage.getItem(TOOL_POS_KEY)||'null');if(p){tb.classList.add('v4-movable');tb.style.left=p.left+'px';tb.style.top=p.top+'px';tb.style.right='auto';}}catch(e){}}
@@ -4147,6 +4152,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     btn.id='v4AddModeloPrincipal';
     btn.className='v4-add-model-main';
     btn.textContent='+ Adicionar modelo na produção';
+    btn.title='Adicionar uma linha de modelo na produção';
     btn.onclick=function(){
       if(typeof criarLinha==='function'){
         criarLinha();
@@ -4248,7 +4254,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     const tb=document.getElementById('arrTb'); if(!tb)return;
     if(!tb.querySelector('.v4-arrow-group')){
       const group=document.createElement('div'); group.className='v4-arrow-group';
-      group.innerHTML=`<button class="v4-arrow-btn" data-arrow-shape="straight" onclick="v4ArrowShape('straight')">Reta</button><button class="v4-arrow-btn" data-arrow-shape="curve" onclick="v4ArrowShape('curve')">Curva</button><button class="v4-arrow-btn" data-arrow-shape="elbow" onclick="v4ArrowShape('elbow')">Dobrada</button><button class="v4-arrow-btn" onclick="v4ArrowStroke2(2)">2px</button><button class="v4-arrow-btn" onclick="v4ArrowStroke2(4)">4px</button><button class="v4-arrow-btn" onclick="v4ArrowStroke2(7)">7px</button><button class="v4-arrow-btn" onclick="v4ArrowDash2()">Tracejada</button>`;
+      group.innerHTML=`<button title="Seta reta" class="v4-arrow-btn" data-arrow-shape="straight" onclick="v4ArrowShape('straight')">Reta</button><button title="Seta curva" class="v4-arrow-btn" data-arrow-shape="curve" onclick="v4ArrowShape('curve')">Curva</button><button title="Seta dobrada" class="v4-arrow-btn" data-arrow-shape="elbow" onclick="v4ArrowShape('elbow')">Dobrada</button><button title="Espessura da seta: 2 px" class="v4-arrow-btn" onclick="v4ArrowStroke2(2)">2px</button><button title="Espessura da seta: 4 px" class="v4-arrow-btn" onclick="v4ArrowStroke2(4)">4px</button><button title="Espessura da seta: 7 px" class="v4-arrow-btn" onclick="v4ArrowStroke2(7)">7px</button><button title="Linha tracejada" class="v4-arrow-btn" onclick="v4ArrowDash2()">Tracejada</button>`;
       tb.appendChild(group);
     }
     updateArrowShapeButtons();
@@ -4289,7 +4295,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     const list=document.getElementById('v4DraftList'); if(!list) return;
     const drafts=getMeta();
     if(!drafts.length){list.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,.35);padding:6px;text-align:center">Nenhum rascunho salvo</div>';return;}
-    list.innerHTML=drafts.map(d=>`<div class="sb-v4-draft"><div><b title="${esc(d.name)}">${esc(d.name)}</b><small>${esc(d.date||'')}</small></div><div><button class="load" onclick="v4CarregarRascunho('${d.id}')">Abrir</button><button class="del" onclick="v4ExcluirRascunho('${d.id}')">✕</button></div></div>`).join('');
+    list.innerHTML=drafts.map(d=>`<div class="sb-v4-draft"><div><b title="${esc(d.name)}">${esc(d.name)}</b><small>${esc(d.date||'')}</small></div><div><button title="Abrir este rascunho" class="load" onclick="v4CarregarRascunho('${d.id}')">Abrir</button><button title="Excluir este rascunho" class="del" onclick="v4ExcluirRascunho('${d.id}')">✕</button></div></div>`).join('');
   }
   window.v4SalvarRascunho=async function(){
     if(typeof capturarFichaParaJSON!=='function'){toastSafe('Sistema de rascunho indisponível.','erro');return;}
@@ -4335,6 +4341,22 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 }
 @media print{.txt-layer .tc{white-space:pre!important;max-width:none!important;overflow:visible!important}}
 
+
+/* ═══ V7.5 (Onda 3) — selo de autosave + ajuda do módulo ═══ */
+.v7-save-chip{font-size:8.5px;font-weight:800;color:var(--glass-text);opacity:.8;text-align:left;padding:0 16px 7px;letter-spacing:.2px}
+.v7-ajuda-bg{position:fixed;inset:0;background:rgba(5,8,15,.6);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
+.v7-ajuda-bg.open{display:flex}
+.v7-ajuda-card{background:#fff;color:#111827;border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.v7-ajuda-card h3{margin:0 0 4px;font-size:19px}
+.v7-ajuda-card .ajuda-sub{color:#4b5563;font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.5}
+.v7-ajuda-card h4{margin:15px 0 4px;font-size:11.5px;color:#1D4ED8;letter-spacing:.5px;text-transform:uppercase}
+.v7-ajuda-card p,.v7-ajuda-card li{font-size:12.5px;line-height:1.65}
+.v7-ajuda-card ul{margin:4px 0 0 18px;padding:0}
+.v7-ajuda-card kbd{background:#eef2f7;border:1px solid #d1d5db;border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px}
+.v7-ajuda-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.v7-ajuda-foot button{border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:9px 14px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit}
+.v7-ajuda-foot button.primary{background:#050505;color:#fff;border-color:#050505}
+@media print{.v7-ajuda-bg,.v7-save-chip{display:none!important}}
 </style>
 <script id="v5-text-nowrap-fix-js">
 (function(){
@@ -4407,17 +4429,35 @@ let v7DropMeta=null;
 
 /* ── Autosave (rascunho vivo) ── */
 let v7LastQuotaWarn=0;
+/* ═══ V7.5 (Onda 3) — selo de autosave + ajuda do módulo ═══ */
+const V7_SAVE_HORA_KEY='vooalto_v7_ficha_ativa_hora';
+function v7HoraAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function v7MarcarSalvo(ok){
+  const el=document.getElementById('v7SaveChip');if(!el)return;
+  if(ok===false){el.textContent='⚠️ não salvou';el.style.opacity='1';el.title='O navegador recusou a gravação (memória cheia?). Exporte a ficha como backup (.json).';return}
+  const h=v7HoraAgora();el.textContent='💾 Salvo '+h;el.style.opacity='.8';
+  el.title='Última gravação automática às '+h+'. A ficha fica salva neste navegador.';
+  try{localStorage.setItem(V7_SAVE_HORA_KEY,h)}catch(e){}
+}
+function abrirAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(el)el.classList.add('open')}
+function fecharAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(el)el.classList.remove('open')}
+function v7MostrarHoraSalva(){try{const h=localStorage.getItem(V7_SAVE_HORA_KEY);const el=document.getElementById('v7SaveChip');
+  if(h&&el){el.textContent='💾 Salvo '+h;el.title='Última gravação automática às '+h+' (sessão anterior).'}}catch(e){}}
+window.addEventListener('load',v7MostrarHoraSalva);
+window.abrirAjudaFicha=abrirAjudaFicha;window.fecharAjudaFicha=fecharAjudaFicha;
 function v7SalvarAutosaveAgora(){
   clearTimeout(v7AutosaveTimer);v7AutosaveTimer=null;
   try{
     if(typeof capturarFichaParaJSON!=='function')return false;
     const dados=capturarFichaParaJSON();
     localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(dados));
+    v7MarcarSalvo(true);
     return true;
   }catch(e){
     /* V7.1.1 — antes a falha era silenciosa (dava a impressão de "travou e
        perdeu"); agora avisa (no máximo 1× por minuto) para exportar backup. */
     try{const agora=Date.now();if(agora-v7LastQuotaWarn>60000){v7LastQuotaWarn=agora;toast('⚠️ Espaço cheio: autosave da ficha falhou. Exporte a ficha como backup.','erro');}}catch(_){}
+    v7MarcarSalvo(false);
     return false;
   }
 }
@@ -5168,5 +5208,42 @@ function applyGlobalTheme(t){ t=v7TemaValido(t); document.documentElement.datase
 window.addEventListener('message', e=>{ if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme); });
 window.addEventListener('DOMContentLoaded', ()=>{ try{ applyGlobalTheme(localStorage.getItem('vooalto_theme_v5')||'claro'); }catch(e){} });
 </script>
+
+<div class="v7-ajuda-bg" id="v7AjudaFicha" onclick="if(event.target===this)fecharAjudaFicha()">
+  <div class="v7-ajuda-card">
+    <h3>📋 Ajuda — Ficha Técnica</h3>
+    <div class="ajuda-sub">A ficha é o começo do fluxo: ela vai para a Catalogação e depois vira orçamento. Nada é enviado para a internet — tudo fica salvo neste computador.</div>
+    <h4>Ferramentas (coluna da esquerda)</h4>
+    <ul>
+      <li><b>Imagem</b> · <b>Texto</b> · <b>Seta/anotação</b> · <b>Retângulo</b> · <b>Círculo</b> · <b>Conta-gotas</b> (pega uma cor pronta da imagem) · <b>Painel de camadas</b> (o que fica na frente e atrás).</li>
+      <li>Clique no item da página para selecioná-lo: aparece a barrinha com <b>⬆/⬇</b> (frente/trás), <b>⊕ Centro</b>, <b>⤢ Fill</b> (preenche a página), <b>✂️</b> recortar, <b>🔒</b> travar e <b>🗑</b> apagar.</li>
+      <li>O cadeado <b>🔒</b> é o "não mexa sem querer": o item continua salvo, só não se move. O <b>✕</b> apenas tira a seleção.</li>
+    </ul>
+    <h4>Páginas</h4>
+    <ul>
+      <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia. Arraste as miniaturas na faixa inferior para reordenar e use <b>✕ Remover</b> para apagar uma página.</li>
+    </ul>
+    <h4>Salvar e continuar depois</h4>
+    <ul>
+      <li>Enquanto você edita, a ficha é <b>salva sozinha</b> neste navegador — o selo <b>💾 Salvo HH:MM</b> mostra a hora da última gravação.</li>
+      <li><b>Salvar rascunho</b> guarda uma versão com nome na lista <b>Rascunhos</b> (bom para comparar opções).</li>
+      <li><b>Exportar backup (.json)</b> baixa a ficha para guardar em outro lugar e <b>Abrir backup (.json)</b> traz de volta.</li>
+    </ul>
+    <h4>Enviar e exportar</h4>
+    <ul>
+      <li><b>Enviar para Catalogação</b> manda a ficha para a produção e fecha esta janela (o número da próxima ficha avança).</li>
+      <li><b>Baixar (escolher páginas)</b> gera o PDF só com as páginas marcadas; <b>Exportar PDF</b> imprime pelo navegador (também dá <b>Ctrl+P</b>) e <b>Exportar PNG</b> salva a página atual como imagem.</li>
+    </ul>
+    <h4>Atalhos</h4>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfazer · <kbd>Ctrl</kbd>+<kbd>Y</kbd> (ou Ctrl+Shift+Z) refazer · <kbd>Delete</kbd> apaga o item selecionado.</li>
+      <li><kbd>Esc</kbd> fecha a ferramenta/seleção e esta ajuda · <kbd>Enter</kbd> pula de campo no <b>preenchimento rápido</b> (Ctrl+Enter aplica tudo).</li>
+    </ul>
+    <div class="v7-ajuda-foot">
+      <button class="primary" onclick="fecharAjudaFicha()" title="Fechar a ajuda">Entendi</button>
+      <button onclick="window.open('../manual.html','_blank')" title="Abrir o manual completo do Vooalto V7">📖 Ver manual completo</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
