@@ -117,6 +117,9 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
   .switcher{order:3;width:100%;overflow-x:auto}
   .controls{margin-left:0}
 }
+
+.tour-x{position:absolute;top:10px;right:12px;width:30px;height:30px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;line-height:1}
+.tour-x:hover{background:#e2e8f0}
 </style>
 </head>
 <body>
@@ -148,8 +151,9 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
   </main>
 </div>
 
-<div class="tour-modal" id="tourV7">
-  <div class="tour-card">
+<div class="tour-modal" id="tourV7" onclick="if(event.target===this)fecharTour()">
+  <div class="tour-card" style="position:relative">
+    <button class="tour-x" onclick="fecharTour()" title="Fechar a tela de boas-vindas (Esc)">✕</button>
     <h3>👋 Bem-vindo ao Vooalto V7</h3>
     <div class="sub">Três módulos, um fluxo só: monte a ficha, acompanhe a produção e faça o orçamento.</div>
     <div class="tour-steps">
@@ -439,8 +443,12 @@ function closeHelp(){document.getElementById('helpModal').classList.remove('open
 document.getElementById('helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')closeHelp()});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  if(fichaPopupOpen)closeFichaPopup();
-  else closeHelp();
+  /* V7.6.1 — o tour também fecha com Esc (antes só saía pelo botão). Fica por último:
+     se a janela da ficha estiver aberta, o Esc fecha ela primeiro (como sempre foi). */
+  if(fichaPopupOpen){closeFichaPopup();return}
+  const tv=document.getElementById('tourV7');
+  if(tv&&tv.classList.contains('open')){fecharTour();return}
+  closeHelp();
 });
 
 function isStandaloneApp(){
@@ -486,10 +494,13 @@ async function installPWA(){
 
 /* ══ V7.5 (Onda 3) — tour de boas-vindas, chip "comece aqui" e manual ══ */
 const TOUR_KEY='vooalto_tour_v7', FICHA_ABERTA_KEY='vooalto_ficha_aberta';
-function abrirManual(){window.open('manual.html','_blank')}
+function abrirManual(){/* V7.6.1 — em prévia/PWA o navegador pode bloquear a janela nova: aí abre na mesma aba */try{const w=window.open('manual.html','_blank');if(w)return}catch(e){}try{location.href='manual.html'}catch(e){}}
 function mostrarTour(){const el=document.getElementById('tourV7');if(el)el.classList.add('open')}
 function fecharTour(){
   const el=document.getElementById('tourV7');if(el)el.classList.remove('open');
+  /* V7.6.1 — marca também na sessão: em prévia/navegador com armazenamento bloqueado o tour
+     reaparecia a cada recarga e parecia que o sistema tinha voltado do zero. */
+  try{sessionStorage.setItem(TOUR_KEY,'visto')}catch(e){}
   const cb=document.getElementById('tourNaoMostrar');
   if(!cb||cb.checked){try{localStorage.setItem(TOUR_KEY,'visto')}catch(e){}}
 }
@@ -506,7 +517,10 @@ function v7MarcarFichaAberta(){
 function v7TourDecidir(){
   v7PromoverComeco();
   let visto=false;try{visto=localStorage.getItem(TOUR_KEY)==='visto'}catch(e){}
-  if(!visto)setTimeout(mostrarTour,600);   // deixa a tela carregar antes de aparecer
+  if(visto)return;
+  let naSessao=false;try{naSessao=sessionStorage.getItem(TOUR_KEY)==='visto'}catch(e){}
+  if(naSessao)return;                      // já foi mostrado nesta sessão do navegador
+  setTimeout(mostrarTour,600);             // deixa a tela carregar antes de aparecer
 }
 function initVooalto(){
   // Aplica tema SALVO SEM animação no boot (evita flash de cor padrão→tema)

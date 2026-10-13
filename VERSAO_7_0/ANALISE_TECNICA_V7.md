@@ -1,6 +1,6 @@
 # VOOALTO V7 — Análise técnica e plano de melhorias
 
-> **Status:** análise concluída e **Ondas 1, 2, 3 e 4 entregues** (V7.2.0 → V7.6.0)
+> **Status:** análise concluída e **Ondas 1, 2, 3 e 4 entregues** (V7.2.0 → V7.6.1)
 > (`VERSAO_7_0/`, suíte de testes verde: JS 14 arquivos + 3 arquivos de teste Python/9 casos).
 > **Base analisada:** `VERSAO_7_0/ATUALIZACAO_V7` (a versão que está publicada na `main`).
 > **Foco principal do pedido:** conseguir **ver os PDFs dentro do próprio sistema**, sem quebrar nada.
@@ -17,6 +17,10 @@
 > **Entregue na Onda 4 (V7.6.0):** PDF como `Blob` no IndexedDB com migração v2→v3 (A9) e coletor
 > de arquivos órfãos. **Pendente:** itens 22 e 23 do quadro abaixo (backup mais amigável e vários
 > PDFs por ficha) — o 23 muda o modelo de dados e só vai com o seu OK.
+> **V7.6.1 (robustez da Onda 4):** a conversão dos PDFs não trava mais o acesso aos arquivos (upgrade
+> bloqueado por outra aba, upgrade recusado, registro problemático), a tela sempre desenha, o coletor
+> de órfãos exige catálogo realmente lido, o tour fecha com ✕/clique fora/Esc e não reaparece a cada
+> recarga na mesma sessão, e o manual abre mesmo com a janela nova bloqueada.
 >
 > **Entregue fora das ondas, a pedido (V7.3.0 — 13/10):** o sistema saiu de **24 paletas de tema**
 > para **2 (Claro padrão + Escuro)**. As 24 paletas do shell, 23 da Catalogação, 23 × 11 dos
@@ -329,7 +333,7 @@ já estava corrigido no `.bat` atual.
 
 | # | Melhoria | Observação | Status |
 |---|---|---|---|
-| 21 | Guardar PDF como `Blob` no IndexedDB (economiza ~33%) + *garbage collector* de PDFs órfãos | exige migração v2→v3 e ajuste no backup | ✅ entregue (migração no `upgradeneeded`, backup segue em base64 e os leitores aceitam os dois formatos) |
+| 21 | Guardar PDF como `Blob` no IndexedDB (economiza ~33%) + *garbage collector* de PDFs órfãos | exige migração v2→v3 e ajuste no backup | ✅ entregue (migração no `upgradeneeded`, backup segue em base64 e os leitores aceitam os dois formatos; **V7.6.1**: upgrade bloqueado/recusado não deixa o sistema sem os arquivos) |
 | 22 | Backup mais amigável: aviso de tamanho, "backup sem PDFs" e/ou `.zip` com os PDFs de verdade | hoje o JSON embute todos os PDFs em base64 | ⏳ em aberto |
 | 23 | Vários PDFs por ficha (anexar revisão sem perder o anterior) | mexe no modelo de dados; só com o seu OK | ⏳ em aberto |
 

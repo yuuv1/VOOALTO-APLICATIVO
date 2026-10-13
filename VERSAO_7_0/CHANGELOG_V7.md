@@ -1,5 +1,45 @@
 # VOOALTO V7 — Registro de alterações
 
+## V7.6.1 — robustez da Onda 4 (2026-10-13)
+
+Revisão da Onda 4 procurando o que pudesse travar na prática. **Nenhuma ferramenta mudou de
+comportamento**: mesma tela, mesmos botões, mesmos cálculos — o que mudou é o que acontece quando
+algo dá errado no meio do caminho.
+
+### A conversão dos PDFs (v2 → v3) não pode mais travar o acesso aos arquivos
+- **Outra aba aberta:** o navegador **bloqueia** a atualização de versão do banco enquanto outra aba
+  do Vooalto está com ele aberto. Nessa situação o pedido ficava pendurado — miniatura girando para
+  sempre e **📄 Visualizar PDF** não abria. Agora, depois de um instante, o sistema abre o banco
+  **sem subir de versão**: segue funcionando com os arquivos no formato antigo (todos os leitores
+  aceitam os dois) e a conversão acontece numa próxima abertura.
+- **Upgrade recusado pelo navegador:** em vez de falhar, volta a abrir o banco como está.
+- **Registro problemático:** o erro do `cursor.update` passou a ser tratado. Antes ele **abortava a
+  transação de upgrade inteira** (o banco podia ficar sem os *stores* novos); agora o registro fica
+  como está — o leitor converte na hora — e os demais são convertidos normalmente.
+- **A tela nunca fica sem desenhar:** o desenho da Catalogação não depende mais do resultado da
+  conversão (uma falha ali deixava a tela sem atualizar).
+
+### Coletor de órfãos: uma trava a mais
+Ele passou a exigir que o catálogo tenha sido **realmente lido** do `localStorage` (não basta a
+chave existir): com o catálogo ilegível e a lista vazia, **nada** é apagado do banco.
+
+### Tour de boas-vindas
+- Fecha com o **✕** novo, com **clique fora** do cartão e com **Esc** (antes só saía pelo botão).
+- Não reaparece a cada recarga na mesma sessão — em prévia/navegador com armazenamento bloqueado ele
+  voltava a cada F5 e parecia que o sistema tinha zerado.
+
+### Manual e botões de ajuda
+- **📖 Ver manual completo** nos 4 lugares (tour, ajuda da Catalogação, da Ficha e do Orçamento)
+  ganhou plano B: se o navegador bloquear a janela nova (prévia, ou instalado como aplicativo), o
+  manual abre na mesma aba em vez de não fazer nada.
+- O rodapé do `manual.html` ainda dizia **7.5.0**; agora acompanha a versão do sistema.
+- `package-lock.json` estava com a versão **7.1.0** desde a V7.1 — sincronizado com o `package.json`.
+
+### Verificação
+* Testes novos no `tests/test_onda4_v7.js`: banco que **recusa** o upgrade (o sistema continua lendo
+  os PDFs antigos, sem pendurar a leitura) e catálogo corrompido (o coletor **não** apaga nada).
+* Suíte completa **357 verificações OK** (`npm test`) + Python (`npm run test:python`).
+
 ## V7.6.0 — Onda 4: estrutura de dados (2026-10-13)
 
 Quarta onda (`ANALISE_TECNICA_V7.md`, item 21). É a que mexe no **armazenamento** — a de maior
