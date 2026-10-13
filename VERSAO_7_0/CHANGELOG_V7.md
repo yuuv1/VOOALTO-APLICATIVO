@@ -1,5 +1,54 @@
 # VOOALTO V7 — Registro de alterações
 
+## V7.6.0 — Onda 4: estrutura de dados (2026-10-13)
+
+Quarta onda (`ANALISE_TECNICA_V7.md`, item 21). É a que mexe no **armazenamento** — a de maior
+risco —, então veio com duas garantias: a migração roda **dentro do próprio banco** (nada é
+copiado para outro lugar) e **todo leitor aceita os dois formatos**, ou seja, se a conversão não
+puder acontecer, o sistema continua funcionando exatamente como antes, sem perder nada.
+
+### A9 — PDF em base64 ocupava ~33% mais espaço
+O arquivo era guardado como `data:application/pdf;base64,...`: um PDF de 3 MB ocupava ~4 MB de
+disco e virava uma **string gigante na memória**, refeita a cada leitura (leitor, miniatura,
+“abrir em nova aba”, download e backup).
+
+Agora o IndexedDB guarda **os bytes do próprio arquivo (Blob)**:
+* anexar um PDF **não passa mais por base64**: o arquivo vai direto para o banco — antes havia um
+  `FileReader.readAsDataURL` no caminho, que inflava 33% e travava a interface em arquivos grandes;
+* o pdf.js recebe os bytes por `Blob.arrayBuffer()` (com `FileReader.readAsArrayBuffer` de reserva
+  para navegador antigo, tipo Safari anterior ao 14);
+* leitor, miniatura, download e “⧉ Nova aba” já trabalhavam com `fetch(data)` — seguem iguais;
+* o **backup `.json` continua em base64** (é um arquivo de texto): exportar converte Blob → base64,
+  importar converte de volta. Backup gerado por qualquer versão abre em qualquer versão.
+
+### Migração v2 → v3 (uma vez, no navegador de quem já usa)
+O banco `vooalto_pdf_store_v2` sobe para a **versão 3** e os PDFs em base64 são convertidos para
+Blob no mesmo `upgradeneeded`, com cursor, registro por registro. **O nome do banco foi mantido de
+propósito** — renomear deixaria os dados de quem já usa para trás. Se um registro não puder ser
+convertido, ele fica como está e o leitor converte na hora: nada é perdido.
+
+### Coletor de arquivos órfãos (novo)
+PDFs e fichas técnicas ficam no banco com a chave = id da ficha. Quando uma ficha sumia (import que
+substituiu tudo, exclusão interrompida, versão antiga), o arquivo continuava ocupando espaço para
+sempre. Agora, ao abrir o sistema, uma varredura libera **o que não pertence a nenhuma ficha** e
+avisa: “🧹 N arquivo(s) antigo(s) sem ficha foram liberados”.
+
+*Trava de segurança:* a varredura **só roda quando o catálogo foi lido do localStorage** — se o
+localStorage estiver vazio, o que está no banco pode ser a única cópia e nada é apagado.
+
+### Verificação
+* Teste novo `tests/test_onda4_v7.js` (40 verificações) com um **IndexedDB de teste**
+  (`tests/_fake_idb.js`): banco v2 com base64 entra → banco v3 com Blob sai, **byte a byte**; a
+  gravação normaliza base64 de backup antigo; os leitores aceitam os dois formatos; o coletor
+  libera só o órfão, não roda sem catálogo e é idempotente.
+* Suíte completa **344 verificações OK** (`npm test`) + Python (`npm run test:python`).
+* Espaço: **~33% menos por PDF** no banco (o `.json` de backup não muda de tamanho, porque continua
+  sendo texto).
+
+### Ainda em aberto nesta onda
+Os itens **22** (backup mais amigável: aviso de tamanho, “backup sem PDFs”, `.zip`) e **23** (vários
+PDFs por ficha) do `ANALISE_TECNICA_V7.md` — o 23 muda o modelo de dados e só vai com o seu OK.
+
 ## V7.5.0 — Onda 3: experiência do usuário (2026-10-13)
 
 Terceira onda, agora de **experiência** (`SUGESTOES_UX_V7.md`). As ferramentas continuam

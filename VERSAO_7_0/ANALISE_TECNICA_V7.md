@@ -1,7 +1,7 @@
 # VOOALTO V7 — Análise técnica e plano de melhorias
 
-> **Status:** análise concluída e **Ondas 1, 2 e 3 entregues** (V7.2.0, V7.3.0, V7.4.0 e V7.5.0)
-> (`VERSAO_7_0/`, suíte de testes verde: JS 12 arquivos + 3 arquivos de teste Python/9 casos).
+> **Status:** análise concluída e **Ondas 1, 2, 3 e 4 entregues** (V7.2.0 → V7.6.0)
+> (`VERSAO_7_0/`, suíte de testes verde: JS 14 arquivos + 3 arquivos de teste Python/9 casos).
 > **Base analisada:** `VERSAO_7_0/ATUALIZACAO_V7` (a versão que está publicada na `main`).
 > **Foco principal do pedido:** conseguir **ver os PDFs dentro do próprio sistema**, sem quebrar nada.
 > **Regra que segui:** nenhuma ferramenta atual (Ficha Técnica, Catalogação, Orçamento) mudou de
@@ -11,8 +11,12 @@
 > teste bomba-relógio corrigido (A3) · código morto removido (A5) · `storage.persist()` + aviso de
 > uso (A7) · plano B do iframe com `blob:` (A6) · confirmação de exclusão com nome da ficha e selo
 > "💾 Salvo HH:MM" (A10) · versão alinhada em 7.2.0 (A11). Detalhes em `CHANGELOG_V7.md`.
-> **Pendente (Ondas 3 e 4):** os itens de experiência do `SUGESTOES_UX_V7.md` e a estrutura de
-> dados (PDF como Blob no IndexedDB — A9), que só valem a pena se você quiser.
+> **Entregue na Onda 3 (V7.5.0):** tour de boas-vindas (A1) · ajuda dentro de cada módulo (B1) ·
+> dicas nos botões que faltavam (B2) · selo visível de autosave (C1) · legenda das prioridades (B3) ·
+> estados vazios que ensinam (B4) · listas de atalhos (C4) · `manual.html` offline (A4).
+> **Entregue na Onda 4 (V7.6.0):** PDF como `Blob` no IndexedDB com migração v2→v3 (A9) e coletor
+> de arquivos órfãos. **Pendente:** itens 22 e 23 do quadro abaixo (backup mais amigável e vários
+> PDFs por ficha) — o 23 muda o modelo de dados e só vai com o seu OK.
 >
 > **Entregue fora das ondas, a pedido (V7.3.0 — 13/10):** o sistema saiu de **24 paletas de tema**
 > para **2 (Claro padrão + Escuro)**. As 24 paletas do shell, 23 da Catalogação, 23 × 11 dos
@@ -321,13 +325,13 @@ textos, GIFs de 5–10 s no manual e ficha de referência para imprimir) — sã
 de treino, não mudam a experiência de quem já usa. O item **D1** (typo "Abrendo" no instalador)
 já estava corrigido no `.bat` atual.
 
-### Onda 4 — Estrutura de dados (fazer só se você quiser)
+### Onda 4 — Estrutura de dados ✅ **item 21 entregue na V7.6.0**
 
-| # | Melhoria | Observação |
-|---|---|---|
-| 21 | Guardar PDF como `Blob` no IndexedDB (economiza ~33%) + *garbage collector* de PDFs órfãos | exige migração v2→v3 e ajuste no backup |
-| 22 | Backup mais amigável: aviso de tamanho, "backup sem PDFs" e/ou `.zip` com os PDFs de verdade | hoje o JSON embute todos os PDFs em base64 |
-| 23 | Vários PDFs por ficha (anexar revisão sem perder o anterior) | mexe no modelo de dados; só com o seu OK |
+| # | Melhoria | Observação | Status |
+|---|---|---|---|
+| 21 | Guardar PDF como `Blob` no IndexedDB (economiza ~33%) + *garbage collector* de PDFs órfãos | exige migração v2→v3 e ajuste no backup | ✅ entregue (migração no `upgradeneeded`, backup segue em base64 e os leitores aceitam os dois formatos) |
+| 22 | Backup mais amigável: aviso de tamanho, "backup sem PDFs" e/ou `.zip` com os PDFs de verdade | hoje o JSON embute todos os PDFs em base64 | ⏳ em aberto |
+| 23 | Vários PDFs por ficha (anexar revisão sem perder o anterior) | mexe no modelo de dados; só com o seu OK | ⏳ em aberto |
 
 ---
 
