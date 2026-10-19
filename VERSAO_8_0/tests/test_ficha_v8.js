@@ -79,6 +79,48 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   t('sugestões de clientes seguem funcionando com o que o módulo lembra',
     `localStorage.setItem('vooalto_ficha_clientes_v7', JSON.stringify({'Escola X':'111'})); document.getElementById('dc_nome').textContent='Esco'; fichaShowSuggestions(); document.getElementById('fichaSugBox').style.display==='block'`);
 
+  /* ═══ BUG V7 — "Nova ficha" só limpava a página 1 ═══════════════════
+     limparParaNovaFicha chamava fecharPaginaExtra(), que nunca existiu em
+     versão nenhuma. A guarda `typeof === 'function'` era sempre falsa e as
+     páginas 2, 3… ficavam com o cliente/modelos da ficha anterior. */
+  ow.eval("document.getElementById('dc_nome').textContent='CLIENTE ANTIGO'");
+  ow.eval("v7AdicionarPaginaComUndo('normal')");
+  ow.eval("v7AdicionarPaginaComUndo('branca')");
+  const antes = ow.eval("[paginas.length, document.querySelectorAll('#pw .folha').length, document.querySelectorAll('#pw .folha-branca').length]");
+  console.log('  [info] antes de limpar: paginas/folhas/brancas =', JSON.stringify(antes));
+  t('página extra conta como conteúdo (não pode ser descartada sem oferecer salvar)', `v8FichaTemConteudo()`);
+  ow.eval('limparParaNovaFicha(7)');
+  const depois = ow.eval("[paginas.length, totalPaginas, document.querySelectorAll('#pw .folha').length, document.querySelectorAll('#pw .folha-branca').length, document.querySelectorAll('#extraPagesNav .sb-page-group').length]");
+  t('nova ficha apaga TODAS as páginas extras (array, contador, DOM e menu)',
+    JSON.stringify(depois) === JSON.stringify([0,1,1,0,0]), { depois });
+  t('nova ficha não deixa label nem input de página órfão',
+    `document.querySelectorAll('#pw .page-label').length === 1 && document.querySelectorAll('input[id^="canvasInput_"]').length === 0`);
+
+  /* ═══ BUG V7 — Preenchimento rápido com metade dos campos ═══════════ */
+  ow.eval('abrirPreenchimentoRapido()');
+  const ids = ['v4qCliente','v4qDoc','v4qTel','v4qVendedor','v4qEnd','v4qCidade','v4qCep','v4qData','v4qTecido','v4qPrevisao','v4qNum','v4qEntrada'];
+  t('preenchimento rápido: todos os campos de cliente/pedido',
+    JSON.stringify(ids.filter(id => !ow.document.getElementById(id))) === '[]', { faltando: ids.filter(id => !ow.document.getElementById(id)) });
+  t('preenchimento rápido: tabela de medidas (24 campos)',
+    `document.querySelectorAll('#v4QuickModal input[data-med]').length === 24`);
+  t('preenchimento rápido: painel de cores',
+    `!!document.getElementById('v4QuickCores') && document.querySelectorAll('#v4QuickCores .v4-cor-row').length >= 1`);
+
+  ow.eval("document.getElementById('v4qDoc').value='12.345.678/0001-99'");
+  ow.eval("document.getElementById('v4qEnd').value='Rua A, 10'");
+  ow.eval("document.getElementById('v4qCidade').value='Goiânia - GO'");
+  ow.eval("document.getElementById('v4qCep').value='74000-000'");
+  ow.eval("document.querySelector('#v4QuickCores [data-cor-nome]').value='Azul'");
+  ow.eval("document.querySelector('#v4QuickCores [data-cor-hex]').value='#123456'");
+  ow.eval("(function(){var m=document.querySelectorAll('#v4QuickModal input[data-med=\"fem\"]');m[0].value='43';m[1].value='55'})()");
+  ow.eval('aplicarPreenchimentoRapido()');
+  t('aplicar grava CPF/CNPJ, endereço, cidade e CEP',
+    `['dc_doc','dc_end','dc_cidade','dc_cep'].every(id=>document.getElementById(id).textContent.trim()!=='')`);
+  t('aplicar grava a cor (hex + nome) na paleta',
+    `document.getElementById('chi_1').value==='#123456' && document.getElementById('cni_1').value==='Azul'`);
+  t('aplicar grava as medidas de largura/comprimento',
+    `(function(){var m=document.querySelectorAll('#folha1 .med-bloco.fem .med-inp');return m[0].value==='43'&&m[1].value==='55'})()`);
+
   if (oerr.length) fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
   console.log(fail ? `\n═══ FICHA V8: ${fail} FALHA(S) ═══` : '\n═══ FICHA V8: tudo OK ═══');

@@ -936,7 +936,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
     <div class="sb-section">
       <div class="sb-section-title">Ficha</div>
       <div class="sb-section-desc">Comece do zero ou preencha os dados principais num clique</div>
-      <button class="sb-btn sb-btn-primary" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelos, valores, grade de tamanhos e aviso de uma vez só">
+      <button class="sb-btn sb-btn-primary" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, CPF, endereço, modelos, grade, cores, medidas e aviso de uma vez só">
         <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-bolt"/></svg></span>
         <span class="sb-btn-label">Preenchimento rápido</span>
       </button>
@@ -3506,7 +3506,11 @@ function v8FichaTemConteudo(){
   const mi = document.querySelector('#prodLinhas tr input');
   const modelo = mi ? (mi.value||'').trim() : '';
   const temImagem = (typeof layers !== 'undefined' && Array.isArray(layers)) && layers.length > 0;
-  return !!(nome || modelo || temImagem);
+  /* Uma página extra já é conteúdo. Sem esta linha, agora que "Nova ficha"
+     realmente apaga as páginas 2, 3…, uma ficha cujo trabalho estava só
+     nelas seria considerada vazia e descartada sem oferecer para salvar. */
+  const temPaginaExtra = (typeof paginas !== 'undefined' && Array.isArray(paginas)) && paginas.length > 0;
+  return !!(nome || modelo || temImagem || temPaginaExtra);
 }
 /* A gravação de verdade fica no módulo Minhas fichas (IndexedDB). */
 async function v8SalvarFicha(opts){
@@ -3538,6 +3542,70 @@ function novaFicha(){ return v8NovaFicha(); }
 /* ══ Preenchimento rápido (V7.1 — guiado por etapas, com modelos, grade e totais) ══ */
 const V4Q_SIZES_M=['PP','P','M','G','GG','3G','4G','5G','6G','7G'];
 const V4Q_SIZES_I=['2a','4a','6a','8a','10a','12a','14a'];
+/* tamanhos da tabela de medidas da folha (largura × comprimento) */
+const V4Q_MED_SIZES=['PP','P','M','G','GG','3G'];
+
+/* ── Cores no preenchimento rápido ── */
+function v4AdicionarCorQ(hex,nome){
+  const box=$('v4QuickCores'); if(!box)return;
+  const row=document.createElement('div'); row.className='v4-cor-row';
+  row.innerHTML='<input type="color" data-cor-hex value="'+(hex||'#3B82F6')+'" title="Escolher a cor">'
+    +'<input type="text" data-cor-nome placeholder="Nome da cor (ex: Azul marinho)" value="'+String(nome==null?'':nome).replace(/"/g,'&quot;')+'">'
+    +'<button class="v4-mini-btn red" title="Remover esta cor" onclick="this.closest(\'.v4-cor-row\').remove()">✕</button>';
+  box.appendChild(row);
+}
+function v4CarregarCores(){
+  const box=$('v4QuickCores'); if(!box)return;
+  box.innerHTML='';
+  document.querySelectorAll('#coresList .cor-item').forEach(it=>{
+    const i=it.id.replace('ci_','');
+    v4AdicionarCorQ(($('chi_'+i)||{}).value||'#3B82F6',($('cni_'+i)||{}).value||'');
+  });
+  if(!box.children.length)v4AdicionarCorQ();
+}
+function v4AplicarCores(){
+  const box=$('v4QuickCores'); if(!box)return;
+  const cores=[...box.querySelectorAll('.v4-cor-row')].map(r=>({
+    hex:(((r.querySelector('[data-cor-hex]')||{}).value)||'').toUpperCase(),
+    nome:(((r.querySelector('[data-cor-nome]')||{}).value)||'').trim()
+  })).filter(c=>c.nome||(c.hex&&c.hex!=='#3B82F6'));
+  if(!cores.length)return;            /* nada preenchido: a paleta atual fica */
+  $('coresList').innerHTML=''; corId=0;
+  cores.forEach(c=>adicionarCor(c.hex,c.nome||'COR'));
+  /* espelha nas páginas extras — mesmo comportamento de copiarP1paraExtra */
+  paginas.forEach(p=>{
+    if(p.tipo==='branca')return;
+    const lista=$('coresList_'+p.id); if(!lista)return;
+    lista.innerHTML=''; p.corId=0;
+    cores.forEach(c=>adicionarCorExtra(p,c.hex,c.nome||'COR'));
+  });
+}
+
+/* ── Medidas no preenchimento rápido ── */
+function v4PreencherMedidas(){
+  ['fem','masc'].forEach(bloco=>{
+    const els=document.querySelectorAll('#folha1 .med-bloco.'+bloco+' .med-inp');
+    document.querySelectorAll('#v4QuickModal input[data-med="'+bloco+'"]').forEach(inp=>{
+      const i=parseInt(inp.getAttribute('data-i'),10);
+      inp.value=(els[i]&&els[i].value)||'';
+    });
+  });
+}
+function v4AplicarMedidas(){
+  ['fem','masc'].forEach(bloco=>{
+    const els=document.querySelectorAll('#folha1 .med-bloco.'+bloco+' .med-inp');
+    document.querySelectorAll('#v4QuickModal input[data-med="'+bloco+'"]').forEach(inp=>{
+      const i=parseInt(inp.getAttribute('data-i'),10);
+      const v=(inp.value||'').trim();
+      if(els[i]&&v!=='')els[i].value=v;
+    });
+    paginas.forEach(p=>{
+      if(p.tipo==='branca')return;
+      const dst=document.querySelectorAll('#folha_'+p.id+' .med-bloco.'+bloco+' .med-inp');
+      els.forEach((el,i)=>{if(dst[i])dst[i].value=el.value;});
+    });
+  });
+}
 
 function abrirPreenchimentoRapido() {
   if(!$('v4QuickModal')) createQuickModal();
@@ -3549,6 +3617,16 @@ function abrirPreenchimentoRapido() {
   setV('v4qTecido', $('tipoTecido')?($('tipoTecido').textContent||'').trim():'');
   setV('v4qAviso', $('avisoTxt')?$('avisoTxt').value:'');
   setV('v4qEntrada', $('entradaVal')?$('entradaVal').value:'');
+  /* V8: os campos que faltavam no painel (eram só 6 dos 16 da ficha) */
+  setV('v4qDoc',    $('dc_doc')?($('dc_doc').textContent||'').trim():'');
+  setV('v4qEnd',    $('dc_end')?($('dc_end').textContent||'').trim():'');
+  setV('v4qCidade', $('dc_cidade')?($('dc_cidade').textContent||'').trim():'');
+  setV('v4qCep',    $('dc_cep')?($('dc_cep').textContent||'').trim():'');
+  setV('v4qNum',    $('fichaNum')?$('fichaNum').value:'');
+  setV('v4qData',   $('fichaData')?$('fichaData').value:'');
+  /* cores e medidas já lançadas entram no painel, para editar em vez de refazer */
+  v4CarregarCores();
+  v4PreencherMedidas();
   /* lembra o último vendedor e tecido usados (agiliza a próxima ficha) */
   try{
     const pref=JSON.parse(localStorage.getItem('vooalto_ficha_quick_v7')||'{}');
@@ -3579,30 +3657,55 @@ function createQuickModal(){
   const m=document.createElement('div'); m.id='v4QuickModal'; m.className='v4plus';
   const gradeInputs=(prefix,arr)=>arr.map(t=>`<label>${t}<input id="v4g_${prefix}_${t}" inputmode="numeric" data-grade="1"></label>`).join('');
   const gradeCard=(prefix,titulo,cls,arr)=>`<div class="v4-grade-card ${cls||''}"><h4>${titulo}</h4><div class="v4-grade-grid">${gradeInputs(prefix,arr)}</div></div>`;
+  /* Medidas: mesma ordem de inputs da folha (cada tamanho = largura, comprimento) */
+  const medCard=(bloco,titulo,sub)=>`<div class="v4-med-card"><h4>${titulo}${sub?' <small>'+sub+'</small>':''}</h4>
+    <table class="v4-med-t"><thead><tr><th>Tam.</th><th>Larg.</th><th>Comp.</th></tr></thead><tbody>
+    ${V4Q_MED_SIZES.map((t,i)=>`<tr><td>${t}</td><td><input data-med="${bloco}" data-i="${i*2}" inputmode="numeric"></td><td><input data-med="${bloco}" data-i="${i*2+1}" inputmode="numeric"></td></tr>`).join('')}
+    </tbody></table></div>`;
   m.innerHTML=`
   <div class="v4-modal-card">
     <div class="v4-modal-head"><h3>⚡ Preenchimento rápido</h3><button title="Cancelar o preenchimento rápido" class="v4-cancel" onclick="fecharPreenchimentoRapido()">Fechar</button></div>
     <div class="v4-modal-body">
-      <p class="v4-hint">Preencha o que souber e clique em <b>Aplicar tudo</b> no final. <b>Enter</b> pula para o próximo campo · <b>Esc</b> fecha · <b>Ctrl+Enter</b> aplica.</p>
-      <div class="v4-step"><span class="n">1</span> Dados do pedido <small>cliente, prazo e tecido</small></div>
+      <p class="v4-hint">Preencha o que souber e clique em <b>Aplicar tudo</b> no final. <b>Enter</b> pula para o próximo campo · <b>Esc</b> fecha · <b>Ctrl+Enter</b> aplica. Campo em branco não mexe no que já está na ficha.</p>
+
+      <div class="v4-step"><span class="n">1</span> Cliente e pedido <small>todos os campos de cabeçalho e dados do cliente</small></div>
       <div class="v4-grid">
         <div class="v4-field"><label>Cliente</label><input id="v4qCliente" list="v4qClientesDL" placeholder="Digite o nome — clientes conhecidos aparecem" autocomplete="off"><datalist id="v4qClientesDL"></datalist><span class="v4-hint">escolhendo um cliente conhecido, o telefone preenche sozinho</span></div>
-        <div class="v4-field"><label>Vendedor</label><input id="v4qVendedor" placeholder="Quem atendeu"></div>
+        <div class="v4-field"><label>CPF / CNPJ</label><input id="v4qDoc" placeholder="000.000.000-00"></div>
         <div class="v4-field"><label>Telefone</label><input id="v4qTel" placeholder="Ex: 62 99999-0000"></div>
-        <div class="v4-field"><label>Previsão</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div>
+        <div class="v4-field"><label>Vendedor (a)</label><input id="v4qVendedor" placeholder="Quem atendeu"></div>
+        <div class="v4-field"><label>Endereço</label><input id="v4qEnd" placeholder="Rua, número, bairro"></div>
+        <div class="v4-field"><label>Cidade</label><input id="v4qCidade" placeholder="Cidade — UF"></div>
+        <div class="v4-field"><label>CEP</label><input id="v4qCep" placeholder="00000-000"></div>
+        <div class="v4-field"><label>Data de emissão</label><input id="v4qData" type="date"></div>
         <div class="v4-field"><label>Tipo de tecido</label><input id="v4qTecido" placeholder="Ex: Piquet PA"></div>
+        <div class="v4-field"><label>Previsão de entrega</label><input id="v4qPrevisao" placeholder="Ex: 30 dias"></div>
+        <div class="v4-field"><label>Nº da ficha</label><input id="v4qNum" placeholder="0001"></div>
         <div class="v4-field"><label>Entrada (R$) — opcional</label><input id="v4qEntrada" placeholder="0,00" inputmode="decimal"></div>
       </div>
+
       <div class="v4-step"><span class="n">2</span> Modelos da produção <small>valor × quantidade — o total aparece sozinho</small></div>
       <table class="v4-plus-table"><thead><tr><th>Modelo / descrição</th><th style="width:110px">Valor unit.</th><th style="width:80px">Qtd</th><th style="width:92px">Total</th><th style="width:44px"></th></tr></thead><tbody id="v4ModelRows"></tbody></table>
       <button title="Adicionar uma linha na tabela de modelos" class="v4-mini-btn" style="margin-top:6px" onclick="v4AddModeloRow()">+ Adicionar modelo</button>
+
       <div class="v4-step"><span class="n">3</span> Grade de tamanhos <small>preencha só os tamanhos usados</small></div>
       <div class="v4-grade-box">
         ${gradeCard('m','Masculino','',V4Q_SIZES_M)}
         ${gradeCard('b','Baby look fem.','',V4Q_SIZES_M)}
         ${gradeCard('i','Infantil','inf',V4Q_SIZES_I)}
       </div>
-      <div class="v4-step"><span class="n">4</span> Observação / aviso <small>vai para o rodapé da ficha</small></div>
+
+      <div class="v4-step"><span class="n">4</span> Cores do tecido <small>opcional — se preencher alguma, a paleta da ficha é substituída</small></div>
+      <div class="v4-cores" id="v4QuickCores"></div>
+      <button title="Adicionar outra cor" class="v4-mini-btn" style="margin-top:6px" onclick="v4AdicionarCorQ()">+ Adicionar cor</button>
+
+      <div class="v4-step"><span class="n">5</span> Medidas em cm <small>largura × comprimento de cada tamanho — em branco mantém o que está</small></div>
+      <div class="v4-med-box">
+        ${medCard('fem','Feminino','(baby look)')}
+        ${medCard('masc','Masculino','')}
+      </div>
+
+      <div class="v4-step"><span class="n">6</span> Observação / aviso <small>vai para o rodapé da ficha</small></div>
       <div class="v4-field" style="grid-column:1/-1"><textarea id="v4qAviso" placeholder="Observação opcional — se deixar vazio, mantém o aviso atual da ficha"></textarea></div>
     </div>
     <div class="v4-actions">
@@ -3610,7 +3713,7 @@ function createQuickModal(){
       <button title="Cancelar o preenchimento rápido" class="v4-cancel" onclick="fecharPreenchimentoRapido()">Cancelar</button>
       <button title="Aplicar tudo nos campos" class="v4-apply" onclick="aplicarPreenchimentoRapido()">✅ Aplicar tudo</button>
     </div>
-  </div>`;
+  </div>`;;
   document.body.appendChild(m);
   m.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();aplicarPreenchimentoRapido();return}
@@ -3672,6 +3775,17 @@ function aplicarPreenchimentoRapido(){
   const setCE=(id,v)=>{const el=$(id); if(el) el.innerHTML=v||''}; const setVal=(id,v)=>{const el=$(id); if(el) el.value=v||''};
   setCE('dc_nome',$('v4qCliente').value.trim()); setCE('dc_vendedor',$('v4qVendedor').value.trim()); setCE('dc_tel',$('v4qTel').value.trim());
   setVal('previsao',$('v4qPrevisao').value); setCE('tipoTecido',$('v4qTecido').value);
+  setCE('dc_doc',($('v4qDoc').value||'').trim());
+  setCE('dc_end',($('v4qEnd').value||'').trim());
+  setCE('dc_cidade',($('v4qCidade').value||'').trim());
+  setCE('dc_cep',($('v4qCep').value||'').trim());
+  if(($('v4qData').value||'').trim()!=='') setVal('fichaData',($('v4qData').value||'').trim());
+  if(($('v4qNum').value||'').trim()!==''){
+    const num=($('v4qNum').value||'').trim();
+    setVal('fichaNum',num);
+    paginas.forEach(p=>{const e=$('fichaNum_'+p.id); if(e)e.value=num;});
+    if(typeof salvarNum==='function'){try{salvarNum();}catch(e){}}
+  }
   if($('v4qAviso').value) setVal('avisoTxt',$('v4qAviso').value);
   if($('v4qEntrada')&&$('v4qEntrada').value.trim()!==''){ setVal('entradaVal',$('v4qEntrada').value); if(typeof calcEntrada==='function')calcEntrada(); }
   /* modelos — substitui as linhas apenas se algo foi preenchido */
@@ -3696,6 +3810,9 @@ function aplicarPreenchimentoRapido(){
   };
   applyG('m',V4Q_SIZES_M); applyG('b',V4Q_SIZES_M); applyG('i',V4Q_SIZES_I);
   if(typeof recalcGrade==='function')recalcGrade();
+  v4AplicarCores();
+  v4AplicarMedidas();
+  if(typeof atualizarRodapes==='function')atualizarRodapes();
   /* lembra vendedor/tecido para a próxima ficha */
   try{
     const pref=JSON.parse(localStorage.getItem('vooalto_ficha_quick_v7')||'{}');
@@ -3713,6 +3830,40 @@ window.v4FecharPreenchimentoRapido=fecharPreenchimentoRapido;
 window.v4AplicarPreenchimentoRapido=aplicarPreenchimentoRapido;
 
 /* ══ Limpar para nova ficha ══ */
+
+/* Remove TODAS as páginas extras (2, 3, 4…) e deixa só a folha 1.
+   ──────────────────────────────────────────────────────────────────────
+   BUG (vinha da V7): limparParaNovaFicha tentava isso chamando
+   `fecharPaginaExtra`, uma função que nunca existiu em versão nenhuma do
+   sistema. A guarda `if(typeof fecharPaginaExtra === 'function')` era sempre
+   falsa, então o bloco inteiro nunca rodava. Resultado: ao clicar em
+   "Nova ficha" com 3 páginas abertas, só a página 1 era limpa e as outras
+   continuavam com o cliente, os modelos e a grade da ficha anterior.
+   Aqui a limpeza é feita de verdade e pelo estado da aplicação, não pelo DOM
+   apenas: páginas extras saem do DOM, do array `paginas` e do contador, e a
+   numeração é refeita a partir do que sobrou. */
+function v8LimparPaginasExtras(){
+  let removidas=0;
+  [...document.querySelectorAll('#pw .folha,#pw .folha-branca')].forEach(el=>{
+    if(el.id==='folha1')return;                 /* a página 1 fica */
+    const pid=el.id.replace(/^folha_/,'');
+    const lb=document.getElementById('label_'+pid); if(lb)lb.remove();
+    const inp=document.getElementById('canvasInput_'+pid); if(inp)inp.remove();
+    el.remove(); removidas++;
+  });
+  /* órfãos: rótulos e inputs de páginas que já não existem no DOM */
+  document.querySelectorAll('#pw .page-label').forEach(el=>{if(el.id!=='label_folha1')el.remove();});
+  document.querySelectorAll('input[id^="canvasInput_"]').forEach(el=>el.remove());
+  paginas.length=0;
+  totalPaginas=1;
+  v7PaginaAtiva=null;
+  if(typeof v7EsconderToolbar==='function'){try{v7EsconderToolbar();}catch(e){}}
+  atualizarNavSidebar();
+  if(typeof v7Renumerar==='function'){try{v7Renumerar();}catch(e){}}
+  else if(typeof atualizarRodapes==='function')atualizarRodapes();
+  return removidas;
+}
+
 function limparParaNovaFicha(novoNum) {
   v7SuppressSnap=true;
   try{ localStorage.removeItem('vooalto_v7_ficha_ativa'); }catch(e){}
@@ -3722,11 +3873,9 @@ function limparParaNovaFicha(novoNum) {
   if(!document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
     try{ v7RestaurarPaginaP1(null); }catch(e){ console.warn('restaurar p1',e); }
   }
-  // Limpa páginas extras que possam ter ficado abertas de ficha anterior
-  if(typeof fecharPaginaExtra==='function'){
-    const extras=[...document.querySelectorAll('[id^="folha"]')].filter(el=>el.id!=='folha1');
-    extras.forEach(el=>{try{fecharPaginaExtra(el.id);}catch(e){}});
-  }
+  /* Páginas extras da ficha anterior saem ANTES de limpar a página 1:
+     sem isso o cliente antigo continuava aparecendo nas páginas 2, 3… */
+  try{ v8LimparPaginasExtras(); }catch(e){ console.warn('limpar extras',e); }
   ['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep','tipoTecido'].forEach(id=>{const el=$(id);if(el)el.innerHTML='';});
   ['previsao','entradaVal'].forEach(id=>{const el=$(id);if(el)el.value='';});
   aplicarNumeroFicha(novoNum);
@@ -3920,6 +4069,26 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 <style id="v4-quickfill-texttools-css">
 /* V4.2 - Preenchimento completo sem painel Canva + texto avançado */
 #v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:#111827;margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:#64748b;text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid #CBD5E1;border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:#fff}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:#111827;color:#fff}.v4-mini-btn.red{background:#FEE2E2;color:#991B1B}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:#111827}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:#64748B;text-transform:uppercase}.v4-grade-grid input{border:1.5px solid #CBD5E1;border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
+
+/* ═══ PREENCHIMENTO RÁPIDO — cores e medidas (V8) ═══ */
+.v4-cores{display:flex;flex-direction:column;gap:6px}
+.v4-cor-row{display:flex;gap:8px;align-items:center}
+.v4-cor-row input[type=color]{width:46px;height:38px;padding:3px;border:1.5px solid #CBD5E1;border-radius:9px;background:#fff;cursor:pointer;flex-shrink:0}
+.v4-cor-row input[type=text]{flex:1;min-width:0;border:1.5px solid #CBD5E1;border-radius:9px;padding:9px 11px;font-family:inherit;font-size:12px;outline:none;background:#fff}
+.v4-cor-row input[type=text]:focus{border-color:#111827}
+.v4-cor-row .v4-mini-btn{padding:9px 11px;flex-shrink:0}
+.v4-med-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.v4-med-card{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}
+.v4-med-card h4{font-size:12px;margin:0 0 9px;color:#111827}
+.v4-med-card h4 small{font-size:9px;color:#64748B;font-weight:700}
+.v4-med-t{width:100%;border-collapse:collapse}
+.v4-med-t th{font-size:8px;text-transform:uppercase;color:#64748B;text-align:center;padding:0 3px 5px;font-weight:900}
+.v4-med-t th:first-child{text-align:left}
+.v4-med-t td{padding:2px 3px}
+.v4-med-t td:first-child{font-size:9.5px;font-weight:900;color:#475569;width:34px}
+.v4-med-t input{width:100%;min-width:0;border:1.5px solid #CBD5E1;border-radius:7px;padding:6px 4px;text-align:center;font-size:12px;font-weight:700;font-family:inherit;outline:none;background:#fff}
+.v4-med-t input:focus{border-color:#111827}
+@media(max-width:720px){.v4-med-box{grid-template-columns:1fr}}
 
 /* V7.1 — Preenchimento rápido guiado */
 .v4-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#111827;margin:18px 0 8px;flex-wrap:wrap}

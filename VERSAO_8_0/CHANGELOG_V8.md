@@ -165,3 +165,81 @@ motivos, todos no mesmo bloco de CSS:
 
 `npm test` → **230 verificações, 0 falhas** (11 arquivos) · `test:python` → 7 OK.
 O `sw.js` foi regerado (`vooalto-v8-5dbaa07c7e8a`) e o pacote também.
+
+## V8.0.2 — "Nova ficha" limpava só a página 1 · preenchimento rápido incompleto (2026-10-19)
+
+### 1. "Nova ficha" com várias páginas só limpava a primeira
+
+**Sintoma:** com 3 páginas abertas, clicar em **Nova ficha** deixava as páginas
+2 e 3 intactas — com o cliente, os modelos e a grade da ficha anterior.
+
+**Causa:** `limparParaNovaFicha()` tentava fechar as páginas extras chamando
+`fecharPaginaExtra()`:
+
+```js
+if (typeof fecharPaginaExtra === 'function') {   // sempre falso
+  const extras = [...document.querySelectorAll('[id^="folha"]')]...
+  extras.forEach(el => fecharPaginaExtra(el.id));
+}
+```
+
+`fecharPaginaExtra` **nunca foi definida** — nem na V8, nem na V7, nem antes.
+A guarda `typeof … === 'function'` era sempre falsa e o bloco inteiro nunca
+rodou. O comentário "Limpa páginas extras que possam ter ficado abertas de
+ficha anterior" descrevia uma intenção que o código não cumpria.
+
+**Correção:** `v8LimparPaginasExtras()` faz a limpeza de verdade e pelo estado
+da aplicação, não só pelo DOM:
+
+* remove `folha_*`, `label_*` e `canvasInput_*` das páginas 2, 3, 4…;
+* zera `paginas`, `totalPaginas` e `v7PaginaAtiva`;
+* refaz a numeração com `v7Renumerar()` (que recalcula o total a partir da
+  ordem real do DOM) e redesenha o menu lateral e a faixa de miniaturas.
+
+**Efeito colateral tratado:** agora que as páginas extras **são apagadas de
+verdade**, uma ficha cujo trabalho estava só na página 2 seria considerada
+"vazia" por `v8FichaTemConteudo()` e descartada sem oferecer para salvar. A
+função passou a considerar **página extra = conteúdo**, então o fluxo salva
+antes de limpar, como já fazia com cliente/modelo/imagem.
+
+### 2. Preenchimento rápido com metade das caixas
+
+O painel tinha **9 campos**; a ficha tem **16** mais grade, cores e medidas.
+Faltavam justamente os que dão trabalho para digitar:
+
+| Entrou no painel | Onde vai |
+|---|---|
+| CPF / CNPJ | `dc_doc` |
+| Endereço | `dc_end` |
+| Cidade | `dc_cidade` |
+| CEP | `dc_cep` |
+| Data de emissão | `fichaData` |
+| Nº da ficha | `fichaNum` (+ espelha nas páginas extras) |
+| **Cores do tecido** (cor + nome, quantas quiser) | `coresList` |
+| **Medidas** — largura × comprimento de PP a 3G, feminino e masculino (24 campos) | `.med-bloco` da folha 1 |
+
+Cada bloco novo abre **preenchido com o que já está na ficha**, então o painel
+serve tanto para começar do zero quanto para corrigir uma ficha pronta.
+Regra mantida: **campo em branco não mexe** no que já está lá.
+
+Cores e medidas são espelhadas nas páginas extras, do mesmo jeito que
+`copiarP1paraExtra()` faz quando uma página é criada — sem isso, as páginas
+2, 3… continuariam com a paleta e as medidas velhas.
+
+Também foram atualizados o **manual** (seções "Ajustes", "Minhas fichas",
+rodapé, selo de autosave e o texto do "Nova ficha") e o tooltip do botão.
+
+### Verificação
+
+* `npm test` → **239 verificações, 0 falhas**.
+* Testes novos em `tests/test_ficha_v8.js`:
+  * cria 2 páginas extras, chama `limparParaNovaFicha()` e exige
+    `paginas.length === 0`, `totalPaginas === 1`, **1 folha**, **0 brancas**,
+    **0 grupos no menu** e **0 inputs órfãos**;
+  * `v8FichaTemConteudo()` verdadeiro só por ter página extra;
+  * os 12 campos de cliente/pedido existem no painel;
+  * 24 campos de medida e o painel de cores existem;
+  * aplicar grava CPF/endereço/cidade/CEP, a cor (hex + nome) e as medidas.
+* `tests/test_ux_v8.js`: o teste do `Enter` passou a conferir a **regra**
+  ("vai para o campo seguinte") em vez de um id fixo — ele quebrava a cada
+  campo novo acrescentado, que é exatamente o que aconteceu aqui.

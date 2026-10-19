@@ -84,7 +84,10 @@ async function main() {
   ft(`abrirPreenchimentoRapido(); 'ok'`);
   await new Promise(r => setTimeout(r, 100));
   ft(`document.getElementById('v4qCliente').focus(); document.getElementById('v4qCliente').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})); 'ok'`);
-  check('Enter modal avança p/ Vendedor', ft(`document.activeElement.id`) === 'v4qVendedor');
+  /* a ordem dos campos mudou na V8 (entraram CPF, endereço, cidade, CEP…),
+     então o teste confere a REGRA — Enter vai para o campo seguinte — e não
+     um id fixo, que quebraria a cada campo novo. */
+  check('Enter modal avança para o próximo campo', ft(`(function(){var ins=[...document.querySelectorAll('#v4QuickModal input')];return ins.indexOf(document.activeElement)===1&&ins[1].id==='v4qDoc'})()`) === true);
 
   // ── V7.1: preenchimento rápido guiado (modelos, grade, totais, clientes) ──
   check('modal pré-carrega modelos da ficha', ft(`document.querySelectorAll('#v4ModelRows tr').length`) >= 1);
