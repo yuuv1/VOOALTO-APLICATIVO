@@ -252,14 +252,14 @@ não só o `npm test` final.
 
 | # | Suíte | Resultado |
 |---|---|---|
-| 1 | `test_shell_v8` | 35 OK · 0 falhas |
+| 1 | `test_shell_v8` | 34 OK · 0 falhas |
 | 2 | `test_ficha_v8` | **37 OK** · 0 falhas |
-| 3 | `test_minhas_fichas_v8` | 27 OK · 0 falhas |
+| 3 | `test_minhas_fichas_v8` | 28 OK · 0 falhas |
 | 4 | `test_orc_v8` | 22 OK · 0 falhas |
 | 5 | `test_orc_features_v8` | 34 OK · 0 falhas |
 | 6 | `test_canva_v8` | 18 OK · 0 falhas |
 | 7 | `test_ux_v8` | 33 OK · 0 falhas |
-| 8 | `test_temas_v8` | 21 OK · 0 falhas |
+| 8 | `test_temas_v8` | 22 OK · 0 falhas |
 | 9 | `test_pwa_infra_v8` | 26 asserções · 3 grupos OK |
 | 10 | `test_server_v8` | 26 asserções · OK |
 | 11 | `test_perf_v8` | 15 OK · 0 falhas |
