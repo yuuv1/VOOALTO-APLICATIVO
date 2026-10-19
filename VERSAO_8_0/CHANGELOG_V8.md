@@ -4,18 +4,24 @@
 
 Na lista de itens, o <kbd>Tab</kbd> do navegador parava nos botões **⧉** e **✕**
 de cada cartão. Para ir do "Valor Unitário" de um item até o "Modelo" do
-seguinte eram **duas paradas** nos ícones **⧉** e **✕**. Agora o Tab anda de
-**caixa em caixa**, na ordem em que elas aparecem na tela, e o
-<kbd>Shift</kbd>+<kbd>Tab</kbd> faz o caminho de volta.
+seguinte eram **duas paradas** nos ícones **⧉** e **✕**. E na folha A4 o Tab
+saía da célula em edição: o `onblur` da célula reconstrói a tabela, então o
+foco morria junto com a célula antiga. Agora o Tab anda de **caixa em caixa**
+na lista **e de célula em célula na folha**, e o <kbd>Shift</kbd>+<kbd>Tab</kbd>
+faz o caminho de volta.
 
 ### O que mudou
 
 - Novo `<script id="v8-orc-tab-js">` no `criador_orcamento/index.html`. Ele
-  monta a lista das **caixas visíveis** do painel (input, textarea, select e
-  `contenteditable`) e, no <kbd>Tab</kbd>, foca a próxima; no
+  monta a lista das **caixas visíveis** do painel e da folha (input, textarea,
+  select e `contenteditable`) e, no <kbd>Tab</kbd>, foca a próxima; no
   <kbd>Shift</kbd>+<kbd>Tab</kbd>, a anterior.
-- **Só dentro do painel do Orçamento.** Fora dele (botões, abas, folha) o Tab
-  continua exatamente o do navegador.
+- **Só dentro do editor do Orçamento** (painel lateral + folha A4). Fora dele
+  (botões, abas, resto do sistema) o Tab continua exatamente o do navegador.
+- **Célula da folha** ganhou `data-v8-cell="página-linha-coluna"` e o Tab tira
+  o foco **antes** de focar o destino: assim a célula nova não nasce e morre na
+  mesma reconstrução. A tabela continua sendo reconstruída como antes — só o
+  foco sobrevive a ela.
 - **Modais de fora:** ⚙️ Configurações, Rascunhos, Assinatura e Ajuda seguem
   com Tab nativo, então botões e seletores continuam alcançáveis.
 - **Datas/horas de fora:** o navegador usa Tab para andar entre dia/mês/ano.
@@ -30,13 +36,14 @@ seguinte eram **duas paradas** nos ícones **⧉** e **✕**. Agora o Tab anda d
 
 ### Testes
 
-Quatorze verificações novas em `test_orc_v8.js` (a suíte foi de **36 para
-50**): sequência Tab dentro do cartão (Modelo → Tecido → Descrição → Qtd →
-Valor → Modelo do item seguinte), volta com Shift+Tab, pontas sem
-`preventDefault`, botão do painel sem interceptação, Ctrl+Tab intacto, modal
-sem interceptação, folha A4 sem interceptação e ajuda documentando as teclas.
+Verificações novas em `test_orc_v8.js` (a suíte foi de **36 para 57**):
+sequência Tab dentro do cartão (Modelo → Tecido → Descrição → Qtd → Valor →
+Modelo do item seguinte), volta com Shift+Tab, pontas sem `preventDefault`,
+botão do painel sem interceptação, Ctrl+Tab intacto, modal sem interceptação,
+Tab de célula em célula na folha **sobrevivendo à reconstrução da tabela**
+(inclusive na virada de página) e ajuda documentando as teclas.
 
-**Total: 296 verificações JS + 3 grupos de infraestrutura + 7 testes Python,
+**Total: 303 verificações JS + 3 grupos de infraestrutura + 7 testes Python,
 todos verdes.**
 
 ## V8.1.0 — atalhos, tema único e rascunho visível (2026-10-19)

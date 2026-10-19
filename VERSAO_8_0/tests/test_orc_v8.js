@@ -82,7 +82,7 @@ const fs = require('fs');
     `(function(){var h=document.getElementById('ajudaOrcamento').innerHTML.toLowerCase();return h.indexOf('ctrl')>-1&&h.indexOf('recorta')>-1&&h.indexOf('desfazer')>-1})()`);
   /* ═══ V8.1.1 — TAB ENTRE AS CAIXAS DO ORÇAMENTO ══════════════════════════
      Antes, o Tab na lista de itens parava nos botões ⧉/✕ de cada cartão. */
-  ow.eval("documentPages[0].tableItems=[{modelo:'A',tecido:'',descricao:'',qnt:1,unit:0},{modelo:'B',tecido:'',descricao:'',qnt:1,unit:0}]; changeActiveFormPage(0); renderItemsEditor();");
+  ow.eval("documentPages[0].tableItems=[{modelo:'A',tecido:'',descricao:'',qnt:1,unit:0},{modelo:'B',tecido:'',descricao:'',qnt:1,unit:0}]; changeActiveFormPage(0); renderItemsEditor(); updatePreviewFromForm();");
   ow.eval(`window.__tabProbe=function(id,shift){
     var el=document.getElementById(id);
     if(!el) return 'sem campo';
@@ -116,8 +116,36 @@ const fs = require('fs');
   t('Tab dentro do modal ⚙️ continua nativo (botões seguem alcançáveis)',
     `__tabProbe('edit-phone',false)==='edit-phone|nativo'`);
   ow.eval('closeBudgetSettings();');
-  t('Tab na folha A4 continua nativo',
-    `(function(){var el=document.getElementById('preview-phone-1');el.focus();var ev=new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true});el.dispatchEvent(ev);return !ev.defaultPrevented})()`);
+  /* Folha A4: além de pular de célula em célula, o foco precisa sobreviver à
+     reconstrução da tabela disparada pelo onblur da célula. */
+  ow.eval(`window.__tabCelula=function(chave,shift){
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    var el=document.querySelector('td[data-v8-cell="'+chave+'"]');
+    if(!el) return 'sem célula';
+    el.focus();
+    var ev=new KeyboardEvent('keydown',{key:'Tab',shiftKey:!!shift,bubbles:true,cancelable:true});
+    el.dispatchEvent(ev);
+    var a=document.activeElement;
+    var foco=(a&&a.getAttribute&&a.getAttribute('data-v8-cell'))||(a&&a.id)||'nulo';
+    return foco+'|'+(ev.defaultPrevented?'bloqueou':'nativo');
+  };`);
+  const passoFolha = (de, para, shift) => {
+    const r = ow.eval(`__tabCelula(${JSON.stringify(de)},${!!shift})`);
+    const ok = r === para + '|bloqueou';
+    console.log(ok?'  [OK]':'  [FAIL]', `Tab${shift?'+Shift':''} na folha: ${de} → ${para}`, ok?'':('-> '+r));
+    if(!ok) fail++;
+  };
+  passoFolha('1-0-modelo','1-0-tecido',false);
+  passoFolha('1-0-descricao','1-0-qnt',false);
+  passoFolha('1-0-unit','1-1-modelo',false);
+  passoFolha('1-1-unit','preview-payment-title-1',false);   /* depois da tabela vem o pagamento */
+  passoFolha('1-1-modelo','1-0-unit',true);
+  t('Tab no cabeçalho da folha: Telefone → CNPJ',
+    `__tabProbe('preview-phone-1',false)==='preview-cnpj-1|bloqueou'`);
+  t('Tab da última caixa da página 1 vai para o começo da página 2',
+    `__tabProbe('preview-resp-name-1',false)==='preview-phone-2|bloqueou'`);
+  t('Tab no fim da última página não prende o foco',
+    `__tabProbe('preview-resp-name-2',false)==='preview-resp-name-2|nativo'`);
   t('ajuda do módulo documenta Tab e Shift+Tab',
     `(function(){var h=document.getElementById('ajudaOrcamento').innerHTML.toLowerCase();return h.indexOf('<kbd>tab</kbd>')>-1&&h.indexOf('shift')>-1})()`);
 
