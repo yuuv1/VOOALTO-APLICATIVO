@@ -243,3 +243,76 @@ rodapé, selo de autosave e o texto do "Nova ficha") e o tooltip do botão.
 * `tests/test_ux_v8.js`: o teste do `Enter` passou a conferir a **regra**
   ("vai para o campo seguinte") em vez de um id fixo — ele quebrava a cada
   campo novo acrescentado, que é exatamente o que aconteceu aqui.
+
+## V8.0.3 — auditoria: 11 suítes rodadas uma a uma (2026-10-19)
+
+Pedido: *"rode testes um atrás do outro até ter certeza de que está tudo certo."*
+Cada suíte foi executada isoladamente, conferindo a saída e o código de saída —
+não só o `npm test` final.
+
+| # | Suíte | Resultado |
+|---|---|---|
+| 1 | `test_shell_v8` | 35 OK · 0 falhas |
+| 2 | `test_ficha_v8` | **37 OK** · 0 falhas |
+| 3 | `test_minhas_fichas_v8` | 27 OK · 0 falhas |
+| 4 | `test_orc_v8` | 22 OK · 0 falhas |
+| 5 | `test_orc_features_v8` | 34 OK · 0 falhas |
+| 6 | `test_canva_v8` | 18 OK · 0 falhas |
+| 7 | `test_ux_v8` | 33 OK · 0 falhas |
+| 8 | `test_temas_v8` | 21 OK · 0 falhas |
+| 9 | `test_pwa_infra_v8` | 26 asserções · 3 grupos OK |
+| 10 | `test_server_v8` | 26 asserções · OK |
+| 11 | `test_perf_v8` | 15 OK · 0 falhas |
+| — | Python (`test_build_v8`, `test_server_v8`) | **7 testes OK** |
+
+**Total: 243 verificações JS + 7 Python, tudo verde.** `npm test` sai com 0.
+
+### Auditorias que as suítes não fazem
+
+Verificados por script à parte, nos três HTML:
+
+* **IDs duplicados** — nenhum.
+* **`onclick`/`oninput` chamando função inexistente** — nenhum.
+* **`<use href="#i-…">` sem símbolo correspondente** — nenhum.
+* **`src`/`href` apontando para arquivo que não existe** — nenhum.
+* **Precache do `sw.js` × disco** — 23 itens, todos existem.
+* **Zip do PWA** — 27 arquivos, sem `__pycache__`/`node_modules`.
+
+### Corrigido nesta rodada
+
+1. **`tests/_render_tmp.js`** — script de depuração meu, commitado por engano.
+   Removido do repositório.
+2. **"Nova ficha" prendia o usuário quando o salvamento falhava.** `v8NovaFicha`
+   fazia `if(!ok) return` — e `ok` é `false` quando o IndexedDB recusa (memória
+   cheia). Resultado: o botão "Nova ficha" ficava **sem efeito para sempre** e a
+   única saída era limpar os dados na mão. Agora, quando o salvamento falha,
+   aparece uma segunda pergunta explícita — *"começa a nova MESMO ASSIM, o que
+   está na tela será perdido"* — com a recomendação de exportar o backup antes.
+3. **As medidas (largura × comprimento) sobreviviam ao "Nova ficha".** A ficha
+   nova herdava a tabela de medidas da anterior — numa ficha de outro cliente
+   isso é erro de produção. Agora `limparParaNovaFicha` devolve a **receita de
+   fábrica**. A receita é capturada por um `<script>` logo depois de a folha 1
+   existir e **antes de qualquer script do app rodar**, portanto fica imune a
+   restaurações de autosave. Para trocar a tabela padrão da fábrica, basta
+   editar os `value=""` dos `<input class="med-inp">` da folha 1.
+4. **Textos de ajuda desatualizados** depois da reforma do menu: a ajuda da
+   ficha, a ajuda do shell e o tour ainda diziam "💾 Salvar ficha", "✨ Nova
+   ficha", "💾 Salvo HH:MM" e "Configurações" (agora **Ajustes**), e mandavam
+   usar "✕ Remover" (agora é só o ✕ ao lado do número da página).
+5. **`toggleLogoProp()`** — código morto: ninguém chamava, o botão `#logoPropBtn`
+   não existe no HTML e `logoSt.prop` não era lido em lugar nenhum. Se alguém a
+   chamasse, dava `TypeError`. Removida.
+6. **`test_orc_v8.js`** era a única suíte que terminava sem dizer nada (só
+   `process.exit`). Agora imprime o resumo como as outras — antes, "sem saída"
+   e "passou" eram indistinguíveis na leitura do log.
+
+### Cenários de borda testados à mão (jsdom)
+
+| Cenário | Resultado |
+|---|---|
+| Ficha com 2 páginas extras → Nova ficha | 0 extras, 1 folha, menu limpo, sem inputs órfãos |
+| Página 1 excluída + página extra → Nova ficha | folha 1 volta do template, 0 extras |
+| Adicionar página logo depois de Nova ficha | numeração recomeça em 2, `totalPaginas` correto |
+| Ctrl+Z depois de Nova ficha | não ressuscita a ficha anterior |
+| Orçamento: `novoOrcamento()` com 3 páginas | 1 página no array **e** no DOM |
+| Receita das medidas com ficha salva carregada | não é contaminada (42, não 77) |

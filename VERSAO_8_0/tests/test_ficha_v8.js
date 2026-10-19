@@ -121,6 +121,31 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   t('aplicar grava as medidas de largura/comprimento',
     `(function(){var m=document.querySelectorAll('#folha1 .med-bloco.fem .med-inp');return m[0].value==='43'&&m[1].value==='55'})()`);
 
+  /* ═══ Medidas: "Nova ficha" tem que voltar para a receita de fábrica ═══
+     Antes ficavam as medidas digitadas na ficha anterior — numa ficha de
+     outro cliente isso é erro de produção (largura/altura erradas). */
+  t('receita das medidas capturada antes de qualquer script', `Array.isArray(window.__v8MedFabrica) && window.__v8MedFabrica.length === 24`);
+  ow.eval("(function(){var m=document.querySelectorAll('#folha1 .med-bloco.fem .med-inp');m[0].value='99';m[1].value='111'})()");
+  ow.eval('limparParaNovaFicha(8)');
+  t('Nova ficha devolve as medidas de fábrica',
+    `(function(){var m=document.querySelectorAll('#folha1 .med-bloco.fem .med-inp');return m[0].value==='42'&&m[1].value==='54'})()`);
+
+  /* ═══ Salvamento falhando não pode prender o usuário ══════════════════
+     Antes: se o IndexedDB recusasse (memória cheia), v8NovaFicha dava return
+     e o botão "Nova ficha" ficava sem efeito para sempre. */
+  ow.eval("document.getElementById('dc_nome').textContent='TRABALHO IMPORTANTE'");
+  ow.eval('window.v8FichasSalvar=async()=>false');
+  ow.eval('window.confirm=()=>false');
+  await ow.eval('v8NovaFicha()');
+  const aindaNaTela = (ow.document.getElementById('dc_nome').textContent || '').includes('TRABALHO');
+  console.log(aindaNaTela ? '  [OK]' : '  [FAIL]', 'salvar falhou + usuário recusou -> ficha atual continua na tela');
+  if (!aindaNaTela) fail++;
+  ow.eval('window.confirm=()=>true');
+  await ow.eval('v8NovaFicha()');
+  const comecouNova = (ow.document.getElementById('dc_nome').textContent || '') === '';
+  console.log(comecouNova ? '  [OK]' : '  [FAIL]', 'salvar falhou + usuário aceitou -> começa a nova mesmo assim');
+  if (!comecouNova) fail++;
+
   if (oerr.length) fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
   console.log(fail ? `\n═══ FICHA V8: ${fail} FALHA(S) ═══` : '\n═══ FICHA V8: tudo OK ═══');

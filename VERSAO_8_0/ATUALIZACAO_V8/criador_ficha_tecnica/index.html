@@ -1466,6 +1466,16 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 
 </div><!-- fim #pw -->
 
+<script>
+/* V8 — receita da tabela de medidas.
+   Capturada AQUI: a folha 1 já existe e nenhum script do aplicativo rodou
+   ainda, então são os valores que vieram no HTML. É para cá que "Nova ficha"
+   volta — sem isto a ficha nova herdava as medidas da ficha anterior.
+   Se a fábrica tiver tabela padrão própria, basta editar os value="" das
+   <input class="med-inp"> da folha 1. */
+window.__v8MedFabrica=[...document.querySelectorAll('#folha1 .med-inp')].map(i=>i.value);
+</script>
+
 <!-- ═══ V7 — FAIXA DE PÁGINAS (estilo Canva) ═══ -->
 <div id="v7PageToolbar" style="display:none"></div>
 <div id="pageStripWrap"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('normal')" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('branca')" title="Adicionar página em branco">🗋</button></div>
@@ -2581,7 +2591,9 @@ function savLogoSt(){try{localStorage.setItem('va3_logo_st',JSON.stringify({w:lo
 function loadLogoSt(){const raw=localStorage.getItem('va3_logo_st');if(!raw)return;try{Object.assign(logoSt,JSON.parse(raw));apLogoSt();}catch(e){}}
 function ativarLogo(e){e.stopPropagation();if(logoSt.ativo)return;logoSt.ativo=true;logoDrag.classList.add('ativo');deselecionarTudo();}
 function fecharLogo(){logoSt.ativo=false;logoDrag.classList.remove('ativo');savLogoSt();}
-function toggleLogoProp(){logoSt.prop=!logoSt.prop;$('logoPropBtn').classList.toggle('on',logoSt.prop);}
+/* toggleLogoProp() removida: era codigo morto. Ninguem a chamava, o botao
+   #logoPropBtn nao existe no HTML e logoSt.prop nao era lido em lugar nenhum
+   — a funcao so servia para dar TypeError se alguem a chamasse. */
 function resetarLogo(){Object.assign(logoSt,{w:182,h:52,tx:0,ty:0,rot:0});apLogoSt();savLogoSt();}
 (()=>{
 let drag=false,sx,sy,stx,sty;
@@ -3524,7 +3536,13 @@ async function v8NovaFicha(){
   if(v8FichaTemConteudo()){
     if(!confirm('Começar uma NOVA ficha?\n\nOK: salva a ficha atual em "Minhas fichas" e começa outra.\nCancelar: não faz nada.')) return;
     const ok = await v8SalvarFicha({nome:v8SugestaoNomeFicha(),semPerguntar:true});
-    if(!ok) return;
+    if(!ok){
+      /* O salvamento falhou (quase sempre memória do navegador cheia).
+         Antes disto a função simplesmente parava: o botão "Nova ficha"
+         ficava sem efeito para sempre e a única saída era limpar os dados
+         na mão. Agora a pessoa decide, sabendo o que perde. */
+      if(!confirm('Não foi possível salvar a ficha atual.\n\nOK: começa a nova ficha MESMO ASSIM — o que está na tela será perdido.\nCancelar: não faz nada.\n\nRecomendado: Cancelar, usar "Exportar backup (.json)" e só então tentar de novo.')) return;
+    }
   }else if(!confirm('Começar uma NOVA ficha em branco?')){
     return;
   }
@@ -3884,6 +3902,13 @@ function limparParaNovaFicha(novoNum) {
   criarLinha(); criarLinha(); criarLinha(); calcTotal();
   document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach(el => { el.value=''; el.classList.remove('v'); });
   recalcGrade();
+  /* Medidas voltam para a receita de fábrica. Antes ficavam as da ficha
+     anterior, o que numa ficha de outro cliente é erro de produção. */
+  if(Array.isArray(window.__v8MedFabrica)){
+    document.querySelectorAll('#folha1 .med-inp').forEach((el,i)=>{
+      if(window.__v8MedFabrica[i]!==undefined)el.value=window.__v8MedFabrica[i];
+    });
+  }
   const cl=$('coresList');if(cl)cl.innerHTML='';corId=0;adicionarCor();
   clearAllLayers();updPh();updList();
   const sep=$('sepTxt');if(sep)sep.value='▸ Detalhes do Modelo ◂';
@@ -5553,13 +5578,13 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     </ul>
     <h4>Páginas</h4>
     <ul>
-      <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia. Arraste as miniaturas na faixa inferior para reordenar e use <b>✕ Remover</b> para apagar uma página.</li>
+      <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia. Arraste as miniaturas na faixa inferior para reordenar. Para apagar uma página, use o <b>✕</b> ao lado do número dela na barra lateral (aparece quando o mouse passa por cima).</li>
     </ul>
     <h4>Salvar e continuar depois</h4>
     <ul>
-      <li>Enquanto você edita, a ficha é <b>salva sozinha</b> neste navegador — o selo <b>💾 Salvo HH:MM</b> mostra a hora da última gravação.</li>
-      <li><b>💾 Salvar ficha</b> guarda na lista <b>Minhas fichas</b>, de onde você reabre, renomeia ou exclui. Salvar de novo <b>atualiza a mesma ficha</b> em vez de criar outra.</li>
-      <li><b>✨ Nova ficha</b> salva a atual (se tiver conteúdo), limpa a tela e avança o número. O número da próxima ficha também pode ser ajustado em <b>Configurações</b>.</li>
+      <li>Enquanto você edita, a ficha é <b>salva sozinha</b> neste navegador — o selo <b>Salvo HH:MM</b>, com um ponto verde, mostra a hora da última gravação (ponto vermelho = não salvou).</li>
+      <li><b>Salvar ficha</b> (botão rosa no pé do menu) guarda na lista <b>Minhas fichas</b>, de onde você reabre, renomeia ou exclui. Salvar de novo <b>atualiza a mesma ficha</b> em vez de criar outra.</li>
+      <li><b>Nova ficha</b> salva a atual (se tiver conteúdo), apaga as páginas extras, volta as medidas para o padrão e avança o número. O número da próxima ficha também pode ser ajustado em <b>Ajustes</b>.</li>
       <li><b>Exportar backup (.json)</b> baixa a ficha para guardar em outro lugar e <b>Abrir backup (.json)</b> traz de volta.</li>
     </ul>
     <h4>Exportar</h4>

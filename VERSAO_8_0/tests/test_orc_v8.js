@@ -52,5 +52,6 @@ const fs = require('fs');
   t('tema global fn', `typeof applyGlobalTheme === 'function'`);
   if(oerr.length)fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
+  console.log(fail ? `\n═══ ORÇAMENTO V8: ${fail} FALHA(S) ═══` : '\n═══ ORÇAMENTO V8: tudo OK ═══');
   process.exit(fail?1:0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });
