@@ -56,7 +56,7 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   t('abrirPreenchimentoRapido', `abrirPreenchimentoRapido(); !!document.getElementById('v4QuickModal')`);
   t('rascunho: atalho antigo continua existindo', `typeof v4SalvarRascunho`);
   t('lista Minhas fichas no lugar de Rascunhos+Recentes', `!!document.getElementById('v8FichasList') && !document.getElementById('v4DraftList') && !document.getElementById('fichasRecentesList')`);
-  t('sidebar: título Ações + descrição', `!!document.querySelector('.sb-section-desc')`);
+  t('sidebar: 4 seções com descrição', `document.querySelectorAll('.sb-section-desc').length >= 4`);
   t('sidebar: botão primário nova ficha', `!!document.querySelector('.sb-btn-primary')`);
   t('sidebar: botão accent rápido', `!!document.querySelector('.sb-btn-accent')`);
   t('chip prontidão existe', `!!document.getElementById('fichaReadiness')`);

@@ -108,3 +108,60 @@ computador sem brigar pelo mesmo `localStorage`.
    isso.
 3. **O Orçamento não mudou de comportamento.** Só o endereço do manual, a chave
    de tema e a versão do `.json`.
+
+## V8.0.1 — menu lateral da Ficha Técnica refeito (2026-10-19)
+
+Pedido: *"acho esse menu lateral muito feio, reformule ele para ficar bacana."*
+
+### O que fazia o menu parecer feio
+
+O painel não era ruim por falta de elementos — era **barulhento**. Cinco
+motivos, todos no mesmo bloco de CSS:
+
+| O que era | Por que envelhecia mal |
+|---|---|
+| `backdrop-filter: blur(40px) saturate(1.8)` (vidro fosco) | A folha A4 vazava por trás do menu. O texto caía sobre uma imagem borrada e cada rolagem repintava o desfoque inteiro. |
+| Halo rosa: `box-shadow: 0 0 80px…, 0 0 40px rgba(212,24,122,.45)` | O painel inteiro brilhava. Um brilho permanente deixa de chamar atenção no segundo em que aparece. |
+| ~4 gradientes concorrentes (azul, rosa, verde, azul→roxo) + brilho animado no "Salvar" | Se tudo brilha, nada se destaca. O botão mais chamativo era o menos usado. |
+| Emoji como ícone (🗋 ⚡ 🖼 ✍ ➜ ▭ ● ☰ 🎨 📁 💾 📤 📂) | Cada sistema desenha o emoji com tamanho, cor e peso próprios. No Windows viravam adesivos coloridos ao lado de texto de 10 px. |
+| Rodapé com 5 botões em 5 estilos, e **"Nova ficha" e "Salvar ficha" duplicados** (uma cópia na seção, outra no rodapé) | O rodapé ocupava 40% da altura do menu e repetia ações. |
+
+### Como ficou
+
+* **Superfície plana** em três níveis — `#101319` (fundo) → `#171B24` (cartão) →
+  `+5% branco` (hover). A profundidade vem do contraste, não do brilho. De
+  quebra, sai o `backdrop-filter`, que era o item mais caro de pintar.
+* **Um acento só**: o rosa Vooalto (`#D4187A`), reservado para a ação principal
+  e para o item ativo. Todo o resto é neutro.
+* **Ícones em SVG** (24 símbolos, sprite no topo do `<body>`): traço de 1,7 px,
+  `stroke: currentColor` — acompanham hover e estado ativo sozinhos.
+* **Ferramentas da página em grade 2×**, com rótulo curto (*Imagem, Texto,
+  Seta, Retângulo, Círculo, Camadas, Cor*). O texto completo continua no
+  `title` (tooltip). Sete linhas viraram quatro.
+* **Rodapé enxuto**: `↶ ↷ · ?` numa linha, **Salvar ficha** (só aqui agora),
+  **Baixar**, e **PDF / PNG** lado a lado. Saiu a segunda cópia de "Nova ficha".
+* **"Minhas fichas"**: a linha inteira abre a ficha; ✎ e ✕ só aparecem no
+  hover. Antes eram três botões de texto por linha, que encolhiam o nome.
+* **Menu recolhido** virou uma coluna de ícones de verdade (42 px) — rótulos,
+  títulos, rodapé e a lista somem; as ferramentas empilham em 1 coluna.
+* **Contraste**: os cinzas do V7 (`#616C7E` a 9 px) davam ~3,5:1, abaixo de
+  AA. Agora título `#9AA5B8` (~7,5:1), descrição `#78849A` (~4,8:1).
+* **Foco de teclado** visível — não existia nenhum.
+* O selo de prontidão (`falta: cliente · telefone · modelo`) **encolhe com
+  reticências** em vez de estourar o botão, e o texto completo vai no `title`.
+
+### Correções de bug no caminho
+
+1. **`toggleSidebar()` apagava o ícone da alça.** Fazia
+   `tog.textContent = col ? '❯' : '❮'` e `tog.style.left = …` — o primeiro
+   destrói qualquer `<svg>` dentro do botão, o segundo vence o CSS. Agora só a
+   classe `.collapsed` muda no `<nav>` e o CSS reage.
+2. **Regra `.v7-save-chip` duplicada.** Havia uma segunda definição no bloco
+   "V7.5 Onda 3", mais abaixo no arquivo; por vir depois, vencia a nova. Removida.
+3. **`.sb-pdf` / `.sb-png` sem estilo.** Continuam existindo como gancho (o
+   `test_canva_v8` procura `.sb-footer .sb-pdf`), agora documentados no CSS.
+
+### Verificação
+
+`npm test` → **230 verificações, 0 falhas** (11 arquivos) · `test:python` → 7 OK.
+O `sw.js` foi regerado (`vooalto-v8-5dbaa07c7e8a`) e o pacote também.

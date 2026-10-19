@@ -13,7 +13,7 @@
 --az:#1E2937;--azm:#2D3F55;--azc:#EEF2F8;--ro:#D4187A;
 --vd:#166534;--vm:#DC2626;--tx:#1a1a2e;--txl:#6b7280;--bd:#D1D5DB;
 --bg:#F9FAFB;--br:#fff;--hd:#3B82F6;--ar:#1D4ED8;
---sidebar-w:280px;
+--sidebar-w:296px;
 --glass-bg:rgba(15,23,42,.78);
 --glass-border:rgba(255,255,255,.12);
 --glass-card:rgba(255,255,255,.06);
@@ -31,172 +31,205 @@
 ;--panel:rgba(255,255,255,.62);--card:rgba(255,255,255,.88);--text:#17172a;--muted:#6b7280;--line:rgba(31,41,55,.10);--black:#050505;--green:#34c759;--yellow:#ffb020;--red:#ff3b64;--blue:#2563eb;--gray:#8e8e93}
 html,body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:11px;color:var(--tx);background:#4B5563}
 
-/* ═══ SIDEBAR — GLASS DARK ═══ */
+/* ══════════════════════════════════════════════════════════════════
+   SIDEBAR V8 — REFAZIDA
+   ──────────────────────────────────────────────────────────────────
+   O que saiu, e por quê:
+   • backdrop-filter: blur(40px) saturate(1.8) — o painel ficava
+     translúcido, a folha vazava por trás e cada rolagem repintava o
+     desfoque inteiro (caro em máquina fraca);
+   • halo rosa (0 0 40px) + brilho animado no "Salvar" — chamavam
+     atenção o tempo todo para o lugar errado;
+   • 4 gradientes concorrentes (azul, rosa, verde, azul→roxo) — quando
+     tudo brilha, nada se destaca;
+   • emoji como ícone (🗋 ⚡ 🖼 ✍ ➜ ▭ ●) — cada sistema desenha com
+     tamanho, cor e peso diferentes. Trocados por SVG de traço, 15 px.
+   O que entrou:
+   • 3 níveis de superfície (fundo #101319 → cartão #171B24 → hover):
+     a profundidade vem do contraste, não do brilho;
+   • UM acento, o rosa Vooalto, só na ação principal e no item ativo;
+   • ferramentas da página em grade 2× com rótulo curto (eram 7 linhas);
+   • "Nova ficha" e "Salvar ficha" aparecem uma vez só — havia duas
+     cópias de cada, uma nas seções e outra no rodapé.
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+--sb-bg:#101319;
+--sb-card:#171B24;
+--sb-card2:#1E232E;
+--sb-line:rgba(255,255,255,.07);
+--sb-line2:rgba(255,255,255,.13);
+--sb-t1:#E7EBF2;
+--sb-t2:#98A2B3;
+--sb-t3:#76839A;
+--sb-rosa:#D4187A;
+--sb-rosa2:#F0449F;
+}
 #sidebar{
 position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
-background:var(--glass-bg);
-backdrop-filter:blur(40px) saturate(1.8);
--webkit-backdrop-filter:blur(40px) saturate(1.8);
-z-index:9999;display:flex;flex-direction:column;
-border-right:1px solid var(--glass-border);
-box-shadow:0 0 80px rgba(0,0,0,.6),0 0 40px var(--glass-glow);
-transition:transform .3s cubic-bezier(.4,0,.2,1);
-overflow:hidden;
+background:var(--sb-bg);z-index:9999;
+display:flex;flex-direction:column;overflow:hidden;
+border-right:1px solid var(--sb-line);
+box-shadow:1px 0 0 rgba(0,0,0,.35);
+transition:transform .28s cubic-bezier(.4,0,.2,1);
 }
 #sidebar.collapsed{transform:translateX(calc(-1 * var(--sidebar-w) + 42px))}
-#sidebar-toggle{
-position:fixed;top:50%;left:var(--sidebar-w);transform:translateY(-50%) translateX(-1px);
-z-index:10000;width:20px;height:56px;
-background:var(--glass-bg);
-backdrop-filter:blur(20px);
-border:1px solid var(--glass-border);border-left:none;cursor:pointer;
-border-radius:0 10px 10px 0;display:flex;align-items:center;justify-content:center;
-color:rgba(255,255,255,.7);font-size:11px;transition:all .3s cubic-bezier(.4,0,.2,1);
-box-shadow:4px 0 20px rgba(0,0,0,.35),4px 0 8px var(--glass-glow);
-}
-#sidebar-toggle:hover{background:var(--glass-hover);color:#fff;
-box-shadow:4px 0 24px rgba(0,0,0,.5),4px 0 12px var(--glass-glow)}
-#sidebar.collapsed~#sidebar-toggle{left:42px}
 
-/* ═══ LOGO ═══ */
+/* ═══ ALÇA DE RECOLHER ═══ */
+#sidebar-toggle{
+position:fixed;top:50%;left:var(--sidebar-w);transform:translateY(-50%);
+z-index:10000;width:18px;height:54px;padding:0;
+background:var(--sb-card);border:1px solid var(--sb-line);border-left:none;
+border-radius:0 8px 8px 0;cursor:pointer;
+display:flex;align-items:center;justify-content:center;color:var(--sb-t3);
+transition:left .28s cubic-bezier(.4,0,.2,1),background .15s,color .15s;
+}
+#sidebar-toggle:hover{background:var(--sb-card2);color:var(--sb-t1)}
+#sidebar-toggle svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+#sidebar.collapsed~#sidebar-toggle{left:42px}
+#sidebar.collapsed~#sidebar-toggle svg{transform:rotate(180deg)}
+
+/* ═══ CABEÇALHO ═══ */
 .sb-logo{
-padding:16px 16px 12px;
-border-bottom:1px solid var(--glass-border);
-flex-shrink:0;display:flex;align-items:center;gap:12px;
+display:flex;align-items:center;gap:10px;height:54px;padding:0 12px 0 14px;
+flex-shrink:0;border-bottom:1px solid var(--sb-line);
 }
 .sb-logo-icon{
-width:36px;height:36px;
-background:linear-gradient(135deg,var(--accent-1),var(--accent-3));
-border-radius:var(--radius-icon);
-display:flex;align-items:center;justify-content:center;flex-shrink:0;
-font-size:16px;font-weight:900;color:#fff;
-box-shadow:0 4px 20px rgba(212,24,122,.3);
+width:30px;height:30px;border-radius:8px;flex-shrink:0;
+background:linear-gradient(150deg,#F0449F,#A81160);
+display:flex;align-items:center;justify-content:center;
+font-size:15px;font-weight:900;color:#fff;line-height:1;
+box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
 }
-.sb-logo-text{overflow:hidden}
-.sb-logo-brand{font-size:12px;font-weight:900;color:var(--glass-text);letter-spacing:1.5px;white-space:nowrap}
-.sb-logo-sub{font-size:8px;color:var(--glass-muted);letter-spacing:.5px;white-space:nowrap}
+.sb-logo-text{flex:1;min-width:0;overflow:hidden}
+.sb-logo-brand{font-size:8.5px;font-weight:800;color:var(--sb-t3);letter-spacing:2.2px;line-height:1.45}
+.sb-logo-sub{font-size:12px;font-weight:700;color:var(--sb-t1);line-height:1.25;letter-spacing:-.1px}
+.sb-logo-ver{font-size:8px;font-weight:800;color:var(--sb-t3);border:1px solid var(--sb-line2);border-radius:4px;padding:2px 4px;letter-spacing:.6px;flex-shrink:0}
 
-/* ═══ SCROLL ═══ */
-.sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 0 20px}
-.sb-scroll::-webkit-scrollbar{width:4px}
+/* ═══ ÁREA ROLÁVEL ═══ */
+.sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent}
+.sb-scroll::-webkit-scrollbar{width:8px}
 .sb-scroll::-webkit-scrollbar-track{background:transparent}
-.sb-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
-.sb-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22)}
+.sb-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:8px;border:2px solid var(--sb-bg)}
+.sb-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
 
-/* ═══ SECTION ═══ */
-.sb-section{margin-bottom:4px}
+/* ═══ SEÇÕES ═══ */
+.sb-section{margin-bottom:2px}
 .sb-section-title{
-font-size:9.5px;font-weight:800;
-color:var(--glass-muted);letter-spacing:2px;text-transform:uppercase;
-padding:14px 16px 3px;white-space:nowrap;overflow:hidden;
+font-size:9px;font-weight:800;color:#9AA5B8;
+letter-spacing:1.7px;text-transform:uppercase;
+padding:15px 14px 3px;white-space:nowrap;overflow:hidden;
 }
 .sb-section-desc{
-font-size:8px;font-weight:500;color:rgba(255,255,255,.34);
-padding:0 16px 7px;line-height:1.4;letter-spacing:.2px;
+font-size:9.5px;font-weight:500;color:#78849A;
+padding:0 14px 9px;line-height:1.4;letter-spacing:.1px;
 }
 
-/* ═══ BUTTONS ═══ */
+/* ═══ BOTÕES DE LINHA ═══ */
 .sb-btn{
-display:flex;align-items:center;gap:10px;width:100%;border:none;background:transparent;
-color:var(--glass-text);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;
-padding:9px 14px;border-radius:0;transition:all .2s;text-align:left;white-space:nowrap;
-position:relative;overflow:hidden;
+display:flex;align-items:center;gap:9px;
+width:calc(100% - 20px);margin:0 10px 3px;
+height:33px;padding:0 9px;
+border:1px solid transparent;border-radius:7px;background:transparent;
+color:var(--sb-t2);font-family:inherit;font-size:11.5px;font-weight:600;
+cursor:pointer;text-align:left;white-space:nowrap;
+transition:background .13s,color .13s,border-color .13s;
 }
-.sb-btn:hover{background:var(--glass-hover);color:#fff}
-.sb-btn.active{background:rgba(212,24,122,.25);color:#fff;font-weight:700;
-box-shadow:inset 3px 0 0 var(--accent-1)}
-.sb-btn.ativo-desenho{background:rgba(245,158,11,.2);color:#fff;font-weight:700;
-animation:pulse-glass .8s infinite alternate}
-@keyframes pulse-glass{from{background:rgba(245,158,11,.2)}to{background:rgba(245,158,11,.35)}}
+.sb-btn:hover{background:rgba(255,255,255,.055);color:var(--sb-t1)}
+.sb-btn:active{background:rgba(255,255,255,.085)}
+.sb-btn.active{background:rgba(212,24,122,.16);color:#fff;box-shadow:inset 2px 0 0 var(--sb-rosa)}
+.sb-btn.ativo-desenho{background:rgba(245,158,11,.15);color:#FDE68A;box-shadow:inset 2px 0 0 #F59E0B}
+.sb-btn-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.75;transition:opacity .13s}
+.sb-btn-icon svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sb-btn:hover .sb-btn-icon,.sb-btn.active .sb-btn-icon{opacity:1}
+.sb-btn-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
 
-/* ═══ BUTTON ICON ═══ */
-.sb-btn-icon{
-width:30px;height:30px;border-radius:var(--radius-icon);
-display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
-background:var(--glass-card);
-border:1px solid var(--glass-border);
-transition:all .2s;
-}
-.sb-btn:hover .sb-btn-icon{background:var(--glass-hover);
-border-color:rgba(255,255,255,.2);
-box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.sb-btn.active .sb-btn-icon{background:rgba(212,24,122,.3);
-border-color:rgba(212,24,122,.4);
-box-shadow:0 2px 12px var(--glass-glow)}
-.sb-btn.ativo-desenho .sb-btn-icon{background:rgba(245,158,11,.25);
-border-color:rgba(245,158,11,.4);
-box-shadow:0 2px 12px rgba(245,158,11,.3)}
-
-/* ═══ BUTTON LABEL & BADGE ═══ */
-.sb-btn-label{flex:1;overflow:hidden;text-overflow:ellipsis}
-.sb-btn:hover .sb-btn-icon{transform:scale(1.1)}
+/* Ação principal — Preenchimento rápido */
 .sb-btn-primary{
-width:calc(100% - 20px);margin:0 10px 7px;
-background:linear-gradient(135deg,rgba(59,130,246,.30),rgba(29,78,216,.16));
-border:1px solid rgba(59,130,246,.45);border-radius:11px;
+height:37px;font-size:11.5px;font-weight:700;color:#fff;border-color:transparent;
+background:linear-gradient(180deg,#E0278A,#C4146F);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 8px rgba(212,24,122,.3);
 }
-.sb-btn-primary .sb-btn-icon{background:rgba(59,130,246,.38);border-color:rgba(59,130,246,.55);font-size:15px}
-.sb-btn-primary .sb-btn-label{font-size:12px;font-weight:800}
-.sb-btn-primary:hover{background:linear-gradient(135deg,rgba(59,130,246,.45),rgba(29,78,216,.28));transform:translateY(-1px);box-shadow:0 6px 18px rgba(37,99,235,.25)}
+.sb-btn-primary:hover{background:linear-gradient(180deg,#EC3597,#CE1A78);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 14px rgba(212,24,122,.4)}
+.sb-btn-primary .sb-btn-icon{opacity:1}
+/* Ação secundária — Nova ficha */
 .sb-btn-accent{
-width:calc(100% - 20px);margin:0 10px 7px;
-background:linear-gradient(135deg,rgba(212,24,122,.26),rgba(212,24,122,.10));
-border:1px solid rgba(212,24,122,.45);border-radius:11px;
+height:35px;font-size:11.5px;font-weight:600;color:var(--sb-t1);
+background:rgba(255,255,255,.045);border-color:var(--sb-line);
 }
-.sb-btn-accent .sb-btn-icon{background:rgba(212,24,122,.32);border-color:rgba(212,24,122,.5);font-size:15px}
-.sb-btn-accent .sb-btn-label{font-size:12px;font-weight:800}
-.sb-btn-accent:hover{background:linear-gradient(135deg,rgba(212,24,122,.40),rgba(212,24,122,.20));transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,24,122,.22)}
-.sb-page-actions .sb-btn{padding:6px 10px;gap:8px}
-.sb-page-actions .sb-btn-icon{width:26px;height:26px;font-size:12px;background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.28)}
-.sb-page-actions .sb-btn-label{font-size:10.5px;font-weight:600}
-.sb-add-page{border-color:rgba(59,130,246,.4);color:var(--glass-text)}
-.sb-add-page:hover{border-color:rgba(59,130,246,.7);background:rgba(59,130,246,.08)}
-.sb-btn-badge{background:var(--accent-1);color:#fff;font-size:7px;font-weight:800;padding:2px 6px;border-radius:10px;flex-shrink:0}
-.sb-btn-badge.verde{background:var(--accent-4)}
+.sb-btn-accent:hover{background:rgba(255,255,255,.08);border-color:var(--sb-line2);color:var(--sb-t1)}
 
-/* ═══ DIVIDER ═══ */
-.sb-divider{height:1px;background:var(--glass-border);margin:8px 16px}
+/* Foco de teclado: o V7 não tinha nenhum, então Tab some no painel. */
+#sidebar button:focus-visible,#sidebar input:focus-visible,#sidebar-toggle:focus-visible{outline:2px solid rgba(212,24,122,.75);outline-offset:1px}
 
-/* ═══ PAGE GROUP ═══ */
+/* ═══ DIVISOR ═══ */
+.sb-divider{height:1px;background:var(--sb-line);margin:8px 14px}
+
+/* ═══ CARTÃO DE PÁGINA ═══ */
 .sb-page-group{
-background:var(--glass-card);border:1px solid var(--glass-border);
-border-radius:var(--radius-card);margin:6px 10px;overflow:hidden;
-box-shadow:0 2px 16px rgba(0,0,0,.15);
+background:var(--sb-card);border:1px solid var(--sb-line);border-radius:9px;
+margin:0 10px 6px;overflow:hidden;
 }
 .sb-page-header{
-display:flex;align-items:center;gap:8px;padding:10px 12px;
-font-size:10px;font-weight:800;color:var(--glass-muted);letter-spacing:.5px;
-border-bottom:1px solid var(--glass-border);
+display:flex;align-items:center;gap:7px;height:32px;padding:0 4px 0 9px;
+border-bottom:1px solid var(--sb-line);
+font-size:10.5px;font-weight:700;color:var(--sb-t2);
 }
 .sb-page-num{
-width:22px;height:22px;border-radius:50%;
-background:linear-gradient(135deg,var(--accent-1),var(--accent-3));
-color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-box-shadow:0 2px 8px rgba(212,24,122,.3)
+width:17px;height:17px;border-radius:4px;flex-shrink:0;
+background:rgba(255,255,255,.09);color:var(--sb-t2);
+font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
 }
-.sb-page-actions{display:flex;flex-direction:column;gap:2px;padding:6px 0}
-.sb-page-actions .sb-btn{padding:7px 12px 7px 14px;font-size:10px}
-.sb-page-actions .sb-btn .sb-btn-icon{width:26px;height:26px;font-size:13px}
-
-/* ═══ ADD PAGE ═══ */
-.sb-add-page{
-display:flex;align-items:center;gap:8px;width:calc(100% - 20px);margin:6px 10px;
-border:1.5px dashed var(--glass-border);border-radius:var(--radius-btn);
-background:transparent;color:var(--glass-muted);font-size:10px;font-weight:700;
-cursor:pointer;font-family:inherit;padding:10px 14px;transition:all .2s;
+.sb-page-branca{
+font-size:7.5px;font-weight:800;letter-spacing:.5px;color:var(--sb-t3);
+border:1px solid var(--sb-line2);border-radius:4px;padding:1px 4px;
 }
-.sb-add-page:hover{border-color:var(--accent-2);color:var(--accent-2);
-background:rgba(6,182,212,.06);
-box-shadow:0 4px 16px rgba(6,182,212,.12)}
-.sb-add-page-icon{font-size:16px;line-height:1}
-
-/* ═══ REMOVE PAGE ═══ */
 .sb-remove-page{
-background:rgba(220,38,38,.12);color:#FCA5A5;border:1px solid rgba(220,38,38,.2);
-border-radius:8px;padding:4px 10px;font-size:8px;font-weight:700;cursor:pointer;
-font-family:inherit;margin-left:auto;transition:all .2s;flex-shrink:0;
+margin-left:auto;width:22px;height:22px;flex-shrink:0;padding:0;
+border:none;border-radius:5px;background:transparent;color:var(--sb-t3);
+display:flex;align-items:center;justify-content:center;cursor:pointer;
+opacity:0;transition:opacity .13s,background .13s,color .13s;
 }
-.sb-remove-page:hover{background:rgba(220,38,38,.25);color:#fff}
+.sb-page-group:hover .sb-remove-page{opacity:1}
+.sb-remove-page:hover{background:rgba(239,68,68,.18);color:#FCA5A5}
+.sb-remove-page svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.sb-page-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px}
+.sb-page-actions .sb-btn{
+width:100%;margin:0;height:31px;padding:0 8px;gap:7px;border-radius:6px;
+font-size:10.5px;font-weight:600;background:rgba(255,255,255,.035);
+}
+.sb-page-actions .sb-btn:hover{background:rgba(255,255,255,.085)}
+.sb-page-actions .sb-btn-icon{width:15px;height:15px;opacity:.65}
+.sb-page-actions .sb-btn-icon svg{width:14px;height:14px}
+.sb-page-actions .sb-btn:hover .sb-btn-icon{opacity:1}
+
+/* ═══ ADICIONAR PÁGINA ═══ */
+.sb-add-page{
+display:flex;align-items:center;gap:8px;
+width:calc(100% - 20px);margin:0 10px 4px;height:31px;padding:0 9px;
+border:1px dashed var(--sb-line2);border-radius:7px;background:transparent;
+color:var(--sb-t3);font-family:inherit;font-size:10.5px;font-weight:600;
+cursor:pointer;transition:background .13s,border-color .13s,color .13s;
+}
+.sb-add-page:hover{border-color:rgba(212,24,122,.55);color:var(--sb-rosa2);background:rgba(212,24,122,.06)}
+.sb-add-page-icon{display:flex;align-items:center;flex-shrink:0}
+.sb-add-page svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ═══ CAMPOS (AJUSTES) ═══ */
+.sb-field{
+display:flex;align-items:center;justify-content:space-between;gap:8px;
+margin:0 10px 5px;padding:0 10px;height:33px;border-radius:7px;
+background:rgba(255,255,255,.035);
+}
+.sb-field-label{font-size:10.5px;font-weight:600;color:var(--sb-t2);white-space:nowrap}
+.sb-field input{
+width:58px;height:23px;padding:0 4px;text-align:center;
+border:1px solid var(--sb-line2);border-radius:5px;
+background:rgba(0,0,0,.28);color:var(--sb-t1);
+font-family:inherit;font-size:10.5px;font-weight:700;outline:none;
+}
+.sb-field input:focus{border-color:rgba(212,24,122,.65);box-shadow:0 0 0 2px rgba(212,24,122,.16)}
+.sb-hint{font-size:9px;color:var(--sb-t3);padding:0 14px 8px;line-height:1.45;overflow-wrap:anywhere}
+
 
 /* ═══ FOOTER ═══ */
 
@@ -207,55 +240,132 @@ font-family:inherit;margin-left:auto;transition:all .2s;flex-shrink:0;
 .shape-tb{position:absolute;left:50%;transform:translateX(-50%);top:8px;display:none;gap:6px;align-items:center;background:rgba(255,255,255,.98);border:1px solid var(--bd);border-radius:16px;padding:8px 14px;z-index:504;white-space:nowrap;box-shadow:0 14px 44px rgba(15,23,42,.18);backdrop-filter:blur(12px)}
 .shape-tb.vis{display:flex}
 .shape-tb::before{content:'Forma';font-size:9px;font-weight:900;color:#3B82F6;text-transform:uppercase;letter-spacing:.8px;margin-right:4px}
+/* ═══ RODAPÉ FIXO ═══ */
 .sb-footer{
-padding:12px 16px;border-top:1px solid var(--glass-border);flex-shrink:0;
-display:flex;gap:6px;flex-direction:column;
-background:var(--glass-bg);backdrop-filter:blur(20px);
+flex-shrink:0;border-top:1px solid var(--sb-line);background:var(--sb-bg);
+padding:7px 10px 5px;display:flex;flex-direction:column;gap:5px;
 }
-/* ══ V7 UX ══ */
-.ficha-readiness{margin-left:auto;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
-.ficha-readiness.ok{background:rgba(74,222,128,.22);color:#4ade80}
-.ficha-readiness.pend{background:rgba(251,191,36,.20);color:#fbbf24}
-.ficha-float-cta{position:fixed;left:52px;bottom:18px;z-index:96;display:none;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 18px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.35);font-family:inherit;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}
-.ficha-float-cta:hover{transform:translateY(-2px)}
+.sb-top-actions{display:flex;align-items:center;gap:2px;margin-bottom:1px}
+.sb-iconbtn{
+width:30px;height:26px;padding:0;border:none;border-radius:5px;background:transparent;
+color:var(--sb-t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+transition:background .13s,color .13s;
+}
+.sb-iconbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sb-iconbtn:hover:not(:disabled){background:rgba(255,255,255,.07);color:var(--sb-t1)}
+.sb-iconbtn:disabled{opacity:.26;cursor:default}
+.sb-iconbtn.push{margin-left:auto}
+.sb-save{
+display:flex;align-items:center;gap:8px;width:100%;height:38px;padding:0 11px;
+border:none;border-radius:8px;cursor:pointer;font-family:inherit;color:#fff;
+background:linear-gradient(180deg,#E0278A,#C4146F);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 10px rgba(212,24,122,.32);
+transition:filter .13s,box-shadow .13s;
+}
+.sb-save:hover{filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 16px rgba(212,24,122,.45)}
+.sb-save:active{transform:translateY(1px)}
+.sb-save svg{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sb-save-label{font-size:12px;font-weight:800;letter-spacing:.1px;white-space:nowrap;flex-shrink:0}
+.ficha-readiness{
+margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
+font-size:8px;font-weight:800;padding:3px 6px;border-radius:20px;
+white-space:nowrap;text-transform:uppercase;letter-spacing:.4px;
+background:rgba(0,0,0,.26);color:rgba(255,255,255,.78);
+}
+.ficha-readiness.ok{color:#93F5BC}
+.ficha-readiness.pend{color:#FFD27A}
+.ficha-float-cta{
+position:fixed;left:52px;bottom:16px;z-index:96;display:none;align-items:center;gap:7px;
+border:0;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:800;
+cursor:pointer;font-family:inherit;color:#fff;
+background:linear-gradient(180deg,#E0278A,#C4146F);
+box-shadow:0 6px 20px rgba(212,24,122,.42);
+transition:filter .13s;
+}
+.ficha-float-cta:hover{filter:brightness(1.08)}
+.ficha-float-cta svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
 #fichaSugBox{position:fixed;z-index:200;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);display:none;min-width:230px;max-width:330px;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
 .fsug-item{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;cursor:pointer;font-size:12.5px;color:#111;font-weight:600}
 .fsug-item:hover{background:#eef2ff}
 .fsug-item span{color:#6b7280;font-size:11px;font-weight:500;white-space:nowrap}
 #fichaSugBox .fsug-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af;padding:7px 12px 3px;font-weight:800}
+/* ═══ BOTÕES DE EXPORTAÇÃO ═══
+   .sb-pdf e .sb-png são nomes herdados: o test_canva_v8 procura
+   .sb-footer .sb-pdf na botoeira de baixar. Não pintam nada — quem pinta
+   é .sb-footer-btn. Ficam declarados para ninguém "limpar" a classe. */
+.sb-pdf,.sb-png{}
 .sb-footer-btn{
-display:flex;align-items:center;gap:10px;width:100%;border:none;
-border-radius:var(--radius-btn);font-size:11px;font-weight:700;
-cursor:pointer;font-family:inherit;padding:10px 14px;transition:all .2s;
-box-shadow:0 4px 16px rgba(0,0,0,.2);
+display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:32px;
+padding:0 10px;border:1px solid var(--sb-line2);border-radius:7px;
+background:rgba(255,255,255,.055);color:var(--sb-t1);
+font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;
+transition:background .13s,border-color .13s;
 }
-.sb-footer-btn:hover{transform:translateY(-2px);
-box-shadow:0 8px 24px rgba(0,0,0,.35)}
-.sb-pdf{background:linear-gradient(135deg,var(--accent-1),#B01060);color:#fff}
-.sb-png{background:linear-gradient(135deg,#10B981,#059669);color:#fff}
-.sb-catalog{
-  background:linear-gradient(135deg,#2563EB,#7C3AED,#1D4ED8);color:#fff;
-  font-size:13px;padding:13px 16px;
-  box-shadow:0 6px 28px rgba(37,99,235,.5),0 0 0 1px rgba(124,58,237,.3);
-  position:relative;overflow:hidden;
+.sb-footer-btn svg{width:14px;height:14px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sb-footer-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.sb-export-row{display:flex;gap:5px}
+.sb-export-half{flex:1;width:auto;height:28px;font-size:10px;font-weight:600;background:transparent;border-color:var(--sb-line);color:var(--sb-t2)}
+.sb-export-half:hover{background:rgba(255,255,255,.06);color:var(--sb-t1);border-color:var(--sb-line2)}
+.sb-version{font-size:7.5px;color:var(--sb-t3);text-align:center;letter-spacing:1.2px;padding-top:1px;opacity:.65}
+
+/* ═══ SELO DE AUTOSAVE ═══ */
+.v7-save-chip{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:var(--sb-t3);padding:0 14px 8px;letter-spacing:.1px}
+.v7-save-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--sb-t3);flex-shrink:0;transition:background .2s}
+.v7-save-chip.salvo::before{background:#4ADE80}
+.v7-save-chip.erro{color:#FCA5A5}
+.v7-save-chip.erro::before{background:#EF4444}
+
+/* ═══ LISTA "MINHAS FICHAS" ═══ */
+#v8FichasList{max-height:172px;overflow-y:auto;padding:0 10px 2px;display:flex;flex-direction:column;gap:3px}
+#v8FichasList::-webkit-scrollbar{width:6px}
+#v8FichasList::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:6px}
+.sb-ficha{
+display:flex;align-items:center;gap:6px;padding:6px 7px;border-radius:7px;
+background:rgba(255,255,255,.035);border:1px solid transparent;cursor:pointer;
+transition:background .13s,border-color .13s;
 }
-.sb-catalog:hover{transform:translateY(-3px)!important;box-shadow:0 10px 36px rgba(37,99,235,.6),0 0 0 1px rgba(124,58,237,.5)!important}
-.sb-catalog::before{content:'';position:absolute;inset:-3px;border-radius:calc(var(--radius-btn) + 3px);background:linear-gradient(135deg,#2563EB,#7C3AED,#60A5FA);z-index:-1;opacity:0;animation:catalogGlow 2.5s ease-in-out infinite}
-@keyframes catalogGlow{0%,100%{opacity:0;transform:scale(1)}50%{opacity:.55;transform:scale(1.02)}}
-.sb-catalog .qa-ico-big{font-size:18px}
-.sb-export-row{display:flex;gap:6px}
-.sb-export-half{flex:1;padding:10px 12px;font-size:10px}
-.sb-ur{display:flex;gap:4px}
-.sb-ur button{
-flex:1;padding:7px;
-border:1px solid var(--glass-border);border-radius:8px;
-background:var(--glass-card);color:var(--glass-text);font-size:11px;
-cursor:pointer;transition:all .2s;font-family:inherit
+.sb-ficha:hover{background:rgba(255,255,255,.08)}
+.sb-ficha.aberta{background:rgba(212,24,122,.13);border-color:rgba(212,24,122,.3)}
+.sb-ficha-txt{flex:1;min-width:0}
+.sb-ficha-txt b{display:block;font-size:10.5px;font-weight:600;color:var(--sb-t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-ficha-txt small{display:block;font-size:8.5px;color:var(--sb-t3);margin-top:1px}
+.sb-ficha-act{display:flex;gap:1px;flex-shrink:0}
+@media (hover:hover) and (pointer:fine){
+.sb-ficha-act{opacity:0;transition:opacity .13s}
+.sb-ficha:hover .sb-ficha-act,.sb-ficha.aberta .sb-ficha-act{opacity:1}
 }
-.sb-ur button:hover:not(:disabled){background:var(--glass-hover);color:#fff;
-box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.sb-ur button:disabled{opacity:.3;cursor:default}
-.sb-version{font-size:7px;color:var(--glass-muted);text-align:center;padding:6px 0 0;letter-spacing:1px}
+.sb-ficha-act button{width:21px;height:21px;padding:0;border:none;border-radius:4px;background:transparent;color:var(--sb-t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .13s,color .13s}
+.sb-ficha-act button:hover{background:rgba(255,255,255,.1);color:var(--sb-t1)}
+.sb-ficha-act button.del:hover{background:rgba(239,68,68,.2);color:#FCA5A5}
+.sb-ficha-act svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sb-empty{font-size:9.5px;color:var(--sb-t3);text-align:center;padding:13px 10px;line-height:1.5;border:1px dashed var(--sb-line2);border-radius:7px}
+.sb-empty b{color:var(--sb-t2);font-weight:700}
+
+/* ═══ RECOLHIDO: só a coluna de ícones (42 px) ═══ */
+#sidebar.collapsed .sb-logo-text,
+#sidebar.collapsed .sb-logo-ver,
+#sidebar.collapsed .sb-section-title,
+#sidebar.collapsed .sb-section-desc,
+#sidebar.collapsed .sb-btn-label,
+#sidebar.collapsed .sb-add-page-label,
+#sidebar.collapsed .sb-page-title,
+#sidebar.collapsed .sb-page-branca,
+#sidebar.collapsed .sb-remove-page,
+#sidebar.collapsed .sb-footer,
+#sidebar.collapsed .sb-hint,
+#sidebar.collapsed .v7-save-chip,
+#sidebar.collapsed #v8FichasList,
+#sidebar.collapsed .sb-divider,
+#sidebar.collapsed .sb-field{display:none!important}
+#sidebar.collapsed .sb-logo{padding-left:6px;padding-right:0}
+#sidebar.collapsed .sb-btn{width:34px;margin:0 0 3px 4px;padding:0;justify-content:center}
+#sidebar.collapsed .sb-add-page{width:34px;margin:0 0 4px 4px;padding:0;justify-content:center;border:none}
+#sidebar.collapsed .sb-page-group{margin:0 16px 6px 4px}
+#sidebar.collapsed .sb-page-header{justify-content:center;padding:0;border-bottom:1px solid var(--sb-line)}
+#sidebar.collapsed .sb-page-actions{grid-template-columns:1fr;padding:3px}
+#sidebar.collapsed .sb-page-actions .sb-btn{width:26px;height:28px;margin:0 auto}
+
 
 /* ═══ PÁGINA WRAPPER ═══ */
 #pw{
@@ -774,177 +884,202 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 </head>
 <body>
 
+<!-- ═══ ÍCONES (sprite SVG) ══════════════════════════════════════════
+     A V7 usava emoji como ícone: 🗋 ⚡ 🖼 ✍ ➜ ▭ ● ☰ 🎨 📁 💾 📤 📂.
+     Cada sistema desenha o mesmo emoji com tamanho, cor e peso
+     diferentes — no Windows viravam adesivos coloridos de 16 px ao lado
+     de um texto de 10 px. Aqui os ícones são traço de 1,7 px, sempre na
+     cor do texto (currentColor), então acompanham hover e estado ativo.
+     Uso: <svg viewBox="0 0 24 24"><use href="#i-nome"/></svg> -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden"><defs>
+<symbol id="i-bolt"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></symbol>
+<symbol id="i-file-plus"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></symbol>
+<symbol id="i-file"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+<symbol id="i-image"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+<symbol id="i-type"><path d="M4 6V4h16v2"/><path d="M9 20h6"/><path d="M12 4v16"/></symbol>
+<symbol id="i-arrow"><path d="M5 19 19 5"/><path d="M8 5h11v11"/></symbol>
+<symbol id="i-square"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
+<symbol id="i-circle"><circle cx="12" cy="12" r="9"/></symbol>
+<symbol id="i-layers"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+<symbol id="i-palette"><circle cx="13.5" cy="6.5" r=".6"/><circle cx="17.5" cy="10.5" r=".6"/><circle cx="8.5" cy="7.5" r=".6"/><circle cx="6.5" cy="12.5" r=".6"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.83-.44-1.12-.29-.29-.44-.66-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.56-2.5 5.56-5.55C22 6.01 17.46 2 12 2Z"/></symbol>
+<symbol id="i-folder"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></symbol>
+<symbol id="i-folder-open"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></symbol>
+<symbol id="i-help"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-save"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></symbol>
+<symbol id="i-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+<symbol id="i-print"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+<symbol id="i-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-upload"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+<symbol id="i-undo"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+<symbol id="i-redo"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></symbol>
+<symbol id="i-plus"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+<symbol id="i-pen"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron"><path d="m15 18-6-6 6-6"/></symbol>
+</defs></svg>
+
 <!-- ═══ SIDEBAR ═══ -->
 <nav id="sidebar">
-<div class="sb-logo">
-<div class="sb-logo-icon">V</div>
-<div class="sb-logo-text">
-<div class="sb-logo-brand">VOOALTO</div>
-<div class="sb-logo-sub">Ficha Técnica V8</div>
-</div>
-</div>
 
-<div class="sb-scroll">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">V</div>
+    <div class="sb-logo-text">
+      <div class="sb-logo-brand">VOOALTO</div>
+      <div class="sb-logo-sub">Ficha Técnica</div>
+    </div>
+    <span class="sb-logo-ver">V8</span>
+  </div>
 
-<!-- AÇÕES -->
-<div class="sb-section">
-<div class="sb-section-title">Ações</div>
-<div class="sb-section-desc">Comece uma nova ficha ou preencha os dados principais num clique</div>
-<button class="sb-btn sb-btn-primary" onclick="novaFicha()" title="Limpa tudo e começa uma ficha nova (o número avança)">
-<div class="sb-btn-icon">🗋</div>
-<span class="sb-btn-label">Nova ficha</span>
-</button>
-<button class="sb-btn sb-btn-accent" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelos, valores, grade de tamanhos e aviso de uma vez só">
-<div class="sb-btn-icon">⚡</div>
-<span class="sb-btn-label">Preenchimento rápido</span>
-</button>
-<div class="sb-divider"></div>
-</div>
+  <div class="sb-scroll">
 
-<!-- PÁGINA 1 -->
-<div class="sb-section">
-<div class="sb-section-title">Páginas</div>
-<div class="sb-section-desc">Ferramentas para adicionar elementos em cada folha</div>
-<div class="sb-page-group" id="pgGroup1">
-<div class="sb-page-header">
-<div class="sb-page-num">1</div>
-<span>Página 1</span>
-</div>
-<div class="sb-page-actions">
-<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput').click()">
-<div class="sb-btn-icon">🖼</div>
-<span class="sb-btn-label">Adicionar Imagem</span>
-</button>
-<button title="Adicionar uma caixa de texto" class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
-<div class="sb-btn-icon">✍</div>
-<span class="sb-btn-label">Adicionar Texto</span>
-</button>
-<button title="Desenhar seta/anotação" class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
-<div class="sb-btn-icon">➜</div>
-<span class="sb-btn-label">Desenhar Seta</span>
-</button>
-<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetangulo()">
-<div class="sb-btn-icon">▭</div>
-<span class="sb-btn-label">Retângulo</span>
-</button>
-<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculo()">
-<div class="sb-btn-icon">●</div>
-<span class="sb-btn-label">Círculo</span>
-</button>
-<button title="Painel de camadas: o que está na frente e nos fundos" class="sb-btn" onclick="toggleLayersPanel()">
-<div class="sb-btn-icon">☰</div>
-<span class="sb-btn-label">Painel de Camadas</span>
-</button>
-<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCor()">
-<div class="sb-btn-icon">🎨</div>
-<span class="sb-btn-label">Adicionar Cor</span>
-</button>
-</div>
-</div>
+    <!-- ─── FICHA ─── -->
+    <div class="sb-section">
+      <div class="sb-section-title">Ficha</div>
+      <div class="sb-section-desc">Comece do zero ou preencha os dados principais num clique</div>
+      <button class="sb-btn sb-btn-primary" onclick="abrirPreenchimentoRapido()" title="Preenche cliente, modelos, valores, grade de tamanhos e aviso de uma vez só">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-bolt"/></svg></span>
+        <span class="sb-btn-label">Preenchimento rápido</span>
+      </button>
+      <button class="sb-btn sb-btn-accent" onclick="novaFicha()" title="Limpa tudo e começa uma ficha nova (o número avança)">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-file-plus"/></svg></span>
+        <span class="sb-btn-label">Nova ficha</span>
+      </button>
+    </div>
 
-<!-- Grupos de páginas extras serão inseridos aqui via JS -->
-<div id="extraPagesNav"></div>
+    <!-- ─── PÁGINAS ─── -->
+    <div class="sb-section">
+      <div class="sb-section-title">Páginas</div>
+      <div class="sb-section-desc">Ferramentas para adicionar elementos em cada folha</div>
 
-<!-- Botão adicionar página normal -->
-<button title="Adicionar uma página (com o layout padrão)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
-<span class="sb-add-page-icon">＋</span>
-<span>Adicionar Página</span>
-</button>
-<!-- Botão adicionar página branca -->
-<button title="Adicionar uma página em branco" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')" style="border-color:rgba(255,255,255,.35);margin-top:2px;">
-<span class="sb-add-page-icon">🗋</span>
-<span>Adicionar Página Branca</span>
-</button>
-</div>
+      <div class="sb-page-group" id="pgGroup1">
+        <div class="sb-page-header">
+          <div class="sb-page-num">1</div>
+          <span class="sb-page-title">Página 1</span>
+        </div>
+        <div class="sb-page-actions">
+          <button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput').click()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></span>
+            <span class="sb-btn-label">Imagem</span>
+          </button>
+          <button title="Adicionar uma caixa de texto" class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-type"/></svg></span>
+            <span class="sb-btn-label">Texto</span>
+          </button>
+          <button title="Desenhar seta/anotação" class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg></span>
+            <span class="sb-btn-label">Seta</span>
+          </button>
+          <button title="Adicionar retângulo" class="sb-btn" onclick="criarRetangulo()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-square"/></svg></span>
+            <span class="sb-btn-label">Retângulo</span>
+          </button>
+          <button title="Adicionar círculo" class="sb-btn" onclick="criarCirculo()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-circle"/></svg></span>
+            <span class="sb-btn-label">Círculo</span>
+          </button>
+          <button title="Painel de camadas: o que está na frente e nos fundos" class="sb-btn" onclick="toggleLayersPanel()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg></span>
+            <span class="sb-btn-label">Camadas</span>
+          </button>
+          <button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCor()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-palette"/></svg></span>
+            <span class="sb-btn-label">Cor</span>
+          </button>
+        </div>
+      </div>
 
+      <!-- Grupos de páginas extras são inseridos aqui via JS -->
+      <div id="extraPagesNav"></div>
 
-<!-- CONFIGURAÇÕES -->
-<div class="sb-section" style="margin-top:4px;">
-<div class="sb-section-title">Configurações</div>
-<div class="sb-section-desc">Número automático da ficha e pasta de exportação</div>
+      <button title="Adicionar uma página (com o layout padrão)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
+        <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span>
+        <span class="sb-add-page-label">Adicionar página</span>
+      </button>
+      <button title="Adicionar uma página em branco" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')">
+        <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-file"/></svg></span>
+        <span class="sb-add-page-label">Página em branco</span>
+      </button>
+    </div>
 
-<div style="padding:4px 14px 2px;display:flex;align-items:center;gap:6px;">
-<span style="font-size:8px;font-weight:700;color:rgba(255,255,255,.5);white-space:nowrap;flex-shrink:0">Nº Próxima Ficha:</span>
-<input type="number" id="cfgProxNum" min="1" max="99999" style="width:58px;padding:3px 5px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:700;font-family:inherit;outline:none;text-align:center" onchange="definirNumeroFicha(this.value)">
-</div>
-<div style="padding:2px 14px 0;font-size:6.5px;color:rgba(255,255,255,.25);font-style:italic;margin-bottom:6px">Ao finalizar uma ficha, o número incrementa +1 automaticamente</div>
+    <!-- ─── MINHAS FICHAS ─── -->
+    <div class="sb-section">
+      <div class="sb-section-title">Minhas fichas</div>
+      <div class="sb-section-desc">Salve para reabrir depois — tudo fica neste navegador</div>
+      <div class="v7-save-chip" id="v7SaveChip" title="A ficha é salva sozinha neste navegador — aqui aparece a hora da última gravação">—</div>
+      <div id="v8FichasList"></div>
+      <div class="sb-divider"></div>
+      <button class="sb-btn" onclick="exportarFichaJSON()" title="Baixar esta ficha em .json (backup)">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-upload"/></svg></span>
+        <span class="sb-btn-label">Exportar backup</span>
+      </button>
+      <button class="sb-btn" onclick="$('fichaJsonInput').click()" title="Abrir uma ficha salva em .json (backup)">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-folder-open"/></svg></span>
+        <span class="sb-btn-label">Abrir backup</span>
+      </button>
+    </div>
 
-<button title="Escolher a pasta padrão para salvar os arquivos" class="sb-btn" onclick="escolherPastaPadrao()">
-<div class="sb-btn-icon">📁</div>
-<span class="sb-btn-label" id="lblPastaPadrao">Escolher Pasta Padrão</span>
-</button>
-<div id="pastaInfo" style="padding:0 14px 6px;font-size:7px;color:rgba(255,255,255,.3);display:none">
-<span id="pastaNome"></span>
-<button onclick="limparPastaPadrao()" style="background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;font-size:8px;margin-left:4px" title="Remover pasta">✕</button>
-</div>
+    <!-- ─── AJUSTES ─── -->
+    <div class="sb-section">
+      <div class="sb-section-title">Ajustes</div>
+      <div class="sb-section-desc">Número da próxima ficha e pasta de exportação</div>
+      <div class="sb-field">
+        <span class="sb-field-label">Nº próxima ficha</span>
+        <input type="number" id="cfgProxNum" min="1" max="99999" onchange="definirNumeroFicha(this.value)">
+      </div>
+      <div class="sb-hint">Avança sozinho a cada ficha nova.</div>
+      <button class="sb-btn" onclick="escolherPastaPadrao()" title="Escolher a pasta padrão para salvar os arquivos">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-folder"/></svg></span>
+        <span class="sb-btn-label" id="lblPastaPadrao">Escolher pasta padrão</span>
+      </button>
+      <div id="pastaInfo" class="sb-hint" style="display:none;padding-left:32px">
+        <span id="pastaNome"></span>
+        <button onclick="limparPastaPadrao()" style="background:none;border:none;color:var(--sb-t3);cursor:pointer;margin-left:4px;display:inline-flex;vertical-align:middle" title="Remover pasta"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round"><use href="#i-x"/></svg></button>
+      </div>
+    </div>
 
-<div class="sb-divider"></div>
-</div>
+  </div><!-- fim sb-scroll -->
 
-<!-- MINHAS FICHAS -->
-<div class="sb-section" style="margin-top:4px;">
-<div class="sb-section-title">Minhas fichas</div>
-<div class="sb-section-desc">Salve para reabrir depois — tudo fica neste navegador</div>
-<div class="v7-save-chip" id="v7SaveChip" title="A ficha é salva sozinha neste navegador — aqui aparece a hora da última gravação">💾 —</div>
-<button class="sb-btn" onclick="abrirAjudaFicha()" title="Ajuda da Ficha Técnica: ferramentas, páginas, salvar, exportar e atalhos">
-<div class="sb-btn-icon">❓</div>
-<span class="sb-btn-label">Ajuda da ficha</span>
-</button>
-<button title="Salvar esta ficha na lista abaixo (salvar de novo atualiza a mesma)" class="sb-btn" onclick="v8SalvarFicha()" style="margin-top:2px;">
-<div class="sb-btn-icon">💾</div>
-<span class="sb-btn-label">Salvar ficha</span>
-</button>
-<div id="v8FichasList" style="max-height:220px;overflow-y:auto;padding:4px 6px 2px;"></div>
-<div class="sb-divider"></div>
-<button title="Baixar esta ficha em .json (backup)" class="sb-btn" onclick="exportarFichaJSON()">
-<div class="sb-btn-icon">📤</div>
-<span class="sb-btn-label">Exportar backup (.json)</span>
-</button>
-<button title="Abrir uma ficha salva em .json (backup)" class="sb-btn" onclick="$('fichaJsonInput').click()">
-<div class="sb-btn-icon">📂</div>
-<span class="sb-btn-label">Abrir backup (.json)</span>
-</button>
-</div>
+  <div class="sb-footer">
+    <div class="sb-top-actions">
+      <button id="btnUndo" class="sb-iconbtn" onclick="undo()" disabled title="Desfazer (Ctrl+Z)"><svg viewBox="0 0 24 24"><use href="#i-undo"/></svg></button>
+      <button id="btnRedo" class="sb-iconbtn" onclick="redo()" disabled title="Refazer (Ctrl+Y)"><svg viewBox="0 0 24 24"><use href="#i-redo"/></svg></button>
+      <button class="sb-iconbtn push" onclick="abrirAjudaFicha()" title="Ajuda da Ficha Técnica"><svg viewBox="0 0 24 24"><use href="#i-help"/></svg></button>
+    </div>
 
-</div><!-- fim sb-scroll -->
+    <button class="sb-save" onclick="v8SalvarFicha()" title="Salvar esta ficha na lista Minhas fichas (para reabrir depois)">
+      <svg viewBox="0 0 24 24"><use href="#i-save"/></svg>
+      <span class="sb-save-label">Salvar ficha</span>
+      <span class="ficha-readiness" id="fichaReadiness">verificando…</span>
+    </button>
 
-<div class="sb-footer">
-<div class="sb-ur">
-<button id="btnUndo" onclick="undo()" disabled title="Desfazer Ctrl+Z">↩ Desfazer</button>
-<button id="btnRedo" onclick="redo()" disabled title="Refazer Ctrl+Y">↪ Refazer</button>
-</div>
-<button title="Salvar esta ficha na lista Minhas fichas (para reabrir depois)" class="sb-footer-btn sb-catalog" onclick="v8SalvarFicha()">
-<span class="qa-ico-big">💾</span>
-<span style="font-size:13px;font-weight:900">Salvar ficha</span>
-<span class="ficha-readiness" id="fichaReadiness">verificando…</span>
-</button>
-<div class="sb-export-row" style="margin-bottom:6px">
-<button title="Baixar em PDF (escolher as páginas)" class="sb-footer-btn sb-pdf" onclick="abrirV7Download()" style="width:100%;background:linear-gradient(135deg,#2563EB,#1D4ED8);box-shadow:0 4px 16px rgba(37,99,235,.35);">
-<span style="font-size:14px">⬇</span>
-<span>Baixar (escolher páginas)</span>
-</button>
-</div>
-<div class="sb-export-row">
-<button title="Imprimir ou salvar em PDF pelo navegador (Ctrl+P)" class="sb-footer-btn sb-pdf sb-export-half" onclick="exportarPDF()">
-<span style="font-size:14px">🖨</span>
-<span>Exportar PDF</span>
-</button>
-<button title="Baixar a página atual como imagem (PNG)" class="sb-footer-btn sb-png sb-export-half" onclick="exportarPNG()">
-<span style="font-size:14px">📸</span>
-<span>Exportar PNG</span>
-</button>
-</div>
-<div class="sb-export-row">
-<button title="Começar outra ficha em branco — o número avança sozinho" class="sb-footer-btn sb-export-half" onclick="v8NovaFicha()" style="width:100%;background:var(--glass-hover);color:var(--glass-text)">
-<span style="font-size:14px">✨</span>
-<span>Nova ficha</span>
-</button>
-</div>
-<div class="sb-version">VOOALTO UNIFORMES · V8</div>
-</div>
+    <button class="sb-footer-btn sb-pdf" onclick="abrirV7Download()" title="Baixar em PDF (escolher as páginas)">
+      <svg viewBox="0 0 24 24"><use href="#i-download"/></svg>
+      <span>Baixar (escolher páginas)</span>
+    </button>
+
+    <div class="sb-export-row">
+      <button class="sb-footer-btn sb-export-half" onclick="exportarPDF()" title="Imprimir ou salvar em PDF pelo navegador (Ctrl+P)">
+        <svg viewBox="0 0 24 24"><use href="#i-print"/></svg>
+        <span>PDF</span>
+      </button>
+      <button class="sb-footer-btn sb-export-half" onclick="exportarPNG()" title="Baixar a página atual como imagem (PNG)">
+        <svg viewBox="0 0 24 24"><use href="#i-camera"/></svg>
+        <span>PNG</span>
+      </button>
+    </div>
+
+    <div class="sb-version">VOOALTO UNIFORMES · V8</div>
+  </div>
+
 </nav>
-<button class="ficha-float-cta" id="fichaFloatCta" onclick="v8SalvarFicha()" title="Salvar ficha (menu recolhido)">💾 Salvar</button>
-<button id="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/expandir menu">❮</button>
+
+<button class="ficha-float-cta" id="fichaFloatCta" onclick="v8SalvarFicha()" title="Salvar ficha (menu recolhido)">
+  <svg viewBox="0 0 24 24"><use href="#i-save"/></svg>
+  <span>Salvar</span>
+</button>
+<button id="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/expandir menu">
+  <svg viewBox="0 0 24 24"><use href="#i-chevron"/></svg>
+</button>
 
 <div id="richBar">
 <span class="rb-label">Formato:</span>
@@ -1415,11 +1550,13 @@ function toast(msg,tipo='',dur=2400){const t=$('toast');t.textContent=msg;t.clas
 
 /* ═══ SIDEBAR TOGGLE ═══ */
 function toggleSidebar(){
-const sb=$('sidebar'),tog=$('sidebar-toggle');
+const sb=$('sidebar');
 sb.classList.toggle('collapsed');
 const col=sb.classList.contains('collapsed');
-tog.textContent=col?'❯':'❮';
-tog.style.left=col?'42px':'var(--sidebar-w)';
+/* V8: a alça não é mais posicionada nem escrita por JS. O V7 fazia
+   tog.textContent=col?'❯':'❮', o que apagava qualquer <svg> dentro dela, e
+   tog.style.left=... venciam o CSS por serem inline. Agora só a classe no
+   <nav> muda e o CSS cuida do resto (#sidebar.collapsed~#sidebar-toggle). */
 $('pw').style.marginLeft=col?'42px':'var(--sidebar-w)';
 fichaSyncFloatCta();
 }
@@ -1640,37 +1777,21 @@ paginas.forEach(p=>{
 const grp=document.createElement('div');
 grp.className='sb-page-group';grp.id='sbGroup_'+p.id;
 const isBranca=p.tipo==='branca';
+const ico=n=>'<span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-'+n+'"/></svg></span>';
 grp.innerHTML=`
 <div class="sb-page-header">
 <div class="sb-page-num">${p.num}</div>
-<span>Página ${p.num}${isBranca?' 🗋':''}</span>
-<button title="Remover esta página" class="sb-remove-page" onclick="removerPagina('${p.id}')">✕ Remover</button>
+<span class="sb-page-title">Página ${p.num}</span>
+${isBranca?'<span class="sb-page-branca">BRANCA</span>':''}
+<button title="Remover esta página" class="sb-remove-page" onclick="removerPagina('${p.id}')"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
 </div>
 <div class="sb-page-actions">
-<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput_${p.id}').click()">
-<div class="sb-btn-icon">🖼</div>
-<span class="sb-btn-label">Adicionar Imagem</span>
-</button>
-<button title="Adicionar uma caixa de texto" class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">
-<div class="sb-btn-icon">✍</div>
-<span class="sb-btn-label">Adicionar Texto</span>
-</button>
-<button title="Desenhar seta/anotação" class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">
-<div class="sb-btn-icon">➜</div>
-<span class="sb-btn-label">Desenhar Seta</span>
-</button>
-<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">
-<div class="sb-btn-icon">▭</div>
-<span class="sb-btn-label">Retângulo</span>
-</button>
-<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculoExtra('${p.id}')">
-<div class="sb-btn-icon">●</div>
-<span class="sb-btn-label">Círculo</span>
-</button>
-${!isBranca?`<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCorExtra('${p.id}')">
-<div class="sb-btn-icon">🎨</div>
-<span class="sb-btn-label">Adicionar Cor</span>
-</button>`:''}
+<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput_${p.id}').click()">${ico('image')}<span class="sb-btn-label">Imagem</span></button>
+<button title="Adicionar uma caixa de texto" class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">${ico('type')}<span class="sb-btn-label">Texto</span></button>
+<button title="Desenhar seta/anotação" class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">${ico('arrow')}<span class="sb-btn-label">Seta</span></button>
+<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">${ico('square')}<span class="sb-btn-label">Retângulo</span></button>
+<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculoExtra('${p.id}')">${ico('circle')}<span class="sb-btn-label">Círculo</span></button>
+${!isBranca?`<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCorExtra('${p.id}')">${ico('palette')}<span class="sb-btn-label">Cor</span></button>`:''}
 </div>`;
 nav.appendChild(grp);
 });
@@ -3325,8 +3446,8 @@ function fichaUpdateReadiness(){
   if (!nome) falta.push('cliente');
   if (!tel) falta.push('telefone');
   if (!mval) falta.push('modelo');
-  if (!falta.length) { el.textContent = '✓ completa'; el.className = 'ficha-readiness ok'; }
-  else { el.textContent = 'falta: ' + falta.join(' · '); el.className = 'ficha-readiness pend'; }
+  if (!falta.length) { el.textContent = '✓ completa'; el.className = 'ficha-readiness ok'; el.title = 'Cliente, telefone e modelo já preenchidos.'; }
+  else { el.textContent = 'falta: ' + falta.join(' · '); el.className = 'ficha-readiness pend'; el.title = 'Ainda falta preencher: ' + falta.join(', ') + '.'; }
 }
 function fichaSyncFloatCta(){
   const btn = $('fichaFloatCta'); if (!btn) return;
@@ -4249,17 +4370,20 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     if(!box)return;
     const itens=getMeta();
     if(!itens.length){
-      box.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,.35);padding:6px;text-align:center">Nenhuma ficha salva ainda.<br>Use <b>💾 Salvar ficha</b>.</div>';
+      box.innerHTML='<div class="sb-empty">Nenhuma ficha salva ainda.<br>Use <b>Salvar ficha</b> no rodapé.</div>';
       return;
     }
+    /* V8: a linha inteira abre a ficha (alvo grande). Renomear e excluir
+       ficam em ícones que só aparecem no hover — antes eram três botões
+       de texto por linha, o que poluía a lista e encolhia o nome. */
+    const ic=n=>'<svg viewBox="0 0 24 24"><use href="#i-'+n+'"/></svg>';
     box.innerHTML=itens.map(d=>{
       const atual=d.id===v8FichaAtualId;
-      return '<div class="sb-v4-draft"'+(atual?' style="outline:1px solid rgba(74,222,128,.65)"':'')+'>'
-        +'<div><b title="'+esc(d.name)+'">'+(atual?'▸ ':'')+esc(d.name)+'</b><small>'+esc(d.date||'')+'</small></div>'
-        +'<div>'
-        +'<button title="Abrir esta ficha" class="load" onclick="v8AbrirFicha(\''+esc(d.id)+'\')">Abrir</button>'
-        +'<button title="Renomear" class="load" onclick="v8RenomearFicha(\''+esc(d.id)+'\')">✎</button>'
-        +'<button title="Excluir esta ficha" class="del" onclick="v8ExcluirFicha(\''+esc(d.id)+'\')">✕</button>'
+      return '<div class="sb-ficha'+(atual?' aberta':'')+'" title="Abrir: '+esc(d.name)+'" onclick="v8AbrirFicha(\''+esc(d.id)+'\')">'
+        +'<div class="sb-ficha-txt"><b>'+esc(d.name)+'</b><small>'+esc(d.date||'')+'</small></div>'
+        +'<div class="sb-ficha-act">'
+        +'<button title="Renomear" onclick="event.stopPropagation();v8RenomearFicha(\''+esc(d.id)+'\')">'+ic('pen')+'</button>'
+        +'<button title="Excluir esta ficha" class="del" onclick="event.stopPropagation();v8ExcluirFicha(\''+esc(d.id)+'\')">'+ic('x')+'</button>'
         +'</div></div>';
     }).join('');
   }
@@ -4375,8 +4499,10 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 @media print{.txt-layer .tc{white-space:pre!important;max-width:none!important;overflow:visible!important}}
 
 
-/* ═══ V7.5 (Onda 3) — selo de autosave + ajuda do módulo ═══ */
-.v7-save-chip{font-size:8.5px;font-weight:800;color:var(--glass-text);opacity:.8;text-align:left;padding:0 16px 7px;letter-spacing:.2px}
+/* ═══ V7.5 (Onda 3) — ajuda do módulo ═══
+   O estilo do selo de autosave subiu para o bloco da SIDEBAR V8 (no topo),
+   junto do resto do rodapé — havia duas regras .v7-save-chip e a de baixo,
+   por ser posterior, vencia. */
 .v7-ajuda-bg{position:fixed;inset:0;background:rgba(5,8,15,.6);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
 .v7-ajuda-bg.open{display:flex}
 .v7-ajuda-card{background:#fff;color:#111827;border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
@@ -4467,8 +4593,8 @@ const V7_SAVE_HORA_KEY='vooalto_v7_ficha_ativa_hora';
 function v7HoraAgora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function v7MarcarSalvo(ok){
   const el=document.getElementById('v7SaveChip');if(!el)return;
-  if(ok===false){el.textContent='⚠️ não salvou';el.style.opacity='1';el.title='O navegador recusou a gravação (memória cheia?). Exporte a ficha como backup (.json).';return}
-  const h=v7HoraAgora();el.textContent='💾 Salvo '+h;el.style.opacity='.8';
+  if(ok===false){el.textContent='não salvou';el.className='v7-save-chip erro';el.title='O navegador recusou a gravação (memória cheia?). Exporte a ficha como backup (.json).';return}
+  const h=v7HoraAgora();el.textContent='Salvo '+h;el.className='v7-save-chip salvo';
   el.title='Última gravação automática às '+h+'. A ficha fica salva neste navegador.';
   try{localStorage.setItem(V7_SAVE_HORA_KEY,h)}catch(e){}
 }
@@ -4476,7 +4602,7 @@ function abrirAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(e
 function abrirManualVooalto(){/* V7.6.1 — se o navegador bloquear a janela nova (prévia/PWA), o manual abre na mesma aba; dentro do sistema, na aba de cima */try{const w=window.open('../manual.html','_blank');if(w)return}catch(e){}try{if(window.top&&window.top!==window){window.top.location.href='../manual.html';return}}catch(e){}try{location.href='../manual.html'}catch(e){}}
 function fecharAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(el)el.classList.remove('open')}
 function v7MostrarHoraSalva(){try{const h=localStorage.getItem(V7_SAVE_HORA_KEY);const el=document.getElementById('v7SaveChip');
-  if(h&&el){el.textContent='💾 Salvo '+h;el.title='Última gravação automática às '+h+' (sessão anterior).'}}catch(e){}}
+  if(h&&el){el.textContent='Salvo '+h;el.className='v7-save-chip salvo';el.title='Última gravação automática às '+h+' (sessão anterior).'}}catch(e){}}
 window.addEventListener('load',v7MostrarHoraSalva);
 window.abrirAjudaFicha=abrirAjudaFicha;window.fecharAjudaFicha=fecharAjudaFicha;
 function v7SalvarAutosaveAgora(){
