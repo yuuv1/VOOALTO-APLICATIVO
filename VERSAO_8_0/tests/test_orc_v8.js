@@ -80,6 +80,47 @@ const fs = require('fs');
     `(function(){v8OrcSelRow=0;addDocumentPage();changeActiveFormPage(1);return v8OrcSelRow===null})()`);
   t('atalhos: ajuda do módulo documenta os comandos',
     `(function(){var h=document.getElementById('ajudaOrcamento').innerHTML.toLowerCase();return h.indexOf('ctrl')>-1&&h.indexOf('recorta')>-1&&h.indexOf('desfazer')>-1})()`);
+  /* ═══ V8.1.1 — TAB ENTRE AS CAIXAS DO ORÇAMENTO ══════════════════════════
+     Antes, o Tab na lista de itens parava nos botões ⧉/✕ de cada cartão. */
+  ow.eval("documentPages[0].tableItems=[{modelo:'A',tecido:'',descricao:'',qnt:1,unit:0},{modelo:'B',tecido:'',descricao:'',qnt:1,unit:0}]; changeActiveFormPage(0); renderItemsEditor();");
+  ow.eval(`window.__tabProbe=function(id,shift){
+    var el=document.getElementById(id);
+    if(!el) return 'sem campo';
+    el.focus();
+    var ev=new KeyboardEvent('keydown',{key:'Tab',shiftKey:!!shift,bubbles:true,cancelable:true});
+    el.dispatchEvent(ev);
+    return (document.activeElement.id||document.activeElement.tagName)+'|'+(ev.defaultPrevented?'bloqueou':'nativo');
+  };`);
+  const passo = (de, para, shift) => {
+    const r = ow.eval(`__tabProbe(${JSON.stringify(de)},${!!shift})`);
+    const ok = r === para + '|bloqueou';
+    console.log(ok?'  [OK]':'  [FAIL]', `Tab${shift?'+Shift':''}: ${de} → ${para}`, ok?'':('-> '+r));
+    if(!ok) fail++;
+  };
+  passo('form-item-modelo-0','form-item-tecido-0',false);
+  passo('form-item-tecido-0','form-item-descricao-0',false);
+  passo('form-item-descricao-0','form-item-qnt-0',false);
+  passo('form-item-qnt-0','form-item-unit-0',false);
+  passo('form-item-unit-0','form-item-modelo-1',false);   /* pula os botões ⧉/✕ */
+  passo('form-item-modelo-1','form-item-unit-0',true);
+  passo('form-item-tecido-0','form-item-modelo-0',true);
+  t('Tab no último campo não prende o foco (segue nativo para "Adicionar Item")',
+    `__tabProbe('form-item-unit-1',false)==='form-item-unit-1|nativo'`);
+  t('Shift+Tab no primeiro campo não prende o foco (segue nativo)',
+    `__tabProbe('form-item-modelo-0',true)==='form-item-modelo-0|nativo'`);
+  t('Tab num botão do painel não é interceptado',
+    `(function(){var el=document.querySelector('#tab-itens .btn');el.focus();var ev=new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true});el.dispatchEvent(ev);return !ev.defaultPrevented})()`);
+  t('Tab com Ctrl não é interceptado',
+    `(function(){var el=document.getElementById('form-item-modelo-0');el.focus();var ev=new KeyboardEvent('keydown',{key:'Tab',ctrlKey:true,bubbles:true,cancelable:true});el.dispatchEvent(ev);return !ev.defaultPrevented})()`);
+  ow.eval('openBudgetSettings();');
+  t('Tab dentro do modal ⚙️ continua nativo (botões seguem alcançáveis)',
+    `__tabProbe('edit-phone',false)==='edit-phone|nativo'`);
+  ow.eval('closeBudgetSettings();');
+  t('Tab na folha A4 continua nativo',
+    `(function(){var el=document.getElementById('preview-phone-1');el.focus();var ev=new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true});el.dispatchEvent(ev);return !ev.defaultPrevented})()`);
+  t('ajuda do módulo documenta Tab e Shift+Tab',
+    `(function(){var h=document.getElementById('ajudaOrcamento').innerHTML.toLowerCase();return h.indexOf('<kbd>tab</kbd>')>-1&&h.indexOf('shift')>-1})()`);
+
   t('tema: papel A4 continua fora do tema',
     `(function(){var p=document.querySelector('.page');return !p.closest('[data-theme]')||getComputedStyle(p).backgroundColor!==''})()`);
 
