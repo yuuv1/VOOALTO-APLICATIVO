@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manual — Vooalto V8</title>
+<script>
+/* Aplica o tema salvo ANTES de desenhar (evita o flash branco no tema escuro). */
+(function(){
+  try{
+    var t=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+    var dark=/escur|noite|dark|night|preto/i.test(t);
+    document.documentElement.dataset.theme=dark?'escuro':'';
+    document.documentElement.style.colorScheme=dark?'dark':'light';
+  }catch(e){}
+})();
+</script>
+<style>
+*{box-sizing:border-box}
+:root{
+  --blue:#1D4ED8;--blue2:#2563EB;--green:#059669;--yellow:#D97706;--red:#DC2626;
+  --bg:#F1F5F9;--card:#FFFFFF;--text:#0F172A;--muted:#526175;--bd:#DBE3EC;--soft:#F8FAFC;--code:#EEF2F7;
+  --sb:#0F1729;
+}
+[data-theme="escuro"]{
+  --bg:#0B0F17;--card:#141A26;--text:#E8EDF6;--muted:#9AA6BA;--bd:#262F40;--soft:#1A2130;--code:#1E2634;
+}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Poppins","Segoe UI",system-ui,-apple-system,Arial,sans-serif;font-size:15px;line-height:1.62}
+a{color:var(--blue2)}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px 60px}
+header.top{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--bd);box-shadow:0 2px 14px rgba(15,23,42,.05)}
+.top-in{max-width:1000px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top-in h1{font-size:17px;margin:0;font-weight:800;letter-spacing:.2px}
+.top-in .sub{font-size:11.5px;color:var(--muted);font-weight:700}
+.top-in .sp{flex:1}
+button.tb,a.tb{border:1px solid var(--bd);background:var(--soft);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block}
+button.tb:hover,a.tb:hover{border-color:var(--blue2)}
+button.tb.primary,a.tb.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.hero{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px 22px;margin:22px 0 14px}
+.hero h2{margin:0 0 6px;font-size:20px}
+.hero p{margin:6px 0 0;color:var(--muted)}
+.flow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.flow div{flex:1 1 210px;background:var(--soft);border:1px solid var(--bd);border-radius:12px;padding:12px 14px}
+.flow b{display:block;font-size:13.5px}
+.flow span{font-size:12.5px;color:var(--muted)}
+nav.idx{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 16px;margin:14px 0 22px}
+nav.idx b{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+nav.idx a{display:inline-block;margin:6px 12px 0 0;font-weight:700;font-size:13px;text-decoration:none}
+section.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px 22px;margin:0 0 18px}
+section.card h2{margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px}
+section.card h3{margin:18px 0 6px;font-size:14.5px;color:var(--blue2);text-transform:uppercase;letter-spacing:.5px}
+section.card p{margin:8px 0}
+section.card ul,section.card ol{margin:8px 0 0 20px;padding:0}
+section.card li{margin:5px 0}
+kbd{background:var(--code);border:1px solid var(--bd);border-radius:6px;padding:1px 6px;font-weight:900;font-size:12px;font-family:inherit}
+.tag{display:inline-block;background:var(--code);border:1px solid var(--bd);border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:800}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+.dg{background:var(--green)}.dy{background:var(--yellow)}.dr{background:var(--red)}
+.tip{background:var(--soft);border-left:4px solid var(--blue2);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.warn{border-left-color:var(--yellow)}
+.danger{border-left-color:var(--red)}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}
+th,td{border-bottom:1px solid var(--bd);padding:8px 6px;text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+details{background:var(--soft);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;margin:8px 0}
+details summary{cursor:pointer;font-weight:800;font-size:13.5px}
+details p,details ul{font-size:13.5px}
+footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0}
+.badge{background:var(--code);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:800;color:var(--muted)}
+@media (max-width:640px){body{font-size:14.5px}.top-in h1{font-size:15px}}
+@media print{
+  header.top,nav.idx,.hero .flow,.no-print{display:none!important}
+  body{background:#fff;color:#000;font-size:12px}
+  section.card,.hero{border:none;padding:0;margin:0 0 14px;break-inside:avoid}
+  a{color:#000;text-decoration:none}
+  details{break-inside:avoid}
+  details[open] summary{font-weight:800}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div>
+      <h1>📖 Manual — Vooalto V8</h1>
+      <div class="sub">Ficha Técnica · Orçamento — funciona offline</div>
+    </div>
+    <div class="sp"></div>
+    <button class="tb" id="btnTema" onclick="alternarTema()" title="Trocar entre tema claro e escuro">🎨 Tema</button>
+    <button class="tb" onclick="window.print()" title="Imprimir este manual ou salvar em PDF">🖨️ Imprimir / PDF</button>
+    <a class="tb primary" href="index.html" title="Voltar para o sistema Vooalto V8">← Voltar ao sistema</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h2>Bem-vindo ao Vooalto V8</h2>
+    <p>A V8 ficou mais enxuta: são <b>duas ferramentas</b>, cada uma em tela cheia, sem etapas intermediárias. Você monta a ficha técnica e faz o orçamento — tudo salvo no próprio navegador, sem internet.</p>
+    <div class="flow">
+      <div>
+        <b>1 · 📋 Ficha Técnica</b>
+        <span>Cliente, modelos, valores, cores, medidas, imagens e páginas extras. Salva sozinha enquanto você digita.</span>
+      </div>
+      <div>
+        <b>2 · 💰 Orçamento</b>
+        <span>Proposta de venda com itens, totais, destaques e assinatura. Também salva sozinha.</span>
+      </div>
+    </div>
+    <div class="tip"><b>O que mudou na V8:</b> a <b>Catalogação</b> foi removida (junto com o leitor de PDF e o dashboard). A Ficha Técnica voltou a abrir como <b>aba em tela cheia</b> — na V7 ela abria numa janela por cima do sistema. E a lista de fichas agora é uma só: <b>Minhas fichas</b>.</div>
+  </div>
+
+  <nav class="idx">
+    <b>Neste manual</b><br>
+    <a href="#ficha">1 · Ficha Técnica</a>
+    <a href="#orcamento">2 · Orçamento</a>
+    <a href="#salvar">3 · Salvamento e backup</a>
+    <a href="#tema">4 · Tema, impressão e PDF</a>
+    <a href="#atalhos">5 · Atalhos do teclado</a>
+    <a href="#duvidas">6 · Dúvidas frequentes</a>
+  </nav>
+
+  <section class="card" id="ficha">
+    <h2>📋 1 · Ficha Técnica</h2>
+    <p>É a primeira ferramenta e já abre com o sistema. Tudo o que você faz nela fica neste computador.</p>
+
+    <h3>Barra lateral (menu da esquerda)</h3>
+    <ul>
+      <li><b>Ações</b> — <b>🗋 Nova ficha</b> e <b>⚡ Preenchimento rápido</b> (cliente, modelos, valores, grade de tamanhos e aviso de uma vez só).</li>
+      <li><b>Configurações</b> — o <b>número da próxima ficha</b> (sobe +1 sozinho a cada ficha finalizada) e a <b>pasta padrão</b> para salvar os arquivos.</li>
+      <li><b>Minhas fichas</b> — <b>💾 Salvar ficha</b> e a lista do que já foi salvo. Cada item tem <b>Abrir</b>, <b>✎</b> renomear e <b>✕</b> excluir.</li>
+      <li><b>Exportar backup (.json)</b> / <b>Abrir backup (.json)</b> — a cópia em arquivo, para levar para outro computador.</li>
+    </ul>
+
+    <h3>Ferramentas de desenho</h3>
+    <ul>
+      <li><b>Imagem</b> · <b>Texto</b> · <b>Seta/anotação</b> · <b>Retângulo</b> · <b>Círculo</b> · <b>Conta-gotas</b> (pega uma cor da imagem) · <b>Painel de camadas</b> (o que fica na frente e atrás).</li>
+      <li>Clique num item da página para selecioná-lo: aparece a barrinha com <b>⬆/⬇</b> (frente/trás), <b>⊕ Centro</b>, <b>⤢ Fill</b> (preenche a página), <b>✂️</b> recortar, <b>🔒</b> travar e <b>🗑</b> apagar.</li>
+      <li>O cadeado <b>🔒</b> é o "não mexa sem querer": o item continua salvo, só não se move. O <b>✕</b> apenas tira a seleção.</li>
+      <li>Arraste a imagem do computador direto para a página; fotos grandes são reduzidas automaticamente para não travar.</li>
+    </ul>
+
+    <h3>Páginas</h3>
+    <ul>
+      <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia.</li>
+      <li>Na faixa de baixo (estilo Canva) clique numa miniatura para ir até ela e <b>arraste para reordenar</b>. <b>✕ Remover</b> apaga a página.</li>
+    </ul>
+
+    <h3>Salvar, baixar e começar outra</h3>
+    <ul>
+      <li><b>💾 Salvo HH:MM</b> na barra lateral é a hora da última gravação automática. Se aparecer <b>⚠️ não salvou</b>, o navegador está sem espaço: exporte o backup.</li>
+      <li><b>💾 Salvar ficha</b> guarda na lista <b>Minhas fichas</b>. Salvar de novo <b>atualiza a mesma ficha</b> em vez de criar outra.</li>
+      <li><b>⬇ Baixar (escolher páginas)</b> gera o PDF só com as páginas marcadas; <b>🖨 Exportar PDF</b> imprime pelo navegador (também serve <kbd>Ctrl</kbd>+<kbd>P</kbd>); <b>📸 Exportar PNG</b> salva a página atual como imagem.</li>
+      <li><b>✨ Nova ficha</b> salva a atual (se tiver conteúdo), limpa a tela e avança o número.</li>
+    </ul>
+    <div class="tip">O campo <b>✓ completa / falta: cliente · telefone · modelo</b>, embaixo do botão Salvar, é só um lembrete do que ainda está vazio — ele não impede nada.</div>
+  </section>
+
+  <section class="card" id="orcamento">
+    <h2>💰 2 · Orçamento</h2>
+    <p>Abre pela aba <b>💰 Orçamento</b> no topo. O editor fica à esquerda e a folha A4 à direita, atualizando na hora.</p>
+    <ul>
+      <li><b>Itens</b> — descrição, quantidade, valor unitário e total automático. <b>Enter</b> pula para o próximo campo; há botão para <b>duplicar item</b>.</li>
+      <li><b>Total geral</b> em tempo real, com campo de <b>destaques/observações</b>.</li>
+      <li><b>Páginas</b> — adicione quantas precisar; cada uma tem sua própria tabela.</li>
+      <li><b>Assinatura</b> — desenhe na tela ou envie uma imagem (ela é reduzida sozinha).</li>
+      <li><b>Salvar .json</b> / <b>Abrir .json</b> — a cópia em arquivo. Arquivos da V7 também abrem na V8.</li>
+      <li><b>Imprimir / PDF</b> — sai em A4, sem margens sobrando.</li>
+    </ul>
+    <div class="tip">O chip <b>💾 Salvo HH:MM</b> no topo do editor mostra que o salvamento automático aconteceu. O conteúdo fica <b>no navegador</b>: para guardar de verdade, use <b>Salvar .json</b>.</div>
+  </section>
+
+  <section class="card" id="salvar">
+    <h2>💾 3 · Salvamento e backup</h2>
+    <p>Existem três camadas, e vale entender a diferença:</p>
+    <table>
+      <tr><th>O quê</th><th>Onde fica</th><th>Para que serve</th></tr>
+      <tr><td><b>Salvamento automático</b></td><td>localStorage deste navegador</td><td>Não perder o que está em edição se a aba fechar ou o computador desligar.</td></tr>
+      <tr><td><b>Minhas fichas</b> / rascunhos do orçamento</td><td>IndexedDB deste navegador</td><td>Voltar a uma ficha ou orçamento antigo pelo próprio sistema.</td></tr>
+      <tr><td><b>Backup .json</b></td><td>Arquivo no seu computador</td><td>A única cópia que sobrevive a navegador limpo, formatado ou troca de máquina.</td></tr>
+    </table>
+    <div class="tip warn">⚠️ <b>Regra de ouro:</b> limpe o navegador, troque de computador ou reinstale o Windows? Exporte antes as fichas (<b>Exportar backup .json</b>) e o orçamento (<b>Salvar .json</b>). O navegador guarda os dados no <b>perfil</b> usado — outro navegador ou outro perfil não enxerga nada.</div>
+    <div class="tip danger">🗑 <b>Zerar dados</b> (<code>zerar_dados.html</code>) apaga tudo e <b>não tem volta</b>. <b>Limpar cache</b> (<code>limpar_cache.html</code>) apaga só os arquivos do programa — fichas e orçamentos continuam lá.</div>
+  </section>
+
+  <section class="card" id="tema">
+    <h2>🎨 4 · Tema, impressão e PDF</h2>
+    <ul>
+      <li><b>Dois temas, e só dois:</b> <b>Claro</b> (padrão) e <b>Escuro</b>. O seletor no topo vale para o sistema inteiro e a escolha fica salva.</li>
+      <li>Quem vinha de uma versão antiga com outro tema (Neon, Tech, Butter…) cai no mais próximo e passa a usar claro/escuro.</li>
+      <li>A <b>folha A4 continua branca</b> nos dois temas — o escuro muda só o painel em volta, para o impresso não sair errado.</li>
+      <li><b>Gerar PDF:</b> <b>⬇ Baixar (escolher páginas)</b> na Ficha, <b>Imprimir / PDF</b> no Orçamento, ou <kbd>Ctrl</kbd>+<kbd>P</kbd> em qualquer lugar (escolha "Salvar como PDF").</li>
+    </ul>
+  </section>
+
+  <section class="card" id="atalhos">
+    <h2>⌨️ 5 · Atalhos do teclado</h2>
+    <table>
+      <tr><th>Tecla</th><th>O que faz</th></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Fecha janelas, painéis, o leitor de seleção e a ajuda</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Desfazer / refazer na Ficha Técnica (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> também refaz)</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>Apaga a imagem/texto/forma selecionada na Ficha Técnica</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>No Orçamento, pula para o próximo campo do item; no preenchimento rápido da Ficha, avança de etapa</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Aplica tudo no preenchimento rápido da Ficha</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>Imprimir ou salvar em PDF (do navegador)</td></tr>
+    </table>
+  </section>
+
+  <section class="card" id="duvidas">
+    <h2>❓ 6 · Dúvidas frequentes</h2>
+
+    <details>
+      <summary>Cadê a Catalogação? Ainda consigo ver as fichas antigas?</summary>
+      <p>A Catalogação saiu do sistema na V8. As fichas que você salvou continuam <b>dentro da Ficha Técnica</b>, na lista <b>Minhas fichas</b> (os antigos "rascunhos" viraram fichas normais). Se a lista estiver vazia, procure os arquivos <b>.json</b> que você exportou e use <b>Abrir backup (.json)</b>.</p>
+    </details>
+
+    <details>
+      <summary>A ficha fechou sozinha / o navegador travou. Perdi o trabalho?</summary>
+      <p>Não. A ficha em edição é gravada a cada instante (<b>💾 Salvo HH:MM</b>). Reabra o sistema e ela volta de onde parou. Se quiser uma cópia nomeada, use <b>💾 Salvar ficha</b>.</p>
+    </details>
+
+    <details>
+      <summary>Apareceu "⚠️ não salvou". O que faço?</summary>
+      <p>O navegador recusou a gravação — quase sempre é falta de espaço (fotos muito grandes na ficha). Use <b>Exportar backup (.json)</b> na hora e depois remova imagens de páginas que não precisa.</p>
+    </details>
+
+    <details>
+      <summary>Como abro o sistema em outro computador?</summary>
+      <p>Instale o Vooalto lá e importe os backups: <b>Abrir backup (.json)</b> na Ficha e <b>Abrir .json</b> no Orçamento. O navegador não sincroniza os dados sozinho.</p>
+    </details>
+
+    <details>
+      <summary>O sistema abriu desatualizado depois de uma atualização.</summary>
+      <p>Abra <code>limpar_cache.html</code> e clique em <b>Limpar cache agora</b>, depois recarregue. Isso não apaga fichas nem orçamentos.</p>
+    </details>
+
+    <details>
+      <summary>Quero começar do zero, sem nada salvo.</summary>
+      <p>Abra <code>zerar_dados.html</code> e siga as duas etapas. Exporte um backup antes — não tem volta.</p>
+    </details>
+
+    <details>
+      <summary>O atalho do aplicativo sumiu da barra de tarefas.</summary>
+      <p>Rode o <code>instalar_e_abrir_V8.bat</code>, abra o Vooalto no Edge/Chrome, clique em <b>⬇ Instalar</b> (ou menu → Aplicativos → Instalar este site como app) e fixe o aplicativo instalado de novo.</p>
+    </details>
+
+    <details>
+      <summary>Alguma coisa vai para a internet?</summary>
+      <p>Não. O sistema roda inteiro neste computador, pelo servidor local, e o cache offline dispensa a rede depois da primeira abertura.</p>
+    </details>
+  </section>
+
+  <footer class="ft">
+    <span class="badge">Vooalto V8 · versão 8.0.0</span><br>
+    Uniformes — ficha técnica e orçamento, offline.
+  </footer>
+
+</div>
+
+<script>
+function alternarTema(){
+  var atual=(document.documentElement.dataset.theme==='escuro')?'claro':'escuro';
+  document.documentElement.dataset.theme=(atual==='escuro')?'escuro':'';
+  document.documentElement.style.colorScheme=atual;
+  try{localStorage.setItem('vooalto_tema',atual)}catch(e){}
+  /* avisa o sistema, caso o manual esteja aberto por cima dele */
+  try{if(window.opener)window.opener.postMessage({type:'vooalto-theme',theme:atual},'*')}catch(e){}
+}
+(function(){
+  var b=document.getElementById('btnTema');
+  if(b)b.title=(document.documentElement.dataset.theme==='escuro')?'Trocar para o tema claro':'Trocar para o tema escuro';
+})();
+</script>
+
+</body>
+</html>
