@@ -134,12 +134,12 @@ box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
 /* ═══ SEÇÕES ═══ */
 .sb-section{margin-bottom:2px}
 .sb-section-title{
-font-size:9px;font-weight:800;color:#9AA5B8;
+font-size:9px;font-weight:800;color:var(--sb-t3);
 letter-spacing:1.7px;text-transform:uppercase;
 padding:15px 14px 3px;white-space:nowrap;overflow:hidden;
 }
 .sb-section-desc{
-font-size:9.5px;font-weight:500;color:#78849A;
+font-size:9.5px;font-weight:500;color:var(--sb-t2);
 padding:0 14px 9px;line-height:1.4;letter-spacing:.1px;
 }
 
@@ -155,8 +155,8 @@ transition:background .13s,color .13s,border-color .13s;
 }
 .sb-btn:hover{background:var(--sb-hover);color:var(--sb-t1)}
 .sb-btn:active{background:var(--sb-active)}
-.sb-btn.active{background:rgba(212,24,122,.16);color:#fff;box-shadow:inset 2px 0 0 var(--sb-rosa)}
-.sb-btn.ativo-desenho{background:rgba(245,158,11,.15);color:#FDE68A;box-shadow:inset 2px 0 0 #F59E0B}
+.sb-btn.active{background:var(--v8-sel);color:var(--sb-rosa);box-shadow:inset 2px 0 0 var(--sb-rosa)}
+.sb-btn.ativo-desenho{background:var(--v8-warn-bg);color:var(--v8-warn);box-shadow:inset 2px 0 0 var(--v8-warn)}
 .sb-btn-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.75;transition:opacity .13s}
 .sb-btn-icon svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .sb-btn:hover .sb-btn-icon,.sb-btn.active .sb-btn-icon{opacity:1}
@@ -209,7 +209,7 @@ display:flex;align-items:center;justify-content:center;cursor:pointer;
 opacity:0;transition:opacity .13s,background .13s,color .13s;
 }
 .sb-page-group:hover .sb-remove-page{opacity:1}
-.sb-remove-page:hover{background:rgba(239,68,68,.18);color:#FCA5A5}
+.sb-remove-page:hover{background:var(--v8-err-bg);color:var(--v8-err)}
 .sb-remove-page svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .sb-page-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px}
 .sb-page-actions .sb-btn{
@@ -237,13 +237,13 @@ cursor:pointer;transition:background .13s,border-color .13s,color .13s;
 .sb-field{
 display:flex;align-items:center;justify-content:space-between;gap:8px;
 margin:0 10px 5px;padding:0 10px;height:33px;border-radius:7px;
-background:rgba(255,255,255,.035);
+background:var(--sb-card);
 }
 .sb-field-label{font-size:10.5px;font-weight:600;color:var(--sb-t2);white-space:nowrap}
 .sb-field input{
 width:58px;height:23px;padding:0 4px;text-align:center;
 border:1px solid var(--sb-line2);border-radius:5px;
-background:rgba(0,0,0,.28);color:var(--sb-t1);
+background:var(--sb-card2);color:var(--sb-t1);
 font-family:inherit;font-size:10.5px;font-weight:700;outline:none;
 }
 .sb-field input:focus{border-color:rgba(212,24,122,.65);box-shadow:0 0 0 2px rgba(212,24,122,.16)}
@@ -331,7 +331,7 @@ transition:background .13s,border-color .13s;
 /* ═══ SELO DE AUTOSAVE ═══ */
 .v7-save-chip{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:var(--sb-t3);padding:0 14px 8px;letter-spacing:.1px}
 .v7-save-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--sb-t3);flex-shrink:0;transition:background .2s}
-.v7-save-chip.salvo::before{background:#4ADE80}
+.v7-save-chip.salvo::before{background:var(--v8-ok)}
 .v7-save-chip.erro{color:var(--v8-err)}
 .v7-save-chip.erro::before{background:var(--v8-err)}
 
@@ -372,7 +372,7 @@ transition:background .13s,border-color .13s;
 }
 .sb-ficha-act button{width:21px;height:21px;padding:0;border:none;border-radius:4px;background:transparent;color:var(--sb-t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .13s,color .13s}
 .sb-ficha-act button:hover{background:var(--sb-active);color:var(--sb-t1)}
-.sb-ficha-act button.del:hover{background:rgba(239,68,68,.2);color:#FCA5A5}
+.sb-ficha-act button.del:hover{background:var(--v8-err-bg);color:var(--v8-err)}
 .sb-ficha-act svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sb-empty{font-size:9.5px;color:var(--sb-t3);text-align:center;padding:13px 10px;line-height:1.5;border:1px dashed var(--sb-line2);border-radius:7px}
 .sb-empty b{color:var(--sb-t2);font-weight:700}
