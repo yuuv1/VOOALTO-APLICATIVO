@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vooalto V8</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#eef0ff" id="themeColorMeta">
+<meta name="application-name" content="Vooalto V8">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>
+/* ── Anti-flash síncrono ──────────────────────────────────────────────
+   Aplica o tema salvo ANTES do primeiro paint, para o navegador não
+   pintar o fundo padrão e trocar de cor na cara do usuário.
+   V8: só existem DOIS temas (claro e escuro). Um valor antigo gravado por
+   versões anteriores (tech, butter, neon...) é resolvido por v8TemaValido,
+   que manda os antigos escuros para o escuro e todo o resto para o claro. */
+(function(){
+  try{
+    var ANTIGOS_ESCUROS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+    var escuro=(salvo==='escuro')||!!ANTIGOS_ESCUROS[salvo];
+    var v=escuro?['#0b0f17','#0b0f17','#fff']:['#eef0ff','#eef0ff','#17172a'];
+    var scheme=escuro?'dark':'light';
+    var css=':root{--shell-bg:'+v[0]+';--top-solid:'+v[1]+';--bar-text:'+v[2]+'!important}'
+      +'html,body{background:'+v[0]+'!important;color:'+v[2]+'!important;color-scheme:'+scheme+'}'
+      +'iframe.project-frame{background:'+v[0]+'!important;color-scheme:'+scheme+'!important}';
+    var st=document.createElement('style');
+    st.id='__theme_boot';
+    st.textContent=css;
+    if(escuro)document.documentElement.setAttribute('data-theme','escuro');
+    document.documentElement.style.colorScheme=scheme;
+    document.write('<style>'+css+'</style>');
+  }catch(e){}
+})();
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bar-text:#17172a;--shell-bg:#eef0ff;--top-solid:#eef0ff}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--shell-bg);color:#111827}
+/* Anima só trocas manuais (classe .theme-animating); na carga inicial não pisca. */
+html.theme-animating body,html.theme-animating .app-shell,html.theme-animating .topbar,html.theme-animating .frame-wrap,html.theme-animating .project-frame{transition:background-color .18s ease,color .18s ease}
+html[data-theme="escuro"]{--bar-text:#fff;--shell-bg:#0b0f17;--top-solid:#0b0f17}
+/* controles do topo no escuro: fundo escuro com texto claro */
+html[data-theme="escuro"] .theme-select,html[data-theme="escuro"] .utility-btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.20);color:#f8fafc}
+html[data-theme="escuro"] .utility-btn:hover{background:rgba(255,255,255,.24)}
+html[data-theme="escuro"] .switcher{background:rgba(255,255,255,.08)}
+html[data-theme="escuro"] .switch-btn{color:#f8fafc}
+html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
+
+.app-shell{height:100vh;display:flex;flex-direction:column;background:var(--shell-bg)}
+.topbar{min-height:64px;flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--top-solid);color:var(--bar-text);border-bottom:1px solid rgba(0,0,0,.12);z-index:50;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{height:38px;object-fit:contain;object-position:left center;display:block}
+.brand-name{font-size:15px;font-weight:900;letter-spacing:.5px;line-height:1.1}
+.brand-name small{display:block;font-size:8.5px;font-weight:700;letter-spacing:2px;opacity:.65;text-transform:uppercase}
+.switcher{display:flex;gap:4px;align-items:center;background:rgba(0,0,0,.14);padding:4px;border-radius:999px}
+.switch-btn{position:relative;border:0;background:transparent;color:inherit;padding:8px 14px;border-radius:999px;cursor:pointer;font-size:12.5px;font-weight:760;font-family:inherit;white-space:nowrap}
+.switch-btn.active{background:rgba(255,255,255,.92);color:#050505;box-shadow:0 4px 14px rgba(17,24,39,.16)}
+.controls{display:flex;align-items:center;gap:8px;margin-left:auto}
+.theme-select{border:1px solid rgba(0,0,0,.18);background:rgba(255,255,255,.25);color:inherit;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:760;cursor:pointer;max-width:150px;font-family:inherit}
+.utility-btn{border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.22);color:inherit;padding:8px 11px;border-radius:999px;cursor:pointer;font-size:11.5px;font-weight:760;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+.utility-btn:hover{background:rgba(255,255,255,.4)}
+
+.frame-wrap{position:relative;flex:1;min-height:0;background:var(--shell-bg)}
+.project-frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--shell-bg,#eef0ff);display:none}
+.project-frame.active{display:block}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;color:var(--bar-text);background:var(--shell-bg,#eef0ff);z-index:10;font-weight:760;font-size:13px}
+.loading .spin{width:34px;height:34px;border:3px solid rgba(127,127,140,.3);border-top-color:currentColor;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.90);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:760;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;max-width:min(78vw,420px)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Janelas (tour e ajuda) ── */
+.modal{position:fixed;inset:0;background:rgba(5,5,10,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:18px}
+.modal.open{display:flex}
+.card{position:relative;background:#fff;color:#111827;border-radius:18px;width:100%;max-height:88vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.card.wide{max-width:760px}
+.card.narrow{max-width:640px}
+.card h3{margin:0;font-size:20px}
+.card .sub{color:#4b5563;font-size:13px;font-weight:600;margin:6px 0 14px;line-height:1.5}
+.card-x{position:absolute;top:10px;right:12px;width:30px;height:30px;border:0;border-radius:50%;background:#f1f5f9;color:#475569;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;line-height:1}
+.card-x:hover{background:#e2e8f0}
+.tour-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.tour-step{border:1px solid #e5e7eb;border-radius:14px;padding:14px;background:#fafbff}
+.tour-step .num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#050505;color:#fff;font-weight:900;font-size:12px;align-items:center;justify-content:center;margin-bottom:8px}
+.tour-step b{font-size:14px}
+.tour-step p{font-size:12.5px;line-height:1.6;color:#374151;margin:6px 0 0}
+.card-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px;border-top:1px solid #eef0f3;padding-top:14px}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:900;font-size:13px;cursor:pointer;font-family:inherit}
+.btn.primary{background:#050505;color:#fff}
+.btn.ghost{background:#f3f4f6;color:#111827}
+.remember{font-size:12px;color:#4b5563;font-weight:700;display:flex;gap:6px;align-items:center;margin-left:auto}
+.help-item{display:flex;gap:12px;padding:12px 0;border-top:1px solid #eef0f3}
+.help-item .ico{font-size:22px;flex:0 0 30px}
+.help-item b{font-size:13px}
+.help-item p{font-size:12px;color:#4b5563;margin-top:3px;line-height:1.45}
+.help-keys{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}
+.help-keys td{padding:5px 8px 5px 0;vertical-align:top;border-top:1px solid #eef0f3}
+.help-keys td:first-child{white-space:nowrap;color:#111827}
+@media(max-width:860px){
+  .topbar{gap:8px}
+  .brand-logo{height:30px}
+  .switcher{order:3;width:100%;overflow-x:auto}
+  .controls{margin-left:0}
+}
+@media(max-width:640px){.brand-name{display:none}}
+@media print{.modal{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="assets/logo_empresa.png" alt="Vooalto Uniformes">
+      <div class="brand-name">VOOALTO<small>V8 · Uniformes</small></div>
+    </div>
+    <nav class="switcher">
+      <button class="switch-btn active" id="btn-ficha" onclick="showProject('ficha')" title="Criar e editar a ficha técnica de produção">📋 Ficha Técnica</button>
+      <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
+    </nav>
+    <div class="controls">
+      <select class="theme-select" id="themeSelect" onchange="applyThemeFromShell(this.value)" title="Tema do sistema: Claro ou Escuro">
+        <option value="claro">Claro</option>
+        <option value="escuro">Escuro</option>
+      </select>
+      <button class="utility-btn" id="installAppBtn" onclick="installPWA()" style="display:none" title="Instalar como aplicativo">⬇ Instalar</button>
+      <button class="utility-btn" onclick="reloadActive()" title="Recarregar o módulo atual">↻</button>
+      <button class="utility-btn" onclick="openHelp()" title="Ajuda — como usar o Vooalto V8">? Ajuda</button>
+    </div>
+  </header>
+  <main class="frame-wrap">
+    <div class="loading" id="loading"><div class="spin"></div>Carregando o Vooalto V8...</div>
+    <iframe class="project-frame active" id="frame-ficha" src="criador_ficha_tecnica/index.html" title="Criador de Ficha Técnica"></iframe>
+    <!-- O orçamento só é carregado quando o usuário abre a aba pela primeira vez. -->
+    <iframe class="project-frame" id="frame-orcamento" data-src="criador_orcamento/index.html" title="Criador de Orçamento"></iframe>
+  </main>
+</div>
+
+<div class="modal" id="tourV8" onclick="if(event.target===this)fecharTour()">
+  <div class="card wide">
+    <button class="card-x" onclick="fecharTour()" title="Fechar a tela de boas-vindas (Esc)">✕</button>
+    <h3>👋 Bem-vindo ao Vooalto V8</h3>
+    <div class="sub">Duas ferramentas, sem etapas intermediárias: monte a ficha técnica e faça o orçamento.</div>
+    <div class="tour-steps">
+      <div class="tour-step">
+        <div class="num">1</div>
+        <b>📋 Ficha Técnica</b>
+        <p>Dados do cliente, modelos, cores, medidas e imagens. Salva sozinha neste navegador enquanto você digita — use <b>Salvar ficha</b> para guardar na lista e <b>Baixar</b> para gerar o PDF.</p>
+      </div>
+      <div class="tour-step">
+        <div class="num">2</div>
+        <b>💰 Orçamento</b>
+        <p>Monte a proposta com itens, valores, cliente e assinatura. Também salva automaticamente neste navegador — use <b>Salvar .json</b> para guardar uma cópia em arquivo.</p>
+      </div>
+    </div>
+    <div class="card-foot">
+      <button class="btn primary" onclick="fecharTour()">Começar a usar</button>
+      <button class="btn ghost" onclick="abrirManual()">📖 Ver manual completo</button>
+      <label class="remember"><input type="checkbox" id="tourNaoMostrar" checked> não mostrar novamente</label>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal">
+  <div class="card narrow">
+    <button class="card-x" onclick="closeHelp()" title="Fechar a ajuda (Esc)">✕</button>
+    <h3>Como usar o Vooalto V8</h3>
+    <div class="sub">Duas ferramentas: a ficha técnica de produção e o orçamento. Tudo fica salvo neste navegador — nada vai para a internet.</div>
+    <div class="help-item"><div class="ico">📋</div><div>
+      <b>1 · Ficha Técnica</b>
+      <p>Dados do cliente, modelos, valores, cores, medidas, imagens e páginas extras. A ficha em edição é <b>salva automaticamente</b> (o selo <b>Salvo HH:MM</b> mostra a hora da última gravação). <b>Salvar ficha</b> guarda na lista <b>Minhas fichas</b>, de onde você reabre quando quiser. <b>Nova ficha</b> começa outra em branco e avança o número.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">💰</div><div>
+      <b>2 · Orçamento</b>
+      <p>Crie orçamentos/propostas com itens, valores, cliente e assinatura. O conteúdo é <b>salvo automaticamente</b> neste navegador — feche e volte que continua de onde parou. Use <b>Salvar .json</b> para guardar um arquivo.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">🎨</div><div>
+      <b>Tema</b>
+      <p>O seletor no topo alterna <b>Claro</b> e <b>Escuro</b> no sistema inteiro (barra e módulos). A escolha fica salva neste navegador.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">💾</div><div>
+      <b>Backup</b>
+      <p>Ficha: <b>Exportar backup (.json)</b> / <b>Abrir backup (.json)</b> na barra lateral. Orçamento: <b>Salvar .json</b>. Guarde uma cópia antes de limpar o navegador ou trocar de computador.</p>
+    </div></div>
+    <div class="help-item"><div class="ico">⌨️</div><div>
+      <b>Atalhos de teclado</b>
+      <table class="help-keys">
+        <tr><td><b>Esc</b></td><td>fecha janelas, painéis e esta ajuda</td></tr>
+        <tr><td><b>Enter</b></td><td>no Orçamento, pula para o próximo campo do item</td></tr>
+        <tr><td><b>Ctrl + Z</b> / <b>Ctrl + Y</b></td><td>na Ficha Técnica, desfazer e refazer (Ctrl+Shift+Z também refaz)</td></tr>
+        <tr><td><b>Delete</b></td><td>na Ficha Técnica, apaga a imagem/texto/forma selecionada</td></tr>
+        <tr><td><b>Ctrl + P</b></td><td>imprimir ou salvar em PDF (do navegador)</td></tr>
+      </table>
+    </div></div>
+    <div class="help-item"><div class="ico">📖</div><div>
+      <b>Precisa de mais detalhe?</b>
+      <p style="margin-bottom:8px">O manual completo tem o passo a passo dos dois módulos, salvamento, backup e as dúvidas frequentes.</p>
+      <button class="btn ghost" onclick="abrirManual()" title="Abrir o manual completo do Vooalto V8">📖 Abrir o manual</button>
+      <button class="btn ghost" onclick="reabrirTour()" title="Mostrar de novo o tour de boas-vindas">👋 Ver o tour de novo</button>
+    </div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* ══ Vooalto V8 — shell ═══════════════════════════════════════════════
+   Dois módulos em tela cheia: Ficha Técnica e Orçamento.
+   A V8 removeu a Catalogação; a ficha técnica voltou a abrir como aba
+   normal (na V7 ela abria numa janela sobre o sistema). */
+const PROJECTS={
+  ficha:{name:'Ficha Técnica',button:'btn-ficha',frame:'frame-ficha'},
+  orcamento:{name:'Orçamento',button:'btn-orcamento',frame:'frame-orcamento'}
+};
+const THEME_KEY='vooalto_tema';
+const THEME_KEY_LEGADO='vooalto_theme_v5';
+const TEMA_CLARO={bg:'#eef0ff',top:'#eef0ff',text:'#17172a'};
+const TEMA_ESCURO={bg:'#0b0f17',top:'#0b0f17',text:'#fff'};
+/* Nomes de tema de versões antigas (antes da V7.3, que já tinha só 2).
+   Mantido para quem vier de uma versão antiga não cair no tema errado. */
+const TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+
+let activeProject='ficha';
+let currentTheme=null;          // evita aplicar o mesmo tema duas vezes
+let deferredInstallPrompt=null;
+
+function v8TemaValido(t){
+  if(t==='escuro')return 'escuro';
+  if(t==='claro')return 'claro';
+  return TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro';
+}
+function v8TemaSalvo(){
+  try{return localStorage.getItem(THEME_KEY)||localStorage.getItem(THEME_KEY_LEGADO)||'claro'}catch(e){return 'claro'}
+}
+function v8NomeTema(t){return t==='escuro'?'Escuro':'Claro'}
+
+function setShellTheme(t,opts){
+  t=v8TemaValido(t);
+  if(currentTheme===t)return;
+  currentTheme=t;
+  const v=(t==='escuro')?TEMA_ESCURO:TEMA_CLARO;
+  const scheme=(t==='escuro')?'dark':'light';
+  const withAnim=!!(opts&&opts.animate);
+  const bootStyle=document.getElementById('__theme_boot');
+  if(bootStyle)bootStyle.remove();
+  const root=document.documentElement;
+  if(withAnim)root.classList.add('theme-animating');
+  root.style.setProperty('--shell-bg',v.bg);
+  root.style.setProperty('--top-solid',v.top);
+  root.style.setProperty('--bar-text',v.text);
+  if(t==='escuro')root.setAttribute('data-theme','escuro');
+  else root.removeAttribute('data-theme');
+  root.style.colorScheme=scheme;
+  document.querySelectorAll('iframe.project-frame').forEach(f=>{
+    f.style.background=v.bg;
+    f.style.colorScheme=scheme;
+  });
+  const meta=document.getElementById('themeColorMeta');
+  if(meta)meta.content=v.bg;
+  const sel=document.getElementById('themeSelect');
+  if(sel&&sel.value!==t)sel.value=t;
+  try{localStorage.setItem(THEME_KEY,t)}catch(e){}
+  if(withAnim)setTimeout(()=>root.classList.remove('theme-animating'),200);
+}
+function applyThemeFromShell(t){
+  t=v8TemaValido(t);
+  if(currentTheme===t)return;
+  // Aplica no shell primeiro (síncrono) e só depois avisa os módulos:
+  // a barra já está na cor nova quando os iframes repintam, sem flash.
+  setShellTheme(t,{animate:true});
+  broadcastTheme(t,null);
+  toast('🎨 Tema aplicado: '+v8NomeTema(t));
+}
+function broadcastTheme(t,exceto){
+  t=v8TemaValido(t);
+  Object.keys(PROJECTS).forEach(k=>{
+    const fr=document.getElementById(PROJECTS[k].frame);
+    if(!fr||fr===exceto)return;
+    try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}
+  });
+}
+
+/* ── Navegação entre os módulos ── */
+function showProject(key,opts){
+  const p=PROJECTS[key];
+  if(!p)return;
+  activeProject=key;
+  const fr=document.getElementById(p.frame);
+  const l=document.getElementById('loading');
+  // O orçamento é carregado sob demanda (a primeira abertura do sistema é mais rápida).
+  const vaiCarregar=!!(fr&&!fr.getAttribute('src')&&fr.dataset.src);
+  if(vaiCarregar){
+    fr.setAttribute('src',fr.dataset.src);
+    fr.removeAttribute('data-src');
+  }
+  Object.keys(PROJECTS).forEach(k=>{
+    document.getElementById(PROJECTS[k].button).classList.toggle('active',k===key);
+    document.getElementById(PROJECTS[k].frame).classList.toggle('active',k===key);
+  });
+  if(l)l.style.display=vaiCarregar?'':'none';
+  try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},'*')}catch(e){}
+  if(!(opts&&opts.silent))toast('Aberto: '+p.name);
+}
+function reloadActive(){
+  const fr=document.getElementById(PROJECTS[activeProject].frame);
+  if(!fr)return;
+  if(!fr.getAttribute('src')){showProject(activeProject);return}
+  try{fr.contentWindow.location.reload()}catch(e){fr.src=fr.getAttribute('src')}
+  toast('Recarregado: '+PROJECTS[activeProject].name);
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  if(!t)return;
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ── Mensagens vindas dos módulos ── */
+window.addEventListener('message',e=>{
+  const d=e&&e.data;
+  if(!d||!d.type)return;
+  if(d.type==='vooalto-theme'){
+    // Um módulo avisou que o usuário trocou o tema nele: aplica no shell e
+    // repassa só para os OUTROS (nunca de volta para quem enviou — evita loop).
+    const tema=v8TemaValido(d.theme);
+    if(currentTheme===tema)return;
+    setShellTheme(tema,{animate:true});
+    let origem=null;
+    Object.keys(PROJECTS).forEach(k=>{
+      const fr=document.getElementById(PROJECTS[k].frame);
+      if(fr&&fr.contentWindow===e.source)origem=fr;
+    });
+    broadcastTheme(tema,origem);
+    return;
+  }
+  if(d.type==='vooalto-switch-tab'&&PROJECTS[d.tab]){showProject(d.tab);return}
+  if(d.type==='vooalto-abrir-manual'){abrirManual();return}
+});
+
+/* ── Ajuda, tour e manual ── */
+function abrirManual(){
+  /* Em prévia/PWA o navegador pode bloquear a janela nova: aí abre na mesma aba. */
+  try{const w=window.open('manual.html','_blank');if(w)return}catch(e){}
+  try{location.href='manual.html'}catch(e){}
+}
+function openHelp(){document.getElementById('helpModal').classList.add('open')}
+function closeHelp(){document.getElementById('helpModal').classList.remove('open')}
+document.getElementById('helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')closeHelp()});
+
+const TOUR_KEY='vooalto_tour_v8';
+function mostrarTour(){const el=document.getElementById('tourV8');if(el)el.classList.add('open')}
+function fecharTour(){
+  const el=document.getElementById('tourV8');
+  if(el)el.classList.remove('open');
+  /* Marca na sessão também: em prévia/navegador com armazenamento bloqueado o
+     tour reaparecia a cada recarga e parecia que o sistema tinha zerado. */
+  try{sessionStorage.setItem(TOUR_KEY,'visto')}catch(e){}
+  const cb=document.getElementById('tourNaoMostrar');
+  if(!cb||cb.checked){try{localStorage.setItem(TOUR_KEY,'visto')}catch(e){}}
+}
+function reabrirTour(){
+  closeHelp();
+  const cb=document.getElementById('tourNaoMostrar');
+  if(cb)cb.checked=true;
+  mostrarTour();
+}
+function v8TourDecidir(){
+  let visto=false;
+  try{visto=localStorage.getItem(TOUR_KEY)==='visto'}catch(e){}
+  if(visto)return;
+  try{if(sessionStorage.getItem(TOUR_KEY)==='visto')return}catch(e){}
+  setTimeout(mostrarTour,600);      // deixa a tela carregar antes de aparecer
+}
+document.getElementById('tourV8').addEventListener('keydown',e=>{if(e.key==='Escape')fecharTour()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const tour=document.getElementById('tourV8');
+  if(tour&&tour.classList.contains('open')){fecharTour();return}
+  closeHelp();
+});
+
+/* ── Instalação como aplicativo ── */
+function isStandaloneApp(){
+  try{return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}catch(e){return false}
+}
+function hideInstallButton(){
+  const b=document.getElementById('installAppBtn');
+  if(b)b.style.display='none';
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  if(isStandaloneApp())return;
+  deferredInstallPrompt=e;
+  const b=document.getElementById('installAppBtn');
+  if(b)b.style.display='inline-flex';
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  hideInstallButton();
+  toast('✅ Vooalto instalado. Fixe o aplicativo na barra de tarefas.');
+});
+async function installPWA(){
+  if(isStandaloneApp()){hideInstallButton();return}
+  if(deferredInstallPrompt){
+    const prompt=deferredInstallPrompt;
+    deferredInstallPrompt=null;
+    try{
+      await prompt.prompt();
+      const choice=await prompt.userChoice;
+      if(!(choice&&choice.outcome==='accepted')){hideInstallButton();toast('Instalação cancelada. Você pode instalar pelo menu do navegador.')}
+    }catch(e){
+      hideInstallButton();
+      toast('Não foi possível abrir a instalação. Use o menu Aplicativos do navegador.');
+    }
+  }else{
+    alert('No Edge/Chrome: menu ⋮ > Aplicativos > Instalar este site como app. Depois fixe o Vooalto instalado na barra de tarefas.');
+  }
+}
+
+/* ── Inicialização ── */
+function initVooalto(){
+  try{setShellTheme(v8TemaSalvo(),{animate:false})}catch(e){}
+  const syncThemeTo=fr=>{try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},'*')}catch(e){}};
+  Object.keys(PROJECTS).forEach(k=>{
+    const fr=document.getElementById(PROJECTS[k].frame);
+    if(!fr)return;
+    // Empurra o tema sempre que um módulo (re)carrega — cobre reload e lazy-load.
+    fr.addEventListener('load',()=>{syncThemeTo(fr);const l=document.getElementById('loading');if(l)l.style.display='none'});
+  });
+  /* Se o primeiro módulo travar sem disparar "load", não deixa a tela presa no spinner. */
+  setTimeout(()=>{const l=document.getElementById('loading');if(l)l.style.display='none'},4000);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initVooalto);
+else initVooalto();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v8TourDecidir);
+else v8TourDecidir();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{reg.update().catch(()=>{})}).catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
