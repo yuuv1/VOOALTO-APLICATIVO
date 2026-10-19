@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ficha técnica de produção</title>
+<link rel="stylesheet" href="../assets/tema-v8.css">
+<script>
+/* V8.1 — anti-piscada. O tema era aplicado só no DOMContentLoaded, então quem
+   usava o escuro via a ficha nascer clara e escurecer depois, a cada
+   abertura. Aqui o atributo é posto antes do primeiro paint, com a mesma
+   regra de sempre: 'escuro' e as paletas escuras antigas viram escuro; todo
+   o resto vira claro. */
+(function(){try{
+  var antigos={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+  var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+  var escuro=(salvo==='escuro')||!!antigos[salvo];
+  document.documentElement.setAttribute('data-theme',escuro?'escuro':'claro');
+  document.documentElement.style.colorScheme=escuro?'dark':'light';
+}catch(e){}})();
+</script>
 <link rel="stylesheet" href="../assets/cropper.min.css">
 <script src="../assets/cropper.min.js"></script>
   <script src="../assets/html2canvas.min.js"></script>
@@ -12,7 +27,7 @@
 :root{
 --az:#1E2937;--azm:#2D3F55;--azc:#EEF2F8;--ro:#D4187A;
 --vd:#166534;--vm:#DC2626;--tx:#1a1a2e;--txl:#6b7280;--bd:#D1D5DB;
---bg:#F9FAFB;--br:#fff;--hd:#3B82F6;--ar:#1D4ED8;
+--bg:#F9FAFB;--br:var(--v8-paper);--hd:#3B82F6;--ar:#1D4ED8;
 --sidebar-w:296px;
 --glass-bg:rgba(15,23,42,.78);
 --glass-border:rgba(255,255,255,.12);
@@ -29,7 +44,7 @@
 --radius-btn:10px;
 --radius-icon:10px
 ;--panel:rgba(255,255,255,.62);--card:rgba(255,255,255,.88);--text:#17172a;--muted:#6b7280;--line:rgba(31,41,55,.10);--black:#050505;--green:#34c759;--yellow:#ffb020;--red:#ff3b64;--blue:#2563eb;--gray:#8e8e93}
-html,body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:11px;color:var(--tx);background:#4B5563}
+html,body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:11px;color:var(--v8-t1);background:var(--v8-bg-2)}
 
 /* ══════════════════════════════════════════════════════════════════
    SIDEBAR V8 — REFAZIDA
@@ -53,23 +68,27 @@ html,body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:11
      cópias de cada, uma nas seções e outra no rodapé.
    ══════════════════════════════════════════════════════════════════ */
 :root{
---sb-bg:#101319;
---sb-card:#171B24;
---sb-card2:#1E232E;
---sb-line:rgba(255,255,255,.07);
---sb-line2:rgba(255,255,255,.13);
---sb-t1:#E7EBF2;
---sb-t2:#98A2B3;
---sb-t3:#76839A;
---sb-rosa:#D4187A;
---sb-rosa2:#F0449F;
+/* A barra lateral deixou de ser "escura sempre". Ela usa a base compartilhada:
+   clara no tema claro, escura no escuro — igual ao shell e ao Orçamento. */
+--sb-bg:var(--v8-surface);
+--sb-card:var(--v8-surface-2);
+--sb-card2:var(--v8-surface-3);
+--sb-line:var(--v8-line);
+--sb-line2:var(--v8-line-2);
+--sb-t1:var(--v8-t1);
+--sb-t2:var(--v8-t2);
+--sb-t3:var(--v8-t3);
+--sb-hover:var(--v8-hover);
+--sb-active:var(--v8-active);
+--sb-rosa:var(--v8-pink);
+--sb-rosa2:var(--v8-pink-2);
 }
 #sidebar{
 position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
 background:var(--sb-bg);z-index:9999;
 display:flex;flex-direction:column;overflow:hidden;
 border-right:1px solid var(--sb-line);
-box-shadow:1px 0 0 rgba(0,0,0,.35);
+box-shadow:1px 0 0 rgba(20,24,50,.06);
 transition:transform .28s cubic-bezier(.4,0,.2,1);
 }
 #sidebar.collapsed{transform:translateX(calc(-1 * var(--sidebar-w) + 42px))}
@@ -109,8 +128,8 @@ box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
 .sb-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent}
 .sb-scroll::-webkit-scrollbar{width:8px}
 .sb-scroll::-webkit-scrollbar-track{background:transparent}
-.sb-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:8px;border:2px solid var(--sb-bg)}
-.sb-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+.sb-scroll::-webkit-scrollbar-thumb{background:var(--v8-line-2);border-radius:8px;border:2px solid var(--sb-bg)}
+.sb-scroll::-webkit-scrollbar-thumb:hover{background:var(--v8-t3)}
 
 /* ═══ SEÇÕES ═══ */
 .sb-section{margin-bottom:2px}
@@ -134,8 +153,8 @@ color:var(--sb-t2);font-family:inherit;font-size:11.5px;font-weight:600;
 cursor:pointer;text-align:left;white-space:nowrap;
 transition:background .13s,color .13s,border-color .13s;
 }
-.sb-btn:hover{background:rgba(255,255,255,.055);color:var(--sb-t1)}
-.sb-btn:active{background:rgba(255,255,255,.085)}
+.sb-btn:hover{background:var(--sb-hover);color:var(--sb-t1)}
+.sb-btn:active{background:var(--sb-active)}
 .sb-btn.active{background:rgba(212,24,122,.16);color:#fff;box-shadow:inset 2px 0 0 var(--sb-rosa)}
 .sb-btn.ativo-desenho{background:rgba(245,158,11,.15);color:#FDE68A;box-shadow:inset 2px 0 0 #F59E0B}
 .sb-btn-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.75;transition:opacity .13s}
@@ -154,9 +173,9 @@ box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 8px rgba(212,24,122,.3);
 /* Ação secundária — Nova ficha */
 .sb-btn-accent{
 height:35px;font-size:11.5px;font-weight:600;color:var(--sb-t1);
-background:rgba(255,255,255,.045);border-color:var(--sb-line);
+background:var(--sb-hover);border-color:var(--sb-line);
 }
-.sb-btn-accent:hover{background:rgba(255,255,255,.08);border-color:var(--sb-line2);color:var(--sb-t1)}
+.sb-btn-accent:hover{background:var(--sb-hover);border-color:var(--sb-line2);color:var(--sb-t1)}
 
 /* Foco de teclado: o V7 não tinha nenhum, então Tab some no painel. */
 #sidebar button:focus-visible,#sidebar input:focus-visible,#sidebar-toggle:focus-visible{outline:2px solid rgba(212,24,122,.75);outline-offset:1px}
@@ -176,7 +195,7 @@ font-size:10.5px;font-weight:700;color:var(--sb-t2);
 }
 .sb-page-num{
 width:17px;height:17px;border-radius:4px;flex-shrink:0;
-background:rgba(255,255,255,.09);color:var(--sb-t2);
+background:var(--sb-active);color:var(--sb-t2);
 font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
 }
 .sb-page-branca{
@@ -195,9 +214,9 @@ opacity:0;transition:opacity .13s,background .13s,color .13s;
 .sb-page-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px}
 .sb-page-actions .sb-btn{
 width:100%;margin:0;height:31px;padding:0 8px;gap:7px;border-radius:6px;
-font-size:10.5px;font-weight:600;background:rgba(255,255,255,.035);
+font-size:10.5px;font-weight:600;background:var(--sb-hover);
 }
-.sb-page-actions .sb-btn:hover{background:rgba(255,255,255,.085)}
+.sb-page-actions .sb-btn:hover{background:var(--sb-active)}
 .sb-page-actions .sb-btn-icon{width:15px;height:15px;opacity:.65}
 .sb-page-actions .sb-btn-icon svg{width:14px;height:14px}
 .sb-page-actions .sb-btn:hover .sb-btn-icon{opacity:1}
@@ -237,9 +256,9 @@ font-family:inherit;font-size:10.5px;font-weight:700;outline:none;
 .rect-layer,.circle-layer{position:absolute;user-select:none;touch-action:none;cursor:move;z-index:50}
 .rect-layer.sel{outline:2px dashed #3B82F6;outline-offset:4px}
 .circle-layer.sel{outline:2px dashed #8B5CF6;outline-offset:4px}
-.shape-tb{position:absolute;left:50%;transform:translateX(-50%);top:8px;display:none;gap:6px;align-items:center;background:rgba(255,255,255,.98);border:1px solid var(--bd);border-radius:16px;padding:8px 14px;z-index:504;white-space:nowrap;box-shadow:0 14px 44px rgba(15,23,42,.18);backdrop-filter:blur(12px)}
+.shape-tb{position:absolute;left:50%;transform:translateX(-50%);top:8px;display:none;gap:6px;align-items:center;background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:16px;padding:8px 14px;z-index:504;white-space:nowrap;box-shadow:0 14px 44px rgba(15,23,42,.18);backdrop-filter:blur(12px)}
 .shape-tb.vis{display:flex}
-.shape-tb::before{content:'Forma';font-size:9px;font-weight:900;color:#3B82F6;text-transform:uppercase;letter-spacing:.8px;margin-right:4px}
+.shape-tb::before{content:'Forma';font-size:9px;font-weight:900;color:var(--v8-pink);text-transform:uppercase;letter-spacing:.8px;margin-right:4px}
 /* ═══ RODAPÉ FIXO ═══ */
 .sb-footer{
 flex-shrink:0;border-top:1px solid var(--sb-line);background:var(--sb-bg);
@@ -252,7 +271,7 @@ color:var(--sb-t3);cursor:pointer;display:flex;align-items:center;justify-conten
 transition:background .13s,color .13s;
 }
 .sb-iconbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.sb-iconbtn:hover:not(:disabled){background:rgba(255,255,255,.07);color:var(--sb-t1)}
+.sb-iconbtn:hover:not(:disabled){background:var(--sb-hover);color:var(--sb-t1)}
 .sb-iconbtn:disabled{opacity:.26;cursor:default}
 .sb-iconbtn.push{margin-left:auto}
 .sb-save{
@@ -285,11 +304,11 @@ transition:filter .13s;
 .ficha-float-cta:hover{filter:brightness(1.08)}
 .ficha-float-cta svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-#fichaSugBox{position:fixed;z-index:200;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);display:none;min-width:230px;max-width:330px;overflow:hidden;border:1px solid rgba(0,0,0,.08)}
-.fsug-item{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;cursor:pointer;font-size:12.5px;color:#111;font-weight:600}
-.fsug-item:hover{background:#eef2ff}
-.fsug-item span{color:#6b7280;font-size:11px;font-weight:500;white-space:nowrap}
-#fichaSugBox .fsug-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:#9ca3af;padding:7px 12px 3px;font-weight:800}
+#fichaSugBox{position:fixed;z-index:200;background:var(--v8-surface);color:var(--v8-t1);border-radius:12px;box-shadow:var(--v8-shadow);display:none;min-width:230px;max-width:330px;overflow:hidden;border:1px solid var(--v8-line)}
+.fsug-item{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;cursor:pointer;font-size:12.5px;color:var(--v8-t1);font-weight:600}
+.fsug-item:hover{background:var(--v8-sel)}
+.fsug-item span{color:var(--v8-t3);font-size:11px;font-weight:500;white-space:nowrap}
+#fichaSugBox .fsug-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--v8-t3);padding:7px 12px 3px;font-weight:800}
 /* ═══ BOTÕES DE EXPORTAÇÃO ═══
    .sb-pdf e .sb-png são nomes herdados: o test_canva_v8 procura
    .sb-footer .sb-pdf na botoeira de baixar. Não pintam nada — quem pinta
@@ -298,34 +317,50 @@ transition:filter .13s;
 .sb-footer-btn{
 display:flex;align-items:center;justify-content:center;gap:7px;width:100%;height:32px;
 padding:0 10px;border:1px solid var(--sb-line2);border-radius:7px;
-background:rgba(255,255,255,.055);color:var(--sb-t1);
+background:var(--sb-hover);color:var(--sb-t1);
 font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;
 transition:background .13s,border-color .13s;
 }
 .sb-footer-btn svg{width:14px;height:14px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.sb-footer-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.sb-footer-btn:hover{background:var(--sb-active);border-color:var(--sb-line2)}
 .sb-export-row{display:flex;gap:5px}
 .sb-export-half{flex:1;width:auto;height:28px;font-size:10px;font-weight:600;background:transparent;border-color:var(--sb-line);color:var(--sb-t2)}
-.sb-export-half:hover{background:rgba(255,255,255,.06);color:var(--sb-t1);border-color:var(--sb-line2)}
+.sb-export-half:hover{background:var(--sb-hover);color:var(--sb-t1);border-color:var(--sb-line2)}
 .sb-version{font-size:7.5px;color:var(--sb-t3);text-align:center;letter-spacing:1.2px;padding-top:1px;opacity:.65}
 
 /* ═══ SELO DE AUTOSAVE ═══ */
 .v7-save-chip{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:var(--sb-t3);padding:0 14px 8px;letter-spacing:.1px}
 .v7-save-chip::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--sb-t3);flex-shrink:0;transition:background .2s}
 .v7-save-chip.salvo::before{background:#4ADE80}
-.v7-save-chip.erro{color:#FCA5A5}
-.v7-save-chip.erro::before{background:#EF4444}
+.v7-save-chip.erro{color:var(--v8-err)}
+.v7-save-chip.erro::before{background:var(--v8-err)}
+
+/* ═══ V8.1 — CARTÃO DE RASCUNHO (visível na barra lateral) ═══
+   O autosave já existia, mas só se via uma linha minúscula "Salvo 14:32".
+   Agora a barra lateral mostra o estado do rascunho e dá os dois comandos
+   que faltavam: restaurar o que ficou guardado e descartar de vez. */
+.sb-draft{padding:0 14px;display:flex;flex-direction:column;gap:6px}
+.sb-draft .v7-save-chip{padding:0;font-size:10px;font-weight:800;color:var(--sb-t2)}
+.sb-draft .v7-save-chip.salvo{color:var(--sb-t1)}
+.sb-draft .v7-save-chip.salvo::before{background:var(--v8-ok)}
+.sb-draft-note{font-size:9px;line-height:1.45;color:var(--sb-t3);font-weight:600}
+.sb-draft-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:1px}
+.sb-draft-btn{border:1px solid var(--sb-line2);background:var(--sb-card);color:var(--sb-t1);border-radius:8px;padding:7px 6px;font-size:10px;font-weight:800;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.sb-draft-btn:hover:not(:disabled){background:var(--sb-hover);border-color:var(--sb-rosa)}
+.sb-draft-btn:disabled{opacity:.42;cursor:default}
+.sb-draft-btn.ghost{background:transparent;color:var(--sb-t2)}
+.sb-draft-btn.ghost:hover:not(:disabled){background:var(--v8-err-bg);border-color:var(--v8-err);color:var(--v8-err)}
 
 /* ═══ LISTA "MINHAS FICHAS" ═══ */
 #v8FichasList{max-height:172px;overflow-y:auto;padding:0 10px 2px;display:flex;flex-direction:column;gap:3px}
 #v8FichasList::-webkit-scrollbar{width:6px}
-#v8FichasList::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:6px}
+#v8FichasList::-webkit-scrollbar-thumb{background:var(--v8-line-2);border-radius:6px}
 .sb-ficha{
 display:flex;align-items:center;gap:6px;padding:6px 7px;border-radius:7px;
-background:rgba(255,255,255,.035);border:1px solid transparent;cursor:pointer;
+background:var(--sb-hover);border:1px solid transparent;cursor:pointer;
 transition:background .13s,border-color .13s;
 }
-.sb-ficha:hover{background:rgba(255,255,255,.08)}
+.sb-ficha:hover{background:var(--sb-active)}
 .sb-ficha.aberta{background:rgba(212,24,122,.13);border-color:rgba(212,24,122,.3)}
 .sb-ficha-txt{flex:1;min-width:0}
 .sb-ficha-txt b{display:block;font-size:10.5px;font-weight:600;color:var(--sb-t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -336,7 +371,7 @@ transition:background .13s,border-color .13s;
 .sb-ficha:hover .sb-ficha-act,.sb-ficha.aberta .sb-ficha-act{opacity:1}
 }
 .sb-ficha-act button{width:21px;height:21px;padding:0;border:none;border-radius:4px;background:transparent;color:var(--sb-t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .13s,color .13s}
-.sb-ficha-act button:hover{background:rgba(255,255,255,.1);color:var(--sb-t1)}
+.sb-ficha-act button:hover{background:var(--sb-active);color:var(--sb-t1)}
 .sb-ficha-act button.del:hover{background:rgba(239,68,68,.2);color:#FCA5A5}
 .sb-ficha-act svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sb-empty{font-size:9.5px;color:var(--sb-t3);text-align:center;padding:13px 10px;line-height:1.5;border:1px dashed var(--sb-line2);border-radius:7px}
@@ -377,7 +412,7 @@ margin-left:var(--sidebar-w);transition:margin-left .25s cubic-bezier(.4,0,.2,1)
 body.sb-collapsed #pw{margin-left:42px}
 
 /* LABEL DE PÁGINA */
-.page-label{font-size:9px;font-weight:800;color:rgba(255,255,255,.5);text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:-18px}
+.page-label{font-size:9px;font-weight:800;color:var(--v8-t3);text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:-18px}
 
 /* FOLHA A4 */
 .folha{
@@ -429,10 +464,10 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .lh-bl{bottom:-4px;left:-4px;cursor:sw-resize}.lh-br{bottom:-4px;right:-4px;cursor:se-resize}
 .lh-rot{width:11px;height:11px;border:2px solid #F59E0B;cursor:crosshair;top:-22px;left:50%;transform:translateX(-50%)}
 .logo-drag.ativo .lh-rot{display:block}
-.logo-tb{position:absolute;top:calc(100% + 5px);left:0;background:#fff;border:1px solid var(--bd);border-radius:7px;padding:3px 5px;display:none;gap:3px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:500;white-space:nowrap}
+.logo-tb{position:absolute;top:calc(100% + 5px);left:0;background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:7px;padding:3px 5px;display:none;gap:3px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:500;white-space:nowrap}
 .logo-drag.ativo~.logo-tb{display:flex}
-.lt-btn{padding:3px 7px;font-size:8px;font-weight:700;border:1px solid var(--bd);border-radius:4px;background:#fff;cursor:pointer;color:var(--tx);font-family:inherit;transition:all .12s}
-.lt-btn:hover{background:var(--azc);border-color:var(--az)}
+.lt-btn{padding:3px 7px;font-size:8px;font-weight:700;border:1px solid var(--v8-line-2);border-radius:4px;background:var(--v8-surface-2);cursor:pointer;color:var(--v8-t1);font-family:inherit;transition:all .12s}
+.lt-btn:hover{background:var(--v8-hover);border-color:var(--v8-pink)}
 .lt-btn.on{background:var(--az);color:#fff;border-color:var(--az)}
 .hdr-centro{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1}
 .hdr-titulo{font-size:11px;font-weight:900;color:var(--az);letter-spacing:2px;text-transform:uppercase;text-align:center}
@@ -473,7 +508,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .prod-t tbody tr:last-child td{border-bottom:none}
 .prod-t tbody tr:nth-child(even) td{background:#FAFAFA}
 .n-cel{width:18px;height:18px;border:1.5px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--az)}
-.del-btn{background:#FEE2E2;color:var(--vm);border:none;border-radius:3px;padding:1px 4px;font-size:8px;cursor:pointer;font-weight:900;font-family:inherit}
+.del-btn{background:var(--v8-err-bg);color:var(--v8-err);border:none;border-radius:3px;padding:1px 4px;font-size:8px;cursor:pointer;font-weight:900;font-family:inherit}
 .fin-bloco{width:148px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
 .tot-card{background:var(--az);border-radius:7px;padding:6px 10px;text-align:center;box-shadow:0 3px 12px rgba(30,41,55,.3)}
 .tot-lbl{font-size:8px;font-weight:800;color:rgba(255,255,255,.8);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px}
@@ -518,7 +553,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
   padding:4px 14px;
 }
 .sep-inp:focus{color:var(--az);background:#EEF2F8;}
-.sep-toolbar{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--bd);border-radius:7px;padding:3px 7px;display:none;gap:4px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:500;white-space:nowrap}
+.sep-toolbar{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:7px;padding:3px 7px;display:none;gap:4px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:500;white-space:nowrap}
 .sep-wrap:focus-within .sep-toolbar{display:flex}
 .sep-fs-lbl{font-size:7px;font-weight:700;color:var(--txl)}
 .sep-fs-inp{border:1px solid var(--bd);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:#fff;width:42px;text-align:center}
@@ -637,47 +672,47 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .img-layer.msel,.txt-layer.msel,.arr-layer.msel,.rect-layer.msel,.circle-layer.msel{outline:2px dashed #3B82F6!important;outline-offset:2px!important;}
 
 /* CANVAS TOOLBARS */
-.canvas-tb,.text-tb,.arr-tb{position:absolute;left:50%;transform:translateX(-50%);display:none;gap:3px;align-items:center;background:rgba(255,255,255,.97);border:1px solid var(--bd);border-radius:8px;padding:5px 9px;box-shadow:0 4px 18px rgba(0,0,0,.15);z-index:502;white-space:nowrap;backdrop-filter:blur(8px)}
+.canvas-tb,.text-tb,.arr-tb{position:absolute;left:50%;transform:translateX(-50%);display:none;gap:3px;align-items:center;background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:8px;padding:5px 9px;box-shadow:var(--v8-shadow);z-index:502;white-space:nowrap;backdrop-filter:blur(8px)}
 .canvas-tb{bottom:8px;gap:2px;border-radius:7px;padding:4px 7px;z-index:500}
 .arr-tb{border-radius:10px;padding:6px 12px;z-index:503}
 .canvas-tb.vis,.text-tb.vis,.arr-tb.vis{display:flex}
 .text-tb,.arr-tb{top:8px}
-.ct-btn,.tt-toggle,.arr-style-btn{padding:2px 7px;font-size:7.5px;font-weight:700;border:1px solid var(--bd);border-radius:4px;background:#fff;cursor:pointer;color:var(--tx);font-family:inherit;transition:all .12s}
+.ct-btn,.tt-toggle,.arr-style-btn{padding:2px 7px;font-size:7.5px;font-weight:700;border:1px solid var(--v8-line-2);border-radius:4px;background:var(--v8-surface-2);cursor:pointer;color:var(--v8-t1);font-family:inherit;transition:all .12s}
 .arr-style-btn{padding:3px 8px;font-size:11px;border-width:1.5px;line-height:1}
 .tt-toggle{padding:2px 7px;font-size:8px}
-.ct-btn:hover,.tt-toggle:hover,.arr-style-btn:hover{background:var(--azc);border-color:var(--az)}
+.ct-btn:hover,.tt-toggle:hover,.arr-style-btn:hover{background:var(--v8-hover);border-color:var(--v8-pink)}
 .ct-btn.on,.tt-toggle.on,.arr-style-btn.on{background:var(--az);color:#fff;border-color:var(--az)}
 .ct-sep{width:1px;height:12px;background:var(--bd)}
 .tt-label{font-size:7.5px;font-weight:800;color:var(--txl);flex-shrink:0}
-.tt-sel{border:1px solid var(--bd);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:#fff;cursor:pointer}
-.tt-num{border:1px solid var(--bd);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:#fff;width:42px;text-align:center}
+.tt-sel{border:1px solid var(--v8-line-2);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer}
+.tt-num{border:1px solid var(--v8-line-2);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:var(--v8-surface-2);color:var(--v8-t1);width:42px;text-align:center}
 .tt-color{width:24px;height:24px;border:1.5px solid var(--bd);border-radius:4px;cursor:pointer;padding:0;background:none}
 .arr-drawhint{position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(30,41,55,.92);color:#fff;font-size:9px;font-weight:700;padding:6px 14px;border-radius:20px;white-space:nowrap;pointer-events:none;z-index:600;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3);letter-spacing:.5px}
 .arr-draw-hint.vis{display:block}
 
 /* RICH BAR */
-#richBar{position:fixed;z-index:99998;display:none;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--bd);border-radius:10px;padding:5px 10px;box-shadow:0 6px 24px rgba(0,0,0,.18);backdrop-filter:blur(8px);white-space:nowrap;pointer-events:all}
+#richBar{position:fixed;z-index:99998;display:none;align-items:center;gap:4px;background:var(--v8-surface);border:1.5px solid var(--v8-line-2);border-radius:10px;padding:5px 10px;box-shadow:0 6px 24px rgba(0,0,0,.18);backdrop-filter:blur(8px);white-space:nowrap;pointer-events:all}
 #richBar.vis{display:flex}
 .rb-label{font-size:7px;font-weight:800;color:var(--txl);text-transform:uppercase;letter-spacing:.8px}
-.rb-btn{padding:3px 8px;font-size:8px;font-weight:700;border:1.5px solid var(--bd);border-radius:5px;background:#fff;cursor:pointer;color:var(--tx);font-family:inherit;transition:all .12s;line-height:1.2}
-.rb-btn:hover{background:var(--azc);border-color:var(--az)}
+.rb-btn{padding:3px 8px;font-size:8px;font-weight:700;border:1.5px solid var(--v8-line-2);border-radius:5px;background:var(--v8-surface-2);cursor:pointer;color:var(--v8-t1);font-family:inherit;transition:all .12s;line-height:1.2}
+.rb-btn:hover{background:var(--v8-hover);border-color:var(--v8-pink)}
 .rb-btn.on{background:var(--az);color:#fff;border-color:var(--az)}
-.rb-size{border:1.5px solid var(--bd);border-radius:5px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:#fff;cursor:pointer;width:46px;text-align:center}
+.rb-size{border:1.5px solid var(--v8-line-2);border-radius:5px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:var(--v8-surface-2);color:var(--v8-t1);background:#fff;cursor:pointer;width:46px;text-align:center}
 .rb-color{width:26px;height:26px;border:1.5px solid var(--bd);border-radius:5px;cursor:pointer;padding:0;background:none}
 .rb-sep{width:1px;height:16px;background:var(--bd);flex-shrink:0}
 .rb-hint{font-size:7px;color:var(--txl);font-style:italic}
 
 /* LAYERS PANEL */
-.layers-panel{position:absolute;top:8px;right:8px;width:130px;background:rgba(255,255,255,.97);border:1px solid var(--bd);border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.11);z-index:400;display:none;overflow:hidden}
+.layers-panel{position:absolute;top:8px;right:8px;width:130px;background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:7px;box-shadow:var(--v8-shadow);z-index:400;display:none;overflow:hidden}
 .layers-panel.vis{display:block}
-.lp-hdr{background:var(--azc);padding:3px 7px;font-size:7.5px;font-weight:800;color:var(--az);display:flex;justify-content:space-between;align-items:center}
+.lp-hdr{background:var(--v8-surface-3);padding:3px 7px;font-size:7.5px;font-weight:800;color:var(--v8-pink);display:flex;justify-content:space-between;align-items:center}
 .lp-list{max-height:120px;overflow-y:auto}
 .lp-row{display:flex;align-items:center;gap:4px;padding:3px 6px;cursor:pointer;font-size:7.5px;border-bottom:1px solid #F0F0F0;transition:background .12s}
-.lp-row:hover{background:var(--azc)}.lp-row.sel-row{background:#DBEAFE}
-.lp-icon{width:18px;height:18px;border-radius:2px;background:#EEF2F8;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
+.lp-row:hover{background:var(--v8-hover)}.lp-row.sel-row{background:var(--v8-sel)}
+.lp-icon{width:18px;height:18px;border-radius:2px;background:var(--v8-surface-3);border:1px solid var(--v8-line-2);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
 .lp-thumb{width:18px;height:18px;border-radius:2px;object-fit:cover;border:1px solid var(--bd);flex-shrink:0}
 .lp-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:7.5px;color:var(--tx)}
-.lp-del{background:#FEE2E2;color:var(--vm);border:none;border-radius:3px;padding:1px 3px;font-size:7px;cursor:pointer;font-weight:900;flex-shrink:0}
+.lp-del{background:var(--v8-err-bg);color:var(--v8-err);border:none;border-radius:3px;padding:1px 3px;font-size:7px;cursor:pointer;font-weight:900;flex-shrink:0}
 .canvas-add-img{position:absolute;bottom:8px;right:8px;z-index:300;background:rgba(255,255,255,.92);border:1.5px dashed var(--ro);color:var(--ro);padding:3px 8px;font-size:8px;font-weight:700;border-radius:5px;cursor:pointer;font-family:inherit;backdrop-filter:blur(4px);transition:all .15s}
 .canvas-add-img:hover{background:#fff}
 
@@ -691,34 +726,34 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .rod-linha{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--ro),transparent);margin:0 8px}
 
 /* TOAST */
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--az);color:#fff;padding:7px 16px;border-radius:20px;font-size:9.5px;font-weight:700;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--v8-t1);color:var(--v8-surface);padding:7px 16px;border-radius:20px;font-size:9.5px;font-weight:700;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#toast.erro{background:var(--vm)}
-#toast.sucesso{background:#059669}
+#toast.erro{background:var(--vm);color:#fff}
+#toast.sucesso{background:#059669;color:#fff}
 
 /* MODAL CROP */
 #cropModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center}
 #cropModal.open{display:flex}
-.crop-inner{background:#fff;border-radius:11px;width:min(660px,94vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.crop-inner{background:var(--v8-surface);color:var(--v8-t1);border-radius:11px;width:min(660px,94vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
 .crop-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--bd);background:var(--azc)}
 .crop-hdr h3{font-size:12px;font-weight:800;color:var(--az)}
 .crop-body{flex:1;overflow:auto;padding:12px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;min-height:180px}
 .crop-body img{max-width:100%;max-height:48vh;display:block}
 .crop-foot{padding:8px 14px;border-top:1px solid var(--bd);display:flex;gap:5px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
-.ar-btn{padding:3px 8px;font-size:8.5px;font-weight:700;border:1px solid var(--bd);border-radius:5px;background:#fff;cursor:pointer;font-family:inherit}
+.ar-btn{padding:3px 8px;font-size:8.5px;font-weight:700;border:1px solid var(--v8-line-2);border-radius:5px;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer;font-family:inherit}
 .ar-btn:hover{background:var(--azc);border-color:var(--az)}.ar-btn.ar-on{background:var(--az);color:#fff;border-color:var(--az)}
 
 
 /* RELINK MODAL */
-.relink-item{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:6px;background:#F9FAFB;border:1.5px solid #D1D5DB;border-radius:8px;transition:all .15s}
-.relink-item.ok{border-color:#059669;background:#F0FDF4}
-.relink-item.pending{border-color:#F59E0B;background:#FFFBEB}
-.relink-thumb{width:48px;height:48px;border-radius:6px;background:#EEF2F8;border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.relink-item{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:6px;background:var(--v8-surface-2);border:1.5px solid var(--v8-line-2);color:var(--v8-t1);border-radius:8px;transition:all .15s}
+.relink-item.ok{border-color:var(--v8-ok);background:var(--v8-ok-bg)}
+.relink-item.pending{border-color:var(--v8-warn);background:var(--v8-warn-bg);color:var(--v8-warn)}
+.relink-thumb{width:48px;height:48px;border-radius:6px;background:var(--v8-surface-3);border:1px solid var(--v8-line-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
 .relink-thumb img{width:100%;height:100%;object-fit:cover}
 .relink-info{flex:1;min-width:0}
-.relink-name{font-size:10px;font-weight:700;color:#1E2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.relink-name{font-size:10px;font-weight:700;color:var(--v8-t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .relink-detail{font-size:8px;color:#6b7280;margin-top:2px}
-.relink-btn{padding:4px 10px;border:1.5px solid #D4187A;border-radius:6px;background:#fff;color:#D4187A;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;flex-shrink:0}
+.relink-btn{padding:4px 10px;border:1.5px solid var(--v8-pink);border-radius:6px;background:var(--v8-surface);color:var(--v8-pink);font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s;flex-shrink:0}
 .relink-btn:hover{background:#FFF0F8}
 .relink-btn.done{background:#059669;color:#fff;border-color:#059669}
 
@@ -816,34 +851,34 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 
 
 /* ═══ V7 — FAIXA DE PÁGINAS ESTILO CANVA + BAIXAR COM SELEÇÃO ═══ */
-#pageStripWrap{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.93);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:8px 10px;z-index:9600;box-shadow:0 12px 40px rgba(0,0,0,.45);max-width:72vw;overflow-x:auto;overflow-y:hidden}
+#pageStripWrap{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:14px;padding:8px 10px;z-index:9600;box-shadow:0 12px 40px rgba(0,0,0,.45);max-width:72vw;overflow-x:auto;overflow-y:hidden}
 #pageStripList{display:flex;gap:8px;align-items:center}
-.v7-thumb{position:relative;width:64px;height:92px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,.28);cursor:pointer;background:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.v7-thumb{position:relative;width:64px;height:92px;border-radius:6px;overflow:hidden;border:2px solid var(--v8-line-2);cursor:pointer;background:var(--v8-paper);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .v7-thumb.active{border-color:#3B82F6;box-shadow:0 0 0 2px rgba(59,130,246,.55)}
 .v7-thumb-scale{position:absolute;top:0;left:0;width:64px;height:92px;overflow:hidden}
-.v7-thumb-scale img[data-v7-img]{background:#E5E7EB;min-width:10px;min-height:10px}
+.v7-thumb-scale img[data-v7-img]{background:var(--v8-surface-3);min-width:10px;min-height:10px}
 .v7-thumb-scale .folha,.v7-thumb-scale .folha-branca{margin:0!important;box-shadow:none!important;border:0!important;border-radius:0!important}
 .v7-thumb-num{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:7.5px;font-weight:900;text-align:center;padding:2px;letter-spacing:.4px;line-height:1.2}
 .v7-thumb-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:0;background:rgba(239,68,68,.92);color:#fff;font-size:9px;line-height:1;cursor:pointer;z-index:5;padding:0}
 .v7-thumb-del:hover{background:#ef4444}
-.v7-strip-btn{flex-shrink:0;width:38px;height:38px;border-radius:10px;border:1px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.08);color:#fff;font-size:17px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
-.v7-strip-btn:hover{background:rgba(255,255,255,.22)}
+.v7-strip-btn{flex-shrink:0;width:38px;height:38px;border-radius:10px;border:1px dashed var(--v8-line-2);background:var(--v8-hover);color:var(--v8-t1);font-size:17px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
+.v7-strip-btn:hover{background:var(--v8-active)}
 @media(max-width:900px){#pageStripWrap{max-width:96vw;bottom:8px}}
 @media print{#pageStripWrap,#v7DownloadModal,#v7PageToolbar{display:none!important}}
 #v7DownloadModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9700;align-items:center;justify-content:center;padding:16px}
 #v7DownloadModal.open{display:flex}
-.v7-dl-card{width:min(780px,96vw);max-height:92vh;background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 28px 80px rgba(0,0,0,.35);font-family:'Segoe UI',system-ui,sans-serif}
-.v7-dl-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #E5E7EB}
-.v7-dl-head h3{margin:0;font-size:15px;color:#111827}
+.v7-dl-card{width:min(780px,96vw);max-height:92vh;background:var(--v8-surface);color:var(--v8-t1);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 28px 80px rgba(0,0,0,.35);font-family:'Segoe UI',system-ui,sans-serif}
+.v7-dl-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--v8-line)}
+.v7-dl-head h3{margin:0;font-size:15px;color:var(--v8-t1)}
 .v7-dl-head .v7-btn{padding:6px 12px}
 .v7-dl-body{padding:14px 18px;overflow:auto;flex:1}
 .v7-dl-pages{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px}
-.v7-dl-page label{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:10px;color:#374151;font-weight:700;text-align:center}
-.v7-dl-page .v7-thumb{width:64px;height:92px;border-color:#D1D5DB}
+.v7-dl-page label{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:10px;color:var(--v8-t2);font-weight:700;text-align:center}
+.v7-dl-page .v7-thumb{width:64px;height:92px;border-color:var(--v8-line-2)}
 .v7-dl-page .v7-thumb-scale{width:64px;height:92px}
 .v7-dl-page input[type="checkbox"]{width:16px;height:16px;accent-color:#2563EB;cursor:pointer}
-.v7-dl-page .v7-thumb.dim{opacity:.45;border-color:#CBD5E1}
-.v7-dl-fmt{margin:14px 0 4px;display:flex;gap:14px;align-items:center;font-size:12px;color:#111827;font-weight:700}
+.v7-dl-page .v7-thumb.dim{opacity:.45;border-color:var(--v8-line-2)}
+.v7-dl-fmt{margin:14px 0 4px;display:flex;gap:14px;align-items:center;font-size:12px;color:var(--v8-t1);font-weight:700}
 .v7-dl-fmt label{display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer}
 .v7-dl-fmt input{accent-color:#2563EB;cursor:pointer}
 .v7-dl-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #E5E7EB}
@@ -854,10 +889,10 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 .v7-btn.primary:hover{background:#1F2937}
 
 /* V7 — TOOLBAR DE PÁGINA + ARRASTAR PARA REORDENAR */
-#v7PageToolbar{position:fixed;z-index:9650;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(15,23,42,.97);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:7px 6px;box-shadow:0 12px 36px rgba(0,0,0,.45)}
-.v7-tb-label{margin:0 0 3px!important;text-align:center!important;writing-mode:initial!important;font-size:8.5px;font-weight:900;color:#93C5FD;text-transform:uppercase;letter-spacing:.6px;margin-right:4px;white-space:nowrap}
-.v7-tb-btn{border:0;background:rgba(255,255,255,.10);color:#fff;width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
-.v7-tb-btn:hover{background:rgba(255,255,255,.28)}
+#v7PageToolbar{position:fixed;z-index:9650;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:12px;padding:7px 6px;box-shadow:var(--v8-shadow)}
+.v7-tb-label{margin:0 0 3px!important;text-align:center!important;writing-mode:initial!important;font-size:8.5px;font-weight:900;color:var(--v8-pink);text-transform:uppercase;letter-spacing:.6px;margin-right:4px;white-space:nowrap}
+.v7-tb-btn{border:0;background:var(--v8-hover);color:var(--v8-t1);width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
+.v7-tb-btn:hover{background:var(--v8-active)}
 .v7-thumb{cursor:grab}
 .v7-thumb.dragging{opacity:.4;border-style:dashed}
 .v7-thumb.drop-before{box-shadow:inset 4px 0 0 #34D399!important;border-color:#34D399!important}
@@ -870,16 +905,12 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
    própria impressão já esconde (.canvas-tb, .text-tb, .arr-tb, .shape-tb,
    .layers-panel, #richBar, #cropModal). Campos que ficam DENTRO da folha
    (.dc-inp, .fin-inp, .sep-inp, .gt, tabelas) não são tocados. */
-[data-theme="escuro"] body{background:#111827}
-[data-theme="escuro"] .canvas-tb,[data-theme="escuro"] .text-tb,[data-theme="escuro"] .arr-tb,[data-theme="escuro"] .shape-tb{background:rgba(17,24,39,.96);border-color:rgba(255,255,255,.14)}
-[data-theme="escuro"] .ct-btn,[data-theme="escuro"] .tt-toggle,[data-theme="escuro"] .arr-style-btn,[data-theme="escuro"] .text-tb .v4-tb-btn,[data-theme="escuro"] .arr-tb .v4-tb-btn,[data-theme="escuro"] .rb-btn,[data-theme="escuro"] .lt-btn{background:rgba(255,255,255,.10);color:#F8FAFC;border-color:rgba(255,255,255,.16)}
-[data-theme="escuro"] .ct-btn:hover,[data-theme="escuro"] .tt-toggle:hover,[data-theme="escuro"] .arr-style-btn:hover,[data-theme="escuro"] .text-tb .v4-tb-btn:hover,[data-theme="escuro"] .arr-tb .v4-tb-btn:hover,[data-theme="escuro"] .rb-btn:hover,[data-theme="escuro"] .lt-btn:hover{background:rgba(255,255,255,.22);color:#fff}
-[data-theme="escuro"] .rb-label{color:#9CA3AF}
-[data-theme="escuro"] .layers-panel{background:rgba(17,24,39,.97);border-color:rgba(255,255,255,.14);color:#F8FAFC}
-[data-theme="escuro"] .lp-hdr{background:rgba(255,255,255,.06);color:#F8FAFC}
-[data-theme="escuro"] .lp-name{color:#F8FAFC}
-[data-theme="escuro"] .v7-dl-card{background:#171b24;color:#F8FAFC}
-[data-theme="escuro"] .v7-dl-head{border-bottom-color:rgba(255,255,255,.12)}
+/* V8.1 — estas barras não precisam mais de cor própria: os componentes usam
+   os tokens do tema (--v8-*), então claro e escuro saem do mesmo lugar. O que
+   sobra aqui é o que ainda tem cor fixa. */
+[data-theme="escuro"] .rb-label{color:var(--v8-t2)}
+[data-theme="escuro"] .lp-name{color:var(--v8-t1)}
+[data-theme="escuro"] .v7-dl-card{background:var(--v8-surface);color:var(--v8-t1)}
 </style>
 </head>
 <body>
@@ -946,6 +977,20 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
       </button>
     </div>
 
+    <!-- ─── RASCUNHO (V8.1) ─── -->
+    <div class="sb-section">
+      <div class="sb-section-title">Rascunho</div>
+      <div class="sb-section-desc">Enquanto você digita, a ficha é guardada sozinha neste navegador</div>
+      <div class="sb-draft" id="v8DraftBox">
+        <div class="v7-save-chip" id="v7SaveChip" title="A ficha é salva sozinha neste navegador — aqui aparece a hora da última gravação">Nenhum rascunho ainda</div>
+        <div class="sb-draft-note" id="v8DraftNote">Assim que você digitar, o rascunho aparece aqui. Pode fechar a aba: ao voltar, a ficha em andamento volta junto.</div>
+        <div class="sb-draft-actions">
+          <button type="button" class="sb-draft-btn" id="v8DraftRestaurar" onclick="v8RascunhoRestaurar()" disabled title="Volta a ficha ao último rascunho guardado">Restaurar</button>
+          <button type="button" class="sb-draft-btn ghost" id="v8DraftDescartar" onclick="v8RascunhoDescartar()" disabled title="Apaga o rascunho guardado (a ficha aberta não muda)">Descartar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── PÁGINAS ─── -->
     <div class="sb-section">
       <div class="sb-section-title">Páginas</div>
@@ -1005,7 +1050,6 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
     <div class="sb-section">
       <div class="sb-section-title">Minhas fichas</div>
       <div class="sb-section-desc">Salve para reabrir depois — tudo fica neste navegador</div>
-      <div class="v7-save-chip" id="v7SaveChip" title="A ficha é salva sozinha neste navegador — aqui aparece a hora da última gravação">—</div>
       <div id="v8FichasList"></div>
       <div class="sb-divider"></div>
       <button class="sb-btn" onclick="exportarFichaJSON()" title="Baixar esta ficha em .json (backup)">
@@ -1493,18 +1537,18 @@ window.__v8MedFabrica=[...document.querySelectorAll('#folha1 .med-inp')].map(i=>
 
 <!-- MODAL REVINCULAR IMAGENS -->
 <div id="relinkModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;align-items:center;justify-content:center">
-<div style="background:#fff;border-radius:12px;width:min(580px,94vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #D1D5DB;background:#EEF2F8">
+<div style="background:var(--v8-surface);color:var(--v8-t1);border:1px solid var(--v8-line);border-radius:12px;width:min(580px,94vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--v8-shadow)">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--v8-line);background:var(--v8-surface-2)">
 <div>
-<h3 style="font-size:14px;font-weight:800;color:#1E2937;margin:0">🖼 Revincular Imagens</h3>
-<p style="font-size:9px;color:#6b7280;margin:3px 0 0">Selecione as imagens que estavam na ficha original</p>
+<h3 style="font-size:14px;font-weight:800;color:var(--v8-t1);margin:0">🖼 Revincular Imagens</h3>
+<p style="font-size:9px;color:var(--v8-t3);margin:3px 0 0">Selecione as imagens que estavam na ficha original</p>
 </div>
-<button title="Fechar" onclick="fecharRelinkModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:#6b7280">✕</button>
+<button title="Fechar" onclick="fecharRelinkModal()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--v8-t3)">✕</button>
 </div>
 <div id="relinkBody" style="flex:1;overflow-y:auto;padding:12px 16px"></div>
-<div style="padding:10px 16px;border-top:1px solid #D1D5DB;display:flex;gap:6px;justify-content:flex-end;align-items:center;background:#F9FAFB">
-<span id="relinkStatus" style="flex:1;font-size:9px;color:#6b7280;font-style:italic"></span>
-<button title="Pular as imagens que não foram encontradas" onclick="fecharRelinkModal()" style="padding:6px 14px;border:1px solid #D1D5DB;border-radius:6px;background:#fff;cursor:pointer;font-size:10px;font-weight:600;font-family:inherit;color:#6b7280">Pular Imagens</button>
+<div style="padding:10px 16px;border-top:1px solid var(--v8-line);display:flex;gap:6px;justify-content:flex-end;align-items:center;background:var(--v8-surface-2)">
+<span id="relinkStatus" style="flex:1;font-size:9px;color:var(--v8-t3);font-style:italic"></span>
+<button title="Pular as imagens que não foram encontradas" onclick="fecharRelinkModal()" style="padding:6px 14px;border:1px solid var(--v8-line-2);border-radius:6px;background:var(--v8-surface);color:var(--v8-t1);cursor:pointer;font-size:10px;font-weight:600;font-family:inherit;color:#6b7280">Pular Imagens</button>
 <button title="Reconectar as imagens escolhidas" onclick="aplicarRelink()" style="padding:6px 14px;border:none;border-radius:6px;background:linear-gradient(135deg,#059669,#047857);color:#fff;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit">✔ Aplicar</button>
 </div>
 </div>
@@ -2546,8 +2590,116 @@ function undo(){if(!undoStack.length)return;redoStack.push(capState());redoSeqSt
 function redo(){if(!redoStack.length)return;undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop());restState(redoStack.pop());updUR();toast('↪ Refeito');}
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
 document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select')&&!e.target.matches('.gi'))snap();if(e.target.matches('[contenteditable]'))snap();});
+
+/* ═══ V8.1 — ÁREA DE TRANSFERÊNCIA DE CAMADAS (Ctrl+C / Ctrl+X / Ctrl+V) ═══
+   Antes a ficha só entendia Ctrl+Z/Y e Delete. Copiar uma caixa de texto,
+   uma imagem ou uma seta exigia recriar tudo na mão. Aqui a camada
+   selecionada viaja pelo clipboard do próprio sistema (localStorage), então
+   dá até para copiar numa página e colar em outra. */
+const V8_CLIP_KEY='vooalto_v8_layer_clip';
+let v8ClipLayer=null;
+
+function v8CamadaSelecionada(){
+  for(const p of paginas){
+    if(p.selId){const l=p.layers.find(x=>x.id===p.selId);if(l)return {pagina:p,layer:l}}
+  }
+  if(selId){const l=layers.find(x=>x.id===selId);if(l)return {pagina:null,layer:l}}
+  return null;
+}
+function v8CopiarCamada(cortar){
+  const s=v8CamadaSelecionada();
+  if(!s)return false;
+  v8ClipLayer=serLayer(s.layer);
+  try{localStorage.setItem(V8_CLIP_KEY,JSON.stringify(v8ClipLayer))}catch(e){}
+  toast(cortar?'✂ Camada recortada':'⧉ Camada copiada — Ctrl+V cola','',1800);
+  return true;
+}
+function v8ExcluirSelecionada(){
+  const s=v8CamadaSelecionada();
+  if(!s)return false;
+  if(s.pagina)excluirSelExtra(s.pagina.id);else excluirSel();
+  return true;
+}
+function v8CamadaAlvoColar(){
+  const s=v8CamadaSelecionada();
+  if(s&&s.pagina)return s.pagina;
+  if(v7PaginaAtiva&&v7PaginaAtiva.id&&v7PaginaAtiva.id!=='folha1'){
+    const p=paginas.find(x=>x.id===v7PaginaAtiva.id);
+    if(p)return p;
+  }
+  return null; /* null = página 1 */
+}
+/* Prepara a definição vinda do clipboard: id novo, um degrau de 2% para não
+   colar exatamente em cima do original, e nada de z herdado. */
+function v8CamadaParaColar(def,deslocar){
+  const novo=Object.assign({},def);
+  novo.id=uid();
+  const dentro=v=>Math.max(0,Math.min(0.94,v));
+  if(novo.x1p!==undefined){
+    const dx=deslocar?0.03:0,dy=deslocar?0.03:0;
+    novo.x1p=dentro(novo.x1p+dx);novo.y1p=dentro(novo.y1p+dy);
+    novo.x2p=dentro(novo.x2p+dx);novo.y2p=dentro(novo.y2p+dy);
+  }else{
+    novo.xp=dentro((novo.xp||0)+(deslocar?0.03:0));
+    novo.yp=dentro((novo.yp||0)+(deslocar?0.03:0));
+  }
+  delete novo.z;
+  return novo;
+}
+function v8InserirCamada(def,pagina){
+  const p=pagina||null, d=def;
+  if(!p){
+    if(d.type==='img'){addImgLayer(d.src,d);return true}
+    if(d.type==='txt'){addTxtLayer(d);selLayer(d.id);return true}
+    if(d.type==='arr'){addArrLayer(d);selLayer(d.id);return true}
+    if(d.type==='rect'){addRectLayer(d);selLayer(d.id);return true}
+    if(d.type==='circle'){addCirculoLayer(d);selLayer(d.id);return true}
+    return false;
+  }
+  if(d.type==='img'){addImgLayerExtra(p,d.src,d);return true}
+  if(d.type==='txt'){const nl=Object.assign({},d,{z:++p.zCnt});p.layers.push(nl);renderTxtLayerExtra(p,nl);selLayerExtra(p,nl.id);updPhExtra(p);snap();return true}
+  if(d.type==='arr'){const nl=Object.assign({},d,{z:++p.zCnt});p.layers.push(nl);renderArrLayerExtra(p,nl);selLayerExtra(p,nl.id);updPhExtra(p);snap();return true}
+  if(d.type==='rect'){addRectLayerExtra(p,d);selLayerExtra(p,d.id);snap();return true}
+  if(d.type==='circle'){addCirculoLayerExtra(p,d);selLayerExtra(p,d.id);snap();return true}
+  return false;
+}
+function v8ColarCamada(){
+  let base=v8ClipLayer;
+  if(!base){
+    try{base=JSON.parse(localStorage.getItem(V8_CLIP_KEY)||'null')}catch(e){base=null}
+  }
+  if(!base||!base.type)return false; /* sem camada: deixa o navegador colar texto */
+  try{
+    const destino=v8CamadaAlvoColar();
+    const ok=v8InserirCamada(v8CamadaParaColar(base,true),destino);
+    if(!ok)return false;
+    if(!destino)snap();
+    toast('⧉ Camada colada','',1600);
+    return true;
+  }catch(err){
+    console.warn('Falha ao colar camada',err);
+    toast('⚠ Não foi possível colar a camada','erro');
+    return false;
+  }
+}
+
 document.addEventListener('keydown',e=>{
-if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key==='z'){e.preventDefault();undo();}
+/* V8.1 — atalhos.
+   A regra de ouro: se o foco está num campo (input, textarea, select ou
+   dentro de um texto editável da folha), o navegador manda. Antes, Ctrl+Z
+   com o cursor num campo desfazia a FOLHA em vez de desfazer a palavra —
+   isso apagava trabalho sem a pessoa entender por quê. */
+const _ctrl=e.ctrlKey||e.metaKey;
+const _alvo=e.target||document.activeElement;
+const _digitando=!!(_alvo&&(_alvo.tagName==='INPUT'||_alvo.tagName==='TEXTAREA'||_alvo.tagName==='SELECT'||_alvo.isContentEditable||(_alvo.closest&&_alvo.closest('[contenteditable="true"]'))));
+if(_ctrl&&!e.shiftKey&&(e.key==='z'||e.key==='Z')){if(_digitando)return;e.preventDefault();undo();return;}
+if(_ctrl&&(e.key==='y'||e.key==='Y'||(e.shiftKey&&(e.key==='z'||e.key==='Z')))){if(_digitando)return;e.preventDefault();redo();return;}
+if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='c'||e.key==='C')){if(_digitando)return;if(v8CopiarCamada(false))e.preventDefault();return;}
+if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='x'||e.key==='X')){if(_digitando)return;if(v8CopiarCamada(true)){if(v8ExcluirSelecionada())snap();e.preventDefault();}return;}
+if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='v'||e.key==='V')){if(_digitando)return;if(v8ColarCamada())e.preventDefault();return;}
+/* Ctrl+A: a ficha seleciona uma camada por vez, então selecionar "tudo" não
+   existe. Fica com o navegador (seleciona o texto da tela) em vez de fingir
+   que fez algo. */
 if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
 if(e.key==='Escape'){
 fecharAjudaFicha();rfHide();deselecionarTudo();fecharLogo();
@@ -2555,8 +2707,24 @@ if(eyeAtivo)desativarEye();
 if(modoSeta)desativarModoSeta();
 paginas.forEach(p=>{if(p.modoSeta)desativarModoSetaExtra(p);deselecionarTudoExtra(p.id);});
 }
-if(e.key==='Delete'&&selId&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){const l=layers.find(x=>x.id===selId);if(l&&!(l.type==='txt'&&l._editing))excluirSel();}
-paginas.forEach(p=>{if(e.key==='Delete'&&p.selId&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){const l=p.layers.find(x=>x.id===p.selId);if(l&&!(l.type==='txt'&&l._editing))excluirSelExtra(p.id);}});
+if(e.key==='Delete'&&!_digitando&&selId){const l=layers.find(x=>x.id===selId);if(l&&!(l.type==='txt'&&l._editing))excluirSel();}
+paginas.forEach(p=>{if(e.key==='Delete'&&!_digitando&&p.selId){const l=p.layers.find(x=>x.id===p.selId);if(l&&!(l.type==='txt'&&l._editing))excluirSelExtra(p.id);}});
+});
+
+/* Colar TEXTO de fora (Word, WhatsApp, bloco de notas) direto na folha:
+   sem campo em foco, o texto vira uma caixa de texto na página ativa. */
+document.addEventListener('paste',e=>{
+  const alvo=e.target||document.activeElement;
+  if(alvo&&(alvo.tagName==='INPUT'||alvo.tagName==='TEXTAREA'||alvo.isContentEditable||(alvo.closest&&alvo.closest('[contenteditable="true"]'))))return;
+  const texto=(e.clipboardData&&e.clipboardData.getData('text/plain'))||'';
+  if(!texto.trim())return;
+  e.preventDefault();
+  try{
+    const destino=v8CamadaAlvoColar();
+    v8InserirCamada(v8CamadaParaColar({type:'txt',txt:texto.slice(0,4000),richHtml:'',font:"'Segoe UI',sans-serif",size:14,color:'#1E2937',bold:false,italic:false,xp:0.12,yp:0.35,wp:0.76,rot:0},false),destino);
+    if(!destino)snap();
+    toast('Texto colado na folha','',1800);
+  }catch(err){console.warn('Falha ao colar texto',err)}
 });
 
 /* ═══ EYEDROPPER ═══ */
@@ -3546,8 +3714,13 @@ async function v8NovaFicha(){
   }else if(!confirm('Começar uma NOVA ficha em branco?')){
     return;
   }
+  /* V8.1 — antes de limpar, guarda o que estava na tela no "rascunho
+     anterior". Sem isto o autosave da ficha em branco passaria por cima do
+     conteúdo e o botão Restaurar não teria o que devolver. */
+  try{if(typeof v8RascunhoSnapshot==='function')v8RascunhoSnapshot()}catch(_){}
   const prox = incrementarNumeroFicha();
   limparParaNovaFicha(prox);
+  try{if(typeof v8RascunhoAtualizarUI==='function')v8RascunhoAtualizarUI()}catch(_){}
   fichaHideSuggestions(); fichaUpdateReadiness();
   toast('✨ Nova ficha Nº '+String(prox).padStart(4,'0'),'sucesso',3000);
 }
@@ -4085,7 +4258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .canvas-tb,.text-tb,.arr-tb{border-radius:14px!important;padding:8px 12px!important;gap:7px!important;box-shadow:0 14px 44px rgba(15,23,42,.18)!important;border:1px solid rgba(15,23,42,.08)!important}.ct-btn,.tt-toggle,.arr-style-btn{font-size:10px!important;padding:6px 10px!important;border-radius:8px!important}.tt-sel,.tt-num{font-size:10px!important;padding:6px 8px!important;border-radius:8px!important}.tt-color{width:82px!important;height:30px!important;border-radius:8px!important;padding:4px 7px!important;font-family:monospace!important;font-size:10px!important}
 #richBar{border-radius:16px!important;padding:8px 12px!important;gap:7px!important}.rb-btn{font-size:10px!important;padding:6px 10px!important;border-radius:8px!important}.rb-size{height:30px!important;font-size:10px!important}.rb-color{width:82px!important;height:30px!important;border-radius:8px!important;padding:4px 7px!important;font-family:monospace!important;font-size:10px!important}
 body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:translateX(calc(-1 * var(--sidebar-w) + 42px))!important}body.v4-preview-clean #pw{margin-left:42px!important}body.v4-preview-clean .canvas-tb,body.v4-preview-clean .text-tb,body.v4-preview-clean .arr-tb,body.v4-preview-clean .shape-tb,body.v4-preview-clean .layers-panel,body.v4-preview-clean .canvas-add-img,body.v4-preview-clean .canvas-ph,body.v4-preview-clean .lyr-h,body.v4-preview-clean .lyr-rot,body.v4-preview-clean .tl-resize,body.v4-preview-clean .tl-rot,body.v4-preview-clean .arr-h,body.v4-preview-clean .arr-rot,body.v4-preview-clean .arr-ep,body.v4-preview-clean .logo-tb,body.v4-preview-clean .lh,body.v4-preview-clean .lh-rot{display:none!important}body.v4-preview-clean .img-layer,body.v4-preview-clean .txt-layer,body.v4-preview-clean .arr-layer,body.v4-preview-clean .rect-layer,body.v4-preview-clean .circle-layer{outline:none!important}
-#v4QuickModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:10050;align-items:center;justify-content:center;padding:18px}#v4QuickModal.open{display:flex}.v4-modal-card{width:min(760px,96vw);background:#fff;border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.45);overflow:hidden;color:#111827}.v4-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#F8FAFC;border-bottom:1px solid #E5E7EB}.v4-modal-head h3{font-size:16px;margin:0}.v4-modal-body{padding:18px}.v4-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.v4-field label{display:block;font-size:10px;font-weight:900;color:#64748B;text-transform:uppercase;margin-bottom:5px}.v4-field input,.v4-field textarea{width:100%;border:1.5px solid #CBD5E1;border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none}.v4-field textarea{min-height:70px;resize:vertical}.v4-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.v4-actions button{border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}.v4-cancel{background:#E5E7EB;color:#374151}.v4-apply{background:#050505;color:#fff}
+#v4QuickModal{display:none;position:fixed;inset:0;background:var(--v8-overlay);z-index:10050;align-items:center;justify-content:center;padding:18px}#v4QuickModal.open{display:flex}.v4-modal-card{width:min(760px,96vw);background:var(--v8-surface);border:1px solid var(--v8-line);border-radius:22px;box-shadow:var(--v8-shadow);overflow:hidden;color:var(--v8-t1)}.v4-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--v8-surface-2);border-bottom:1px solid var(--v8-line)}.v4-modal-head h3{font-size:16px;margin:0}.v4-modal-body{padding:18px}.v4-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.v4-field label{display:block;font-size:10px;font-weight:900;color:var(--v8-t3);text-transform:uppercase;margin-bottom:5px}.v4-field input,.v4-field textarea{width:100%;border:1.5px solid var(--v8-line-2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;background:var(--v8-surface);color:var(--v8-t1)}.v4-field textarea{min-height:70px;resize:vertical}.v4-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.v4-actions button{border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}.v4-cancel{background:var(--v8-surface-3);color:var(--v8-t2)}.v4-apply{background:#050505;color:#fff}
 
 </style>
 
@@ -4093,43 +4266,43 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 
 <style id="v4-quickfill-texttools-css">
 /* V4.2 - Preenchimento completo sem painel Canva + texto avançado */
-#v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:#111827;margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:#64748b;text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid #CBD5E1;border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:#fff}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:#111827;color:#fff}.v4-mini-btn.red{background:#FEE2E2;color:#991B1B}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:#111827}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:#64748B;text-transform:uppercase}.v4-grade-grid input{border:1.5px solid #CBD5E1;border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
+#v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:var(--v8-t1);margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:var(--v8-t3);text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid var(--v8-line-2);border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:var(--v8-surface);color:var(--v8-t1)}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:var(--v8-t1);color:var(--v8-surface)}.v4-mini-btn.red{background:rgba(239,68,68,.14);color:var(--v8-err)}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid var(--v8-line);border-radius:14px;padding:12px;background:var(--v8-surface-2)}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:var(--v8-t1)}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:var(--v8-t3);text-transform:uppercase}.v4-grade-grid input{border:1.5px solid var(--v8-line-2);border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none;background:var(--v8-surface);color:var(--v8-t1)}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
 
 /* ═══ PREENCHIMENTO RÁPIDO — cores e medidas (V8) ═══ */
 .v4-cores{display:flex;flex-direction:column;gap:6px}
 .v4-cor-row{display:flex;gap:8px;align-items:center}
-.v4-cor-row input[type=color]{width:46px;height:38px;padding:3px;border:1.5px solid #CBD5E1;border-radius:9px;background:#fff;cursor:pointer;flex-shrink:0}
-.v4-cor-row input[type=text]{flex:1;min-width:0;border:1.5px solid #CBD5E1;border-radius:9px;padding:9px 11px;font-family:inherit;font-size:12px;outline:none;background:#fff}
-.v4-cor-row input[type=text]:focus{border-color:#111827}
+.v4-cor-row input[type=color]{width:46px;height:38px;padding:3px;border:1.5px solid var(--v8-line-2);border-radius:9px;background:var(--v8-surface);cursor:pointer;flex-shrink:0}
+.v4-cor-row input[type=text]{flex:1;min-width:0;border:1.5px solid #CBD5E1;border-radius:9px;padding:9px 11px;font-family:inherit;font-size:12px;outline:none;background:var(--v8-surface);color:var(--v8-t1)}
+.v4-cor-row input[type=text]:focus{border-color:var(--v8-pink)}
 .v4-cor-row .v4-mini-btn{padding:9px 11px;flex-shrink:0}
 .v4-med-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.v4-med-card{border:1px solid #E5E7EB;border-radius:14px;padding:12px;background:#F8FAFC}
-.v4-med-card h4{font-size:12px;margin:0 0 9px;color:#111827}
-.v4-med-card h4 small{font-size:9px;color:#64748B;font-weight:700}
+.v4-med-card{border:1px solid var(--v8-line);border-radius:14px;padding:12px;background:var(--v8-surface-2)}
+.v4-med-card h4{font-size:12px;margin:0 0 9px;color:var(--v8-t1)}
+.v4-med-card h4 small{font-size:9px;color:var(--v8-t3);font-weight:700}
 .v4-med-t{width:100%;border-collapse:collapse}
-.v4-med-t th{font-size:8px;text-transform:uppercase;color:#64748B;text-align:center;padding:0 3px 5px;font-weight:900}
+.v4-med-t th{font-size:8px;text-transform:uppercase;color:var(--v8-t3);text-align:center;padding:0 3px 5px;font-weight:900}
 .v4-med-t th:first-child{text-align:left}
 .v4-med-t td{padding:2px 3px}
-.v4-med-t td:first-child{font-size:9.5px;font-weight:900;color:#475569;width:34px}
-.v4-med-t input{width:100%;min-width:0;border:1.5px solid #CBD5E1;border-radius:7px;padding:6px 4px;text-align:center;font-size:12px;font-weight:700;font-family:inherit;outline:none;background:#fff}
-.v4-med-t input:focus{border-color:#111827}
+.v4-med-t td:first-child{font-size:9.5px;font-weight:900;color:var(--v8-t2);width:34px}
+.v4-med-t input{width:100%;min-width:0;border:1.5px solid var(--v8-line-2);border-radius:7px;padding:6px 4px;text-align:center;font-size:12px;font-weight:700;font-family:inherit;outline:none;background:var(--v8-surface);color:var(--v8-t1)}
+.v4-med-t input:focus{border-color:var(--v8-pink)}
 @media(max-width:720px){.v4-med-box{grid-template-columns:1fr}}
 
 /* V7.1 — Preenchimento rápido guiado */
-.v4-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#111827;margin:18px 0 8px;flex-wrap:wrap}
-.v4-step .n{flex:0 0 20px;width:20px;height:20px;border-radius:999px;background:#111827;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px}
-.v4-step small{font-weight:700;font-size:9.5px;color:#64748B}
-.v4-hint{display:block;font-size:9.5px;font-weight:600;color:#64748B;line-height:1.45}
+.v4-step{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:var(--v8-t1);margin:18px 0 8px;flex-wrap:wrap}
+.v4-step .n{flex:0 0 20px;width:20px;height:20px;border-radius:999px;background:var(--v8-t1);color:var(--v8-surface);display:inline-flex;align-items:center;justify-content:center;font-size:10.5px}
+.v4-step small{font-weight:700;font-size:9.5px;color:var(--v8-t3)}
+.v4-hint{display:block;font-size:9.5px;font-weight:600;color:var(--v8-t3);line-height:1.45}
 .v4-modal-body>.v4-hint{margin:0 0 12px}
 .v4-field .v4-hint{margin-top:4px}
-.v4-row-total{font-size:11.5px;font-weight:900;color:#0F766E;white-space:nowrap;text-align:right;padding:0 6px!important}
+.v4-row-total{font-size:11.5px;font-weight:900;color:var(--v8-ok);white-space:nowrap;text-align:right;padding:0 6px!important}
 .v4-plus-table td{vertical-align:middle}
-#v4QuickModal.v4plus .v4-actions{padding:12px 18px;border-top:1px solid #E5E7EB;margin-top:0;background:#F8FAFC;align-items:center;flex-wrap:wrap;gap:10px}
+#v4QuickModal.v4plus .v4-actions{padding:12px 18px;border-top:1px solid var(--v8-line);margin-top:0;background:var(--v8-surface-2);align-items:center;flex-wrap:wrap;gap:10px}
 .v4-summary{margin-right:auto;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
-.v4-total-line{font-size:10.5px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.4px}
-.v4-total-line b{font-size:14px;color:#111827;letter-spacing:0}
+.v4-total-line{font-size:10.5px;font-weight:800;color:var(--v8-t2);text-transform:uppercase;letter-spacing:.4px}
+.v4-total-line b{font-size:14px;color:var(--v8-t1);letter-spacing:0}
 /* Texto avançado estilo Canva, sem painel lateral extra */
-.text-tb{background:rgba(255,255,255,.98)!important;border-radius:16px!important;padding:9px 12px!important;gap:8px!important;box-shadow:0 18px 54px rgba(15,23,42,.20)!important}.text-tb::before{content:'Texto';font-size:9px;font-weight:900;color:#D4187A;text-transform:uppercase;letter-spacing:.8px;margin-right:3px}.tt-sel{min-width:150px!important;font-weight:800!important}.tt-num{width:58px!important;font-weight:900!important}.v4-font-slider{width:120px;accent-color:#111827}.v4-font-presets{display:flex;gap:4px}.v4-font-presets button{border:1px solid #D1D5DB;background:#fff;border-radius:7px;padding:4px 7px;font-size:9px;font-weight:900;cursor:pointer}.v4-font-presets button:hover{background:#F3F4F6}.tl-fontsize-handle{position:absolute;right:-10px;top:50%;width:18px;height:18px;transform:translateY(-50%);border-radius:50%;background:#111827;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:ns-resize;z-index:205;display:none}.txt-layer.sel .tl-fontsize-handle{display:block}.tl-fontsize-handle::after{content:'A';position:absolute;inset:0;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}.txt-layer.sel{outline:2px solid #111827!important;outline-offset:4px!important;border-radius:4px}.txt-layer .tc{border-radius:6px!important}
+.text-tb{background:var(--v8-surface)!important;border-radius:16px!important;padding:9px 12px!important;gap:8px!important;box-shadow:var(--v8-shadow)!important}.text-tb::before{content:'Texto';font-size:9px;font-weight:900;color:#D4187A;text-transform:uppercase;letter-spacing:.8px;margin-right:3px}.tt-sel{min-width:150px!important;font-weight:800!important}.tt-num{width:58px!important;font-weight:900!important}.v4-font-slider{width:120px;accent-color:#111827}.v4-font-presets{display:flex;gap:4px}.v4-font-presets button{border:1px solid var(--v8-line-2);background:var(--v8-surface-2);color:var(--v8-t1);border-radius:7px;padding:4px 7px;font-size:9px;font-weight:900;cursor:pointer}.v4-font-presets button:hover{background:var(--v8-hover)}.tl-fontsize-handle{position:absolute;right:-10px;top:50%;width:18px;height:18px;transform:translateY(-50%);border-radius:50%;background:#111827;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:ns-resize;z-index:205;display:none}.txt-layer.sel .tl-fontsize-handle{display:block}.tl-fontsize-handle::after{content:'A';position:absolute;inset:0;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}.txt-layer.sel{outline:2px solid #111827!important;outline-offset:4px!important;border-radius:4px}.txt-layer .tc{border-radius:6px!important}
 @media(max-width:760px){.v4-grade-box{grid-template-columns:1fr}.v4-grade-grid{grid-template-columns:repeat(3,1fr)!important}}
 
 </style>
@@ -4175,7 +4348,7 @@ function v7EnhanceTxtTbExtra(){
 .aviso input{font-size:20px!important;line-height:1.15!important;letter-spacing:.5px!important}
 #previsao,.info-box.dest input{font-size:24px!important;min-width:120px!important;line-height:1.05!important}
 .text-tb .v4-tb-group{display:flex;align-items:center;gap:4px;border-left:1px solid var(--bd);padding-left:6px;margin-left:2px}
-.text-tb .v4-tb-btn,.arr-tb .v4-tb-btn{padding:5px 8px;font-size:10px;font-weight:900;border:1px solid var(--bd);border-radius:7px;background:#fff;color:#111827;cursor:pointer;font-family:inherit}.text-tb .v4-tb-btn:hover,.arr-tb .v4-tb-btn:hover{background:#EEF2F8}.text-tb .v4-tb-color{width:74px;height:28px;border:1px solid var(--bd);border-radius:7px;padding:3px 5px;font-size:9px;font-family:monospace;text-transform:uppercase}.arr-layer svg line{transition:stroke-width .12s}
+.text-tb .v4-tb-btn,.arr-tb .v4-tb-btn{padding:5px 8px;font-size:10px;font-weight:900;border:1px solid var(--v8-line-2);border-radius:7px;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer;font-family:inherit}.text-tb .v4-tb-btn:hover,.arr-tb .v4-tb-btn:hover{background:var(--v8-hover)}.text-tb .v4-tb-color{width:74px;height:28px;border:1px solid var(--bd);border-radius:7px;padding:3px 5px;font-size:9px;font-family:monospace;text-transform:uppercase}.arr-layer svg line{transition:stroke-width .12s}
 @media print{.aviso input{font-size:17px!important;line-height:1.15!important}.info-box.dest input,#previsao{font-size:18px!important;font-weight:900!important}.text-tb .v4-tb-group,.text-tb .v4-tb-btn,.arr-tb .v4-tb-btn{display:none!important}}
 
 </style>
@@ -4699,16 +4872,16 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
    por ser posterior, vencia. */
 .v7-ajuda-bg{position:fixed;inset:0;background:rgba(5,8,15,.6);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
 .v7-ajuda-bg.open{display:flex}
-.v7-ajuda-card{background:#fff;color:#111827;border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.v7-ajuda-card{background:var(--v8-surface);color:var(--v8-t1);border:1px solid var(--v8-line);border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:var(--v8-shadow)}
 .v7-ajuda-card h3{margin:0 0 4px;font-size:19px}
-.v7-ajuda-card .ajuda-sub{color:#4b5563;font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.5}
-.v7-ajuda-card h4{margin:15px 0 4px;font-size:11.5px;color:#1D4ED8;letter-spacing:.5px;text-transform:uppercase}
+.v7-ajuda-card .ajuda-sub{color:var(--v8-t2);font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.5}
+.v7-ajuda-card h4{margin:15px 0 4px;font-size:11.5px;color:var(--v8-pink);letter-spacing:.5px;text-transform:uppercase}
 .v7-ajuda-card p,.v7-ajuda-card li{font-size:12.5px;line-height:1.65}
 .v7-ajuda-card ul{margin:4px 0 0 18px;padding:0}
-.v7-ajuda-card kbd{background:#eef2f7;border:1px solid #d1d5db;border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px}
+.v7-ajuda-card kbd{background:var(--v8-surface-3);border:1px solid var(--v8-line-2);border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px;color:var(--v8-t1)}
 .v7-ajuda-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.v7-ajuda-foot button{border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:9px 14px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit}
-.v7-ajuda-foot button.primary{background:#050505;color:#fff;border-color:#050505}
+.v7-ajuda-foot button{border:1px solid var(--v8-line-2);background:var(--v8-surface-2);color:var(--v8-t1);border-radius:10px;padding:9px 14px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit}
+.v7-ajuda-foot button.primary{background:var(--v8-t1);color:var(--v8-surface);border-color:var(--v8-t1)}
 @media print{.v7-ajuda-bg,.v7-save-chip{display:none!important}}
 </style>
 <script id="v5-text-nowrap-fix-js">
@@ -4788,9 +4961,10 @@ function v7HoraAgora(){const d=new Date();return String(d.getHours()).padStart(2
 function v7MarcarSalvo(ok){
   const el=document.getElementById('v7SaveChip');if(!el)return;
   if(ok===false){el.textContent='não salvou';el.className='v7-save-chip erro';el.title='O navegador recusou a gravação (memória cheia?). Exporte a ficha como backup (.json).';return}
-  const h=v7HoraAgora();el.textContent='Salvo '+h;el.className='v7-save-chip salvo';
+  const h=v7HoraAgora();el.textContent='Rascunho guardado às '+h;el.className='v7-save-chip salvo';
   el.title='Última gravação automática às '+h+'. A ficha fica salva neste navegador.';
   try{localStorage.setItem(V7_SAVE_HORA_KEY,h)}catch(e){}
+  try{if(typeof v8RascunhoAtualizarUI==='function')v8RascunhoAtualizarUI()}catch(_){}
 }
 function abrirAjudaFicha(){const el=document.getElementById('v7AjudaFicha');if(el)el.classList.add('open')}
 function abrirManualVooalto(){/* V7.6.1 — se o navegador bloquear a janela nova (prévia/PWA), o manual abre na mesma aba; dentro do sistema, na aba de cima */try{const w=window.open('../manual.html','_blank');if(w)return}catch(e){}try{if(window.top&&window.top!==window){window.top.location.href='../manual.html';return}}catch(e){}try{location.href='../manual.html'}catch(e){}}
@@ -4806,12 +4980,16 @@ function v7SalvarAutosaveAgora(){
     const dados=capturarFichaParaJSON();
     localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(dados));
     v7MarcarSalvo(true);
+    /* V8.1 — o cartão de rascunho da barra lateral precisa saber se o que
+       está guardado tem conteúdo ou é uma ficha em branco. */
+    try{if(typeof v8RascunhoMarcarSalvo==='function')v8RascunhoMarcarSalvo(true)}catch(_){}
     return true;
   }catch(e){
     /* V7.1.1 — antes a falha era silenciosa (dava a impressão de "travou e
        perdeu"); agora avisa (no máximo 1× por minuto) para exportar backup. */
     try{const agora=Date.now();if(agora-v7LastQuotaWarn>60000){v7LastQuotaWarn=agora;toast('⚠️ Espaço cheio: autosave da ficha falhou. Exporte a ficha como backup.','erro');}}catch(_){}
     v7MarcarSalvo(false);
+    try{if(typeof v8RascunhoMarcarSalvo==='function')v8RascunhoMarcarSalvo(false)}catch(_){}
     return false;
   }
 }
@@ -5591,9 +5769,16 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     <ul>
       <li><b>Baixar (escolher páginas)</b> gera o PDF só com as páginas marcadas; <b>Exportar PDF</b> imprime pelo navegador (também dá <b>Ctrl+P</b>) e <b>Exportar PNG</b> salva a página atual como imagem.</li>
     </ul>
+    <h4>Rascunho</h4>
+    <ul>
+      <li>A ficha é guardada sozinha enquanto você digita. A seção <b>Rascunho</b>, na barra lateral, mostra a hora da última gravação e traz <b>Restaurar</b> e <b>Descartar</b>.</li>
+      <li>Ao clicar em <b>Nova ficha</b>, a ficha que estava na tela fica guardada como <b>rascunho anterior</b> — dá para voltar a ela com <b>Restaurar</b>.</li>
+    </ul>
     <h4>Atalhos</h4>
     <ul>
       <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfazer · <kbd>Ctrl</kbd>+<kbd>Y</kbd> (ou Ctrl+Shift+Z) refazer · <kbd>Delete</kbd> apaga o item selecionado.</li>
+      <li><kbd>Ctrl</kbd>+<kbd>C</kbd> copia a camada selecionada · <kbd>Ctrl</kbd>+<kbd>X</kbd> recorta · <kbd>Ctrl</kbd>+<kbd>V</kbd> cola (na página ativa, um degrau abaixo do original).</li>
+      <li>Com o cursor dentro de um campo de texto, os atalhos de copiar/colar/desfazer são os do próprio campo — a folha não é mexida.</li>
       <li><kbd>Esc</kbd> fecha a ferramenta/seleção e esta ajuda · <kbd>Enter</kbd> pula de campo no <b>preenchimento rápido</b> (Ctrl+Enter aplica tudo).</li>
     </ul>
     <div class="v7-ajuda-foot">
@@ -5602,5 +5787,170 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     </div>
   </div>
 </div>
+<!-- ══════════════════════════════════════════════════════════════════════
+     V8.1 — RASCUNHO VISÍVEL
+     ──────────────────────────────────────────────────────────────────────
+     O autosave sempre existiu (vooalto_v7_ficha_ativa), mas era invisível:
+     uma linha "Salvo 14:32" no fundo de "Minhas fichas". Quem fechava a aba
+     sem querer não tinha como saber que a ficha voltaria — nem como voltar
+     a um rascunho anterior depois de começar uma ficha nova.
+
+     Este módulo dá rosto ao rascunho:
+       • mostra SE há rascunho, QUANDO foi guardado e SE tem conteúdo;
+       • "Restaurar" devolve o rascunho (pedindo confirmação se a ficha
+         aberta tem conteúdo);
+       • "Descartar" apaga o rascunho guardado sem mexer na ficha aberta;
+       • "Nova ficha" guarda a ficha atual num slot separado antes de
+         limpar, então dá para voltar atrás mesmo depois de limpar.
+
+     Chaves (as antigas continuam valendo):
+       vooalto_v7_ficha_ativa       rascunho vivo (mesma chave da V7)
+       vooalto_v7_ficha_ativa_hora  hora da última gravação
+       vooalto_v8_rascunho_anterior ficha guardada pelo "Nova ficha"
+       vooalto_v8_rascunho_meta     {hora, vazio} para a interface
+     ══════════════════════════════════════════════════════════════════════ -->
+<script id="v8-rascunho-js">
+const V8_RASCUNHO_LIVE='vooalto_v7_ficha_ativa';
+const V8_RASCUNHO_HORA='vooalto_v7_ficha_ativa_hora';
+const V8_RASCUNHO_BACKUP='vooalto_v8_rascunho_anterior';
+const V8_RASCUNHO_META='vooalto_v8_rascunho_meta';
+let v8RascunhoUltimoErro=false;
+
+function v8RascunhoLer(chave){try{const raw=localStorage.getItem(chave);return raw?JSON.parse(raw):null}catch(e){return null}}
+function v8RascunhoTemDados(d){return !!(d&&typeof d==='object'&&d._version)}
+function v8RascunhoMeta(){try{return JSON.parse(localStorage.getItem(V8_RASCUNHO_META)||'null')||null}catch(e){return null}}
+function v8RascunhoHora(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+
+/* Retrato do que existe hoje. Puro o bastante para ser testado sem DOM. */
+function v8RascunhoEstado(){
+  const live=v8RascunhoLer(V8_RASCUNHO_LIVE);
+  const backup=v8RascunhoLer(V8_RASCUNHO_BACKUP);
+  const meta=v8RascunhoMeta();
+  const temLive=v8RascunhoTemDados(live);
+  const temBackup=v8RascunhoTemDados(backup);
+  const vazio=!!(meta&&meta.vazio);
+  let hora=(meta&&meta.hora)||'';
+  if(!hora){try{hora=localStorage.getItem(V8_RASCUNHO_HORA)||''}catch(e){}}
+  const liveUtil=temLive&&!vazio;
+  return {live:live,backup:backup,temLive:temLive,temBackup:temBackup,vazio:vazio,hora:hora,liveUtil:liveUtil,restauravel:liveUtil||temBackup};
+}
+
+/* Desenha o cartão. Nunca lança: a barra lateral não pode quebrar por causa
+   de um localStorage cheio ou de um elemento ausente. */
+function v8RascunhoAtualizarUI(){
+  try{
+    const e=v8RascunhoEstado();
+    const chip=document.getElementById('v7SaveChip');
+    const nota=document.getElementById('v8DraftNote');
+    const bRest=document.getElementById('v8DraftRestaurar');
+    const bDesc=document.getElementById('v8DraftDescartar');
+    if(bRest)bRest.disabled=!e.restauravel;
+    if(bDesc)bDesc.disabled=!(e.temLive||e.temBackup);
+    if(chip){
+      if(v8RascunhoUltimoErro){
+        chip.textContent='Não foi possível guardar o rascunho';
+        chip.className='v7-save-chip erro';
+        chip.title='O navegador recusou a gravação (espaço cheio?). Exporte a ficha como backup (.json).';
+      }else if(e.liveUtil){
+        chip.textContent='Rascunho guardado às '+(e.hora||v8RascunhoHora());
+        chip.className='v7-save-chip salvo';
+        chip.title='Última gravação automática às '+(e.hora||v8RascunhoHora())+'. A ficha fica salva neste navegador.';
+      }else if(e.temBackup){
+        chip.textContent='Rascunho anterior às '+(e.hora||v8RascunhoHora());
+        chip.className='v7-save-chip';
+        chip.title='A ficha aberta está em branco; o último rascunho com conteúdo está guardado.';
+      }else if(e.temLive){
+        chip.textContent='Ficha em branco';
+        chip.className='v7-save-chip';
+        chip.title='O rascunho existe, mas está sem conteúdo.';
+      }else{
+        chip.textContent='Nenhum rascunho ainda';
+        chip.className='v7-save-chip';
+        chip.title='A ficha é salva sozinha neste navegador — aqui aparece a hora da última gravação.';
+      }
+    }
+    if(nota){
+      if(v8RascunhoUltimoErro)nota.textContent='O navegador está sem espaço. Exporte a ficha como backup (.json) para não perder.';
+      else if(e.liveUtil)nota.textContent='A ficha em andamento está guardada. Se fechar a aba, ela volta sozinha ao abrir de novo.';
+      else if(e.temBackup)nota.textContent='A ficha aberta está em branco, mas o rascunho com conteúdo continua guardado. Use Restaurar para voltar a ele.';
+      else if(e.temLive)nota.textContent='O rascunho está vazio. Assim que você digitar, ele passa a guardar a ficha.';
+      else nota.textContent='Assim que você digitar, o rascunho aparece aqui. Pode fechar a aba: ao voltar, a ficha em andamento volta junto.';
+    }
+  }catch(e){}
+}
+
+/* Chamado pelo autosave (v7SalvarAutosaveAgora), com ok=true/false. */
+function v8RascunhoMarcarSalvo(ok){
+  v8RascunhoUltimoErro=(ok===false);
+  if(ok!==false){
+    try{
+      const vazio=(typeof v8FichaTemConteudo==='function')?!v8FichaTemConteudo():false;
+      localStorage.setItem(V8_RASCUNHO_META,JSON.stringify({hora:v8RascunhoHora(),vazio:vazio}));
+    }catch(e){}
+  }
+  v8RascunhoAtualizarUI();
+}
+
+/* Guarda a ficha atual no slot "anterior" — chamado por v8NovaFicha ANTES de
+   limpar a tela. Devolve true se havia conteúdo para guardar. */
+function v8RascunhoSnapshot(){
+  try{
+    if(typeof v8FichaTemConteudo==='function'&&!v8FichaTemConteudo())return false;
+    if(typeof v7SalvarAutosaveAgora==='function')v7SalvarAutosaveAgora();
+    const raw=localStorage.getItem(V8_RASCUNHO_LIVE);
+    if(!raw)return false;
+    localStorage.setItem(V8_RASCUNHO_BACKUP,raw);
+    const meta=v8RascunhoMeta();
+    localStorage.setItem(V8_RASCUNHO_META,JSON.stringify({hora:(meta&&meta.hora)||v8RascunhoHora(),vazio:true}));
+    return true;
+  }catch(e){return false}
+}
+
+function v8RascunhoRestaurar(){
+  const e=v8RascunhoEstado();
+  const dados=e.liveUtil?e.live:(e.temBackup?e.backup:null);
+  if(!dados){
+    if(typeof toast==='function')toast('Nenhum rascunho guardado para restaurar','erro');
+    return false;
+  }
+  if(typeof v8FichaTemConteudo==='function'&&v8FichaTemConteudo()){
+    if(!confirm('Restaurar o rascunho?\n\nA ficha aberta agora será substituída pelo que está guardado.'))return false;
+  }
+  try{
+    if(typeof restaurarDeJSON!=='function')throw new Error('restaurarDeJSON ausente');
+    restaurarDeJSON(dados);
+    if(typeof renderPageStrip==='function')renderPageStrip();
+    if(typeof v8FichaTemConteudo==='function'&&v8FichaTemConteudo()&&typeof v7SalvarAutosaveAgora==='function')v7SalvarAutosaveAgora();
+    v8RascunhoUltimoErro=false;
+    v8RascunhoAtualizarUI();
+    if(typeof toast==='function')toast('↩ Rascunho restaurado'+(e.hora?' (guardado às '+e.hora+')':''),'sucesso',3000);
+    return true;
+  }catch(err){
+    if(typeof toast==='function')toast('⚠ Não foi possível restaurar o rascunho','erro');
+    return false;
+  }
+}
+
+function v8RascunhoDescartar(){
+  const e=v8RascunhoEstado();
+  if(!e.temLive&&!e.temBackup){v8RascunhoAtualizarUI();return false}
+  if(!confirm('Descartar o rascunho guardado?\n\nSó o rascunho é apagado — a ficha aberta na tela continua igual.'))return false;
+  try{
+    localStorage.removeItem(V8_RASCUNHO_BACKUP);
+    localStorage.removeItem(V8_RASCUNHO_LIVE);
+    localStorage.removeItem(V8_RASCUNHO_META);
+    localStorage.removeItem(V8_RASCUNHO_HORA);
+  }catch(err){}
+  v8RascunhoUltimoErro=false;
+  v8RascunhoAtualizarUI();
+  if(typeof toast==='function')toast('Rascunho descartado','',2600);
+  return true;
+}
+
+/* A restauração automática da V7 roda em DOMContentLoaded+200 ms; o cartão
+   é atualizado depois dela para já mostrar o estado certo. */
+document.addEventListener('DOMContentLoaded',()=>setTimeout(v8RascunhoAtualizarUI,600));
+window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
+</script>
 </body>
 </html>

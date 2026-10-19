@@ -118,6 +118,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
     <a href="#salvar">3 · Salvamento e backup</a>
     <a href="#tema">4 · Tema, impressão e PDF</a>
     <a href="#atalhos">5 · Atalhos do teclado</a>
+    <a href="#rascunho">5.1 · Rascunho da ficha</a>
     <a href="#duvidas">6 · Dúvidas frequentes</a>
   </nav>
 
@@ -199,12 +200,23 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
     <table>
       <tr><th>Tecla</th><th>O que faz</th></tr>
       <tr><td><kbd>Esc</kbd></td><td>Fecha janelas, painéis, o leitor de seleção e a ajuda</td></tr>
-      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Desfazer / refazer na Ficha Técnica (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> também refaz)</td></tr>
-      <tr><td><kbd>Delete</kbd></td><td>Apaga a imagem/texto/forma selecionada na Ficha Técnica</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Desfazer / refazer na Ficha Técnica <b>e no Orçamento</b> (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> também refaz)</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>X</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Na Ficha: copia, recorta e cola a camada selecionada (imagem, texto, seta ou forma) — dá para colar em outra página. No Orçamento: clique no cartão de um item para selecioná-lo e use os mesmos atalhos para copiar, recortar e colar o item. Dentro de um campo de texto, os atalhos são os do próprio campo.</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>Apaga a imagem/texto/forma selecionada na Ficha Técnica ou o item selecionado no Orçamento</td></tr>
       <tr><td><kbd>Enter</kbd></td><td>No Orçamento, pula para o próximo campo do item; no preenchimento rápido da Ficha, avança de etapa</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Aplica tudo no preenchimento rápido da Ficha</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>Imprimir ou salvar em PDF (do navegador)</td></tr>
     </table>
+  </section>
+
+  <section class="card" id="rascunho">
+    <h2>↩ 5.1 · Rascunho da ficha</h2>
+    <p>A Ficha Técnica é guardada sozinha enquanto você trabalha. A seção <b>Rascunho</b>, na barra lateral, mostra a hora da última gravação e dois botões:</p>
+    <ul>
+      <li><b>Restaurar</b> — volta a ficha ao rascunho guardado (pede confirmação se a ficha aberta tem conteúdo).</li>
+      <li><b>Descartar</b> — apaga o rascunho guardado sem mexer na ficha que está na tela.</li>
+    </ul>
+    <p>Ao clicar em <b>Nova ficha</b>, a ficha que estava na tela é guardada como <b>rascunho anterior</b>: se você limpou por engano, dá para voltar a ela com <b>Restaurar</b>.</p>
   </section>
 
   <section class="card" id="duvidas">

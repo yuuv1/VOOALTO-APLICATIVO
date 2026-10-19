@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROPOSTA DE VENDA</title>
   <!-- Google Font: Poppins -->
+  <!-- V8.1 — base de tema compartilhada (mesma paleta do shell e da ficha) -->
+  <link rel="stylesheet" href="../assets/tema-v8.css">
+  <script>
+  /* Anti-piscada: o tema era aplicado só no DOMContentLoaded, então no escuro
+     o módulo nascia azul-escuro fixo e só depois trocava. */
+  (function(){try{
+    var antigos={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+    var escuro=(salvo==='escuro')||!!antigos[salvo];
+    document.documentElement.setAttribute('data-theme',escuro?'escuro':'claro');
+    document.documentElement.style.colorScheme=escuro?'dark':'light';
+  }catch(e){}})();
+  </script>
   <style>
 @font-face{font-family:'Poppins';font-style:normal;font-weight:300;font-display:swap;src:url('../assets/fonts/poppins-latin-300-normal.woff2') format('woff2')}
 @font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/poppins-latin-400-normal.woff2') format('woff2')}
@@ -31,8 +44,8 @@
     }
     
     body {
-      background-color: #0F172A; /* Modern dark dashboard background */
-      color: #E2E8F0;
+      background-color: var(--v8-bg-2); /* fundo do editor (segue o tema) */
+      color: var(--v8-t1);
       font-family: 'Poppins', sans-serif;
       display: flex;
       min-height: 100vh;
@@ -50,8 +63,8 @@
     .editor-sidebar {
       width: 440px;
       height: 100vh;
-      background-color: #1E293B;
-      border-right: 1px solid #334155;
+      background-color: var(--v8-surface);
+      border-right: 1px solid var(--v8-line-2);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -61,14 +74,14 @@
 
     .editor-header {
       padding: 12px 16px;
-      background-color: #0F172A;
-      border-bottom: 1px solid #334155;
+      background-color: var(--v8-bg-2);
+      border-bottom: 1px solid var(--v8-line-2);
     }
 
     .editor-header h1 {
       font-size: 15px;
       font-weight: 700;
-      color: #F8FAFC;
+      color: var(--v8-t1);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -76,34 +89,34 @@
 
     .editor-header p {
       font-size: 11px;
-      color: #94A3B8;
+      color: var(--v8-t2);
       margin-top: 2px;
     }
 
     /* Tabs Navigation inside sidebar */
     .tabs-nav {
       display: flex;
-      background-color: #111827;
-      border-bottom: 1px solid #334155;
+      background-color: var(--v8-bg-2);
+      border-bottom: 1px solid var(--v8-line-2);
     }
 
     .orc-running-total {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #0F172A;
-      border-bottom: 1px solid #1E293B;
+      background: var(--v8-bg-2);
+      border-bottom: 1px solid var(--v8-surface);
       padding: 6px 14px;
       font-size: 10px;
-      color: #94A3B8;
+      color: var(--v8-t2);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .5px;
     }
 
     .orc-running-total .ort-values { display: flex; align-items: baseline; gap: 8px; }
-    .orc-running-total b { font-size: 16px; color: #38BDF8; text-transform: none; letter-spacing: 0; }
-    .orc-running-total .ort-items { font-size: 10px; color: #64748B; text-transform: none; }
+    .orc-running-total b { font-size: 16px; color: var(--v8-pink); text-transform: none; letter-spacing: 0; }
+    .orc-running-total .ort-items { font-size: 10px; color: var(--v8-t3); text-transform: none; }
 
     .btn-dup-row {
       position: absolute;
@@ -111,7 +124,7 @@
       right: 38px;
       background: none;
       border: none;
-      color: #38BDF8;
+      color: var(--v8-pink);
       cursor: pointer;
       font-size: 16px;
       transition: opacity 0.2s;
@@ -123,22 +136,22 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #0F172A;
+      background: var(--v8-bg-2);
       border-radius: 8px;
       padding: 8px 12px;
-      color: #94A3B8;
+      color: var(--v8-t2);
       font-size: 12px;
       margin-top: 8px;
     }
 
-    .item-total-line b { color: #38BDF8; font-size: 13px; }
+    .item-total-line b { color: var(--v8-pink); font-size: 13px; }
 
     .tab-btn {
       flex: 1;
       padding: 12px 6px;
       background: none;
       border: none;
-      color: #94A3B8;
+      color: var(--v8-t2);
       font-family: inherit;
       font-size: 11px;
       font-weight: 600;
@@ -150,14 +163,14 @@
     }
 
     .tab-btn:hover {
-      color: #E2E8F0;
-      background-color: #1E293B;
+      color: var(--v8-t1);
+      background-color: var(--v8-surface);
     }
 
     .tab-btn.active {
-      color: #38BDF8; /* Accent color */
-      border-bottom: 2px solid #38BDF8;
-      background-color: #1E293B;
+      color: var(--v8-pink); /* Accent color */
+      border-bottom: 2px solid var(--v8-pink);
+      background-color: var(--v8-surface);
     }
 
     /* Tabs Content Area */
@@ -177,7 +190,7 @@
 
 
     .settings-modal-content{ text-align:left; max-height:90vh; overflow:auto; }
-    .v5-settings-section{font-size:12px;font-weight:900;color:#F8FAFC;margin:18px 0 12px;padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,#0F172A,#1E293B);border:1px solid #334155;letter-spacing:.7px;text-transform:uppercase}
+    .v5-settings-section{font-size:12px;font-weight:900;color:var(--v8-t1);margin:18px 0 12px;padding:10px 12px;border-radius:10px;background:linear-gradient(135deg,var(--v8-bg-2),var(--v8-surface));border:1px solid var(--v8-line-2);letter-spacing:.7px;text-transform:uppercase}
 
     /* Form Fields and Inputs */
     .form-group {
@@ -188,7 +201,7 @@
       display: block;
       font-size: 11px;
       font-weight: 600;
-      color: #38BDF8;
+      color: var(--v8-pink);
       margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -196,9 +209,9 @@
 
     .form-control {
       width: 100%;
-      background-color: #0F172A;
-      border: 1px solid #334155;
-      color: #F8FAFC;
+      background-color: var(--v8-bg-2);
+      border: 1px solid var(--v8-line-2);
+      color: var(--v8-t1);
       padding: 10px 14px;
       border-radius: 6px;
       font-family: inherit;
@@ -208,7 +221,7 @@
 
     .form-control:focus {
       outline: none;
-      border-color: #38BDF8;
+      border-color: var(--v8-pink);
     }
 
     textarea.form-control {
@@ -224,8 +237,8 @@
 
     /* Dynamic Table Row Editor — Compact V7 */
     .item-row-card {
-      background-color: #0F172A;
-      border: 1px solid #283548;
+      background-color: var(--v8-bg-2);
+      border: 1px solid var(--v8-surface-2);
       border-radius: 7px;
       padding: 8px 10px;
       margin-bottom: 7px;
@@ -233,7 +246,7 @@
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .item-row-card:hover {
-      border-color: #38BDF8;
+      border-color: var(--v8-pink);
     }
 
     .orc-item-topbar {
@@ -242,7 +255,7 @@
       align-items: center;
       margin-bottom: 5px;
       padding-bottom: 4px;
-      border-bottom: 1px solid #1E293B;
+      border-bottom: 1px solid var(--v8-surface);
     }
 
     .orc-item-badge-wrap {
@@ -263,7 +276,7 @@
 
     .orc-item-pag-tag {
       font-size: 9.5px;
-      color: #64748B;
+      color: var(--v8-t3);
       font-weight: 600;
     }
 
@@ -276,8 +289,8 @@
     .orc-item-inline-total {
       font-size: 11.5px;
       font-weight: 800;
-      color: #38BDF8;
-      background: rgba(56, 189, 248, 0.12);
+      color: var(--v8-pink);
+      background: var(--v8-pink-soft);
       padding: 2px 7px;
       border-radius: 4px;
       letter-spacing: 0.2px;
@@ -293,27 +306,28 @@
       height: 24px;
       border-radius: 4px;
       cursor: pointer;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--v8-surface-2);
+      border: 1px solid var(--v8-line);
+      color: var(--v8-t1);
       font-size: 13px;
       line-height: 1;
       transition: background 0.15s, color 0.15s;
     }
 
     .btn-dup-row {
-      color: #38BDF8;
+      color: var(--v8-pink);
     }
     .btn-dup-row:hover {
-      background: rgba(56, 189, 248, 0.22);
-      color: #FFFFFF;
+      background: var(--v8-sel);
+      color: var(--v8-pink);
     }
 
     .btn-delete-row {
       color: #EF4444;
     }
     .btn-delete-row:hover {
-      background: rgba(239, 68, 68, 0.22);
-      color: #FFFFFF;
+      background: var(--v8-err-bg);
+      color: var(--v8-err);
     }
 
     .orc-mini-group {
@@ -324,7 +338,7 @@
     .orc-mini-lbl {
       font-size: 9px;
       font-weight: 700;
-      color: #64748B;
+      color: var(--v8-t3);
       text-transform: uppercase;
       letter-spacing: 0.4px;
       margin-bottom: 2px;
@@ -335,13 +349,13 @@
       font-size: 12px !important;
       height: 28px !important;
       border-radius: 5px !important;
-      background-color: #090E17 !important;
-      border: 1px solid #1E293B !important;
+      background-color: var(--v8-bg-2) !important;
+      border: 1px solid var(--v8-surface) !important;
     }
 
     .orc-input-compact:focus {
-      border-color: #38BDF8 !important;
-      background-color: #0F172A !important;
+      border-color: var(--v8-pink) !important;
+      background-color: var(--v8-bg-2) !important;
     }
 
     .orc-mini-row-2 {
@@ -356,8 +370,8 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      background: #0B1120;
-      border: 1px solid #1E293B;
+      background: var(--v8-bg-2);
+      border: 1px solid var(--v8-surface);
       border-radius: 8px;
       padding: 5px 8px;
       margin-bottom: 8px;
@@ -371,9 +385,9 @@
     }
 
     .orc-page-pill {
-      border: 1px solid #334155;
-      background: #0F172A;
-      color: #94A3B8;
+      border: 1px solid var(--v8-line-2);
+      background: var(--v8-bg-2);
+      color: var(--v8-t2);
       font-size: 10.5px;
       font-weight: 700;
       border-radius: 5px;
@@ -387,13 +401,13 @@
     }
 
     .orc-page-pill:hover {
-      color: #F8FAFC;
-      border-color: #38BDF8;
+      color: var(--v8-t1);
+      border-color: var(--v8-pink);
     }
 
     .orc-page-pill.active {
-      background: #0284C7;
-      border-color: #38BDF8;
+      background: var(--v8-pink);
+      border-color: var(--v8-pink);
       color: #FFFFFF;
     }
 
@@ -442,7 +456,7 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
       font-family: 'Poppins', sans-serif;
       font-size: 10.5px;
-      color: #E2E8F0;
+      color: var(--v8-t1);
     }
 
     .orc-a4-page-actions .orc-a4-del-btn {
@@ -472,9 +486,9 @@
     }
 
     .btn-orc-tool {
-      border: 1px solid #334155;
-      background: rgba(255,255,255,0.06);
-      color: #E2E8F0;
+      border: 1px solid var(--v8-line-2);
+      background: var(--v8-hover);
+      color: var(--v8-t1);
       font-size: 10px;
       font-weight: 700;
       border-radius: 5px;
@@ -485,17 +499,17 @@
     }
 
     .btn-orc-tool:hover {
-      background: rgba(255,255,255,0.14);
+      background: var(--v8-active);
     }
 
     .btn-orc-tool.accent {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38BDF8;
-      border-color: rgba(56, 189, 248, 0.4);
+      background: var(--v8-pink-soft);
+      color: var(--v8-pink);
+      border-color: var(--v8-pink);
     }
 
     .btn-orc-tool.accent:hover {
-      background: rgba(56, 189, 248, 0.28);
+      background: var(--v8-sel);
     }
 
     .btn-orc-tool.danger {
@@ -526,12 +540,12 @@
     }
 
     .btn-primary {
-      background-color: #0284C7;
+      background-color: var(--v8-pink);
       color: #FFFFFF;
     }
 
     .btn-primary:hover {
-      background-color: #0369A1;
+      background-color: var(--v8-pink-2);
     }
 
     .btn-success {
@@ -544,12 +558,13 @@
     }
 
     .btn-secondary {
-      background-color: #475569;
-      color: #FFFFFF;
+      background-color: var(--v8-surface-3);
+      color: var(--v8-t1);
+      border: 1px solid var(--v8-line-2);
     }
 
     .btn-secondary:hover {
-      background-color: #334155;
+      background-color: var(--v8-line-2);
     }
 
     .btn-danger-outline {
@@ -566,8 +581,8 @@
     /* Action Panel at Bottom of Sidebar */
     .editor-actions {
       padding: 20px 24px;
-      background-color: #0F172A;
-      border-top: 1px solid #334155;
+      background-color: var(--v8-bg-2);
+      border-top: 1px solid var(--v8-line-2);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -583,7 +598,7 @@
       justify-content: flex-start;
       align-items: center;
       padding: 30px;
-      background-color: #0F172A;
+      background-color: var(--v8-bg-2);
     }
 
     /* Container holding all preview pages vertically - Font Size 0 eliminates empty whitespace nodes completely */
@@ -601,8 +616,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background-color: #1E293B;
-      border: 1px solid #334155;
+      background-color: var(--v8-surface);
+      border: 1px solid var(--v8-line-2);
       padding: 8px 16px;
       border-radius: 8px;
       margin-bottom: 15px;
@@ -615,7 +630,7 @@
     .tool-btn {
       background: none;
       border: none;
-      color: #F8FAFC;
+      color: var(--v8-t1);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -625,12 +640,12 @@
     }
 
     .tool-btn:hover {
-      background-color: #334155;
-      color: #38BDF8;
+      background-color: var(--v8-line-2);
+      color: var(--v8-pink);
     }
 
     .tool-separator {
-      color: #334155;
+      color: var(--v8-line-2);
       margin: 0 4px;
     }
 
@@ -975,10 +990,10 @@
     }
 
     .modal-content {
-      background-color: #1E293B;
+      background-color: var(--v8-surface);
       padding: 24px;
       border-radius: 12px;
-      border: 1px solid #334155;
+      border: 1px solid var(--v8-line-2);
       width: 550px;
       text-align: center;
     }
@@ -988,7 +1003,7 @@
       border-radius: 6px;
       margin: 15px 0;
       overflow: hidden;
-      border: 1px solid #334155;
+      border: 1px solid var(--v8-line-2);
     }
 
     #signature-pad {
@@ -1326,16 +1341,16 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
 
   <!-- Modal: Rascunhos de Orçamento -->
   <div class="modal" id="orcDraftsModal" style="display:none;">
-    <div class="modal-content settings-modal-content" style="width:580px;background:#0F172A;border:1px solid #334155;border-radius:12px;padding:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1E293B;padding-bottom:12px;margin-bottom:14px;">
-        <h3 style="margin:0;color:#F8FAFC;font-size:16px;display:flex;align-items:center;gap:8px;">📁 Rascunhos de Orçamentos</h3>
+    <div class="modal-content settings-modal-content" style="width:580px;background:var(--v8-bg-2);border:1px solid var(--v8-line-2);border-radius:12px;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--v8-surface);padding-bottom:12px;margin-bottom:14px;">
+        <h3 style="margin:0;color:var(--v8-t1);font-size:16px;display:flex;align-items:center;gap:8px;">📁 Rascunhos de Orçamentos</h3>
         <button title="Fechar a lista de rascunhos" class="btn btn-danger-outline" style="width:auto;padding:6px 12px;font-size:12px;" onclick="fecharOrcDraftsModal()">Fechar</button>
       </div>
-      <p style="font-size:12px;color:#94A3B8;margin-top:0;margin-bottom:12px;">Orçamentos guardados no seu navegador. Você pode abrir qualquer rascunho salvo para continuar a edição.</p>
+      <p style="font-size:12px;color:var(--v8-t2);margin-top:0;margin-bottom:12px;">Orçamentos guardados no seu navegador. Você pode abrir qualquer rascunho salvo para continuar a edição.</p>
       <div id="orcDraftsList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;">
         <!-- Draft cards rendered here -->
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid #1E293B;padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;border-top:1px solid var(--v8-surface);padding-top:12px;">
         <button title="Guardar este orçamento como rascunho (lista dentro do sistema)" class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="salvarRascunhoOrcamento()">💾 Salvar Atual Como Rascunho</button>
         <button title="Fechar a lista de rascunhos" class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:11.5px;" onclick="fecharOrcDraftsModal()">Fechar</button>
       </div>
@@ -1346,7 +1361,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
   <div class="modal" id="signature-modal">
     <div class="modal-content">
       <h3 style="color: white; font-size: 16px; margin-bottom: 8px;">Desenhar Assinatura</h3>
-      <p style="color: #94A3B8; font-size: 12px; margin-bottom: 12px;">Use o mouse ou o dedo dentro da caixa para assinar</p>
+      <p style="color: var(--v8-t2); font-size: 12px; margin-bottom: 12px;">Use o mouse ou o dedo dentro da caixa para assinar</p>
       
       <div class="signature-pad-container">
         <canvas id="signature-pad" width="500" height="150"></canvas>
@@ -1958,21 +1973,21 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const drafts = orcGetDrafts();
       if (!drafts.length) {
         list.innerHTML = `
-          <div style="padding: 24px 16px; text-align: center; color: #64748B; background: #0B1120; border: 1px dashed #334155; border-radius: 8px;">
+          <div style="padding: 24px 16px; text-align: center; color: var(--v8-t3); background: var(--v8-bg-2); border: 1px dashed var(--v8-line-2); border-radius: 8px;">
             <div style="font-size: 24px; margin-bottom: 6px;">📂</div>
-            <b style="color: #94A3B8; font-size: 13px;">Nenhum rascunho salvo ainda</b>
+            <b style="color: var(--v8-t2); font-size: 13px;">Nenhum rascunho salvo ainda</b>
             <p style="font-size: 11px; margin-top: 4px; margin-bottom: 0;">Clique em "Salvar Rascunho" para guardar seu orçamento atual e continuar editando depois.</p>
           </div>
         `;
         return;
       }
       list.innerHTML = drafts.map(d => `
-        <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div style="background:var(--v8-surface); border:1px solid var(--v8-line-2); border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
           <div style="min-width:0; flex:1;">
-            <div style="font-weight:700; font-size:12.5px; color:#F8FAFC; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.name)}</div>
-            <div style="font-size:10px; color:#94A3B8; margin-top:2px; display:flex; flex-wrap:wrap; gap:8px;">
+            <div style="font-weight:700; font-size:12.5px; color:var(--v8-t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.name)}</div>
+            <div style="font-size:10px; color:var(--v8-t2); margin-top:2px; display:flex; flex-wrap:wrap; gap:8px;">
               <span>📅 ${escapeHtml(d.date || '')}</span>
-              <span style="color:#38BDF8; font-weight:700;">${escapeHtml(d.total || '')}</span>
+              <span style="color:var(--v8-pink); font-weight:700;">${escapeHtml(d.total || '')}</span>
               <span>${d.itemsCount || 0} ${(d.itemsCount===1?'item':'itens')}</span>
               <span>${d.pagesCount || 1} ${(d.pagesCount===1?'pág':'págs')}</span>
             </div>
@@ -2654,8 +2669,8 @@ function printProposal() {
   max-width:calc(100vw - 480px)!important;
   z-index:99990!important;
 }
-.v5-drag-tool{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;background:#0F172A;color:#fff;font-size:10px;font-weight:900;cursor:grab;user-select:none}.v5-drag-tool:active{cursor:grabbing}
-.v5-tool-select,.v5-tool-input{background:#0F172A;color:#fff;border:1px solid #334155;border-radius:6px;padding:5px 7px;font-size:11px;font-family:inherit;outline:none}.v5-tool-input{width:58px;font-family:monospace}.v5-highlight-group{display:flex;gap:4px;align-items:center}.v5-hl{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:5px 8px;font-size:10px;font-weight:900;cursor:pointer}.v5-hl.yellow{background:#FFE066;color:#111}.v5-hl.red{background:#FF6B6B;color:#fff}.v5-hl.blue{background:#74C0FC;color:#082f49}
+.v5-drag-tool{display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;background:var(--v8-surface-3);color:var(--v8-t1);font-size:10px;font-weight:900;cursor:grab;user-select:none}.v5-drag-tool:active{cursor:grabbing}
+.v5-tool-select,.v5-tool-input{background:var(--v8-surface-2);color:var(--v8-t1);border:1px solid var(--v8-line-2);border-radius:6px;padding:5px 7px;font-size:11px;font-family:inherit;outline:none}.v5-tool-input{width:58px;font-family:monospace}.v5-highlight-group{display:flex;gap:4px;align-items:center}.v5-hl{border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:5px 8px;font-size:10px;font-weight:900;cursor:pointer}.v5-hl.yellow{background:#FFE066;color:#111}.v5-hl.red{background:#FF6B6B;color:#fff}.v5-hl.blue{background:#74C0FC;color:#082f49}
 @media(max-width:900px){.formatting-toolbar.v5-movable{left:10px!important;right:10px!important;top:62px!important;max-width:calc(100vw - 20px)!important}}
 
 </style>
@@ -2724,7 +2739,7 @@ function printProposal() {
   box-shadow:0 18px 50px rgba(0,0,0,.35)!important;
   z-index:99990!important;
 }
-.formatting-toolbar::before{content:'Texto';color:#fff;font-size:11px;font-weight:900;text-align:center;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.formatting-toolbar::before{content:'Texto';color:var(--v8-t3);font-size:11px;font-weight:900;text-align:center;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
 .formatting-toolbar .tool-separator{display:none!important}
 .formatting-toolbar .tool-btn,
 .formatting-toolbar .v5-hl,
@@ -2740,7 +2755,7 @@ function printProposal() {
 }
 .formatting-toolbar .v5-highlight-group{display:flex!important;flex-direction:column!important;gap:5px!important;border-left:none!important;padding-left:0!important;width:100%!important}
 .formatting-toolbar .v5-drag-tool{display:none!important}
-.formatting-toolbar span[style*="Tamanho"]{color:#CBD5E1!important;text-align:center!important;font-size:10px!important;}
+.formatting-toolbar span[style*="Tamanho"]{color:var(--v8-t2)!important;text-align:center!important;font-size:10px!important;}
 #text-size-tool{width:100%!important;}
 @media(max-width:900px){.formatting-toolbar,.formatting-toolbar.v5-movable{right:8px!important;top:72px!important;width:104px!important;max-width:104px!important;}}
 @media print{.editor-sidebar,.editor-actions,.editor-header,.editor-content,.tabs-nav,.modal,.formatting-toolbar,.formatting-toolbar.v5-movable,.v5-drag-tool,.v5-tool-select,.v5-tool-input,.v5-highlight-group,.v5-hl,#budget-settings-modal,#signature-modal{display:none!important}}
@@ -2748,17 +2763,17 @@ function printProposal() {
 
 .orc-toprow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
 .orc-save-chip{font-size:11px;font-weight:800;color:#0f766e;background:#ecfdf5;border:1px solid #99f6e4;border-radius:999px;padding:3px 9px;white-space:nowrap}
-.orc-help-btn{border:1px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:800;cursor:pointer}
-.orc-help-btn:hover{background:#eef2f7}
+.orc-help-btn{border:1px solid var(--v8-t2);background:var(--v8-t1);color:var(--v8-bg-2);border-radius:999px;padding:4px 11px;font-size:11.5px;font-weight:800;cursor:pointer}
+.orc-help-btn:hover{background:var(--v8-hover)}
 .ajuda-orc-bg{position:fixed;inset:0;background:rgba(5,8,15,.55);display:none;align-items:center;justify-content:center;z-index:4000;padding:16px}
 .ajuda-orc-bg.open{display:flex}
-.ajuda-orc-card{background:#fff;color:#111827;border-radius:18px;max-width:780px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.ajuda-orc-card{background:var(--v8-surface);color:var(--v8-t1);border:1px solid var(--v8-line);border-radius:18px;max-width:780px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:var(--v8-shadow)}
 .ajuda-orc-card h3{margin:0 0 4px;font-size:19px}
-.ajuda-orc-card .ajuda-sub{color:#4b5563;font-size:12.5px;font-weight:700;margin-bottom:6px}
-.ajuda-orc-card h4{margin:15px 0 4px;font-size:12px;color:#1d4ed8;letter-spacing:.5px;text-transform:uppercase}
+.ajuda-orc-card .ajuda-sub{color:var(--v8-t2);font-size:12.5px;font-weight:700;margin-bottom:6px}
+.ajuda-orc-card h4{margin:15px 0 4px;font-size:12px;color:var(--v8-pink);letter-spacing:.5px;text-transform:uppercase}
 .ajuda-orc-card p,.ajuda-orc-card li{font-size:12.5px;line-height:1.65}
 .ajuda-orc-card ul{margin:4px 0 0 18px;padding:0}
-.ajuda-orc-card kbd{background:#eef2f7;border:1px solid #d1d5db;border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px}
+.ajuda-orc-card kbd{background:var(--v8-surface-3);border:1px solid var(--v8-line-2);border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px;color:var(--v8-t1)}
 .ajuda-orc-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 @media print{.ajuda-orc-bg,.orc-save-chip,.orc-help-btn{display:none!important}}
 </style>
@@ -2795,7 +2810,9 @@ function printProposal() {
     </ul>
     <h4>Atalhos</h4>
     <ul>
-      <li><kbd>Enter</kbd> próximo campo do item · <kbd>Ctrl</kbd>+<kbd>P</kbd> imprimir/salvar PDF · <kbd>Esc</kbd> fecha as janelas.</li>
+      <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfazer · <kbd>Ctrl</kbd>+<kbd>Y</kbd> (ou Ctrl+Shift+Z) refazer — vale para o orçamento inteiro.</li>
+      <li>Clique no cartão de um item (no número <b>#1</b>, por exemplo) para selecioná-lo. Aí: <kbd>Ctrl</kbd>+<kbd>C</kbd> copia o item, <kbd>Ctrl</kbd>+<kbd>X</kbd> recorta, <kbd>Ctrl</kbd>+<kbd>V</kbd> cola um igual e <kbd>Delete</kbd> apaga.</li>
+      <li><kbd>Enter</kbd> próximo campo do item · <kbd>Ctrl</kbd>+<kbd>P</kbd> imprimir/salvar PDF · <kbd>Esc</kbd> solta a seleção e fecha as janelas.</li>
     </ul>
     <div class="ajuda-orc-foot">
       <button class="orc-help-btn" onclick="fecharAjudaOrcamento()">Entendi</button>
@@ -2803,7 +2820,236 @@ function printProposal() {
     </div>
   </div>
 </div>
-<div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.92);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;font-family:'Poppins',sans-serif"></div>
+<div id="orcToast" style="position:fixed;right:18px;bottom:18px;background:var(--v8-surface-3);color:var(--v8-t1);border:1px solid var(--v8-line);padding:11px 15px;border-radius:999px;font-size:12px;font-weight:700;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;font-family:'Poppins',sans-serif"></div>
+
+<style id="v8-orc-atalhos-css">
+/* V8.1 — item selecionado para copiar/recortar/colar.
+   O cartão inteiro responde ao clique (menos os campos), e o número #N é o
+   alvo mais óbvio. O contorno é o mesmo rosa do resto do sistema. */
+.item-row-card{position:relative}
+.orc-item-num{cursor:pointer}
+.item-row-card:hover .orc-item-num{background:var(--v8-sel);color:var(--v8-pink)}
+.item-row-card.sel-row{outline:2px solid var(--v8-pink);outline-offset:2px}
+.item-row-card.sel-row .orc-item-num{background:var(--v8-pink);color:#fff}
+</style>
+<script id="v8-orc-atalhos-js">
+/* ══════════════════════════════════════════════════════════════════════════
+   V8.1 — ATALHOS DO ORÇAMENTO
+   ──────────────────────────────────────────────────────────────────────────
+   O Orçamento não tinha UM atalho de teclado: nem desfazer, nem copiar item.
+   Aqui entram os mesmos comandos da ficha, com o significado que faz sentido
+   neste módulo:
+
+     Ctrl+Z / Ctrl+Y (ou Ctrl+Shift+Z)  desfaz / refaz (histórico de verdade)
+     Ctrl+C / Ctrl+X / Ctrl+V           copia / recorta / cola o ITEM
+     Delete                             apaga o item selecionado
+     Esc                                solta a seleção
+
+   Como selecionar um item: clique no cartão do item (no número #N ou no
+   espaço vazio ao redor dos campos). Aí ele ganha um contorno rosa.
+
+   Regra de convivência com o texto: dentro de um campo, Ctrl+C/V continuam
+   sendo copiar/colar TEXTO quando há trecho selecionado. O desfazer é do
+   documento inteiro (como num editor), porque cada campo é ligado ao
+   orçamento — desfazer só o campo deixaria o documento inconsistente.
+   ══════════════════════════════════════════════════════════════════════════ */
+let v8OrcSelRow=null;
+let v8OrcClip=null;
+let v8OrcUndoStack=[],v8OrcRedoStack=[];
+let v8OrcAtual=null,v8OrcAtualSig='';
+let v8OrcSnapTimer=null,v8OrcAplicando=false;
+const V8_ORC_CLIP_KEY='vooalto_v8_orc_item_clip';
+
+function v8OrcCopiarEstado(){try{return JSON.parse(JSON.stringify(orcCollectState()))}catch(e){return null}}
+
+/* Guarda o estado ANTERIOR quando algo muda. Chamado com atraso (debounce)
+   para uma rajada de digitação virar um passo de histórico só. */
+function v8OrcRegistrar(){
+  /* Sem guarda de "aplicando": comparar assinatura já evita duplicar o
+     estado que acabou de ser restaurado (é o mesmo de v8OrcAtual). */
+  const st=v8OrcCopiarEstado();
+  if(!st)return;
+  const sig=JSON.stringify(st);
+  if(!v8OrcAtual){v8OrcAtual=st;v8OrcAtualSig=sig;return}
+  if(sig===v8OrcAtualSig)return;
+  v8OrcUndoStack.push({sig:v8OrcAtualSig,state:v8OrcAtual});
+  if(v8OrcUndoStack.length>40)v8OrcUndoStack.shift();
+  v8OrcRedoStack=[];
+  v8OrcAtual=st;v8OrcAtualSig=sig;
+}
+function v8OrcRegistrarDepois(){
+  if(v8OrcAplicando)return;
+  clearTimeout(v8OrcSnapTimer);
+  v8OrcSnapTimer=setTimeout(v8OrcRegistrar,450);
+}
+/* Operação estrutural (adicionar/duplicar/excluir) vira um passo próprio,
+   na hora: não pode esperar o debounce da digitação. */
+function v8OrcRegistrarAgora(){
+  /* Sem a guarda de "aplicando": depois de um desfazer, a próxima operação
+     estrutural precisa entrar no histórico mesmo que aconteça no mesmo
+     instante — o estado restaurado já é igual a v8OrcAtual, então registrar
+     de novo não duplica nada. */
+  clearTimeout(v8OrcSnapTimer);
+  v8OrcRegistrar();
+}
+function v8OrcAplicarEstado(st){
+  if(!st)return false;
+  v8OrcAplicando=true;
+  try{
+    /* Cópia profunda: orcRestoreState reaproveita o array tableItems do
+       objeto recebido. Sem copiar, a edição seguinte (splice) alteraria
+       também o retrato guardado no histórico e o desfazer não teria o que
+       devolver. */
+    orcRestoreState(JSON.parse(JSON.stringify(st)));
+    if(typeof renderItemsEditor==='function')renderItemsEditor();
+    if(typeof updatePreviewFromForm==='function')updatePreviewFromForm();
+    if(typeof orcUpdateRunningTotal==='function')orcUpdateRunningTotal();
+  }catch(e){console.warn('Histórico do orçamento',e)}
+  setTimeout(()=>{v8OrcAplicando=false},0);
+  return true;
+}
+function v8OrcDesfazer(){
+  clearTimeout(v8OrcSnapTimer);
+  v8OrcRegistrar();
+  if(!v8OrcUndoStack.length){orcToast('Nada para desfazer');return false}
+  const anterior=v8OrcUndoStack.pop();
+  if(v8OrcAtual)v8OrcRedoStack.push({sig:v8OrcAtualSig,state:v8OrcAtual});
+  v8OrcAtual=anterior.state;v8OrcAtualSig=anterior.sig;
+  v8OrcAplicarEstado(anterior.state);
+  if(v8OrcSelRow!==null)v8OrcAplicarSelecao();
+  orcToast('↩ Desfeito');
+  return true;
+}
+function v8OrcRefazer(){
+  clearTimeout(v8OrcSnapTimer);
+  if(!v8OrcRedoStack.length){orcToast('Nada para refazer');return false}
+  const proximo=v8OrcRedoStack.pop();
+  if(v8OrcAtual)v8OrcUndoStack.push({sig:v8OrcAtualSig,state:v8OrcAtual});
+  v8OrcAtual=proximo.state;v8OrcAtualSig=proximo.sig;
+  v8OrcAplicarEstado(proximo.state);
+  if(v8OrcSelRow!==null)v8OrcAplicarSelecao();
+  orcToast('↪ Refeito');
+  return true;
+}
+
+function v8OrcCards(){return Array.prototype.slice.call(document.querySelectorAll('#items-editor-list .item-row-card'))}
+function v8OrcAplicarSelecao(){
+  const cards=v8OrcCards();
+  if(v8OrcSelRow!==null&&!cards[v8OrcSelRow])v8OrcSelRow=null;
+  cards.forEach((c,i)=>c.classList.toggle('sel-row',i===v8OrcSelRow));
+}
+function v8OrcSelecionar(i){
+  v8OrcSelRow=(v8OrcSelRow===i)?null:i;
+  v8OrcAplicarSelecao();
+}
+function v8OrcCopiarItem(cortar){
+  const pg=documentPages[activeFormPageIndex];
+  if(!pg||v8OrcSelRow===null||!pg.tableItems[v8OrcSelRow])return false;
+  v8OrcClip=JSON.parse(JSON.stringify(pg.tableItems[v8OrcSelRow]));
+  try{localStorage.setItem(V8_ORC_CLIP_KEY,JSON.stringify(v8OrcClip))}catch(e){}
+  orcToast(cortar?'✂ Item recortado':'⧉ Item copiado — Ctrl+V cola um igual');
+  return true;
+}
+function v8OrcColarItem(){
+  let base=v8OrcClip;
+  if(!base){try{base=JSON.parse(localStorage.getItem(V8_ORC_CLIP_KEY)||'null')}catch(e){base=null}}
+  if(!base||typeof base!=='object')return false;
+  const pg=documentPages[activeFormPageIndex];
+  if(!pg)return false;
+  const pos=(v8OrcSelRow===null)?pg.tableItems.length:v8OrcSelRow+1;
+  pg.tableItems.splice(pos,0,JSON.parse(JSON.stringify(base)));
+  if(typeof renderItemsEditor==='function')renderItemsEditor();
+  if(typeof updatePreviewFromForm==='function')updatePreviewFromForm();
+  if(typeof orcUpdateRunningTotal==='function')orcUpdateRunningTotal();
+  v8OrcSelRow=pos;
+  v8OrcAplicarSelecao();
+  v8OrcRegistrarAgora();
+  orcToast('⧉ Item colado na posição '+(pos+1));
+  return true;
+}
+function v8OrcExcluirItem(){
+  const pg=documentPages[activeFormPageIndex];
+  if(!pg||v8OrcSelRow===null||!pg.tableItems[v8OrcSelRow])return false;
+  const idx=v8OrcSelRow;
+  pg.tableItems.splice(idx,1);
+  if(typeof renderItemsEditor==='function')renderItemsEditor();
+  if(typeof updatePreviewFromForm==='function')updatePreviewFromForm();
+  if(typeof orcUpdateRunningTotal==='function')orcUpdateRunningTotal();
+  v8OrcSelRow=(idx<pg.tableItems.length)?idx:(pg.tableItems.length?pg.tableItems.length-1:null);
+  v8OrcAplicarSelecao();
+  v8OrcRegistrarAgora();
+  orcToast('Item removido — Ctrl+Z desfaz');
+  return true;
+}
+
+/* Clique no cartão seleciona; clique em campo/controle continua sendo do campo. */
+document.addEventListener('click',e=>{
+  const card=e.target.closest?e.target.closest('#items-editor-list .item-row-card'):null;
+  if(!card)return;
+  if(e.target.closest('input,textarea,select,button,a,label'))return;
+  const i=v8OrcCards().indexOf(card);
+  if(i>=0)v8OrcSelecionar(i);
+});
+
+document.addEventListener('keydown',e=>{
+  const ctrl=e.ctrlKey||e.metaKey;
+  const k=(e.key||'').toLowerCase();
+  const alvo=e.target||document.activeElement;
+  const digitando=!!(alvo&&(alvo.tagName==='INPUT'||alvo.tagName==='TEXTAREA'||alvo.tagName==='SELECT'||alvo.isContentEditable||(alvo.closest&&alvo.closest('[contenteditable="true"]'))));
+  let selecaoTexto=false;
+  try{selecaoTexto=!!(alvo&&typeof alvo.selectionStart==='number'&&alvo.selectionStart!==alvo.selectionEnd)}catch(_){}
+  if(!ctrl&&e.key==='Escape'&&v8OrcSelRow!==null){v8OrcSelRow=null;v8OrcAplicarSelecao();return}
+  if(!ctrl){
+    if(e.key==='Delete'&&v8OrcSelRow!==null&&!digitando){e.preventDefault();v8OrcExcluirItem();}
+    return;
+  }
+  if(k==='z'){e.preventDefault();e.shiftKey?v8OrcRefazer():v8OrcDesfazer();return}
+  if(k==='y'){e.preventDefault();v8OrcRefazer();return}
+  if(k==='c'&&!e.shiftKey&&!e.altKey){if(digitando&&selecaoTexto)return;if(v8OrcCopiarItem(false))e.preventDefault();return}
+  if(k==='x'&&!e.shiftKey&&!e.altKey){if(digitando&&selecaoTexto)return;if(v8OrcCopiarItem(true)){v8OrcExcluirItem();e.preventDefault();}return}
+  if(k==='v'&&!e.shiftKey&&!e.altKey){if(digitando&&v8OrcSelRow===null)return;if(v8OrcColarItem())e.preventDefault();return}
+});
+
+/* Histórico: qualquer digitação/ajuste entra, e as operações estruturais
+   (adicionar, duplicar, excluir item ou página) também. */
+document.addEventListener('input',v8OrcRegistrarDepois);
+document.addEventListener('change',v8OrcRegistrarDepois);
+['addTableRow','deleteTableRow','duplicateTableRow','addDocumentPage','duplicateDocumentPage','removeActiveDocumentPage'].forEach(function(nome){
+  const fn=window[nome];
+  if(typeof fn!=='function')return;
+  window[nome]=function(){
+    const r=fn.apply(this,arguments);
+    v8OrcRegistrarAgora();   /* o estado ANTERIOR já está em v8OrcAtual */
+    return r;
+  };
+});
+/* Trocar de página muda o significado do índice selecionado. */
+['changeActiveFormPage','novoOrcamento','orcCarregarRascunho'].forEach(function(nome){
+  const fn=window[nome];
+  if(typeof fn!=='function')return;
+  window[nome]=function(){
+    v8OrcSelRow=null;
+    const r=fn.apply(this,arguments);
+    v8OrcAplicarSelecao();
+    v8OrcRegistrarAgora();
+    return r;
+  };
+});
+/* Depois de qualquer re-render da lista, o contorno da seleção volta. */
+if(typeof window.renderItemsEditor==='function'){
+  const _render=window.renderItemsEditor;
+  window.renderItemsEditor=function(){
+    const r=_render.apply(this,arguments);
+    try{v8OrcAplicarSelecao()}catch(e){}
+    return r;
+  };
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(v8OrcRegistrar,900);          /* estado inicial do histórico */
+  setTimeout(v8OrcAplicarSelecao,300);
+});
+</script>
+
 <script>
 /* ══ Tema global (shell -> módulo) ══ */
 /* O Orçamento tem interface própria (escura, como o documento impresso).
@@ -2811,7 +3057,7 @@ function printProposal() {
    sincronia para os controles nativos do navegador seguirem a escolha. */
 const V7_TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
 function v7TemaValido(t){if(t==='escuro')return 'escuro';if(t==='claro')return 'claro';return V7_TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro'}
-function applyGlobalTheme(t){ t=v7TemaValido(t); document.documentElement.style.colorScheme=(t==='escuro')?'dark':'light'; }
+function applyGlobalTheme(t){ t=v7TemaValido(t); document.documentElement.dataset.theme=(t==='escuro')?'escuro':'claro'; document.documentElement.style.colorScheme=(t==='escuro')?'dark':'light'; }
 window.addEventListener('message', e=>{ if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme); });
 /* V8 — chave nova 'vooalto_tema', com a antiga 'vooalto_theme_v5' como reserva. */
 function v8TemaSalvo(){try{return localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro'}catch(e){return 'claro'}}

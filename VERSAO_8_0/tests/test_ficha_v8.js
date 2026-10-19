@@ -146,6 +146,45 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   console.log(comecouNova ? '  [OK]' : '  [FAIL]', 'salvar falhou + usuário aceitou -> começa a nova mesmo assim');
   if (!comecouNova) fail++;
 
+  /* ═══ V8.1 — RASCUNHO VISÍVEL ═════════════════════════════════════════
+     Antes o autosave era invisível: uma linha "Salvo 14:32" no fundo de
+     "Minhas fichas" e nada mais. Agora existe um cartão "Rascunho" com
+     estado, hora, Restaurar e Descartar. */
+  t('rascunho: cartão visível na barra lateral', `!!document.getElementById('v8DraftBox') && !!document.getElementById('v8DraftRestaurar') && !!document.getElementById('v8DraftDescartar')`);
+  t('rascunho: estado é legível (hora, conteúdo, backup)', `(function(){var e=v8RascunhoEstado();return typeof e.hora==='string' && 'liveUtil' in e && 'temBackup' in e})()`);
+  t('rascunho: Nova ficha guardou a ficha anterior',
+    `v8RascunhoEstado().temBackup && document.getElementById('v7SaveChip').textContent.indexOf('anterior') > -1`);
+  t('rascunho: a nota diz que a ficha aberta está em branco',
+    `document.getElementById('v8DraftNote').textContent.indexOf('em branco') > -1`);
+  t('rascunho: Restaurar fica habilitado quando há o que restaurar',
+    `document.getElementById('v8DraftRestaurar').disabled === false`);
+  ow.eval('window.confirm=()=>true');
+  t('rascunho: Restaurar devolve o conteúdo guardado',
+    `v8RascunhoRestaurar() && document.getElementById('dc_nome').textContent.indexOf('TRABALHO') > -1`);
+  t('rascunho: depois de restaurar, vira o rascunho vivo',
+    `v8RascunhoEstado().liveUtil && document.getElementById('v7SaveChip').textContent.indexOf('guardado') > -1`);
+  t('rascunho: Descartar apaga o guardado', `v8RascunhoDescartar() && !v8RascunhoEstado().temLive && !v8RascunhoEstado().temBackup`);
+  t('rascunho: sem rascunho, os dois botões ficam desabilitados',
+    `document.getElementById('v8DraftRestaurar').disabled === true && document.getElementById('v8DraftDescartar').disabled === true`);
+
+  /* ═══ V8.1 — Ctrl+C / Ctrl+X / Ctrl+V de camadas ═══════════════════════ */
+  ow.eval("layers.length=0; document.querySelectorAll('#canvasInner .txt-layer').forEach(function(e){e.remove()});");
+  t('atalhos: copiar a camada selecionada', `criarTexto(); v8CopiarCamada(false)`);
+  t('atalhos: colar cria uma camada nova (id diferente)',
+    `v8ColarCamada() && layers.length===2 && layers[0].id!==layers[1].id`);
+  t('atalhos: colar desloca 3% para não cobrir o original',
+    `Math.abs(layers[1].xp-layers[0].xp-0.03)<0.001 && Math.abs(layers[1].yp-layers[0].yp-0.03)<0.001`);
+  t('atalhos: recortar copia e apaga',
+    `(function(){var n=layers.length;selLayer(layers[0].id);var ok=v8CopiarCamada(true)&&v8ExcluirSelecionada();return ok&&layers.length===n-1})()`);
+  t('atalhos: Ctrl+C dentro de um campo não mexe na folha',
+    `(function(){var n=layers.length,c=JSON.stringify(v8ClipLayer);var el=document.getElementById('avisoTxt');el.dispatchEvent(new KeyboardEvent('keydown',{key:'c',ctrlKey:true,bubbles:true}));return layers.length===n&&JSON.stringify(v8ClipLayer)===c})()`);
+  t('atalhos: Ctrl+Z dentro de um campo não desfaz a folha',
+    `(function(){var orig=window.undo,chamou=0;window.undo=function(){chamou++};var el=document.getElementById('avisoTxt');el.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));window.undo=orig;return chamou===0})()`);
+  t('atalhos: Ctrl+Z fora de campo desfaz a folha',
+    `(function(){var orig=window.undo,chamou=0;window.undo=function(){chamou++};document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));window.undo=orig;return chamou===1})()`);
+  t('atalhos: Ctrl+V fora de campo cola a camada copiada',
+    `(function(){var n=layers.length;document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'v',ctrlKey:true,bubbles:true}));return layers.length===n+1})()`);
+
   if (oerr.length) fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
   console.log(fail ? `\n═══ FICHA V8: ${fail} FALHA(S) ═══` : '\n═══ FICHA V8: tudo OK ═══');

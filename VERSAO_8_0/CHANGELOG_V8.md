@@ -1,5 +1,116 @@
 # VOOALTO V8 — Registro de alterações
 
+## V8.1.0 — atalhos, tema único e rascunho visível (2026-10-19)
+
+Três pedidos que estavam em aberto desde a V8.0.0: **atalhos de teclado nos dois
+módulos**, **temas parecidos de verdade** e um **rascunho de ficha visível**.
+No caminho, o tema escuro da Ficha foi auditado regra por regra.
+
+### Tema: uma paleta só para os três lugares
+
+Entrou **`assets/tema-v8.css`**, carregado pelo shell, pela Ficha e pelo
+Orçamento: uma base única de tokens (`--v8-*`) com **claro** e **escuro**. Cada
+módulo passou a apontar os seus nomes antigos (`--sb-*`, a paleta do Orçamento)
+para esses tokens, em vez de ter cores próprias.
+
+| Antes | Agora |
+|---|---|
+| Barra lateral da Ficha **sempre escura** (`#101319`) | `--v8-surface`: clara no claro, escura no escuro |
+| Orçamento com paleta fixa `#0F172A / #1E293B / #38BDF8` que **nunca trocava** | segue o tema, com os mesmos tokens da Ficha |
+| Ficha **piscava clara** antes de escurecer (só o shell tinha boot anti-flash) | Ficha e Orçamento também aplicam o tema **antes do primeiro paint** |
+
+**Papel não é tema.** `--v8-paper` é `#fff` nos dois temas: a folha A4 da Ficha
+continua branca e a do Orçamento continua creme (`#F3F0E7`), senão a ficha
+impressa sairia cinza. Nenhuma regra de tema toca em `.folha`, `.folha-branca`
+ou `.page`.
+
+### Bugs do tema escuro corrigidos
+
+A auditoria (todas as regras de `<style>` cruzam fundo claro fixo × ausência de
+override) achou 52 seletores, dos quais estes eram bugs reais:
+
+- **barra de texto flutuante ficava branca no escuro** — `background:#fff!important`
+  ganhava das regras de tema (o `!important` do CSS vence especificidade);
+- ajuda da Ficha, caixa de sugestões de cliente, modal de revincular imagens,
+  modal do preenchimento rápido, painel de camadas, barra de ferramentas da
+  página, faixa de miniaturas, barra de formatação — todos com fundo branco fixo;
+- **linha selecionada no painel de camadas** (`#DBEAFE`) e item "pendente" do
+  revincular (`#FFFBEB`) — texto claro em fundo pastel, ilegível;
+- toast, selo "Salvo", chips de erro e o rodapé da ajuda;
+- sombra da barra lateral (`rgba(0,0,0,.35)`) pesada no tema claro.
+
+### Atalhos de teclado
+
+**Ficha Técnica**
+
+| Atalho | O que faz |
+|---|---|
+| `Ctrl+Z` / `Ctrl+Y` ou `Ctrl+Shift+Z` | desfaz / refaz |
+| `Ctrl+C` / `Ctrl+X` | copia / recorta a camada selecionada (imagem, texto, seta, forma) |
+| `Ctrl+V` | cola na página ativa, 3% deslocado e com **id novo** (pode colar várias vezes) |
+| `Ctrl+V` (texto de fora) | texto do clipboard vira uma caixa de texto na folha |
+| `Delete` | apaga a camada selecionada |
+
+**Correção de comportamento:** antes, `Ctrl+Z` com o cursor dentro de um campo
+desfazia a **folha** em vez de desfazer a palavra digitada — dava para apagar
+trabalho sem entender por quê. Agora, com o foco num `input`, `textarea` ou
+texto editável, os atalhos são os do campo.
+
+**Orçamento** (não tinha nenhum atalho):
+
+| Atalho | O que faz |
+|---|---|
+| `Ctrl+Z` / `Ctrl+Y` ou `Ctrl+Shift+Z` | desfaz / refaz (histórico de 40 passos, por estado do documento) |
+| `Ctrl+C` / `Ctrl+X` / `Ctrl+V` | copia / recorta / cola o **item** selecionado |
+| `Delete` | apaga o item selecionado |
+| `Esc` | solta a seleção |
+
+O item é selecionado clicando no cartão (no número `#N` ou no espaço vazio entre
+os campos) e ganha contorno rosa. Dentro de um campo com trecho selecionado,
+`Ctrl+C`/`Ctrl+V` continuam copiando texto.
+
+### Rascunho de ficha visível
+
+O autosave existia desde a V7, mas era invisível: uma linha "Salvo 14:32" no
+fundo de "Minhas fichas". A barra lateral da Ficha ganhou uma seção **Rascunho**:
+
+- mostra **se** há rascunho, **quando** foi guardado e **se** tem conteúdo;
+- **Restaurar** devolve o rascunho (confirma antes de substituir uma ficha com
+  conteúdo);
+- **Descartar** apaga o rascunho guardado sem mexer na ficha aberta;
+- ao clicar em **Nova ficha**, a ficha que estava na tela é guardada como
+  **rascunho anterior** — se limpou por engano, "Restaurar" traz de volta.
+
+Chaves: `vooalto_v7_ficha_ativa` (a mesma da V7, para nada se perder),
+`vooalto_v8_rascunho_anterior` e `vooalto_v8_rascunho_meta`.
+
+### Testes
+
+**282 verificações em 9 suítes JS + 2 suítes de infraestrutura + 7 testes
+Python, todos verdes.** Suítes rodadas uma a uma:
+
+| Suíte | Antes | Agora |
+|---|---|---|
+| shell | 34 | 34 |
+| ficha | 37 | **54** |
+| minhas fichas | 28 | 28 |
+| orçamento | 22 | **36** |
+| orçamento (features) | 34 | 34 |
+| canva | 18 | 18 |
+| UX | 33 | 33 |
+| temas | 22 | **30** |
+| perf | 15 | 15 |
+| pwa_infra / server | 26 asserts | 26 asserts |
+
+As duas verificações de `test_temas_v8.js` que **exigiam** o Orçamento fora do
+tema (`!data-theme`, "sem regras de tema") foram reescritas: elas codificavam a
+decisão antiga e agora o requisito é o contrário.
+
+O histórico do Orçamento pegou um bug de verdade durante os testes: o snapshot
+guardava **referência** ao array `tableItems`, então a edição seguinte alterava
+o retrato no histórico e o desfazer não tinha o que devolver. Corrigido com
+cópia profunda no restore.
+
 ## V8.0.0 — simplificação: dois módulos, dois temas (2026-10-19)
 
 Versão de **corte**. O sistema tinha três módulos e a Catalogação carregava junto

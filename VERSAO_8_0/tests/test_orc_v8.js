@@ -50,6 +50,39 @@ const fs = require('fs');
   t('add page 2', `addDocumentPage(); documentPages.length + ' | ' + !!document.getElementById('printable-a4-page-2')`);
   t('remove page 2', `removeActiveDocumentPage(); documentPages.length + ' | ' + !document.getElementById('printable-a4-page-2')`);
   t('tema global fn', `typeof applyGlobalTheme === 'function'`);
+  t('tema: aplica data-theme no <html>', `applyGlobalTheme('escuro'); document.documentElement.dataset.theme==='escuro'`);
+  t('tema: claro volta para claro', `applyGlobalTheme('claro'); document.documentElement.dataset.theme==='claro'`);
+
+  /* ═══ V8.1 — ATALHOS DO ORÇAMENTO ══════════════════════════════════════
+     Antes o módulo não tinha um atalho sequer. Agora: histórico de verdade
+     (Ctrl+Z/Y) e copiar/recortar/colar item (Ctrl+C/X/V com o item
+     selecionado no cartão). */
+  ow.eval('window.confirm=()=>true; novoOrcamento();');
+  t('atalhos: histórico começa vazio depois de um orçamento novo',
+    `v8OrcRegistrarAgora(); v8OrcUndoStack.length + ' | ' + documentPages[0].tableItems.length`);
+  ow.eval("documentPages[0].tableItems.push({modelo:'Camiseta',tecido:'Piquet',descricao:'',qnt:10,unit:25}); renderItemsEditor(); v8OrcRegistrarAgora();");
+  t('atalhos: selecionar item pelo cartão',
+    `(function(){var c=document.querySelector('#items-editor-list .item-row-card .orc-item-num');c.dispatchEvent(new MouseEvent('click',{bubbles:true}));return v8OrcSelRow===0&&!!document.querySelector('#items-editor-list .item-row-card.sel-row')})()`);
+  t('atalhos: copiar item', `v8OrcCopiarItem(false) && v8OrcClip && v8OrcClip.modelo==='Camiseta'`);
+  t('atalhos: colar item cria um igual logo abaixo',
+    `(function(){var antes=documentPages[0].tableItems.length;var ok=v8OrcColarItem();var it=documentPages[0].tableItems[1];return ok&&documentPages[0].tableItems.length===antes+1&&it.modelo==='Camiseta'&&it.qnt===10})()`);
+  t('atalhos: Ctrl+Z desfaz o item colado',
+    `(function(){var antes=documentPages[0].tableItems.length;document.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));return documentPages[0].tableItems.length===antes-1})()`);
+  t('atalhos: Ctrl+Y refaz',
+    `(function(){var antes=documentPages[0].tableItems.length;document.dispatchEvent(new KeyboardEvent('keydown',{key:'y',ctrlKey:true,bubbles:true}));return documentPages[0].tableItems.length===antes+1})()`);
+  t('atalhos: Ctrl+Shift+Z também refaz',
+    `(function(){document.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));var antes=documentPages[0].tableItems.length;document.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,shiftKey:true,bubbles:true}));return documentPages[0].tableItems.length===antes+1})()`);
+  t('atalhos: recortar item tira da lista',
+    `(function(){var n=documentPages[0].tableItems.length;v8OrcSelRow=0;var ok=v8OrcCopiarItem(true)&&v8OrcExcluirItem();return ok&&documentPages[0].tableItems.length===n-1})()`);
+  t('atalhos: Ctrl+Z devolve o item recortado',
+    `(function(){var n=documentPages[0].tableItems.length;document.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));return documentPages[0].tableItems.length===n+1})()`);
+  t('atalhos: página nova limpa a seleção (índice não vaza entre páginas)',
+    `(function(){v8OrcSelRow=0;addDocumentPage();changeActiveFormPage(1);return v8OrcSelRow===null})()`);
+  t('atalhos: ajuda do módulo documenta os comandos',
+    `(function(){var h=document.getElementById('ajudaOrcamento').innerHTML.toLowerCase();return h.indexOf('ctrl')>-1&&h.indexOf('recorta')>-1&&h.indexOf('desfazer')>-1})()`);
+  t('tema: papel A4 continua fora do tema',
+    `(function(){var p=document.querySelector('.page');return !p.closest('[data-theme]')||getComputedStyle(p).backgroundColor!==''})()`);
+
   if(oerr.length)fail++;
   console.log('  page errors:', oerr.length ? oerr : 'none ✓');
   console.log(fail ? `\n═══ ORÇAMENTO V8: ${fail} FALHA(S) ═══` : '\n═══ ORÇAMENTO V8: tudo OK ═══');
