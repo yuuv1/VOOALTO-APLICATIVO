@@ -1,5 +1,66 @@
 # VOOALTO V8 — Registro de alterações
 
+## V8.2.0 — medidas das camisetas: auditoria V5→V8 e sincronização (2026-10-20)
+
+Pedido: *"as medidas das camisetas sumiram da ficha técnica. pesquise como estava
+nos últimos branchs e atualize a versão v8."*
+
+### A pesquisa (o que foi conferido)
+
+A tabela de medidas (**Feminino (baby look)** e **Masculino**, colunas
+`Tam. / Larg. / Comp.`, 6 tamanhos por bloco, 12 valores cada) foi procurada
+arquivo por arquivo, branch por branch:
+
+| Onde | Situação |
+|---|---|
+| `VERSAO_5_0/…/criador_ficha_tecnica/index.html` | presente (24 campos) |
+| `VERSAO_6_0/…/criador_ficha_tecnica/index.html` | presente (24 campos) |
+| `VERSAO_7_0/…/criador_ficha_tecnica/index.html` | presente (24 campos) |
+| branches `arena/…` dos PRs **#1 a #11** (V6.1 → V7.6.1) | presente em todos |
+| `VERSAO_8_0/…/criador_ficha_tecnica/index.html` (PR #12, V8.0.0–V8.1.1) | **presente (24 campos)** |
+
+Também foi comparado o *HTML da folha 1* da V7 com o da V8: **é idêntico**
+(as únicas diferenças da folha são títulos de botões e o rodapé "V6"). Os
+valores de fábrica (42/54 … 60/76) são os mesmos desde a V5.
+
+Verificado no navegador (Chromium headless) sobre a V8 atual:
+
+* a tabela aparece na coluna da esquerda, abaixo de **Tipo de tecido**;
+* sai no **PDF** (impressão A4) e no **PNG** exportado, com os valores digitados;
+* **"Nova ficha"** devolve a receita de fábrica (V8.0.3);
+* o **preenchimento rápido** (etapa 5) abre com as 24 caixas preenchidas e
+  aplica o que for digitado;
+* salvar → "Nova ficha" → reabrir e recarregar a página **mantém** os valores
+  (`_medFem` / `_medMasc` no `.json` e no IndexedDB).
+
+Ou seja: a tabela não foi removida em nenhum momento. O que existia era um
+**defeito de sincronização** que fazia a medida digitada "desaparecer" da ficha
+impressa — é o que esta versão corrige.
+
+### O bug corrigido — medida digitada valia só para a página 1
+
+`copiarP1paraExtra()` e `v4AplicarMedidas()` já espelhavam as medidas nas
+páginas 2, 3…, mas **digitar direto na folha 1 não disparava nada**: as caixas
+`.med-inp` não tinham `oninput` e não havia listener delegado. Resultado: com
+duas páginas abertas, a página 1 mostrava 43/55 e a página 2 continuava com
+42/54 — **duas tabelas de medidas diferentes na mesma ficha**, e a página 2
+parecia ter "perdido" a medida. O mesmo acontecia com uma ficha de 3 páginas
+impressa em PDF.
+
+**Correção:** `v8MedSync()` (novo, logo depois de `sincTodasPaginas`) copia as
+24 caixas da folha 1 para as páginas extras, chamado por um listener delegado
+de `input` no documento. Só a folha 1 é origem; a página extra continua cópia.
+Vale também para as cópias criadas depois (ficha restaurada, `adicionarPagina`).
+
+### Verificação
+
+* `npm test` → **tudo verde** (as 3 verificações novas estão em
+  `tests/test_ficha_v8.js`: página extra criada, medida do feminino espelhada,
+  medida do masculino espelhada).
+* Conferência no navegador de verdade (Chromium headless): PDF e PNG da folha 1
+  com os valores digitados, e a página 2 acompanhando a folha 1 depois da
+  correção.
+
 ## V8.1.1 — Tab de caixa em caixa no Orçamento (2026-10-19)
 
 Na lista de itens, o <kbd>Tab</kbd> do navegador parava nos botões **⧉** e **✕**
