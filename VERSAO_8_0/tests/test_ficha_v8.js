@@ -121,6 +121,28 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   t('aplicar grava as medidas de largura/comprimento',
     `(function(){var m=document.querySelectorAll('#folha1 .med-bloco.fem .med-inp');return m[0].value==='43'&&m[1].value==='55'})()`);
 
+  /* ═══ V8.2 — medida digitada na folha 1 vale para as páginas extras ═══
+     Antes, digitar direto na folha 1 não disparava nada: as páginas 2, 3…
+     continuavam com a tabela antiga e a ficha impressa saía com duas tabelas
+     de medidas diferentes (parecia que a medida digitada tinha sumido). */
+  t('página extra criada para o teste de medidas',
+    `(adicionarPagina(), document.querySelectorAll('#pw .folha').length === 2)`);
+  t('medida digitada na folha 1 chega na página extra',
+    `(function(){
+       var src=document.querySelector('#folha1 .med-bloco.fem .med-inp');
+       src.value='77'; src.dispatchEvent(new Event('input',{bubbles:true}));
+       var extra=document.querySelectorAll('#pw .folha')[1];
+       var dst=extra.querySelector('.med-bloco.fem .med-inp');
+       return !!dst && dst.value==='77';
+     })()`);
+  t('medida do masculino também é espelhada',
+    `(function(){
+       var src=document.querySelectorAll('#folha1 .med-bloco.masc .med-inp')[3];
+       src.value='123'; src.dispatchEvent(new Event('input',{bubbles:true}));
+       var extra=document.querySelectorAll('#pw .folha')[1];
+       return extra.querySelectorAll('.med-bloco.masc .med-inp')[3].value==='123';
+     })()`);
+
   /* ═══ Medidas: "Nova ficha" tem que voltar para a receita de fábrica ═══
      Antes ficavam as medidas digitadas na ficha anterior — numa ficha de
      outro cliente isso é erro de produção (largura/altura erradas). */

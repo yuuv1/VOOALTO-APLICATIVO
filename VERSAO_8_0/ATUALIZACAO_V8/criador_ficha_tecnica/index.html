@@ -2075,6 +2075,36 @@ if(src&&dst)dst.innerHTML=src.innerHTML;
 paginas.filter(p=>p.tipo==='branca').forEach(p=>{sincLogoParaBranca(p);});
 }
 
+/* ═══ V8.2 — MEDIDAS (largura × comprimento) EM TODAS AS PÁGINAS ═══
+   A tabela de medidas é da folha 1 e as páginas extras nascem com uma cópia
+   dela (copiarP1paraExtra e o preenchimento rápido já espelhavam). Faltava o
+   caso mais comum: digitar direto na folha 1 deixava as páginas 2, 3… com a
+   tabela antiga — a ficha impressa saía com duas tabelas de medidas
+   diferentes, e parecia que a medida digitada tinha "sumido". */
+function v8MedSync(){
+  const alvos=[...document.querySelectorAll('#pw .folha')].filter(f=>f.id!=='folha1');
+  if(!alvos.length)return 0;
+  let mudou=0;
+  ['fem','masc'].forEach(bloco=>{
+    const src=[...document.querySelectorAll('#folha1 .med-bloco.'+bloco+' .med-inp')].map(el=>el.value);
+    alvos.forEach(f=>{
+      f.querySelectorAll('.med-bloco.'+bloco+' .med-inp').forEach((el,i)=>{
+        if(src[i]!==undefined&&el.value!==src[i]){el.value=src[i];mudou++;}
+      });
+    });
+  });
+  return mudou;
+}
+/* Delegado no documento: cobre as 24 caixas da folha 1 e as cópias criadas
+   depois (inclusive as que vêm de uma ficha salva). Só observa a folha 1 —
+   a página extra é cópia, não origem. */
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(!t||!t.classList||!t.classList.contains('med-inp'))return;
+  if(!t.closest||!t.closest('#folha1'))return;
+  v8MedSync();
+});
+
 /* ═══ COPIAR P1 PARA EXTRA ═══ */
 function copiarP1paraExtra(p){
 const pid=p.id;
