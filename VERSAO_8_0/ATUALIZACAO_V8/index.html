@@ -73,10 +73,51 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
 .toast{position:fixed;right:18px;bottom:18px;background:rgba(17,24,39,.90);color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;font-weight:760;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:9999;max-width:min(78vw,420px)}
 .toast.show{opacity:1;transform:translateY(0)}
 
-/* ── Janelas (tour e ajuda) ── */
+/* ── Janelas (tour, ajuda e backup) ── */
 .modal{position:fixed;inset:0;background:rgba(5,5,10,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:18px}
 .modal.open{display:flex}
-.card{position:relative;background:#fff;color:#111827;border-radius:18px;width:100%;max-height:88vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.card{position:relative;background:#fff;color:#111827;color-scheme:light;border-radius:18px;width:100%;max-height:88vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+html[data-theme="escuro"] .card{background:#171b24;color:#e7ebf2;color-scheme:dark;border:1px solid rgba(255,255,255,.12)}
+html[data-theme="escuro"] .card .sub,html[data-theme="escuro"] .help-item p,html[data-theme="escuro"] .tour-step p,html[data-theme="escuro"] .remember{color:#98a2b3}
+html[data-theme="escuro"] .card-x{background:#1e232e;color:#e7ebf2}
+html[data-theme="escuro"] .card-x:hover{background:#2a3140}
+html[data-theme="escuro"] .tour-step{background:#101319;border-color:rgba(255,255,255,.10);color:#e7ebf2}
+html[data-theme="escuro"] .tour-step .num{background:#F0449F;color:#fff}
+html[data-theme="escuro"] .card-foot,html[data-theme="escuro"] .help-item,html[data-theme="escuro"] .help-keys td{border-top-color:rgba(255,255,255,.10)}
+html[data-theme="escuro"] .help-keys td:first-child{color:#e7ebf2}
+html[data-theme="escuro"] .btn.primary{background:#D4187A;color:#fff}
+html[data-theme="escuro"] .btn.ghost{background:#1e232e;color:#e7ebf2}
+.bkp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:16px}
+.bkp-stat{border:1px solid #e5e7eb;background:#fafbff;border-radius:13px;padding:12px 14px}
+html[data-theme="escuro"] .bkp-stat{background:#101319;border-color:rgba(255,255,255,.10)}
+.bkp-stat-num{font-size:21px;font-weight:900;color:#D4187A;line-height:1.1}
+html[data-theme="escuro"] .bkp-stat-num{color:#F0449F}
+.bkp-stat-lbl{font-size:12px;font-weight:800;margin-top:4px}
+.bkp-stat-sub{font-size:11px;color:#6b7280;margin-top:2px;line-height:1.35}
+html[data-theme="escuro"] .bkp-stat-sub{color:#98a2b3}
+.bkp-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.bkp-actions{grid-template-columns:1fr}}
+.bkp-action-card{border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 16px;background:#fafbff;display:flex;flex-direction:column;gap:8px}
+html[data-theme="escuro"] .bkp-action-card{background:#101319;border-color:rgba(255,255,255,.12)}
+.bkp-action-card b{font-size:13.5px}
+.bkp-action-card p{font-size:12px;color:#4b5563;line-height:1.5;flex:1}
+html[data-theme="escuro"] .bkp-action-card p{color:#98a2b3}
+.btn.pink{background:linear-gradient(180deg,#E0278A,#C4146F);color:#fff}
+.btn.pink:hover{filter:brightness(1.07)}
+.btn.danger{background:#dc2626;color:#fff}
+.btn.danger:hover{background:#b91c1c}
+.bkp-preview{display:none;margin-top:14px;border:1.5px solid rgba(212,24,122,.4);background:rgba(212,24,122,.06);border-radius:14px;padding:14px 16px}
+.bkp-preview.open{display:block}
+.bkp-preview h4{font-size:13.5px;margin-bottom:5px;color:#D4187A}
+html[data-theme="escuro"] .bkp-preview h4{color:#F0449F}
+.bkp-preview p{font-size:12px;line-height:1.55;margin-bottom:10px}
+.bkp-preview-btns{display:flex;gap:8px;flex-wrap:wrap}
+.bkp-msg{display:none;margin-top:12px;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:700;line-height:1.45}
+.bkp-msg.open{display:block}
+.bkp-msg.ok{background:rgba(21,128,61,.12);color:#15803d;border:1px solid rgba(21,128,61,.3)}
+html[data-theme="escuro"] .bkp-msg.ok{background:rgba(74,222,128,.14);color:#4ade80;border-color:rgba(74,222,128,.3)}
+.bkp-msg.err{background:rgba(185,28,28,.10);color:#b91c1c;border:1px solid rgba(185,28,28,.3)}
+html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#fca5a5;border-color:rgba(252,165,165,.3)}
 .card.wide{max-width:760px}
 .card.narrow{max-width:640px}
 .card h3{margin:0;font-size:20px}
@@ -122,6 +163,7 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
       <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
     </nav>
     <div class="controls">
+      <button class="utility-btn" id="btnBackupShell" onclick="openBackupModal()" title="Exportar ou importar backup completo (fichas, rascunhos, orçamentos e preferências)">💾 Backup</button>
       <select class="theme-select" id="themeSelect" onchange="applyThemeFromShell(this.value)" title="Tema do sistema: Claro ou Escuro">
         <option value="claro">Claro</option>
         <option value="escuro">Escuro</option>
@@ -182,8 +224,9 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
       <p>O seletor no topo alterna <b>Claro</b> e <b>Escuro</b> no sistema inteiro (barra e módulos). A escolha fica salva neste navegador.</p>
     </div></div>
     <div class="help-item"><div class="ico">💾</div><div>
-      <b>Backup</b>
-      <p>Ficha: <b>Exportar backup (.json)</b> / <b>Abrir backup (.json)</b> na barra lateral. Orçamento: <b>Salvar .json</b>. Guarde uma cópia antes de limpar o navegador ou trocar de computador.</p>
+      <b>Backup completo (com rascunhos)</b>
+      <p>Use <b>💾 Backup</b> na barra superior para exportar ou importar <b>tudo de uma vez</b> em um único arquivo <b>.json</b>: todas as fichas de <b>Minhas fichas</b> (com fotos e artes), o rascunho atual e anterior da Ficha Técnica, todos os rascunhos do Orçamento, clientes e preferências. Você também pode continuar exportando/importando fichas ou orçamentos avulsos.</p>
+      <button class="btn ghost" style="margin-top:8px" onclick="closeHelp();openBackupModal()" title="Abrir a Central de Backup Completo">💾 Abrir Central de Backup</button>
     </div></div>
     <div class="help-item"><div class="ico">⌨️</div><div>
       <b>Atalhos de teclado</b>
@@ -204,7 +247,679 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
   </div>
 </div>
 
+<div class="modal" id="backupModal" role="dialog" aria-modal="true" aria-labelledby="backupTitle">
+  <div class="card wide">
+    <button class="card-x" onclick="closeBackupModal()" title="Fechar a Central de Backup (Esc)">✕</button>
+    <h3 id="backupTitle">💾 Backup Completo do Vooalto</h3>
+    <div class="sub">Exporte ou importe todas as fichas salvas, imagens, rascunhos em andamento, orçamentos, clientes e preferências em um único arquivo <b>.json</b>.</div>
+
+    <div class="bkp-grid" id="backupStatsGrid">
+      <div class="bkp-stat">
+        <div class="bkp-stat-num" id="bkpCountFichas">0</div>
+        <div class="bkp-stat-lbl">Minhas fichas salvas</div>
+        <div class="bkp-stat-sub" id="bkpSubFichaAtiva">Verificando rascunhos…</div>
+      </div>
+      <div class="bkp-stat">
+        <div class="bkp-stat-num" id="bkpCountOrc">0</div>
+        <div class="bkp-stat-lbl">Rascunhos de orçamento</div>
+        <div class="bkp-stat-sub" id="bkpSubOrcAtivo">Verificando proposta atual…</div>
+      </div>
+      <div class="bkp-stat">
+        <div class="bkp-stat-num" id="bkpCountClientes">0</div>
+        <div class="bkp-stat-lbl">Clientes e preferências</div>
+        <div class="bkp-stat-sub" id="bkpSubUltimo">Telefones, cores rápidas e ajustes</div>
+      </div>
+    </div>
+
+    <div class="bkp-actions">
+      <div class="bkp-action-card">
+        <b>📤 Exportar backup completo</b>
+        <p>Baixa um único arquivo <b>.json</b> contendo todas as fichas de <b>Minhas fichas</b> (com fotos e artes), o rascunho em edição e o rascunho anterior da Ficha Técnica, todos os rascunhos do Orçamento, clientes e configurações.</p>
+        <button class="btn pink" id="btnExportarTudo" type="button" onclick="exportarBackupSistema()">📤 Baixar backup completo (.json)</button>
+      </div>
+      <div class="bkp-action-card">
+        <b>📥 Importar backup (.json)</b>
+        <p>Aceita um backup completo V8, backup antigo V7 ou até uma ficha/orçamento individual. Você escolhe entre <b>Mesclar</b> (mantém o que já existe + importa) ou <b>Substituir tudo</b>.</p>
+        <button class="btn primary" id="btnImportarTudo" type="button" onclick="document.getElementById('backupFileInput').click()">📥 Escolher arquivo .json</button>
+        <input type="file" id="backupFileInput" accept=".json,application/json" style="display:none" onchange="selecionarArquivoBackup(event)">
+      </div>
+    </div>
+
+    <div class="bkp-preview" id="backupPreviewBox">
+      <h4 id="backupPreviewTitle">Arquivo pronto para importar</h4>
+      <p id="backupPreviewText"></p>
+      <div class="bkp-preview-btns">
+        <button class="btn pink" id="btnConfirmMerge" type="button" onclick="confirmarImportacaoBackup('mesclar')">✅ Mesclar (manter atuais + importar)</button>
+        <button class="btn danger" id="btnConfirmReplace" type="button" onclick="confirmarImportacaoBackup('substituir')">♻️ Substituir tudo por este backup</button>
+        <button class="btn ghost" type="button" onclick="cancelarImportacaoBackup()">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="bkp-msg" id="backupFeedback"></div>
+
+    <div class="card-foot">
+      <span style="font-size:12px;opacity:.78">💡 Faça um backup semanal ou antes de limpar o navegador / trocar de computador.</span>
+      <button class="btn ghost" type="button" onclick="closeBackupModal()" style="margin-left:auto">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script id="v8-backup-js">
+(function(){
+  'use strict';
+  if(window.VooaltoBackup)return;
+  const DB_NAME='vooalto_ficha_rascunhos_db_v4';
+  const STORE='drafts';
+  const META_KEY='vooalto_ficha_rascunhos_v4_meta';
+  const OLD_FICHAS_KEY='vooalto_ficha_rascunhos_v4';
+  const FICHA_LIVE_KEY='vooalto_v7_ficha_ativa';
+  const FICHA_HORA_KEY='vooalto_v7_ficha_ativa_hora';
+  const FICHA_ANT_KEY='vooalto_v8_rascunho_anterior';
+  const FICHA_META_KEY='vooalto_v8_rascunho_meta';
+  const ORC_DRAFTS_KEY='vooalto_orcamento_rascunhos_v7';
+  const ORC_LIVE_KEY='vooalto_orcamento_autosave_v7';
+  const ORC_LIVE_LEG='vooalto_orcamento_autosave';
+  const ORC_HORA_KEY='vooalto_orcamento_autosave_hora';
+  const CLIENTES_KEY='vooalto_ficha_clientes_v7';
+  const LAST_BKP_KEY='vooalto_ultimo_backup_v8';
+  const SKIP_KEYS={'vooalto_v8_clip_layer':1,'vooalto_v8_orc_clip':1,'vooalto_v8_orc_item_clip':1};
+
+  function isVooaltoKey(k){
+    return typeof k==='string'&&!SKIP_KEYS[k]&&(
+      k.indexOf('vooalto_')===0||k.indexOf('va3_')===0||k.indexOf('va4_')===0||
+      k==='v4_text_toolbar_pos'||k==='v5_orcamento_toolbar_pos'
+    );
+  }
+  function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+  function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+  function lsJSON(k,fb){
+    const raw=lsGet(k);
+    if(!raw)return fb;
+    try{const v=JSON.parse(raw);return v==null?fb:v}catch(e){return fb}
+  }
+  function stripTags(s){return String(s||'').replace(/<[^>]*>/g,'').trim()}
+  function horaHM(){
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return p(d.getHours())+':'+p(d.getMinutes());
+  }
+  function agoraBR(){
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+  function carimboArquivo(){
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'h'+p(d.getMinutes());
+  }
+  function temConteudoFicha(d){
+    if(!d||typeof d!=='object')return false;
+    if(['dc_nome','dc_doc','dc_end','dc_tel','cliente','telefone','obs','previsao','entradaVal','tipoTecido'].some(k=>stripTags(d[k])))return true;
+    if(d._grade&&['m','b','i'].some(g=>Array.isArray(d._grade[g])&&d._grade[g].some(v=>Number(v)>0)))return true;
+    if(Array.isArray(d._prod)&&d._prod.some(p=>p&&(String(p.modelo||'').trim()||Number(p.valor)>0||Number(p.qtd)>0)))return true;
+    if(Array.isArray(d._layers)&&d._layers.length>0)return true;
+    if(Array.isArray(d._paginas)&&d._paginas.length>0)return true;
+    if(Array.isArray(d.cores)&&d.cores.some(c=>c&&String(c.nome||'').trim()))return true;
+    if(d.imagens&&Object.keys(d.imagens).some(k=>d.imagens[k]))return true;
+    if((Array.isArray(d.textos)&&d.textos.length)||(Array.isArray(d.setas)&&d.setas.length))return true;
+    return false;
+  }
+  function temConteudoOrcamento(d){
+    if(!d||typeof d!=='object')return false;
+    if(d.signature)return true;
+    const pages=Array.isArray(d.pages)?d.pages:[];
+    if(pages.length>1)return true;
+    for(let i=0;i<pages.length;i++){
+      const items=(pages[i]&&pages[i].tableItems)||[];
+      if(items.some(it=>it&&(String(it.modelo||'').trim()||String(it.tecido||'').trim()||stripTags(it.descricao)||Number(it.unit)>0)))return true;
+      const rows=(pages[i]&&pages[i].rows)||[];
+      if(rows.some(r=>r&&(stripTags(r.descHtml)||Number(r.qty)>1)))return true;
+    }
+    if(d.form&&String(d.form['proposal-title']||'').trim()&&String(d.form['proposal-title']).trim()!=='PROPOSTA DE VENDA')return true;
+    if(d.fields&&String(d.fields['client-name']||'').trim())return true;
+    return false;
+  }
+  function calcOrcStats(d){
+    const pages=Array.isArray(d&&d.pages)?d.pages:[];
+    let itemsCount=0,soma=0;
+    pages.forEach(p=>{
+      (p.tableItems||[]).forEach(it=>{
+        itemsCount++;
+        soma+=(Number(it.qnt)||0)*(Number(it.unit)||0);
+      });
+    });
+    return {
+      pagesCount:Math.max(1,pages.length),
+      itemsCount:itemsCount,
+      total:'R$ '+soma.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+    };
+  }
+  function nomeFicha(d){
+    if(!d||typeof d!=='object')return 'Ficha sem nome';
+    if(String(d._nome||'').trim())return String(d._nome).trim();
+    const cli=stripTags(d.dc_nome)||String(d.cliente||'').trim();
+    const num=String(d._numFicha||d.fichaNum||'').trim();
+    return (num?'Nº '+num:'')+(num&&cli?' — ':'')+(cli||(!num?'Ficha sem nome':''));
+  }
+  function nomeOrcamento(d){
+    if(!d||typeof d!=='object')return 'Orçamento';
+    const tit=String((d.form&&d.form['proposal-title'])||(d.fields&&d.fields['client-name'])||d.clientName||'Orçamento').trim();
+    const p0=Array.isArray(d.pages)&&d.pages[0]&&Array.isArray(d.pages[0].tableItems)&&d.pages[0].tableItems[0];
+    const mod=p0&&p0.modelo?String(p0.modelo).trim():'';
+    return tit+(mod?' - '+mod:'');
+  }
+  function lerOrcLive(){
+    return lsJSON(ORC_LIVE_KEY,null)||lsJSON(ORC_LIVE_LEG,null);
+  }
+  function flushAtivos(){
+    const wins=[window];
+    try{
+      document.querySelectorAll('iframe.project-frame').forEach(fr=>{
+        if(fr&&fr.contentWindow)wins.push(fr.contentWindow);
+      });
+    }catch(e){}
+    wins.forEach(w=>{
+      try{
+        if(typeof w.capturarFichaParaJSON==='function'&&typeof w.v7SalvarAutosaveAgora==='function'){
+          const tem=(typeof w.v8FichaTemConteudo==='function')?w.v8FichaTemConteudo():temConteudoFicha(w.capturarFichaParaJSON());
+          if(tem)w.v7SalvarAutosaveAgora();
+        }
+      }catch(e){}
+      try{
+        if(typeof w.orcCollectState==='function'&&typeof w.saveOrcautosaveNow==='function'){
+          if(temConteudoOrcamento(w.orcCollectState()))w.saveOrcautosaveNow();
+        }
+      }catch(e){}
+    });
+  }
+  function abrirIDB(){
+    return new Promise(resolve=>{
+      if(typeof indexedDB==='undefined'||!indexedDB){resolve(null);return}
+      let settled=false;
+      const done=v=>{if(!settled){settled=true;resolve(v)}};
+      const timer=setTimeout(()=>done(null),4000);
+      try{
+        const req=indexedDB.open(DB_NAME,1);
+        req.onupgradeneeded=e=>{
+          const db=e.target.result;
+          if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);
+        };
+        req.onsuccess=()=>{clearTimeout(timer);done(req.result)};
+        req.onerror=()=>{clearTimeout(timer);done(null)};
+        req.onblocked=()=>{clearTimeout(timer);done(null)};
+      }catch(e){clearTimeout(timer);done(null)}
+    });
+  }
+  function reqProm(req){
+    return new Promise((resolve,reject)=>{
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('Falha no IndexedDB'));
+    });
+  }
+  async function lerTodasFichasIDB(){
+    const meta=lsJSON(META_KEY,[]);
+    const legacy=lsJSON(OLD_FICHAS_KEY,[]);
+    const db=await abrirIDB();
+    if(!db){
+      if(Array.isArray(legacy)&&legacy.length)return legacy.filter(x=>x&&x.id&&x.data);
+      return [];
+    }
+    try{
+      const tx=db.transaction(STORE,'readonly');
+      const keys=await reqProm(tx.objectStore(STORE).getAllKeys());
+      const keySet=new Set((keys||[]).map(String));
+      const ordered=[];
+      const seen=new Set();
+      (Array.isArray(meta)?meta:[]).forEach(m=>{
+        if(m&&m.id&&!seen.has(String(m.id))){seen.add(String(m.id));ordered.push(m)}
+      });
+      (keys||[]).forEach(k=>{
+        const id=String(k);
+        if(!seen.has(id)){seen.add(id);ordered.push({id:id,name:'',date:agoraBR(),num:''})}
+      });
+      const out=[];
+      for(let i=0;i<ordered.length;i++){
+        const m=ordered[i];
+        let data=null;
+        if(keySet.has(String(m.id))){
+          const txR=db.transaction(STORE,'readonly');
+          data=await reqProm(txR.objectStore(STORE).get(m.id));
+        }
+        if(!data&&Array.isArray(legacy)){
+          const found=legacy.find(x=>x&&String(x.id)===String(m.id));
+          if(found)data=found.data;
+        }
+        if(data&&typeof data==='object'){
+          out.push({
+            id:String(m.id),
+            name:String(m.name||nomeFicha(data)),
+            date:String(m.date||agoraBR()),
+            num:String(m.num||data._numFicha||data.fichaNum||''),
+            data:data
+          });
+        }
+      }
+      db.close();
+      return out;
+    }catch(e){
+      try{db.close()}catch(_){}
+      return Array.isArray(legacy)?legacy.filter(x=>x&&x.id&&x.data):[];
+    }
+  }
+  async function gravarFichasIDB(lista,limparAntes){
+    const validas=(Array.isArray(lista)?lista:[]).filter(x=>x&&x.id&&x.data&&typeof x.data==='object');
+    const meta=validas.map(x=>({
+      id:String(x.id),
+      name:String(x.name||nomeFicha(x.data)),
+      date:String(x.date||agoraBR()),
+      num:String(x.num||x.data._numFicha||x.data.fichaNum||'')
+    }));
+    const db=await abrirIDB();
+    if(!db){
+      lsSet(OLD_FICHAS_KEY,JSON.stringify(validas));
+      lsSet(META_KEY,JSON.stringify(meta));
+      return meta;
+    }
+    try{
+      if(limparAntes){
+        const txK=db.transaction(STORE,'readonly');
+        const oldKeys=await reqProm(txK.objectStore(STORE).getAllKeys());
+        for(let i=0;i<(oldKeys||[]).length;i++){
+          const txD=db.transaction(STORE,'readwrite');
+          await reqProm(txD.objectStore(STORE).delete(oldKeys[i]));
+        }
+      }
+      for(let i=0;i<validas.length;i++){
+        const item=validas[i];
+        const txW=db.transaction(STORE,'readwrite');
+        await reqProm(txW.objectStore(STORE).put(item.data,String(item.id)));
+      }
+      db.close();
+    }catch(e){
+      try{db.close()}catch(_){}
+      lsSet(OLD_FICHAS_KEY,JSON.stringify(validas));
+    }
+    lsSet(META_KEY,JSON.stringify(meta));
+    return meta;
+  }
+  async function resumir(){
+    flushAtivos();
+    const fichas=await lerTodasFichasIDB();
+    const fichaAtiva=lsJSON(FICHA_LIVE_KEY,null);
+    const fichaMeta=lsJSON(FICHA_META_KEY,null);
+    const fichaVazia=!!(fichaMeta&&fichaMeta.vazio);
+    const temLive=temConteudoFicha(fichaAtiva)&&!fichaVazia;
+    const fichaAnterior=lsJSON(FICHA_ANT_KEY,null);
+    const orcRascunhos=lsJSON(ORC_DRAFTS_KEY,[]);
+    const orcAtivo=lerOrcLive();
+    const clientes=lsJSON(CLIENTES_KEY,{});
+    return {
+      fichasSalvas:fichas.length,
+      temRascunhoFicha:temLive,
+      nomeRascunhoFicha:temLive?nomeFicha(fichaAtiva):'',
+      horaRascunhoFicha:lsGet(FICHA_HORA_KEY)||'',
+      temRascunhoAnterior:temConteudoFicha(fichaAnterior),
+      orcamentoRascunhos:Array.isArray(orcRascunhos)?orcRascunhos.length:0,
+      temRascunhoOrcamento:temConteudoOrcamento(orcAtivo),
+      nomeRascunhoOrcamento:temConteudoOrcamento(orcAtivo)?nomeOrcamento(orcAtivo):'',
+      horaRascunhoOrcamento:lsGet(ORC_HORA_KEY)||'',
+      clientesSalvos:clientes&&typeof clientes==='object'?Object.keys(clientes).length:0,
+      ultimoBackup:lsGet(LAST_BKP_KEY)||''
+    };
+  }
+  async function coletarTudo(){
+    flushAtivos();
+    const fichas=await lerTodasFichasIDB();
+    const storage={};
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(isVooaltoKey(k))storage[k]=localStorage.getItem(k);
+      }
+    }catch(e){}
+    const fichaAtivaRaw=lsJSON(FICHA_LIVE_KEY,null);
+    const fichaMeta=lsJSON(FICHA_META_KEY,null);
+    const fichaLiveUtil=temConteudoFicha(fichaAtivaRaw)&&!(fichaMeta&&fichaMeta.vazio);
+    const fichaAnteriorRaw=lsJSON(FICHA_ANT_KEY,null);
+    const orcRascunhos=lsJSON(ORC_DRAFTS_KEY,[]);
+    const orcAtivoRaw=lerOrcLive();
+    const clientes=lsJSON(CLIENTES_KEY,{});
+    const info=await resumir();
+    return {
+      _version:'vooalto_backup_v8',
+      _app:'Vooalto V8',
+      _exportedAt:new Date().toISOString(),
+      _exportedDisplay:agoraBR(),
+      _resumo:info,
+      fichas:fichas,
+      rascunhosFicha:{
+        ativo:fichaLiveUtil?fichaAtivaRaw:null,
+        ativoHora:lsGet(FICHA_HORA_KEY)||'',
+        anterior:temConteudoFicha(fichaAnteriorRaw)?fichaAnteriorRaw:null,
+        meta:fichaMeta
+      },
+      orcamento:{
+        rascunhos:Array.isArray(orcRascunhos)?orcRascunhos:[],
+        ativo:temConteudoOrcamento(orcAtivoRaw)?orcAtivoRaw:null,
+        ativoHora:lsGet(ORC_HORA_KEY)||''
+      },
+      clientes:clientes&&typeof clientes==='object'?clientes:{},
+      storage:storage
+    };
+  }
+  function inspecionarArquivo(entrada){
+    let d=entrada;
+    if(typeof entrada==='string'){
+      try{d=JSON.parse(entrada)}catch(e){throw new Error('O arquivo selecionado não é um JSON válido.')}
+    }
+    if(!d||typeof d!=='object')throw new Error('Este arquivo não é um backup válido do Vooalto.');
+    if(d._version==='vooalto_backup_v8'){
+      const fichas=Array.isArray(d.fichas)?d.fichas.filter(x=>x&&x.id&&x.data):[];
+      const rf=d.rascunhosFicha||{};
+      const orc=d.orcamento||{};
+      const orcList=Array.isArray(orc.rascunhos)?orc.rascunhos:[];
+      const cli=d.clientes&&typeof d.clientes==='object'?d.clientes:{};
+      return {
+        tipo:'backup_v8',
+        rotulo:'Backup Completo Vooalto V8',
+        exportedDisplay:d._exportedDisplay||'',
+        fichas:fichas,
+        rascunhosFicha:{
+          ativo:temConteudoFicha(rf.ativo)?rf.ativo:null,
+          ativoHora:rf.ativoHora||'',
+          anterior:temConteudoFicha(rf.anterior)?rf.anterior:null,
+          meta:rf.meta||null
+        },
+        orcamento:{
+          rascunhos:orcList,
+          ativo:temConteudoOrcamento(orc.ativo)?orc.ativo:null,
+          ativoHora:orc.ativoHora||''
+        },
+        clientes:cli,
+        storage:d.storage&&typeof d.storage==='object'?d.storage:{}
+      };
+    }
+    if(d._version==='vooalto_catalog_v7'||Array.isArray(d.orders)){
+      const orders=Array.isArray(d.orders)?d.orders:[];
+      const fichas=[];
+      const cli={};
+      orders.forEach((o,idx)=>{
+        if(!o||typeof o!=='object')return;
+        if(o.cliente&&o.telefone)cli[String(o.cliente).trim()]=String(o.telefone).trim();
+        if(o.fichaData&&typeof o.fichaData==='object'){
+          const id=String(o.id||('v7_'+idx+'_'+Date.now()));
+          const num=String(o.num||o.fichaData._numFicha||'');
+          fichas.push({
+            id:id,
+            name:(num?'Nº '+num+' — ':'')+String(o.cliente||stripTags(o.fichaData.dc_nome)||'Pedido V7'),
+            date:agoraBR(),
+            num:num,
+            data:o.fichaData
+          });
+        }
+      });
+      return {
+        tipo:'catalogo_v7',
+        rotulo:'Backup legado V7 ('+fichas.length+' ficha(s))',
+        exportedDisplay:d._exportedAt||'',
+        fichas:fichas,
+        rascunhosFicha:{ativo:fichas[0]?fichas[0].data:null,ativoHora:'',anterior:null,meta:null},
+        orcamento:{rascunhos:[],ativo:null,ativoHora:''},
+        clientes:cli,
+        storage:{}
+      };
+    }
+    if(typeof d._version==='string'&&d._version.indexOf('vooalto_ficha')===0){
+      const item={
+        id:'d_imp_'+Date.now(),
+        name:nomeFicha(d),
+        date:agoraBR(),
+        num:String(d._numFicha||d.fichaNum||''),
+        data:d
+      };
+      const cliNome=stripTags(d.dc_nome)||String(d.cliente||'').trim();
+      const cliTel=stripTags(d.dc_tel)||String(d.telefone||'').trim();
+      return {
+        tipo:'ficha_avulsa',
+        rotulo:'Ficha Técnica individual ('+item.name+')',
+        exportedDisplay:'',
+        fichas:[item],
+        rascunhosFicha:{ativo:d,ativoHora:'',anterior:null,meta:null},
+        orcamento:{rascunhos:[],ativo:null,ativoHora:''},
+        clientes:cliNome?{[cliNome]:cliTel}:{},
+        storage:{}
+      };
+    }
+    if(d.version==='vooalto_orcamento_v8'||d.version==='vooalto_orcamento_v7'){
+      const st=calcOrcStats(d);
+      const draft={
+        id:'orc_imp_'+Date.now(),
+        name:nomeOrcamento(d),
+        date:agoraBR(),
+        timestamp:Date.now(),
+        total:st.total,
+        itemsCount:st.itemsCount,
+        pagesCount:st.pagesCount,
+        state:d
+      };
+      return {
+        tipo:'orcamento_avulso',
+        rotulo:'Orçamento individual ('+draft.name+')',
+        exportedDisplay:d.savedAt||'',
+        fichas:[],
+        rascunhosFicha:{ativo:null,ativoHora:'',anterior:null,meta:null},
+        orcamento:{rascunhos:[draft],ativo:d,ativoHora:''},
+        clientes:{},
+        storage:{}
+      };
+    }
+    throw new Error('Formato não reconhecido. Selecione um arquivo .json exportado pelo Vooalto.');
+  }
+  function notificarModulos(modo,tipo){
+    const msg={type:'vooalto-backup-restaurado',modo:modo,tipo:tipo};
+    try{window.dispatchEvent(new CustomEvent('vooalto-backup-restaurado',{detail:msg}))}catch(e){}
+    try{
+      document.querySelectorAll('iframe.project-frame').forEach(fr=>{
+        if(fr&&fr.contentWindow)fr.contentWindow.postMessage(msg,'*');
+      });
+    }catch(e){}
+    try{
+      if(window.parent&&window.parent!==window){
+        window.parent.postMessage(msg,'*');
+      }
+    }catch(e){}
+  }
+  async function restaurar(entrada,modo){
+    const m=modo==='substituir'?'substituir':'mesclar';
+    const norm=inspecionarArquivo(entrada);
+    const hm=horaHM();
+    if(m==='substituir'){
+      const apagar=[];
+      try{
+        for(let i=0;i<localStorage.length;i++){
+          const k=localStorage.key(i);
+          if(isVooaltoKey(k))apagar.push(k);
+        }
+      }catch(e){}
+      apagar.forEach(lsDel);
+      Object.keys(norm.storage||{}).forEach(k=>{
+        if(isVooaltoKey(k)&&norm.storage[k]!=null)lsSet(k,String(norm.storage[k]));
+      });
+      await gravarFichasIDB(norm.fichas,true);
+      if(norm.rascunhosFicha.ativo){
+        const h=norm.rascunhosFicha.ativoHora||hm;
+        lsSet(FICHA_LIVE_KEY,JSON.stringify(norm.rascunhosFicha.ativo));
+        lsSet(FICHA_HORA_KEY,h);
+        lsSet(FICHA_META_KEY,JSON.stringify({hora:h,vazio:false}));
+      }else{
+        lsDel(FICHA_LIVE_KEY);
+        lsDel(FICHA_HORA_KEY);
+        lsDel(FICHA_META_KEY);
+      }
+      if(norm.rascunhosFicha.anterior)lsSet(FICHA_ANT_KEY,JSON.stringify(norm.rascunhosFicha.anterior));
+      else lsDel(FICHA_ANT_KEY);
+      lsSet(ORC_DRAFTS_KEY,JSON.stringify(norm.orcamento.rascunhos||[]));
+      if(norm.orcamento.ativo){
+        lsSet(ORC_LIVE_KEY,JSON.stringify(norm.orcamento.ativo));
+        lsSet(ORC_HORA_KEY,norm.orcamento.ativoHora||hm);
+      }else{
+        lsDel(ORC_LIVE_KEY);
+        lsDel(ORC_LIVE_LEG);
+      }
+      if(norm.clientes&&Object.keys(norm.clientes).length)lsSet(CLIENTES_KEY,JSON.stringify(norm.clientes));
+    }else{
+      flushAtivos();
+      const atuais=await lerTodasFichasIDB();
+      const mapa=new Map();
+      atuais.forEach(item=>{if(item&&item.id)mapa.set(String(item.id),item)});
+      const liveAtual=lsJSON(FICHA_LIVE_KEY,null);
+      const liveMetaAtual=lsJSON(FICHA_META_KEY,null);
+      const liveAtualUtil=temConteudoFicha(liveAtual)&&!(liveMetaAtual&&liveMetaAtual.vazio);
+      if(liveAtualUtil&&norm.rascunhosFicha.ativo){
+        const rawAtual=JSON.stringify(liveAtual);
+        const rawNovo=JSON.stringify(norm.rascunhosFicha.ativo);
+        if(rawAtual!==rawNovo){
+          const jaSalvo=atuais.some(x=>JSON.stringify(x.data)===rawAtual);
+          if(!jaSalvo){
+            const recId='d_rec_'+Date.now();
+            mapa.set(recId,{
+              id:recId,
+              name:'Rascunho recuperado — '+nomeFicha(liveAtual),
+              date:agoraBR(),
+              num:String(liveAtual._numFicha||liveAtual.fichaNum||''),
+              data:liveAtual
+            });
+          }
+        }
+      }
+      (norm.fichas||[]).forEach((item,idx)=>{
+        if(!item||!item.id||!item.data)return;
+        let id=String(item.id);
+        if(mapa.has(id)){
+          const existente=mapa.get(id);
+          if(JSON.stringify(existente.data)!==JSON.stringify(item.data)){
+            id=id+'_imp_'+idx;
+          }
+        }
+        mapa.set(id,{
+          id:id,
+          name:String(item.name||nomeFicha(item.data)),
+          date:String(item.date||agoraBR()),
+          num:String(item.num||item.data._numFicha||item.data.fichaNum||''),
+          data:item.data
+        });
+      });
+      await gravarFichasIDB(Array.from(mapa.values()),false);
+
+      if(norm.rascunhosFicha.ativo){
+        const h=norm.rascunhosFicha.ativoHora||hm;
+        lsSet(FICHA_LIVE_KEY,JSON.stringify(norm.rascunhosFicha.ativo));
+        lsSet(FICHA_HORA_KEY,h);
+        lsSet(FICHA_META_KEY,JSON.stringify({hora:h,vazio:false}));
+      }
+      if(norm.rascunhosFicha.anterior&&!temConteudoFicha(lsJSON(FICHA_ANT_KEY,null))){
+        lsSet(FICHA_ANT_KEY,JSON.stringify(norm.rascunhosFicha.anterior));
+      }
+
+      const orcAtuais=lsJSON(ORC_DRAFTS_KEY,[]);
+      const orcMapa=new Map();
+      (Array.isArray(orcAtuais)?orcAtuais:[]).forEach(x=>{if(x&&x.id)orcMapa.set(String(x.id),x)});
+      const orcLiveAtual=lerOrcLive();
+      if(temConteudoOrcamento(orcLiveAtual)&&norm.orcamento.ativo){
+        const rawOA=JSON.stringify(orcLiveAtual);
+        const rawON=JSON.stringify(norm.orcamento.ativo);
+        if(rawOA!==rawON){
+          const jaTem=Array.from(orcMapa.values()).some(x=>JSON.stringify(x.state)===rawOA);
+          if(!jaTem){
+            const oid='orc_rec_'+Date.now();
+            const st=calcOrcStats(orcLiveAtual);
+            orcMapa.set(oid,{
+              id:oid,
+              name:'Rascunho recuperado — '+nomeOrcamento(orcLiveAtual),
+              date:agoraBR(),
+              timestamp:Date.now(),
+              total:st.total,
+              itemsCount:st.itemsCount,
+              pagesCount:st.pagesCount,
+              state:orcLiveAtual
+            });
+          }
+        }
+      }
+      (norm.orcamento.rascunhos||[]).forEach((x,idx)=>{
+        if(!x||!x.state)return;
+        let id=String(x.id||('orc_imp_'+idx+'_'+Date.now()));
+        if(orcMapa.has(id)&&JSON.stringify(orcMapa.get(id).state)!==JSON.stringify(x.state)){
+          id=id+'_imp_'+idx;
+        }
+        const st=calcOrcStats(x.state);
+        orcMapa.set(id,Object.assign({
+          date:agoraBR(),
+          timestamp:Date.now(),
+          total:st.total,
+          itemsCount:st.itemsCount,
+          pagesCount:st.pagesCount
+        },x,{id:id}));
+      });
+      lsSet(ORC_DRAFTS_KEY,JSON.stringify(Array.from(orcMapa.values())));
+      if(norm.orcamento.ativo){
+        lsSet(ORC_LIVE_KEY,JSON.stringify(norm.orcamento.ativo));
+        lsSet(ORC_HORA_KEY,norm.orcamento.ativoHora||hm);
+      }
+
+      const cliMerged=Object.assign({},lsJSON(CLIENTES_KEY,{}),norm.clientes||{});
+      if(norm.storage&&norm.storage[CLIENTES_KEY]){
+        try{Object.assign(cliMerged,JSON.parse(norm.storage[CLIENTES_KEY]))}catch(e){}
+      }
+      lsSet(CLIENTES_KEY,JSON.stringify(cliMerged));
+
+      ['va4_ficha_counter','va3_num'].forEach(ck=>{
+        const vNovo=parseInt((norm.storage&&norm.storage[ck])||'0',10);
+        const vAtual=parseInt(lsGet(ck)||'0',10);
+        if(vNovo>vAtual)lsSet(ck,String(vNovo));
+      });
+      ['vooalto_ficha_quick_v7','va3_cores','va3_logo_st','vooalto_tema'].forEach(pk=>{
+        if(norm.storage&&norm.storage[pk]!=null&&!lsGet(pk))lsSet(pk,String(norm.storage[pk]));
+      });
+    }
+    notificarModulos(m,norm.tipo);
+    return {ok:true,modo:m,tipo:norm.tipo,rotulo:norm.rotulo,resumo:await resumir()};
+  }
+  async function exportarTudo(){
+    const payload=await coletarTudo();
+    const stamp=agoraBR();
+    lsSet(LAST_BKP_KEY,stamp);
+    payload._resumo.ultimoBackup=stamp;
+    payload.storage[LAST_BKP_KEY]=stamp;
+    const filename='backup_vooalto_completo_'+carimboArquivo()+'.json';
+    const json=JSON.stringify(payload,null,2);
+    if(typeof window.salvarArquivoJSON==='function'&&window._pastaHandle){
+      await window.salvarArquivoJSON(filename,json);
+    }else{
+      const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},2000);
+    }
+    return {ok:true,filename:filename,payload:payload,resumo:payload._resumo};
+  }
+  window.VooaltoBackup={
+    resumir:resumir,
+    coletarTudo:coletarTudo,
+    exportarTudo:exportarTudo,
+    inspecionarArquivo:inspecionarArquivo,
+    restaurar:restaurar,
+    temConteudoFicha:temConteudoFicha,
+    temConteudoOrcamento:temConteudoOrcamento
+  };
+})();
+</script>
 
 <script>
 'use strict';
@@ -341,7 +1056,122 @@ window.addEventListener('message',e=>{
   }
   if(d.type==='vooalto-switch-tab'&&PROJECTS[d.tab]){showProject(d.tab);return}
   if(d.type==='vooalto-abrir-manual'){abrirManual();return}
+  if(d.type==='vooalto-abrir-backup'){openBackupModal();return}
+  if(d.type==='vooalto-backup-restaurado'){
+    try{setShellTheme(v8TemaSalvo(),{animate:false});broadcastTheme(currentTheme||'claro',null)}catch(err){}
+    Object.keys(PROJECTS).forEach(k=>{
+      const fr=document.getElementById(PROJECTS[k].frame);
+      if(fr&&fr.contentWindow&&fr.contentWindow!==e.source){
+        try{fr.contentWindow.postMessage({type:'vooalto-backup-restaurado',modo:d.modo||'mesclar',tipo:d.tipo||'backup_v8'},'*')}catch(err){}
+      }
+    });
+    return;
+  }
 });
+
+/* ── Central de Backup Completo ── */
+let _backupPendenteTexto=null;
+function bkpFeedback(texto,tipo){
+  const el=document.getElementById('backupFeedback');
+  if(!el)return;
+  if(!texto){el.className='bkp-msg';el.textContent='';return}
+  el.textContent=texto;
+  el.className='bkp-msg open '+(tipo==='err'?'err':'ok');
+}
+async function atualizarResumoBackupUI(){
+  if(!window.VooaltoBackup)return;
+  try{
+    const r=await window.VooaltoBackup.resumir();
+    const cf=document.getElementById('bkpCountFichas');
+    const co=document.getElementById('bkpCountOrc');
+    const cc=document.getElementById('bkpCountClientes');
+    const sf=document.getElementById('bkpSubFichaAtiva');
+    const so=document.getElementById('bkpSubOrcAtivo');
+    const su=document.getElementById('bkpSubUltimo');
+    if(cf)cf.textContent=String(r.fichasSalvas);
+    if(co)co.textContent=String(r.orcamentoRascunhos);
+    if(cc)cc.textContent=String(r.clientesSalvos);
+    if(sf)sf.textContent=r.temRascunhoFicha?('Rascunho atual: '+r.nomeRascunhoFicha+(r.temRascunhoAnterior?' (+ anterior)':'')):(r.temRascunhoAnterior?'Rascunho anterior salvo':'Nenhum rascunho em edição');
+    if(so)so.textContent=r.temRascunhoOrcamento?('Proposta atual: '+r.nomeRascunhoOrcamento):'Nenhuma proposta em edição';
+    if(su)su.textContent=r.ultimoBackup?('Último backup: '+r.ultimoBackup):'Telefones, cores rápidas e ajustes';
+  }catch(e){}
+}
+function openBackupModal(){
+  cancelarImportacaoBackup();
+  bkpFeedback('','');
+  const m=document.getElementById('backupModal');
+  if(m)m.classList.add('open');
+  atualizarResumoBackupUI();
+}
+function closeBackupModal(){
+  const m=document.getElementById('backupModal');
+  if(m)m.classList.remove('open');
+}
+document.getElementById('backupModal').addEventListener('click',e=>{if(e.target.id==='backupModal')closeBackupModal()});
+async function exportarBackupSistema(){
+  if(!window.VooaltoBackup)return;
+  try{
+    const res=await window.VooaltoBackup.exportarTudo();
+    await atualizarResumoBackupUI();
+    bkpFeedback('✅ Backup exportado: '+res.filename+' ('+res.resumo.fichasSalvas+' ficha(s) salva(s)'+(res.resumo.temRascunhoFicha?' + rascunho atual':'')+', '+res.resumo.orcamentoRascunhos+' rascunho(s) de orçamento).','ok');
+    toast('💾 Backup completo exportado!');
+  }catch(e){
+    bkpFeedback('❌ Não foi possível exportar o backup: '+(e&&e.message?e.message:String(e)),'err');
+  }
+}
+function cancelarImportacaoBackup(){
+  _backupPendenteTexto=null;
+  const box=document.getElementById('backupPreviewBox');
+  if(box)box.classList.remove('open');
+  const inp=document.getElementById('backupFileInput');
+  if(inp)inp.value='';
+}
+function selecionarArquivoBackup(ev){
+  const file=ev&&ev.target&&ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(evt){
+    try{
+      const raw=String(evt.target.result||'');
+      const info=window.VooaltoBackup.inspecionarArquivo(raw);
+      _backupPendenteTexto=raw;
+      const partes=[];
+      partes.push('<b>'+info.fichas.length+'</b> ficha(s) salva(s)');
+      if(info.rascunhosFicha.ativo)partes.push('rascunho atual da Ficha Técnica');
+      if(info.orcamento.rascunhos.length)partes.push('<b>'+info.orcamento.rascunhos.length+'</b> rascunho(s) de orçamento');
+      else if(info.orcamento.ativo)partes.push('proposta ativa de orçamento');
+      const nCli=Object.keys(info.clientes||{}).length;
+      if(nCli)partes.push('<b>'+nCli+'</b> cliente(s)');
+      const box=document.getElementById('backupPreviewBox');
+      const ttl=document.getElementById('backupPreviewTitle');
+      const txt=document.getElementById('backupPreviewText');
+      if(ttl)ttl.textContent='📦 '+info.rotulo+(info.exportedDisplay?' · '+info.exportedDisplay:'');
+      if(txt)txt.innerHTML='Encontrado no arquivo: '+partes.join(', ')+'.<br>Em <b>Mesclar</b>, tudo o que já está no seu navegador é preservado (inclusive rascunhos não salvos).';
+      if(box)box.classList.add('open');
+      bkpFeedback('','');
+    }catch(err){
+      cancelarImportacaoBackup();
+      bkpFeedback('❌ '+(err&&err.message?err.message:'Arquivo inválido.'),'err');
+    }
+  };
+  reader.readAsText(file,'utf-8');
+}
+async function confirmarImportacaoBackup(modo){
+  if(!_backupPendenteTexto||!window.VooaltoBackup)return;
+  if(modo==='substituir'){
+    if(!confirm('Substituir TODOS os dados atuais deste navegador apenas pelo conteúdo deste arquivo de backup?\n\nDica: use "Mesclar" se quiser manter o que já existe.'))return;
+  }
+  try{
+    const res=await window.VooaltoBackup.restaurar(_backupPendenteTexto,modo);
+    cancelarImportacaoBackup();
+    try{setShellTheme(v8TemaSalvo(),{animate:false});broadcastTheme(currentTheme||'claro',null)}catch(e){}
+    await atualizarResumoBackupUI();
+    bkpFeedback('✅ Backup importado com sucesso ('+(res.modo==='substituir'?'substituição completa':'mesclagem segura')+'): '+res.resumo.fichasSalvas+' ficha(s) em Minhas fichas e '+res.resumo.orcamentoRascunhos+' rascunho(s) de orçamento!','ok');
+    toast('✅ Backup restaurado com sucesso!');
+  }catch(err){
+    bkpFeedback('❌ Erro ao restaurar backup: '+(err&&err.message?err.message:String(err)),'err');
+  }
+}
 
 /* ── Ajuda, tour e manual ── */
 function abrirManual(){
@@ -382,6 +1212,8 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   const tour=document.getElementById('tourV8');
   if(tour&&tour.classList.contains('open')){fecharTour();return}
+  const bkp=document.getElementById('backupModal');
+  if(bkp&&bkp.classList.contains('open')){closeBackupModal();return}
   closeHelp();
 });
 

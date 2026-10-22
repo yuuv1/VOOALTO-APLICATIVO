@@ -33,6 +33,7 @@ p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
   </div>
   <div class="log" id="log">Nada foi apagado. O botão vermelho está desativado até a confirmação dupla.</div>
   <div class="row">
+    <button class="btn sec" id="btnBackupAntes" type="button" onclick="exportarAntesDeZerar()">📤 Baixar backup completo (.json)</button>
     <button class="btn" id="btnZerar" onclick="zerar(1)">Etapa 1/2 — Preparar apagamento</button>
     <button class="btn" id="btnZerar2" style="display:none;background:#7f1d1d" onclick="zerar(2)">ETAPA 2/2 — APAGAR TUDO DEFINITIVAMENTE</button>
     <a class="btn sec" style="display:inline-block;text-decoration:none;text-align:center" href="./index.html">Cancelar / voltar</a>
@@ -132,6 +133,68 @@ async function zerar(etapa){
   }else log('✔ DADOS DO VOOALTO APAGADOS. Os dados de outros aplicativos foram mantidos. Recarregue o V8 para começar do zero.');
   second.style.display='none';document.getElementById('btnZerar').disabled=false;resetRunning=false;
 }
+async function exportarAntesDeZerar(){
+  if(!window.VooaltoBackup)return;
+  try{
+    const res=await window.VooaltoBackup.exportarTudo();
+    log('✔ Backup completo baixado: '+res.filename+' ('+res.resumo.fichasSalvas+' ficha(s) salva(s), '+res.resumo.orcamentoRascunhos+' rascunho(s) de orçamento).');
+  }catch(e){
+    log('⚠ Falha ao exportar backup: '+(e&&e.message?e.message:String(e)));
+  }
+}
+</script>
+<script id="v8-backup-js">
+(function(){
+  'use strict';
+  if(window.VooaltoBackup)return;
+  const DB_NAME='vooalto_ficha_rascunhos_db_v4',STORE='drafts',META_KEY='vooalto_ficha_rascunhos_v4_meta',OLD_FICHAS_KEY='vooalto_ficha_rascunhos_v4';
+  const FICHA_LIVE_KEY='vooalto_v7_ficha_ativa',FICHA_HORA_KEY='vooalto_v7_ficha_ativa_hora',FICHA_ANT_KEY='vooalto_v8_rascunho_anterior',FICHA_META_KEY='vooalto_v8_rascunho_meta';
+  const ORC_DRAFTS_KEY='vooalto_orcamento_rascunhos_v7',ORC_LIVE_KEY='vooalto_orcamento_autosave_v7',ORC_LIVE_LEG='vooalto_orcamento_autosave',ORC_HORA_KEY='vooalto_orcamento_autosave_hora';
+  const CLIENTES_KEY='vooalto_ficha_clientes_v7',LAST_BKP_KEY='vooalto_ultimo_backup_v8';
+  const SKIP_KEYS={'vooalto_v8_clip_layer':1,'vooalto_v8_orc_clip':1,'vooalto_v8_orc_item_clip':1};
+  const isVooaltoKey=k=>typeof k==='string'&&!SKIP_KEYS[k]&&(k.indexOf('vooalto_')===0||k.indexOf('va3_')===0||k.indexOf('va4_')===0||k==='v4_text_toolbar_pos'||k==='v5_orcamento_toolbar_pos');
+  const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+  const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
+  const lsJSON=(k,fb)=>{const r=lsGet(k);if(!r)return fb;try{const v=JSON.parse(r);return v==null?fb:v}catch(e){return fb}};
+  const stripTags=s=>String(s||'').replace(/<[^>]*>/g,'').trim();
+  const agoraBR=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes())};
+  const carimboArquivo=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'h'+p(d.getMinutes())};
+  function nomeFicha(d){if(!d||typeof d!=='object')return 'Ficha sem nome';if(String(d._nome||'').trim())return String(d._nome).trim();const cli=stripTags(d.dc_nome)||String(d.cliente||'').trim();const num=String(d._numFicha||d.fichaNum||'').trim();return (num?'Nº '+num:'')+(num&&cli?' — ':'')+(cli||(!num?'Ficha sem nome':''))}
+  function abrirIDB(){return new Promise(resolve=>{if(typeof indexedDB==='undefined'||!indexedDB){resolve(null);return}let settled=false;const done=v=>{if(!settled){settled=true;resolve(v)}};const timer=setTimeout(()=>done(null),4000);try{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE)};req.onsuccess=()=>{clearTimeout(timer);done(req.result)};req.onerror=()=>{clearTimeout(timer);done(null)};req.onblocked=()=>{clearTimeout(timer);done(null)}}catch(e){clearTimeout(timer);done(null)}})}
+  const reqProm=req=>new Promise((res,rej)=>{req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error)});
+  async function lerTodasFichasIDB(){
+    const meta=lsJSON(META_KEY,[]),legacy=lsJSON(OLD_FICHAS_KEY,[]),db=await abrirIDB();
+    if(!db)return Array.isArray(legacy)?legacy.filter(x=>x&&x.id&&x.data):[];
+    try{
+      const keys=await reqProm(db.transaction(STORE,'readonly').objectStore(STORE).getAllKeys());
+      const keySet=new Set((keys||[]).map(String)),ordered=[],seen=new Set();
+      (Array.isArray(meta)?meta:[]).forEach(m=>{if(m&&m.id&&!seen.has(String(m.id))){seen.add(String(m.id));ordered.push(m)}});
+      (keys||[]).forEach(k=>{const id=String(k);if(!seen.has(id)){seen.add(id);ordered.push({id:id,name:'',date:agoraBR(),num:''})}});
+      const out=[];
+      for(let i=0;i<ordered.length;i++){
+        const m=ordered[i];
+        const data=keySet.has(String(m.id))?await reqProm(db.transaction(STORE,'readonly').objectStore(STORE).get(m.id)):null;
+        if(data&&typeof data==='object')out.push({id:String(m.id),name:String(m.name||nomeFicha(data)),date:String(m.date||agoraBR()),num:String(m.num||data._numFicha||data.fichaNum||''),data:data});
+      }
+      db.close();return out;
+    }catch(e){try{db.close()}catch(_){}return []}
+  }
+  async function exportarTudo(){
+    const fichas=await lerTodasFichasIDB(),storage={};
+    try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(isVooaltoKey(k))storage[k]=localStorage.getItem(k)}}catch(e){}
+    const orcRascunhos=lsJSON(ORC_DRAFTS_KEY,[]),fichaAtiva=lsJSON(FICHA_LIVE_KEY,null),orcAtivo=lsJSON(ORC_LIVE_KEY,null)||lsJSON(ORC_LIVE_LEG,null),clientes=lsJSON(CLIENTES_KEY,{});
+    const stamp=agoraBR();lsSet(LAST_BKP_KEY,stamp);storage[LAST_BKP_KEY]=stamp;
+    const resumo={fichasSalvas:fichas.length,temRascunhoFicha:!!fichaAtiva,orcamentoRascunhos:Array.isArray(orcRascunhos)?orcRascunhos.length:0,temRascunhoOrcamento:!!orcAtivo,clientesSalvos:clientes&&typeof clientes==='object'?Object.keys(clientes).length:0,ultimoBackup:stamp};
+    const payload={_version:'vooalto_backup_v8',_app:'Vooalto V8',_exportedAt:new Date().toISOString(),_exportedDisplay:stamp,_resumo:resumo,fichas:fichas,rascunhosFicha:{ativo:fichaAtiva,ativoHora:lsGet(FICHA_HORA_KEY)||'',anterior:lsJSON(FICHA_ANT_KEY,null),meta:lsJSON(FICHA_META_KEY,null)},orcamento:{rascunhos:Array.isArray(orcRascunhos)?orcRascunhos:[],ativo:orcAtivo,ativoHora:lsGet(ORC_HORA_KEY)||''},clientes:clientes||{},storage:storage};
+    const filename='backup_vooalto_completo_'+carimboArquivo()+'.json';
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},2000);
+    return {ok:true,filename:filename,payload:payload,resumo:resumo};
+  }
+  window.VooaltoBackup={exportarTudo:exportarTudo};
+})();
 </script>
 </body>
 </html>

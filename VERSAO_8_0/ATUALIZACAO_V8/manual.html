@@ -179,10 +179,10 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
       <tr><th>O quê</th><th>Onde fica</th><th>Para que serve</th></tr>
       <tr><td><b>Salvamento automático</b></td><td>localStorage deste navegador</td><td>Não perder o que está em edição se a aba fechar ou o computador desligar.</td></tr>
       <tr><td><b>Minhas fichas</b> / rascunhos do orçamento</td><td>IndexedDB deste navegador</td><td>Voltar a uma ficha ou orçamento antigo pelo próprio sistema.</td></tr>
-      <tr><td><b>Backup .json</b></td><td>Arquivo no seu computador</td><td>A única cópia que sobrevive a navegador limpo, formatado ou troca de máquina.</td></tr>
+      <tr><td><b>Backup Completo (.json)</b></td><td>Arquivo único no seu computador</td><td>Guarda <b>tudo de uma vez</b> — todas as fichas de <b>Minhas fichas</b> (com fotos e artes), rascunho atual e anterior da Ficha Técnica, todos os rascunhos de orçamento, clientes e preferências.</td></tr>
     </table>
-    <div class="tip warn">⚠️ <b>Regra de ouro:</b> limpe o navegador, troque de computador ou reinstale o Windows? Exporte antes as fichas (<b>Exportar backup .json</b>) e o orçamento (<b>Salvar .json</b>). O navegador guarda os dados no <b>perfil</b> usado — outro navegador ou outro perfil não enxerga nada.</div>
-    <div class="tip danger">🗑 <b>Zerar dados</b> (<code>zerar_dados.html</code>) apaga tudo e <b>não tem volta</b>. <b>Limpar cache</b> (<code>limpar_cache.html</code>) apaga só os arquivos do programa — fichas e orçamentos continuam lá.</div>
+    <div class="tip warn">💡 <b>Central de Backup Completo:</b> clique em <b>💾 Backup</b> na barra superior (ou em <b>Exportar tudo (com rascunhos)</b> na Ficha / Orçamento) para baixar um único arquivo <b>.json</b> com todos os seus trabalhos e rascunhos. Ao importar, escolha <b>Mesclar</b> para somar ao que já está salvo sem perder nada (inclusive rascunhos em edição) ou <b>Substituir tudo</b> para restaurar exatamente o estado do arquivo.</div>
+    <div class="tip danger">🗑 <b>Zerar dados</b> (<code>zerar_dados.html</code>) traz um botão para baixar o backup completo antes de apagar tudo. <b>Limpar cache</b> (<code>limpar_cache.html</code>) apaga só os arquivos do programa — fichas e orçamentos continuam lá.</div>
   </section>
 
   <section class="card" id="tema">
@@ -239,8 +239,8 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
     </details>
 
     <details>
-      <summary>Como abro o sistema em outro computador?</summary>
-      <p>Instale o Vooalto lá e importe os backups: <b>Abrir backup (.json)</b> na Ficha e <b>Abrir .json</b> no Orçamento. O navegador não sincroniza os dados sozinho.</p>
+      <summary>Como abro o sistema em outro computador ou passo todos os rascunhos?</summary>
+      <p>No computador atual, clique em <b>💾 Backup</b> no topo e baixe o <b>Backup Completo (.json)</b> — ele leva todas as fichas salvas, imagens, rascunhos em edição e orçamentos num só arquivo. No outro computador, abra <b>💾 Backup → Escolher arquivo .json</b> e clique em <b>Mesclar</b>.</p>
     </details>
 
     <details>
