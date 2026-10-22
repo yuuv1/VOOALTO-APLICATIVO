@@ -1,5 +1,32 @@
 # VOOALTO V8 — Registro de alterações
 
+## V8.3.0 — visibilidade dos tamanhos na Ficha Técnica e sistema completo de backup com rascunhos (2026-10-22)
+
+### 1. Causa raiz e correção definitiva dos tamanhos "apagados em branco" na Ficha Técnica
+
+Ao ativar `html[data-theme="escuro"] { color-scheme: dark }` em `assets/tema-v8.css`, os demais `<input>` da folha (`.field`, `.fin-inp`, `.sep-inp`) possuíam `color: var(--tx)` explícito, **mas `.med-inp` (as 24 caixas de medidas `PP` a `EXG` de Feminino e Masculino), `.cor-inp` e `.sep-fs-inp` não declaravam `color:`**. No Chrome/Edge, `<input>` usa a cor de sistema `FieldText`/`CanvasText`, que no esquema `dark` vira **`#FFFFFF` (branco puro) sobre o fundo branco `#FFFFFF`/`#FAFCFF` da folha A4** — deixando todos os números de tamanhos invisíveis na tela e na exportação.
+
+* **Blindagem CSS de tinta e papel (`criador_ficha_tecnica/index.html` e `criador_orcamento/index.html`)**:
+  * `.folha`, `.folha-branca` e `.page` agora fixam `color` escuro e `color-scheme: light`, além de `color-scheme: light !important` em `@media print`.
+  * `.med-inp`, `.cor-inp`, `.sep-fs-inp` e `.gi` declaram explicitamente `color: var(--tx)`, `-webkit-text-fill-color: var(--tx)`, `caret-color: var(--tx)` e `color-scheme: light` (com `.gi.v` preservando branco sobre azul marinho `var(--az)`).
+  * Controles flutuantes e modais ajustados para contraste nítido nos dois temas (`.rb-size`, `.arr-tb`, `.text-tb .v4-tb-color`, `.orc-a4-page-actions`, `.formatting-toolbar` e títulos dos modais do Orçamento).
+* **Autorrecuperação ao abrir rascunhos (`restaurarDeJSON`)**:
+  * Se a ficha anterior removeu `#folha1` (`_folha1Removida: true`), abrir outra ficha recria automaticamente a Página 1 completa.
+  * Se um rascunho antigo gravou `_medFem` ou `_medMasc` inteiramente vazios por acidente, os 24 tamanhos padrão de fábrica são restaurados automaticamente.
+
+### 2. Sistema completo de Backup (Importar e Exportar com todos os rascunhos)
+
+* **Central de Backup Completo (`💾 Backup` no topo de `index.html` → `#backupModal`)**:
+  * Mostra em tempo real a contagem de fichas salvas em **Minhas fichas**, rascunhos em andamento na Ficha Técnica, rascunhos e proposta ativa no Orçamento e clientes salvos.
+  * **Exportar backup completo (`.json`)**: consolida em um único arquivo todas as fichas do IndexedDB (incluindo fotos/artes base64 e resgatando eventuais registros órfãos), o rascunho atual e o rascunho anterior da Ficha Técnica, todos os rascunhos e a proposta ativa do Orçamento, clientes, contadores e preferências.
+  * **Importar backup (`.json`)**: inspeciona o arquivo antes de aplicar e permite escolher entre **Mesclar** (padrão seguro: mantém tudo o que já existe no navegador e salva automaticamente rascunhos abertos não salvos como `"Rascunho recuperado — ..."`) ou **Substituir tudo** (restauração 1:1). Compatível com `vooalto_backup_v8`, backups legados do catálogo V7 (`vooalto_catalog_v7`) e arquivos `.json` individuais de Ficha ou Orçamento.
+* **Atalhos integrados em todos os módulos**:
+  * **Ficha Técnica**: botões **Exportar tudo (com rascunhos)**, **Importar backup (.json)** e **Exportar só esta ficha** em **Minhas fichas**, além do botão **💾 Backup** no cartão **Rascunho**.
+  * **Orçamento**: botão **💾 Exportar tudo (com rascunhos)** na barra lateral e botões **📤 Exportar todos (.json)** / **📥 Importar (.json)** dentro de **📁 Rascunhos de Orçamentos**.
+  * **Zerar dados (`zerar_dados.html`)**: botão **📤 Baixar backup completo (.json)** antes da confirmação de limpeza.
+
+---
+
 ## V8.2.0 — medidas das camisetas: auditoria V5→V8 e sincronização (2026-10-20)
 
 Pedido: *"as medidas das camisetas sumiram da ficha técnica. pesquise como estava

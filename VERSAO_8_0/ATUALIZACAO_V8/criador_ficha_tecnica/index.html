@@ -416,7 +416,7 @@ body.sb-collapsed #pw{margin-left:42px}
 
 /* FOLHA A4 */
 .folha{
-width:794px;height:1123px;background:var(--br);
+width:794px;height:1123px;background:var(--br);color:var(--tx);color-scheme:light;
 display:flex;flex-direction:column;padding:10px 14px 7px;
 box-shadow:0 8px 40px rgba(0,0,0,.35);border-radius:3px;
 position:relative;overflow:hidden;flex-shrink:0;
@@ -424,7 +424,7 @@ position:relative;overflow:hidden;flex-shrink:0;
 
 /* FOLHA BRANCA */
 .folha-branca{
-width:794px;height:1123px;background:#fff;
+width:794px;height:1123px;background:#fff;color:var(--tx);color-scheme:light;
 display:flex;flex-direction:column;padding:10px 14px 7px;
 box-shadow:0 8px 40px rgba(0,0,0,.35);border-radius:3px;
 position:relative;overflow:hidden;flex-shrink:0;
@@ -537,9 +537,9 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .gt tbody td.td-lbl{font-size:7.5px;font-weight:700;color:var(--tx);text-align:left;padding-left:4px}
 .gt tbody td.td-eq{font-size:9px;font-weight:700;color:var(--txl);width:12px}
 .gt tbody td.td-tot{font-size:12px;font-weight:900;color:var(--az);width:26px}
-.gi{width:100%;max-width:38px;height:28px;border:1.5px solid var(--bd);border-radius:4px;text-align:center;padding:4px 0;font-size:16px;font-weight:800;font-family:inherit;outline:none;background:#FAFBFF;display:block;margin:0 auto;-webkit-appearance:none;appearance:none;color:var(--tx);line-height:1;}
+.gi{width:100%;max-width:38px;height:28px;border:1.5px solid var(--bd);border-radius:4px;text-align:center;padding:4px 0;font-size:16px;font-weight:800;font-family:inherit;outline:none;background:#FAFBFF;display:block;margin:0 auto;-webkit-appearance:none;appearance:none;color:var(--tx);-webkit-text-fill-color:var(--tx);caret-color:var(--tx);color-scheme:light;line-height:1;}
 .gi:focus{border-color:var(--ro);background:#FFF0F8}
-.gi.v{background:var(--az);color:#fff;border-color:var(--az)}
+.gi.v{background:var(--az);color:#fff;-webkit-text-fill-color:#fff;border-color:var(--az)}
 .pecas-card{min-width:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
 .pecas-lbl{font-size:6.5px;font-weight:700;color:var(--az);text-decoration:underline;text-align:center;line-height:1.3}
 .pecas-num{width:46px;height:36px;border:2px solid var(--az);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:var(--az);background:var(--bg)}
@@ -555,8 +555,8 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .sep-inp:focus{color:var(--az);background:#EEF2F8;}
 .sep-toolbar{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--v8-surface);border:1px solid var(--v8-line-2);border-radius:7px;padding:3px 7px;display:none;gap:4px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:500;white-space:nowrap}
 .sep-wrap:focus-within .sep-toolbar{display:flex}
-.sep-fs-lbl{font-size:7px;font-weight:700;color:var(--txl)}
-.sep-fs-inp{border:1px solid var(--bd);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:#fff;width:42px;text-align:center}
+.sep-fs-lbl{font-size:7px;font-weight:700;color:var(--v8-t2)}
+.sep-fs-inp{border:1px solid var(--bd);border-radius:4px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:#fff;color:var(--tx);-webkit-text-fill-color:var(--tx);color-scheme:light;width:42px;text-align:center}
 
 /* LINHA INFERIOR */
 .bottom-row{display:flex;gap:4px;flex:1;min-height:0;overflow:hidden;}
@@ -595,8 +595,8 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .cor-nome-disp{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;pointer-events:none;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,.4);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cor-painel{width:80px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:3px 4px;background:#F8F9FC;border-left:1px solid var(--bd)}
 .cor-p-lbl{font-size:5.5px;font-weight:800;color:var(--az);text-transform:uppercase}
-.cor-inp{width:100%;border:1.5px solid var(--bd);border-radius:3px;padding:1px 3px;font-size:7px;font-family:inherit;outline:none;background:#fff}
-.cor-inp.nome{font-weight:700;text-transform:uppercase;color:var(--ro)}
+.cor-inp{width:100%;border:1.5px solid var(--bd);border-radius:3px;padding:1px 3px;font-size:7px;font-family:inherit;outline:none;background:#fff;color:var(--tx);-webkit-text-fill-color:var(--tx);color-scheme:light}
+.cor-inp.nome{font-weight:700;text-transform:uppercase;color:var(--ro);-webkit-text-fill-color:var(--ro)}
 .cor-inp.nome:focus{border-color:var(--ro)}
 .cor-inp.hex{font-family:monospace;text-transform:uppercase;font-size:6.5px}
 .cor-del{background:#FEE2E2;color:var(--vm);border:none;border-radius:3px;padding:1px 3px;font-size:6px;cursor:pointer;font-weight:900;font-family:inherit;align-self:flex-start;margin-top:1px}
@@ -619,14 +619,14 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .med-sub{font-size:7px;font-weight:400;color:var(--txl)}
 .med-scroll{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .med-t{width:100%;border-collapse:collapse;height:100%}
-.med-t th{background:var(--bg);padding:1px 2px;font-size:6px;font-weight:700;text-align:center;color:var(--txl);text-transform:uppercase;border-bottom:1px solid var(--bd)}
+.med-t th{background:var(--bg);padding:1px 2px;font-size:6.5px;font-weight:800;text-align:center;color:var(--az);text-transform:uppercase;border-bottom:1px solid var(--bd)}
 .med-t th:first-child{text-align:left;padding-left:4px}
-.med-t td{padding:0 2px;text-align:center;border-bottom:1px solid #F5F5F5;font-size:13px;font-weight:900;line-height:1}
+.med-t td{padding:0 2px;text-align:center;border-bottom:1px solid #F5F5F5;font-size:13px;font-weight:900;color:var(--tx);line-height:1}
 .med-t tbody tr:last-child td{border-bottom:none}
 .med-t tbody tr:nth-child(odd) td{background:#FAFCFF}
 .med-td-lbl{font-weight:900;font-size:10px!important;text-align:left!important;padding-left:4px!important;color:var(--az)}
-.med-inp{width:34px;border:1px solid var(--bd);border-radius:2px;text-align:center;padding:0 1px;font-size:13px;font-weight:900;font-family:inherit;outline:none;background:#fff;line-height:1}
-.med-inp:focus{border-color:var(--az)}
+.med-inp{width:34px;border:1px solid var(--bd);border-radius:2px;text-align:center;padding:0 1px;font-size:13px;font-weight:900;font-family:inherit;outline:none;background:#fff;color:var(--tx);-webkit-text-fill-color:var(--tx);caret-color:var(--tx);color-scheme:light;line-height:1}
+.med-inp:focus{border-color:var(--az);background:#EFF6FF;color:var(--az);-webkit-text-fill-color:var(--az)}
 
 /* CANVAS PH */
 .canvas-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;pointer-events:none;z-index:1}
@@ -697,7 +697,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .rb-btn{padding:3px 8px;font-size:8px;font-weight:700;border:1.5px solid var(--v8-line-2);border-radius:5px;background:var(--v8-surface-2);cursor:pointer;color:var(--v8-t1);font-family:inherit;transition:all .12s;line-height:1.2}
 .rb-btn:hover{background:var(--v8-hover);border-color:var(--v8-pink)}
 .rb-btn.on{background:var(--az);color:#fff;border-color:var(--az)}
-.rb-size{border:1.5px solid var(--v8-line-2);border-radius:5px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:var(--v8-surface-2);color:var(--v8-t1);background:#fff;cursor:pointer;width:46px;text-align:center}
+.rb-size{border:1.5px solid var(--v8-line-2);border-radius:5px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer;width:46px;text-align:center}
 .rb-color{width:26px;height:26px;border:1.5px solid var(--bd);border-radius:5px;cursor:pointer;padding:0;background:none}
 .rb-sep{width:1px;height:16px;background:var(--bd);flex-shrink:0}
 .rb-hint{font-size:7px;color:var(--txl);font-style:italic}
@@ -761,7 +761,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 @media print{
 @page{size:A4 portrait;margin:0}
 .folha.print-skip,.folha-branca.print-skip{display:none!important}
-html,body{width:210mm;height:auto;background:#fff!important;margin:0!important;padding:0!important;font-size:11px!important}
+html,body{width:210mm;height:auto;background:#fff!important;color:var(--tx)!important;color-scheme:light!important;margin:0!important;padding:0!important;font-size:11px!important}
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 #sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb,#fichaFloatCta,#fichaSugBox{display:none!important}
 .dc-inp:empty::before{content:none!important}
@@ -802,8 +802,8 @@ input:not(.gi):not(.med-inp),textarea{border:none!important;background:transpare
 .tot-lbl{font-size:7.5px!important}
 .fin-row{padding:5px 8px!important}
 .fin-lbl,.fin-lbl-white{font-size:8.5px!important}
-.gi{border:1.5px solid #D1D5DB!important;background:#FAFBFF!important;font-size:16px!important;font-weight:800!important;padding:4px 0!important;height:28px!important;max-width:34px!important;pointer-events:none!important;-webkit-appearance:none!important;appearance:none!important;color:var(--tx)!important;border-radius:4px!important;line-height:1!important;display:block!important}
-.gi.v{background:var(--az)!important;color:#fff!important}
+.gi{border:1.5px solid #D1D5DB!important;background:#FAFBFF!important;font-size:16px!important;font-weight:800!important;padding:4px 0!important;height:28px!important;max-width:34px!important;pointer-events:none!important;-webkit-appearance:none!important;appearance:none!important;color:var(--tx)!important;-webkit-text-fill-color:var(--tx)!important;border-radius:4px!important;line-height:1!important;display:block!important}
+.gi.v{background:var(--az)!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
 .gt thead th{font-size:7.5px!important;padding:3px 1px!important}
 .gt tbody td{padding:3px 1px!important}
 .gt tbody td.td-tot{font-size:11px!important}
@@ -834,9 +834,9 @@ input:not(.gi):not(.med-inp),textarea{border:none!important;background:transpare
 .med-hdr{padding:2px 4px!important}
 .med-t th{font-size:5.5px!important;padding:1px!important}
 .med-t th:first-child{text-align:left!important;padding-left:4px!important}
-.med-t td{font-size:11px!important;font-weight:900!important;padding:0 1px!important;line-height:1!important}
+.med-t td{font-size:11px!important;font-weight:900!important;color:var(--tx)!important;padding:0 1px!important;line-height:1!important}
 .med-td-lbl{font-size:9px!important;font-weight:900!important;color:var(--az)!important;text-align:left!important;padding-left:4px!important}
-.med-inp{font-size:11px!important;font-weight:900!important;width:26px!important;padding:0!important;line-height:1!important;border:none!important;background:transparent!important}
+.med-inp{font-size:11px!important;font-weight:900!important;width:26px!important;padding:0!important;line-height:1!important;border:none!important;background:transparent!important;color:var(--tx)!important;-webkit-text-fill-color:var(--tx)!important;color-scheme:light!important}
 .aviso{padding:1.5px 5px!important;flex-shrink:0!important}
 .aviso input{font-size:5.5px!important}
 .rodape{height:14px!important;padding-top:2px!important;flex-shrink:0!important}
@@ -987,6 +987,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
         <div class="sb-draft-actions">
           <button type="button" class="sb-draft-btn" id="v8DraftRestaurar" onclick="v8RascunhoRestaurar()" disabled title="Volta a ficha ao último rascunho guardado">Restaurar</button>
           <button type="button" class="sb-draft-btn ghost" id="v8DraftDescartar" onclick="v8RascunhoDescartar()" disabled title="Apaga o rascunho guardado (a ficha aberta não muda)">Descartar</button>
+          <button type="button" class="sb-draft-btn ghost" id="v8DraftBackupBtn" onclick="abrirCentralBackupV8()" title="Exportar ou importar backup completo com todos os rascunhos">💾 Backup</button>
         </div>
       </div>
     </div>
@@ -1052,13 +1053,17 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
       <div class="sb-section-desc">Salve para reabrir depois — tudo fica neste navegador</div>
       <div id="v8FichasList"></div>
       <div class="sb-divider"></div>
-      <button class="sb-btn" onclick="exportarFichaJSON()" title="Baixar esta ficha em .json (backup)">
-        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-upload"/></svg></span>
-        <span class="sb-btn-label">Exportar backup</span>
+      <button class="sb-btn sb-btn-primary" id="btnExportarTudoFicha" onclick="exportarBackupCompletoV8()" title="Baixar um único arquivo .json com TODAS as fichas salvas, imagens, rascunhos em andamento e orçamentos">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-save"/></svg></span>
+        <span class="sb-btn-label">Exportar tudo (com rascunhos)</span>
       </button>
-      <button class="sb-btn" onclick="$('fichaJsonInput').click()" title="Abrir uma ficha salva em .json (backup)">
+      <button class="sb-btn" id="btnImportarBackupFicha" onclick="$('fichaJsonInput').click()" title="Importar backup completo (.json) ou uma ficha técnica individual (.json)">
         <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-folder-open"/></svg></span>
-        <span class="sb-btn-label">Abrir backup</span>
+        <span class="sb-btn-label">Importar backup (.json)</span>
+      </button>
+      <button class="sb-btn" onclick="exportarFichaJSON()" title="Baixar apenas esta ficha aberta em .json">
+        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-upload"/></svg></span>
+        <span class="sb-btn-label">Exportar só esta ficha</span>
       </button>
     </div>
 
@@ -4123,16 +4128,38 @@ function limparParaNovaFicha(novoNum) {
   toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!','sucesso',2600);
 }
 
-/* ══ Importar ══ */
+/* ══ Importar (aceita Ficha individual OU Backup Completo V8 / V7) ══ */
 function importarFichaJSON(e) {
   const file = e.target.files[0]; if(!file) return;
   e.target.value = '';
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     try {
-      const data = JSON.parse(ev.target.result);
+      const rawText = String(ev.target.result || '');
+      const data = JSON.parse(rawText);
+      if(data && (data._version === 'vooalto_backup_v8' || data._version === 'vooalto_catalog_v7' || Array.isArray(data.orders) || data.version === 'vooalto_orcamento_v8' || data.version === 'vooalto_orcamento_v7')) {
+        if(!window.VooaltoBackup) {
+          toast('⚠ Motor de backup indisponível.', 'erro', 3500); return;
+        }
+        const info = window.VooaltoBackup.inspecionarArquivo(data);
+        const substituir = confirm(
+          'Arquivo detectado: ' + info.rotulo + '\n'
+          + '• ' + info.fichas.length + ' ficha(s) salva(s)'
+          + (info.rascunhosFicha.ativo ? ' + rascunho atual' : '')
+          + (info.orcamento.rascunhos.length ? ' + ' + info.orcamento.rascunhos.length + ' orçamento(s)' : '')
+          + '\n\nClique em OK para MESCLAR com o que você já tem (recomendado — não apaga nada)\n'
+          + 'ou Cancelar para escolher outra opção.'
+        );
+        if(!substituir) return;
+        const res = await window.VooaltoBackup.restaurar(data, 'mesclar');
+        toast('✅ Backup importado: ' + res.resumo.fichasSalvas + ' ficha(s) disponível(is) em Minhas fichas!', 'sucesso', 4200);
+        return;
+      }
       if(!data._version || !data._version.startsWith('vooalto_ficha')) {
-        toast('⚠ Este arquivo não é uma ficha técnica válida.', 'erro', 3500); return;
+        toast('⚠ Este arquivo não é uma ficha técnica nem um backup válido do Vooalto.', 'erro', 3500); return;
+      }
+      if(typeof v8FichaTemConteudo === 'function' && v8FichaTemConteudo() && typeof window.v8FichasSalvar === 'function') {
+        await window.v8FichasSalvar({ nome: 'Rascunho antes de importar — ' + v8SugestaoNomeFicha(), semPerguntar: true, silencioso: true });
       }
       const imgLayers = (data._layers || []).filter(l => l.type === 'img');
       if(imgLayers.length > 0) {
@@ -4152,6 +4179,9 @@ function importarFichaJSON(e) {
 
 function restaurarDeJSON(d) {
   v8FichaAtualId=null;   /* V8: quem chama decide se isto é um registro salvo */
+  if(!d._folha1Removida && !document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
+    try{ v7RestaurarPaginaP1(null); }catch(e){}
+  }
   CAMPOS_INPUT_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.value = d[id]; });
   CAMPOS_CE_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.innerHTML = d[id]; });
   if(d._grade) { document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i) => { if(d._grade[i] !== undefined) { el.value = d._grade[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); } }); }
@@ -4166,8 +4196,18 @@ function restaurarDeJSON(d) {
     else if(x.type==='rect') addRectLayer(x);
     else if(x.type==='circle') addCirculoLayer(x);
   });
-  if(d._medFem) document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i) => { if(d._medFem[i] !== undefined) el.value = d._medFem[i]; });
-  if(d._medMasc) document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i) => { if(d._medMasc[i] !== undefined) el.value = d._medMasc[i]; });
+  const fabFem = Array.isArray(window.__v8MedFabrica) ? window.__v8MedFabrica.slice(0, 12) : [];
+  const fabMasc = Array.isArray(window.__v8MedFabrica) ? window.__v8MedFabrica.slice(12, 24) : [];
+  if(Array.isArray(d._medFem) && d._medFem.some(v => String(v==null?'':v).trim()!=='')) {
+    document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i) => { if(d._medFem[i] !== undefined) el.value = d._medFem[i]; });
+  } else if(fabFem.length) {
+    document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i) => { if(fabFem[i] !== undefined) el.value = fabFem[i]; });
+  }
+  if(Array.isArray(d._medMasc) && d._medMasc.some(v => String(v==null?'':v).trim()!=='')) {
+    document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i) => { if(d._medMasc[i] !== undefined) el.value = d._medMasc[i]; });
+  } else if(fabMasc.length) {
+    document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i) => { if(fabMasc[i] !== undefined) el.value = fabMasc[i]; });
+  }
   if(d._folha1Removida && document.getElementById('folha1')){
     const f=document.getElementById('folha1'); if(f)f.remove();
     const lb=document.getElementById('label_folha1'); if(lb)lb.remove();
@@ -4288,7 +4328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .canvas-tb,.text-tb,.arr-tb{border-radius:14px!important;padding:8px 12px!important;gap:7px!important;box-shadow:0 14px 44px rgba(15,23,42,.18)!important;border:1px solid rgba(15,23,42,.08)!important}.ct-btn,.tt-toggle,.arr-style-btn{font-size:10px!important;padding:6px 10px!important;border-radius:8px!important}.tt-sel,.tt-num{font-size:10px!important;padding:6px 8px!important;border-radius:8px!important}.tt-color{width:82px!important;height:30px!important;border-radius:8px!important;padding:4px 7px!important;font-family:monospace!important;font-size:10px!important}
 #richBar{border-radius:16px!important;padding:8px 12px!important;gap:7px!important}.rb-btn{font-size:10px!important;padding:6px 10px!important;border-radius:8px!important}.rb-size{height:30px!important;font-size:10px!important}.rb-color{width:82px!important;height:30px!important;border-radius:8px!important;padding:4px 7px!important;font-family:monospace!important;font-size:10px!important}
 body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:translateX(calc(-1 * var(--sidebar-w) + 42px))!important}body.v4-preview-clean #pw{margin-left:42px!important}body.v4-preview-clean .canvas-tb,body.v4-preview-clean .text-tb,body.v4-preview-clean .arr-tb,body.v4-preview-clean .shape-tb,body.v4-preview-clean .layers-panel,body.v4-preview-clean .canvas-add-img,body.v4-preview-clean .canvas-ph,body.v4-preview-clean .lyr-h,body.v4-preview-clean .lyr-rot,body.v4-preview-clean .tl-resize,body.v4-preview-clean .tl-rot,body.v4-preview-clean .arr-h,body.v4-preview-clean .arr-rot,body.v4-preview-clean .arr-ep,body.v4-preview-clean .logo-tb,body.v4-preview-clean .lh,body.v4-preview-clean .lh-rot{display:none!important}body.v4-preview-clean .img-layer,body.v4-preview-clean .txt-layer,body.v4-preview-clean .arr-layer,body.v4-preview-clean .rect-layer,body.v4-preview-clean .circle-layer{outline:none!important}
-#v4QuickModal{display:none;position:fixed;inset:0;background:var(--v8-overlay);z-index:10050;align-items:center;justify-content:center;padding:18px}#v4QuickModal.open{display:flex}.v4-modal-card{width:min(760px,96vw);background:var(--v8-surface);border:1px solid var(--v8-line);border-radius:22px;box-shadow:var(--v8-shadow);overflow:hidden;color:var(--v8-t1)}.v4-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--v8-surface-2);border-bottom:1px solid var(--v8-line)}.v4-modal-head h3{font-size:16px;margin:0}.v4-modal-body{padding:18px}.v4-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.v4-field label{display:block;font-size:10px;font-weight:900;color:var(--v8-t3);text-transform:uppercase;margin-bottom:5px}.v4-field input,.v4-field textarea{width:100%;border:1.5px solid var(--v8-line-2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;background:var(--v8-surface);color:var(--v8-t1)}.v4-field textarea{min-height:70px;resize:vertical}.v4-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.v4-actions button{border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}.v4-cancel{background:var(--v8-surface-3);color:var(--v8-t2)}.v4-apply{background:#050505;color:#fff}
+#v4QuickModal{display:none;position:fixed;inset:0;background:var(--v8-overlay);z-index:10050;align-items:center;justify-content:center;padding:18px}#v4QuickModal.open{display:flex}.v4-modal-card{width:min(760px,96vw);background:var(--v8-surface);border:1px solid var(--v8-line);border-radius:22px;box-shadow:var(--v8-shadow);overflow:hidden;color:var(--v8-t1)}.v4-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--v8-surface-2);border-bottom:1px solid var(--v8-line)}.v4-modal-head h3{font-size:16px;margin:0}.v4-modal-body{padding:18px}.v4-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.v4-field label{display:block;font-size:10px;font-weight:900;color:var(--v8-t3);text-transform:uppercase;margin-bottom:5px}.v4-field input,.v4-field textarea{width:100%;border:1.5px solid var(--v8-line-2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;background:var(--v8-surface);color:var(--v8-t1);-webkit-text-fill-color:var(--v8-t1);caret-color:var(--v8-t1)}.v4-field textarea{min-height:70px;resize:vertical}.v4-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.v4-actions button{border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}.v4-cancel{background:var(--v8-surface-3);color:var(--v8-t2)}.v4-apply{background:#050505;color:#fff}
 
 </style>
 
@@ -4296,7 +4336,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 
 <style id="v4-quickfill-texttools-css">
 /* V4.2 - Preenchimento completo sem painel Canva + texto avançado */
-#v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:var(--v8-t1);margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:var(--v8-t3);text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid var(--v8-line-2);border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:var(--v8-surface);color:var(--v8-t1)}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:var(--v8-t1);color:var(--v8-surface)}.v4-mini-btn.red{background:rgba(239,68,68,.14);color:var(--v8-err)}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid var(--v8-line);border-radius:14px;padding:12px;background:var(--v8-surface-2)}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:var(--v8-t1)}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:var(--v8-t3);text-transform:uppercase}.v4-grade-grid input{border:1.5px solid var(--v8-line-2);border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none;background:var(--v8-surface);color:var(--v8-t1)}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
+#v4QuickModal.v4plus .v4-modal-card{width:min(980px,97vw);max-height:94vh;display:flex;flex-direction:column}#v4QuickModal.v4plus .v4-modal-body{overflow:auto}.v4-section-title{font-size:12px;font-weight:900;color:var(--v8-t1);margin:14px 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px}.v4-section-title small{font-size:9px;color:#64748b;font-weight:700}.v4-plus-table{width:100%;border-collapse:separate;border-spacing:0 6px}.v4-plus-table th{font-size:8px;text-transform:uppercase;color:var(--v8-t3);text-align:left;padding:0 5px}.v4-plus-table td{padding:0 4px}.v4-plus-table input{width:100%;border:1.5px solid var(--v8-line-2);border-radius:8px;padding:8px 9px;font-size:12px;font-family:inherit;outline:none;background:var(--v8-surface);color:var(--v8-t1);-webkit-text-fill-color:var(--v8-t1);caret-color:var(--v8-t1)}.v4-mini-btn{border:none;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900;cursor:pointer;font-family:inherit;background:var(--v8-t1);color:var(--v8-surface)}.v4-mini-btn.red{background:rgba(239,68,68,.14);color:var(--v8-err)}.v4-grade-box{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v4-grade-card{border:1px solid var(--v8-line);border-radius:14px;padding:12px;background:var(--v8-surface-2)}.v4-grade-card h4{font-size:12px;margin-bottom:9px;color:var(--v8-t1)}.v4-grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.v4-grade-grid label{display:flex;flex-direction:column;gap:3px;font-size:8px;font-weight:900;color:var(--v8-t3);text-transform:uppercase}.v4-grade-grid input{border:1.5px solid var(--v8-line-2);border-radius:8px;padding:7px 4px;text-align:center;font-size:12px;font-weight:800;outline:none;background:var(--v8-surface);color:var(--v8-t1);-webkit-text-fill-color:var(--v8-t1);caret-color:var(--v8-t1)}.v4-grade-card.inf .v4-grade-grid{grid-template-columns:repeat(7,1fr)}
 
 /* ═══ PREENCHIMENTO RÁPIDO — cores e medidas (V8) ═══ */
 .v4-cores{display:flex;flex-direction:column;gap:6px}
@@ -4314,7 +4354,7 @@ body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:t
 .v4-med-t th:first-child{text-align:left}
 .v4-med-t td{padding:2px 3px}
 .v4-med-t td:first-child{font-size:9.5px;font-weight:900;color:var(--v8-t2);width:34px}
-.v4-med-t input{width:100%;min-width:0;border:1.5px solid var(--v8-line-2);border-radius:7px;padding:6px 4px;text-align:center;font-size:12px;font-weight:700;font-family:inherit;outline:none;background:var(--v8-surface);color:var(--v8-t1)}
+.v4-med-t input{width:100%;min-width:0;border:1.5px solid var(--v8-line-2);border-radius:7px;padding:6px 4px;text-align:center;font-size:12px;font-weight:700;font-family:inherit;outline:none;background:var(--v8-surface);color:var(--v8-t1);-webkit-text-fill-color:var(--v8-t1);caret-color:var(--v8-t1)}
 .v4-med-t input:focus{border-color:var(--v8-pink)}
 @media(max-width:720px){.v4-med-box{grid-template-columns:1fr}}
 
@@ -4367,7 +4407,7 @@ function v7EnhanceTxtTbExtra(){
 }
   window.v4SetTextSize=function(size){if($id('ttSize')){$id('ttSize').value=size;applyTxtProps();}const sl=document.querySelector('.v4-font-slider');if(sl)sl.value=size;}
   function addFontSizeHandle(layer){if(!layer||layer.querySelector('.tl-fontsize-handle'))return; const h=document.createElement('div'); h.className='tl-fontsize-handle'; layer.appendChild(h); h.addEventListener('mousedown',e=>{const id=layer.id.replace('ly_',''); const l=layers.find(x=>x.id===id); if(!l||l.type!=='txt')return; const startY=e.clientY,startSize=parseInt(l.size)||20; function move(ev){const ns=Math.max(6,Math.min(180,startSize+(startY-ev.clientY)/2)); l.size=Math.round(ns); const tc=layer.querySelector('.tc'); if(tc)tc.style.fontSize=l.size+'px'; if($id('ttSize'))$id('ttSize').value=l.size; const sl=document.querySelector('.v4-font-slider'); if(sl)sl.value=l.size;} function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);savLayers();snap();} document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);e.preventDefault();e.stopPropagation();});}
-  const obs=new MutationObserver(()=>document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle)); obs.observe(document.body,{childList:true,subtree:true}); document.addEventListener('click',()=>setTimeout(()=>{enhanceTextToolbar();document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle);},80)); setTimeout(()=>{enhanceTextToolbar();document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle);},800);
+  const obs=new MutationObserver(()=>{try{document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle)}catch(e){}}); obs.observe(document.body,{childList:true,subtree:true}); document.addEventListener('click',()=>setTimeout(()=>{enhanceTextToolbar();document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle);},80)); setTimeout(()=>{enhanceTextToolbar();document.querySelectorAll('.txt-layer').forEach(addFontSizeHandle);},800);
 })();
 </script>
 
@@ -4378,7 +4418,7 @@ function v7EnhanceTxtTbExtra(){
 .aviso input{font-size:20px!important;line-height:1.15!important;letter-spacing:.5px!important}
 #previsao,.info-box.dest input{font-size:24px!important;min-width:120px!important;line-height:1.05!important}
 .text-tb .v4-tb-group{display:flex;align-items:center;gap:4px;border-left:1px solid var(--bd);padding-left:6px;margin-left:2px}
-.text-tb .v4-tb-btn,.arr-tb .v4-tb-btn{padding:5px 8px;font-size:10px;font-weight:900;border:1px solid var(--v8-line-2);border-radius:7px;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer;font-family:inherit}.text-tb .v4-tb-btn:hover,.arr-tb .v4-tb-btn:hover{background:var(--v8-hover)}.text-tb .v4-tb-color{width:74px;height:28px;border:1px solid var(--bd);border-radius:7px;padding:3px 5px;font-size:9px;font-family:monospace;text-transform:uppercase}.arr-layer svg line{transition:stroke-width .12s}
+.text-tb .v4-tb-btn,.arr-tb .v4-tb-btn{padding:5px 8px;font-size:10px;font-weight:900;border:1px solid var(--v8-line-2);border-radius:7px;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer;font-family:inherit}.text-tb .v4-tb-btn:hover,.arr-tb .v4-tb-btn:hover{background:var(--v8-hover)}.text-tb .v4-tb-color{width:74px;height:28px;border:1px solid var(--v8-line-2);border-radius:7px;padding:3px 5px;font-size:9px;font-family:monospace;text-transform:uppercase;background:var(--v8-surface-2);color:var(--v8-t1)}.arr-layer svg line{transition:stroke-width .12s}
 @media print{.aviso input{font-size:17px!important;line-height:1.15!important}.info-box.dest input,#previsao{font-size:18px!important;font-weight:900!important}.text-tb .v4-tb-group,.text-tb .v4-tb-btn,.arr-tb .v4-tb-btn{display:none!important}}
 
 </style>
@@ -4625,16 +4665,17 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   justify-content:flex-start!important;
   z-index:99991!important;
   overflow:visible!important;
-  background:rgba(255,255,255,.98)!important;
+  background:var(--v8-surface)!important;
+  border:1px solid var(--v8-line-2)!important;
   border-radius:16px!important;
   padding:9px 12px!important;
   gap:8px!important;
-  box-shadow:0 18px 54px rgba(15,23,42,.20)!important;
+  box-shadow:var(--v8-shadow)!important;
 }
 .arr-tb.vis{display:flex!important;}
-.arr-tb::before{content:'Seta';font-size:9px;font-weight:900;color:#1D4ED8;text-transform:uppercase;letter-spacing:.8px;margin-right:3px}
-.arr-tb .v4-arrow-group{display:flex;align-items:center;gap:4px;border-left:1px solid var(--bd);padding-left:7px;margin-left:3px;flex-wrap:wrap}
-.arr-tb .v4-arrow-btn{padding:6px 9px;font-size:10px;font-weight:900;border:1px solid var(--bd);border-radius:8px;background:#fff;color:#111827;cursor:pointer;font-family:inherit}.arr-tb .v4-arrow-btn:hover{background:#EEF2F8}.arr-tb .v4-arrow-btn.on{background:#111827;color:#fff;border-color:#111827}
+.arr-tb::before{content:'Seta';font-size:9px;font-weight:900;color:var(--v8-pink);text-transform:uppercase;letter-spacing:.8px;margin-right:3px}
+.arr-tb .v4-arrow-group{display:flex;align-items:center;gap:4px;border-left:1px solid var(--v8-line-2);padding-left:7px;margin-left:3px;flex-wrap:wrap}
+.arr-tb .v4-arrow-btn{padding:6px 9px;font-size:10px;font-weight:900;border:1px solid var(--v8-line-2);border-radius:8px;background:var(--v8-surface-2);color:var(--v8-t1);cursor:pointer;font-family:inherit}.arr-tb .v4-arrow-btn:hover{background:var(--v8-hover)}.arr-tb .v4-arrow-btn.on{background:var(--az);color:#fff;border-color:var(--az)}
 .arr-layer svg{overflow:visible!important}.arr-layer.curved,.arr-layer.elbow{overflow:visible!important}
 @media(max-width:900px){.arr-tb{left:10px!important;right:10px!important;top:70px!important;max-width:calc(100vw - 20px)!important}}
 @media print{.arr-tb{display:none!important}}
@@ -4843,6 +4884,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     fichaUpdateReadiness();
     toastSafe('📋 Ficha aberta: '+(data._nome||''),'sucesso');
   };
+  window.v8FichasListar=listar;
   window.v8RenomearFicha=async function(id){
     const meta=getMeta();
     const item=meta.find(m=>m.id===id);
@@ -5793,7 +5835,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
       <li>Enquanto você edita, a ficha é <b>salva sozinha</b> neste navegador — o selo <b>Salvo HH:MM</b>, com um ponto verde, mostra a hora da última gravação (ponto vermelho = não salvou).</li>
       <li><b>Salvar ficha</b> (botão rosa no pé do menu) guarda na lista <b>Minhas fichas</b>, de onde você reabre, renomeia ou exclui. Salvar de novo <b>atualiza a mesma ficha</b> em vez de criar outra.</li>
       <li><b>Nova ficha</b> salva a atual (se tiver conteúdo), apaga as páginas extras, volta as medidas para o padrão e avança o número. O número da próxima ficha também pode ser ajustado em <b>Ajustes</b>.</li>
-      <li><b>Exportar backup (.json)</b> baixa a ficha para guardar em outro lugar e <b>Abrir backup (.json)</b> traz de volta.</li>
+      <li><b>Exportar tudo (com rascunhos)</b> gera um único arquivo <b>.json</b> com todas as fichas de <b>Minhas fichas</b>, imagens, rascunhos em andamento e orçamentos; <b>Importar backup (.json)</b> restaura tanto o backup completo quanto fichas avulsas sem perder seus dados atuais.</li>
     </ul>
     <h4>Exportar</h4>
     <ul>
@@ -5981,6 +6023,637 @@ function v8RascunhoDescartar(){
    é atualizado depois dela para já mostrar o estado certo. */
 document.addEventListener('DOMContentLoaded',()=>setTimeout(v8RascunhoAtualizarUI,600));
 window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
+</script>
+
+<script id="v8-backup-js">
+(function(){
+  'use strict';
+  if(window.VooaltoBackup)return;
+  const DB_NAME='vooalto_ficha_rascunhos_db_v4';
+  const STORE='drafts';
+  const META_KEY='vooalto_ficha_rascunhos_v4_meta';
+  const OLD_FICHAS_KEY='vooalto_ficha_rascunhos_v4';
+  const FICHA_LIVE_KEY='vooalto_v7_ficha_ativa';
+  const FICHA_HORA_KEY='vooalto_v7_ficha_ativa_hora';
+  const FICHA_ANT_KEY='vooalto_v8_rascunho_anterior';
+  const FICHA_META_KEY='vooalto_v8_rascunho_meta';
+  const ORC_DRAFTS_KEY='vooalto_orcamento_rascunhos_v7';
+  const ORC_LIVE_KEY='vooalto_orcamento_autosave_v7';
+  const ORC_LIVE_LEG='vooalto_orcamento_autosave';
+  const ORC_HORA_KEY='vooalto_orcamento_autosave_hora';
+  const CLIENTES_KEY='vooalto_ficha_clientes_v7';
+  const LAST_BKP_KEY='vooalto_ultimo_backup_v8';
+  const SKIP_KEYS={'vooalto_v8_clip_layer':1,'vooalto_v8_orc_clip':1,'vooalto_v8_orc_item_clip':1};
+
+  function isVooaltoKey(k){
+    return typeof k==='string'&&!SKIP_KEYS[k]&&(
+      k.indexOf('vooalto_')===0||k.indexOf('va3_')===0||k.indexOf('va4_')===0||
+      k==='v4_text_toolbar_pos'||k==='v5_orcamento_toolbar_pos'
+    );
+  }
+  function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+  function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+  function lsJSON(k,fb){
+    const raw=lsGet(k);
+    if(!raw)return fb;
+    try{const v=JSON.parse(raw);return v==null?fb:v}catch(e){return fb}
+  }
+  function stripTags(s){return String(s||'').replace(/<[^>]*>/g,'').trim()}
+  function horaHM(){
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return p(d.getHours())+':'+p(d.getMinutes());
+  }
+  function agoraBR(){
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+  function carimboArquivo(){
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'h'+p(d.getMinutes());
+  }
+  function temConteudoFicha(d){
+    if(!d||typeof d!=='object')return false;
+    if(['dc_nome','dc_doc','dc_end','dc_tel','cliente','telefone','obs','previsao','entradaVal','tipoTecido'].some(k=>stripTags(d[k])))return true;
+    if(d._grade&&['m','b','i'].some(g=>Array.isArray(d._grade[g])&&d._grade[g].some(v=>Number(v)>0)))return true;
+    if(Array.isArray(d._prod)&&d._prod.some(p=>p&&(String(p.modelo||'').trim()||Number(p.valor)>0||Number(p.qtd)>0)))return true;
+    if(Array.isArray(d._layers)&&d._layers.length>0)return true;
+    if(Array.isArray(d._paginas)&&d._paginas.length>0)return true;
+    if(Array.isArray(d.cores)&&d.cores.some(c=>c&&String(c.nome||'').trim()))return true;
+    if(d.imagens&&Object.keys(d.imagens).some(k=>d.imagens[k]))return true;
+    if((Array.isArray(d.textos)&&d.textos.length)||(Array.isArray(d.setas)&&d.setas.length))return true;
+    return false;
+  }
+  function temConteudoOrcamento(d){
+    if(!d||typeof d!=='object')return false;
+    if(d.signature)return true;
+    const pages=Array.isArray(d.pages)?d.pages:[];
+    if(pages.length>1)return true;
+    for(let i=0;i<pages.length;i++){
+      const items=(pages[i]&&pages[i].tableItems)||[];
+      if(items.some(it=>it&&(String(it.modelo||'').trim()||String(it.tecido||'').trim()||stripTags(it.descricao)||Number(it.unit)>0)))return true;
+      const rows=(pages[i]&&pages[i].rows)||[];
+      if(rows.some(r=>r&&(stripTags(r.descHtml)||Number(r.qty)>1)))return true;
+    }
+    if(d.form&&String(d.form['proposal-title']||'').trim()&&String(d.form['proposal-title']).trim()!=='PROPOSTA DE VENDA')return true;
+    if(d.fields&&String(d.fields['client-name']||'').trim())return true;
+    return false;
+  }
+  function calcOrcStats(d){
+    const pages=Array.isArray(d&&d.pages)?d.pages:[];
+    let itemsCount=0,soma=0;
+    pages.forEach(p=>{
+      (p.tableItems||[]).forEach(it=>{
+        itemsCount++;
+        soma+=(Number(it.qnt)||0)*(Number(it.unit)||0);
+      });
+    });
+    return {
+      pagesCount:Math.max(1,pages.length),
+      itemsCount:itemsCount,
+      total:'R$ '+soma.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+    };
+  }
+  function nomeFicha(d){
+    if(!d||typeof d!=='object')return 'Ficha sem nome';
+    if(String(d._nome||'').trim())return String(d._nome).trim();
+    const cli=stripTags(d.dc_nome)||String(d.cliente||'').trim();
+    const num=String(d._numFicha||d.fichaNum||'').trim();
+    return (num?'Nº '+num:'')+(num&&cli?' — ':'')+(cli||(!num?'Ficha sem nome':''));
+  }
+  function nomeOrcamento(d){
+    if(!d||typeof d!=='object')return 'Orçamento';
+    const tit=String((d.form&&d.form['proposal-title'])||(d.fields&&d.fields['client-name'])||d.clientName||'Orçamento').trim();
+    const p0=Array.isArray(d.pages)&&d.pages[0]&&Array.isArray(d.pages[0].tableItems)&&d.pages[0].tableItems[0];
+    const mod=p0&&p0.modelo?String(p0.modelo).trim():'';
+    return tit+(mod?' - '+mod:'');
+  }
+  function lerOrcLive(){
+    return lsJSON(ORC_LIVE_KEY,null)||lsJSON(ORC_LIVE_LEG,null);
+  }
+  function flushAtivos(){
+    try{
+      if(typeof capturarFichaParaJSON==='function'&&typeof v7SalvarAutosaveAgora==='function'){
+        const tem=(typeof v8FichaTemConteudo==='function')?v8FichaTemConteudo():temConteudoFicha(capturarFichaParaJSON());
+        if(tem)v7SalvarAutosaveAgora();
+      }
+    }catch(e){}
+  }
+  function abrirIDB(){
+    return new Promise(resolve=>{
+      if(typeof indexedDB==='undefined'||!indexedDB){resolve(null);return}
+      let settled=false;
+      const done=v=>{if(!settled){settled=true;resolve(v)}};
+      const timer=setTimeout(()=>done(null),4000);
+      try{
+        const req=indexedDB.open(DB_NAME,1);
+        req.onupgradeneeded=e=>{
+          const db=e.target.result;
+          if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);
+        };
+        req.onsuccess=()=>{clearTimeout(timer);done(req.result)};
+        req.onerror=()=>{clearTimeout(timer);done(null)};
+        req.onblocked=()=>{clearTimeout(timer);done(null)};
+      }catch(e){clearTimeout(timer);done(null)}
+    });
+  }
+  function reqProm(req){
+    return new Promise((resolve,reject)=>{
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('Falha no IndexedDB'));
+    });
+  }
+  async function lerTodasFichasIDB(){
+    const meta=lsJSON(META_KEY,[]);
+    const legacy=lsJSON(OLD_FICHAS_KEY,[]);
+    const db=await abrirIDB();
+    if(!db){
+      if(Array.isArray(legacy)&&legacy.length)return legacy.filter(x=>x&&x.id&&x.data);
+      return [];
+    }
+    try{
+      const tx=db.transaction(STORE,'readonly');
+      const keys=await reqProm(tx.objectStore(STORE).getAllKeys());
+      const keySet=new Set((keys||[]).map(String));
+      const ordered=[];
+      const seen=new Set();
+      (Array.isArray(meta)?meta:[]).forEach(m=>{
+        if(m&&m.id&&!seen.has(String(m.id))){seen.add(String(m.id));ordered.push(m)}
+      });
+      (keys||[]).forEach(k=>{
+        const id=String(k);
+        if(!seen.has(id)){seen.add(id);ordered.push({id:id,name:'',date:agoraBR(),num:''})}
+      });
+      const out=[];
+      for(let i=0;i<ordered.length;i++){
+        const m=ordered[i];
+        let data=null;
+        if(keySet.has(String(m.id))){
+          const txR=db.transaction(STORE,'readonly');
+          data=await reqProm(txR.objectStore(STORE).get(m.id));
+        }
+        if(!data&&Array.isArray(legacy)){
+          const found=legacy.find(x=>x&&String(x.id)===String(m.id));
+          if(found)data=found.data;
+        }
+        if(data&&typeof data==='object'){
+          out.push({
+            id:String(m.id),
+            name:String(m.name||nomeFicha(data)),
+            date:String(m.date||agoraBR()),
+            num:String(m.num||data._numFicha||data.fichaNum||''),
+            data:data
+          });
+        }
+      }
+      db.close();
+      return out;
+    }catch(e){
+      try{db.close()}catch(_){}
+      return Array.isArray(legacy)?legacy.filter(x=>x&&x.id&&x.data):[];
+    }
+  }
+  async function gravarFichasIDB(lista,limparAntes){
+    const validas=(Array.isArray(lista)?lista:[]).filter(x=>x&&x.id&&x.data&&typeof x.data==='object');
+    const meta=validas.map(x=>({
+      id:String(x.id),
+      name:String(x.name||nomeFicha(x.data)),
+      date:String(x.date||agoraBR()),
+      num:String(x.num||x.data._numFicha||x.data.fichaNum||'')
+    }));
+    const db=await abrirIDB();
+    if(!db){
+      lsSet(OLD_FICHAS_KEY,JSON.stringify(validas));
+      lsSet(META_KEY,JSON.stringify(meta));
+      return meta;
+    }
+    try{
+      if(limparAntes){
+        const txK=db.transaction(STORE,'readonly');
+        const oldKeys=await reqProm(txK.objectStore(STORE).getAllKeys());
+        for(let i=0;i<(oldKeys||[]).length;i++){
+          const txD=db.transaction(STORE,'readwrite');
+          await reqProm(txD.objectStore(STORE).delete(oldKeys[i]));
+        }
+      }
+      for(let i=0;i<validas.length;i++){
+        const item=validas[i];
+        const txW=db.transaction(STORE,'readwrite');
+        await reqProm(txW.objectStore(STORE).put(item.data,String(item.id)));
+      }
+      db.close();
+    }catch(e){
+      try{db.close()}catch(_){}
+      lsSet(OLD_FICHAS_KEY,JSON.stringify(validas));
+    }
+    lsSet(META_KEY,JSON.stringify(meta));
+    return meta;
+  }
+  async function resumir(){
+    flushAtivos();
+    const fichas=await lerTodasFichasIDB();
+    const fichaAtiva=lsJSON(FICHA_LIVE_KEY,null);
+    const fichaMeta=lsJSON(FICHA_META_KEY,null);
+    const fichaVazia=!!(fichaMeta&&fichaMeta.vazio);
+    const temLive=temConteudoFicha(fichaAtiva)&&!fichaVazia;
+    const fichaAnterior=lsJSON(FICHA_ANT_KEY,null);
+    const orcRascunhos=lsJSON(ORC_DRAFTS_KEY,[]);
+    const orcAtivo=lerOrcLive();
+    const clientes=lsJSON(CLIENTES_KEY,{});
+    return {
+      fichasSalvas:fichas.length,
+      temRascunhoFicha:temLive,
+      nomeRascunhoFicha:temLive?nomeFicha(fichaAtiva):'',
+      horaRascunhoFicha:lsGet(FICHA_HORA_KEY)||'',
+      temRascunhoAnterior:temConteudoFicha(fichaAnterior),
+      orcamentoRascunhos:Array.isArray(orcRascunhos)?orcRascunhos.length:0,
+      temRascunhoOrcamento:temConteudoOrcamento(orcAtivo),
+      nomeRascunhoOrcamento:temConteudoOrcamento(orcAtivo)?nomeOrcamento(orcAtivo):'',
+      horaRascunhoOrcamento:lsGet(ORC_HORA_KEY)||'',
+      clientesSalvos:clientes&&typeof clientes==='object'?Object.keys(clientes).length:0,
+      ultimoBackup:lsGet(LAST_BKP_KEY)||''
+    };
+  }
+  async function coletarTudo(){
+    flushAtivos();
+    const fichas=await lerTodasFichasIDB();
+    const storage={};
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(isVooaltoKey(k))storage[k]=localStorage.getItem(k);
+      }
+    }catch(e){}
+    const fichaAtivaRaw=lsJSON(FICHA_LIVE_KEY,null);
+    const fichaMeta=lsJSON(FICHA_META_KEY,null);
+    const fichaLiveUtil=temConteudoFicha(fichaAtivaRaw)&&!(fichaMeta&&fichaMeta.vazio);
+    const fichaAnteriorRaw=lsJSON(FICHA_ANT_KEY,null);
+    const orcRascunhos=lsJSON(ORC_DRAFTS_KEY,[]);
+    const orcAtivoRaw=lerOrcLive();
+    const clientes=lsJSON(CLIENTES_KEY,{});
+    const info=await resumir();
+    return {
+      _version:'vooalto_backup_v8',
+      _app:'Vooalto V8',
+      _exportedAt:new Date().toISOString(),
+      _exportedDisplay:agoraBR(),
+      _resumo:info,
+      fichas:fichas,
+      rascunhosFicha:{
+        ativo:fichaLiveUtil?fichaAtivaRaw:null,
+        ativoHora:lsGet(FICHA_HORA_KEY)||'',
+        anterior:temConteudoFicha(fichaAnteriorRaw)?fichaAnteriorRaw:null,
+        meta:fichaMeta
+      },
+      orcamento:{
+        rascunhos:Array.isArray(orcRascunhos)?orcRascunhos:[],
+        ativo:temConteudoOrcamento(orcAtivoRaw)?orcAtivoRaw:null,
+        ativoHora:lsGet(ORC_HORA_KEY)||''
+      },
+      clientes:clientes&&typeof clientes==='object'?clientes:{},
+      storage:storage
+    };
+  }
+  function inspecionarArquivo(entrada){
+    let d=entrada;
+    if(typeof entrada==='string'){
+      try{d=JSON.parse(entrada)}catch(e){throw new Error('O arquivo selecionado não é um JSON válido.')}
+    }
+    if(!d||typeof d!=='object')throw new Error('Este arquivo não é um backup válido do Vooalto.');
+    if(d._version==='vooalto_backup_v8'){
+      const fichas=Array.isArray(d.fichas)?d.fichas.filter(x=>x&&x.id&&x.data):[];
+      const rf=d.rascunhosFicha||{};
+      const orc=d.orcamento||{};
+      const orcList=Array.isArray(orc.rascunhos)?orc.rascunhos:[];
+      const cli=d.clientes&&typeof d.clientes==='object'?d.clientes:{};
+      return {
+        tipo:'backup_v8',
+        rotulo:'Backup Completo Vooalto V8',
+        exportedDisplay:d._exportedDisplay||'',
+        fichas:fichas,
+        rascunhosFicha:{
+          ativo:temConteudoFicha(rf.ativo)?rf.ativo:null,
+          ativoHora:rf.ativoHora||'',
+          anterior:temConteudoFicha(rf.anterior)?rf.anterior:null,
+          meta:rf.meta||null
+        },
+        orcamento:{
+          rascunhos:orcList,
+          ativo:temConteudoOrcamento(orc.ativo)?orc.ativo:null,
+          ativoHora:orc.ativoHora||''
+        },
+        clientes:cli,
+        storage:d.storage&&typeof d.storage==='object'?d.storage:{}
+      };
+    }
+    if(d._version==='vooalto_catalog_v7'||Array.isArray(d.orders)){
+      const orders=Array.isArray(d.orders)?d.orders:[];
+      const fichas=[];
+      const cli={};
+      orders.forEach((o,idx)=>{
+        if(!o||typeof o!=='object')return;
+        if(o.cliente&&o.telefone)cli[String(o.cliente).trim()]=String(o.telefone).trim();
+        if(o.fichaData&&typeof o.fichaData==='object'){
+          const id=String(o.id||('v7_'+idx+'_'+Date.now()));
+          const num=String(o.num||o.fichaData._numFicha||'');
+          fichas.push({
+            id:id,
+            name:(num?'Nº '+num+' — ':'')+String(o.cliente||stripTags(o.fichaData.dc_nome)||'Pedido V7'),
+            date:agoraBR(),
+            num:num,
+            data:o.fichaData
+          });
+        }
+      });
+      return {
+        tipo:'catalogo_v7',
+        rotulo:'Backup legado V7 ('+fichas.length+' ficha(s))',
+        exportedDisplay:d._exportedAt||'',
+        fichas:fichas,
+        rascunhosFicha:{ativo:fichas[0]?fichas[0].data:null,ativoHora:'',anterior:null,meta:null},
+        orcamento:{rascunhos:[],ativo:null,ativoHora:''},
+        clientes:cli,
+        storage:{}
+      };
+    }
+    if(typeof d._version==='string'&&d._version.indexOf('vooalto_ficha')===0){
+      const item={
+        id:'d_imp_'+Date.now(),
+        name:nomeFicha(d),
+        date:agoraBR(),
+        num:String(d._numFicha||d.fichaNum||''),
+        data:d
+      };
+      const cliNome=stripTags(d.dc_nome)||String(d.cliente||'').trim();
+      const cliTel=stripTags(d.dc_tel)||String(d.telefone||'').trim();
+      return {
+        tipo:'ficha_avulsa',
+        rotulo:'Ficha Técnica individual ('+item.name+')',
+        exportedDisplay:'',
+        fichas:[item],
+        rascunhosFicha:{ativo:d,ativoHora:'',anterior:null,meta:null},
+        orcamento:{rascunhos:[],ativo:null,ativoHora:''},
+        clientes:cliNome?{[cliNome]:cliTel}:{},
+        storage:{}
+      };
+    }
+    if(d.version==='vooalto_orcamento_v8'||d.version==='vooalto_orcamento_v7'){
+      const st=calcOrcStats(d);
+      const draft={
+        id:'orc_imp_'+Date.now(),
+        name:nomeOrcamento(d),
+        date:agoraBR(),
+        timestamp:Date.now(),
+        total:st.total,
+        itemsCount:st.itemsCount,
+        pagesCount:st.pagesCount,
+        state:d
+      };
+      return {
+        tipo:'orcamento_avulso',
+        rotulo:'Orçamento individual ('+draft.name+')',
+        exportedDisplay:d.savedAt||'',
+        fichas:[],
+        rascunhosFicha:{ativo:null,ativoHora:'',anterior:null,meta:null},
+        orcamento:{rascunhos:[draft],ativo:d,ativoHora:''},
+        clientes:{},
+        storage:{}
+      };
+    }
+    throw new Error('Formato não reconhecido. Selecione um arquivo .json exportado pelo Vooalto.');
+  }
+  function notificarModulos(modo,tipo){
+    const msg={type:'vooalto-backup-restaurado',modo:modo,tipo:tipo};
+    try{window.dispatchEvent(new CustomEvent('vooalto-backup-restaurado',{detail:msg}))}catch(e){}
+    try{
+      if(window.parent&&window.parent!==window){
+        window.parent.postMessage(msg,'*');
+      }
+    }catch(e){}
+  }
+  async function restaurar(entrada,modo){
+    const m=modo==='substituir'?'substituir':'mesclar';
+    const norm=inspecionarArquivo(entrada);
+    const hm=horaHM();
+    if(m==='substituir'){
+      const apagar=[];
+      try{
+        for(let i=0;i<localStorage.length;i++){
+          const k=localStorage.key(i);
+          if(isVooaltoKey(k))apagar.push(k);
+        }
+      }catch(e){}
+      apagar.forEach(lsDel);
+      Object.keys(norm.storage||{}).forEach(k=>{
+        if(isVooaltoKey(k)&&norm.storage[k]!=null)lsSet(k,String(norm.storage[k]));
+      });
+      await gravarFichasIDB(norm.fichas,true);
+      if(norm.rascunhosFicha.ativo){
+        const h=norm.rascunhosFicha.ativoHora||hm;
+        lsSet(FICHA_LIVE_KEY,JSON.stringify(norm.rascunhosFicha.ativo));
+        lsSet(FICHA_HORA_KEY,h);
+        lsSet(FICHA_META_KEY,JSON.stringify({hora:h,vazio:false}));
+      }else{
+        lsDel(FICHA_LIVE_KEY);
+        lsDel(FICHA_HORA_KEY);
+        lsDel(FICHA_META_KEY);
+      }
+      if(norm.rascunhosFicha.anterior)lsSet(FICHA_ANT_KEY,JSON.stringify(norm.rascunhosFicha.anterior));
+      else lsDel(FICHA_ANT_KEY);
+      lsSet(ORC_DRAFTS_KEY,JSON.stringify(norm.orcamento.rascunhos||[]));
+      if(norm.orcamento.ativo){
+        lsSet(ORC_LIVE_KEY,JSON.stringify(norm.orcamento.ativo));
+        lsSet(ORC_HORA_KEY,norm.orcamento.ativoHora||hm);
+      }else{
+        lsDel(ORC_LIVE_KEY);
+        lsDel(ORC_LIVE_LEG);
+      }
+      if(norm.clientes&&Object.keys(norm.clientes).length)lsSet(CLIENTES_KEY,JSON.stringify(norm.clientes));
+    }else{
+      flushAtivos();
+      const atuais=await lerTodasFichasIDB();
+      const mapa=new Map();
+      atuais.forEach(item=>{if(item&&item.id)mapa.set(String(item.id),item)});
+      const liveAtual=lsJSON(FICHA_LIVE_KEY,null);
+      const liveMetaAtual=lsJSON(FICHA_META_KEY,null);
+      const liveAtualUtil=temConteudoFicha(liveAtual)&&!(liveMetaAtual&&liveMetaAtual.vazio);
+      if(liveAtualUtil&&norm.rascunhosFicha.ativo){
+        const rawAtual=JSON.stringify(liveAtual);
+        const rawNovo=JSON.stringify(norm.rascunhosFicha.ativo);
+        if(rawAtual!==rawNovo){
+          const jaSalvo=atuais.some(x=>JSON.stringify(x.data)===rawAtual);
+          if(!jaSalvo){
+            const recId='d_rec_'+Date.now();
+            mapa.set(recId,{
+              id:recId,
+              name:'Rascunho recuperado — '+nomeFicha(liveAtual),
+              date:agoraBR(),
+              num:String(liveAtual._numFicha||liveAtual.fichaNum||''),
+              data:liveAtual
+            });
+          }
+        }
+      }
+      (norm.fichas||[]).forEach((item,idx)=>{
+        if(!item||!item.id||!item.data)return;
+        let id=String(item.id);
+        if(mapa.has(id)){
+          const existente=mapa.get(id);
+          if(JSON.stringify(existente.data)!==JSON.stringify(item.data)){
+            id=id+'_imp_'+idx;
+          }
+        }
+        mapa.set(id,{
+          id:id,
+          name:String(item.name||nomeFicha(item.data)),
+          date:String(item.date||agoraBR()),
+          num:String(item.num||item.data._numFicha||item.data.fichaNum||''),
+          data:item.data
+        });
+      });
+      await gravarFichasIDB(Array.from(mapa.values()),false);
+
+      if(norm.rascunhosFicha.ativo){
+        const h=norm.rascunhosFicha.ativoHora||hm;
+        lsSet(FICHA_LIVE_KEY,JSON.stringify(norm.rascunhosFicha.ativo));
+        lsSet(FICHA_HORA_KEY,h);
+        lsSet(FICHA_META_KEY,JSON.stringify({hora:h,vazio:false}));
+      }
+      if(norm.rascunhosFicha.anterior&&!temConteudoFicha(lsJSON(FICHA_ANT_KEY,null))){
+        lsSet(FICHA_ANT_KEY,JSON.stringify(norm.rascunhosFicha.anterior));
+      }
+
+      const orcAtuais=lsJSON(ORC_DRAFTS_KEY,[]);
+      const orcMapa=new Map();
+      (Array.isArray(orcAtuais)?orcAtuais:[]).forEach(x=>{if(x&&x.id)orcMapa.set(String(x.id),x)});
+      const orcLiveAtual=lerOrcLive();
+      if(temConteudoOrcamento(orcLiveAtual)&&norm.orcamento.ativo){
+        const rawOA=JSON.stringify(orcLiveAtual);
+        const rawON=JSON.stringify(norm.orcamento.ativo);
+        if(rawOA!==rawON){
+          const jaTem=Array.from(orcMapa.values()).some(x=>JSON.stringify(x.state)===rawOA);
+          if(!jaTem){
+            const oid='orc_rec_'+Date.now();
+            const st=calcOrcStats(orcLiveAtual);
+            orcMapa.set(oid,{
+              id:oid,
+              name:'Rascunho recuperado — '+nomeOrcamento(orcLiveAtual),
+              date:agoraBR(),
+              timestamp:Date.now(),
+              total:st.total,
+              itemsCount:st.itemsCount,
+              pagesCount:st.pagesCount,
+              state:orcLiveAtual
+            });
+          }
+        }
+      }
+      (norm.orcamento.rascunhos||[]).forEach((x,idx)=>{
+        if(!x||!x.state)return;
+        let id=String(x.id||('orc_imp_'+idx+'_'+Date.now()));
+        if(orcMapa.has(id)&&JSON.stringify(orcMapa.get(id).state)!==JSON.stringify(x.state)){
+          id=id+'_imp_'+idx;
+        }
+        const st=calcOrcStats(x.state);
+        orcMapa.set(id,Object.assign({
+          date:agoraBR(),
+          timestamp:Date.now(),
+          total:st.total,
+          itemsCount:st.itemsCount,
+          pagesCount:st.pagesCount
+        },x,{id:id}));
+      });
+      lsSet(ORC_DRAFTS_KEY,JSON.stringify(Array.from(orcMapa.values())));
+      if(norm.orcamento.ativo){
+        lsSet(ORC_LIVE_KEY,JSON.stringify(norm.orcamento.ativo));
+        lsSet(ORC_HORA_KEY,norm.orcamento.ativoHora||hm);
+      }
+
+      const cliMerged=Object.assign({},lsJSON(CLIENTES_KEY,{}),norm.clientes||{});
+      if(norm.storage&&norm.storage[CLIENTES_KEY]){
+        try{Object.assign(cliMerged,JSON.parse(norm.storage[CLIENTES_KEY]))}catch(e){}
+      }
+      lsSet(CLIENTES_KEY,JSON.stringify(cliMerged));
+
+      ['va4_ficha_counter','va3_num'].forEach(ck=>{
+        const vNovo=parseInt((norm.storage&&norm.storage[ck])||'0',10);
+        const vAtual=parseInt(lsGet(ck)||'0',10);
+        if(vNovo>vAtual)lsSet(ck,String(vNovo));
+      });
+      ['vooalto_ficha_quick_v7','va3_cores','va3_logo_st','vooalto_tema'].forEach(pk=>{
+        if(norm.storage&&norm.storage[pk]!=null&&!lsGet(pk))lsSet(pk,String(norm.storage[pk]));
+      });
+    }
+    notificarModulos(m,norm.tipo);
+    return {ok:true,modo:m,tipo:norm.tipo,rotulo:norm.rotulo,resumo:await resumir()};
+  }
+  async function exportarTudo(){
+    const payload=await coletarTudo();
+    const stamp=agoraBR();
+    lsSet(LAST_BKP_KEY,stamp);
+    payload._resumo.ultimoBackup=stamp;
+    payload.storage[LAST_BKP_KEY]=stamp;
+    const filename='backup_vooalto_completo_'+carimboArquivo()+'.json';
+    const json=JSON.stringify(payload,null,2);
+    if(typeof window.salvarArquivoJSON==='function'&&window._pastaHandle){
+      await window.salvarArquivoJSON(filename,json);
+    }else{
+      const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},2000);
+    }
+    return {ok:true,filename:filename,payload:payload,resumo:payload._resumo};
+  }
+  window.VooaltoBackup={
+    resumir:resumir,
+    coletarTudo:coletarTudo,
+    exportarTudo:exportarTudo,
+    inspecionarArquivo:inspecionarArquivo,
+    restaurar:restaurar,
+    temConteudoFicha:temConteudoFicha,
+    temConteudoOrcamento:temConteudoOrcamento
+  };
+})();
+
+async function exportarBackupCompletoV8(){
+  if(!window.VooaltoBackup){if(typeof toast==='function')toast('⚠ Motor de backup indisponível.','erro');return}
+  try{
+    const res=await window.VooaltoBackup.exportarTudo();
+    if(typeof toast==='function'){
+      toast('💾 Backup completo salvo: '+res.resumo.fichasSalvas+' ficha(s)'+(res.resumo.temRascunhoFicha?' + rascunho atual':'')+'!','sucesso',4000);
+    }
+  }catch(e){
+    if(typeof toast==='function')toast('⚠ Falha ao exportar backup: '+(e&&e.message?e.message:String(e)),'erro',4000);
+  }
+}
+function abrirCentralBackupV8(){
+  if(window.parent&&window.parent!==window){
+    try{window.parent.postMessage({type:'vooalto-abrir-backup'},'*');return}catch(e){}
+  }
+  exportarBackupCompletoV8();
+}
+async function v8RecarregarPosBackup(){
+  try{
+    if(typeof window.v8FichasListar==='function')await window.v8FichasListar();
+    const raw=localStorage.getItem('vooalto_v7_ficha_ativa');
+    if(raw&&typeof restaurarDeJSON==='function'){
+      restaurarDeJSON(JSON.parse(raw));
+      if(typeof renderPageStrip==='function')renderPageStrip();
+    }
+    if(typeof v8RascunhoAtualizarUI==='function')v8RascunhoAtualizarUI();
+    if(typeof fichaUpdateReadiness==='function')fichaUpdateReadiness();
+  }catch(e){console.warn('Falha ao atualizar ficha após backup',e)}
+}
+window.addEventListener('vooalto-backup-restaurado',()=>v8RecarregarPosBackup());
+window.addEventListener('message',ev=>{
+  if(ev&&ev.data&&ev.data.type==='vooalto-backup-restaurado')v8RecarregarPosBackup();
+});
 </script>
 </body>
 </html>
