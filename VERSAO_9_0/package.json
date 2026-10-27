@@ -1,0 +1,14 @@
+{
+  "name": "vooalto-v9",
+  "private": true,
+  "version": "9.0.0",
+  "description": "Testes e ferramentas de build do Vooalto V9 PWA",
+  "scripts": {
+    "test": "node tests/test_shell_v9.js && node tests/test_ficha_v9.js && node tests/test_minhas_fichas_v9.js && node tests/test_orc_v9.js && node tests/test_orc_features_v9.js && node tests/test_canva_v9.js && node tests/test_ux_v9.js && node tests/test_temas_v9.js && node tests/test_pwa_infra_v9.js && node tests/test_server_v9.js && node tests/test_perf_v9.js && node tests/test_backup_e_tamanhos_v9.js",
+    "test:python": "python -m unittest discover -s tests -p 'test_*.py'",
+    "build": "python build_v9_pwa.py"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

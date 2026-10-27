@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vooalto V9 — Limpar cache</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0b0f17;color:#e5e7eb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#111827;border:1px solid #1f2937;border-radius:20px;padding:30px;max-width:560px;width:100%}
+h1{font-size:19px;margin-bottom:6px}
+p.sub{font-size:12.5px;color:#9ca3af;margin-bottom:16px;line-height:1.5}
+.note{background:#052e1b;border:1px solid #14532d;color:#bbf7d0;border-radius:12px;padding:12px 14px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.warn{background:#451a03;border:1px solid #7c2d12;color:#fed7aa;border-radius:12px;padding:12px 14px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.log{background:#030712;border-radius:12px;padding:12px 14px;font-size:11.5px;font-family:monospace;min-height:90px;max-height:180px;overflow-y:auto;margin-bottom:16px;color:#a5f3fc;white-space:pre-wrap}
+.btn{background:#0284c7;color:#fff;border:0;border-radius:999px;padding:12px 22px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn:hover{background:#0369a1}
+.btn.sec{background:#374151}
+.row{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🧹 Limpar cache do Vooalto V9</h1>
+  <p class="sub">Remove o cache do Service Worker (versões antigas do app) para atualizar depois de uma nova instalação.</p>
+  <div class="note">✅ <b>Seguro:</b> esta página <b>não apaga seus dados</b> (fichas, catálogo, orçamentos e PDFs continuam intactos). Só limpa o cache do navegador usado pelo aplicativo.</div>
+  <div class="log" id="log">Aguardando ação...</div>
+  <div class="row">
+    <button class="btn" onclick="limparCache()">Limpar cache agora</button>
+    <a class="btn sec" id="btnVoltar" style="display:inline-block;text-decoration:none;text-align:center" href="./index.html">Voltar ao V9</a>
+  </div>
+</div>
+<script>
+function log(m){ const l=document.getElementById('log'); l.textContent += m+'\n'; l.scrollTop=l.scrollHeight; }
+let cacheCleanupRunning=false;
+/* Apaga os caches do V9 e tambem os deixados por versoes anteriores na mesma origem. */
+function isVooaltoCacheKey(name){return /^vooalto-v\d+(-|$)/.test(name)}
+function isVooaltoRegistration(reg){
+  try{
+    const expected=new URL('./',location.href);
+    const scope=new URL(reg.scope);
+    return scope.origin===expected.origin&&scope.pathname===expected.pathname;
+  }catch(e){return false}
+}
+async function limparCache(){
+  if(cacheCleanupRunning)return;
+  cacheCleanupRunning=true;
+  const runButton=document.querySelector('.btn:not(.sec)');
+  if(runButton)runButton.disabled=true;
+  log('Iniciando limpeza segura...');
+  let nReg=0,nCache=0,nFail=0;
+  if('serviceWorker' in navigator){
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const reg of regs){
+        if(!isVooaltoRegistration(reg))continue;
+        try{if(await reg.unregister())nReg++;}catch(e){nFail++;log('Falha ao remover o Service Worker: '+e.message)}
+      }
+      log('Service Workers do Vooalto removidos: '+nReg);
+      log('Service Workers de outros apps mantidos.');
+    }catch(e){nFail++;log('Nao foi possivel listar Service Workers: '+e.message)}
+  }else log('Service Worker nao suportado neste navegador.');
+  if('caches' in window){
+    try{
+      const keys=await caches.keys();
+      for(const key of keys){
+        if(!isVooaltoCacheKey(key))continue;
+        try{if(await caches.delete(key)){nCache++;log('Cache removido: '+key)}}catch(e){nFail++;log('Falha no cache '+key+': '+e.message)}
+      }
+      if(!nCache)log('Nenhum cache Vooalto encontrado.');
+      log('Caches de outros aplicativos mantidos.');
+    }catch(e){nFail++;log('Nao foi possivel listar caches: '+e.message)}
+  }
+  const btn=document.getElementById('btnVoltar');
+  if(btn)btn.href='./index.html?atualizar='+Date.now();
+  log(nFail?'⚠ Limpeza concluida com '+nFail+' falha(s). Tente novamente ou recarregue a pagina.':'✔ Concluido. Seus dados (fichas, PDFs e orcamentos) NAO foram tocados.');
+  log('Clique em "Voltar ao V9" para abrir e recachear a versao atual.');
+  cacheCleanupRunning=false;
+  if(runButton)runButton.disabled=false;
+}
+</script>
+</body>
+</html>
