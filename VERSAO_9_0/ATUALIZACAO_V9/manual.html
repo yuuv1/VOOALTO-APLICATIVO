@@ -8,7 +8,7 @@
 /* Aplica o tema salvo ANTES de desenhar (evita o flash branco no tema escuro). */
 (function(){
   try{
-    var t=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+    var t=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro';
     var dark=/escur|noite|dark|night|preto/i.test(t);
     document.documentElement.dataset.theme=dark?'escuro':'';
     document.documentElement.style.colorScheme=dark?'dark':'light';
@@ -169,6 +169,18 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
       <li>As ferramentas <b>acompanham a página em foco</b>: clicar numa arte da página 2 leva a régua, o painel e o estúdio para lá. Cada página tem ⤢ e 🎛 na sua barrinha.</li>
       <li><b>Solte uma foto em cima de outra</b> para trocar só aquela arte. Na aba <b>Precisão</b> dá para digitar o tamanho <b>em milímetros</b> (largura da arte no papel).</li>
       <li>Com <b>Shift+clique</b> em várias camadas, <b>alinhar</b> encosta uma na outra — o jeito rápido de deixar frente e costas na mesma altura.</li>
+    </ul>
+
+    <h3>Peça do mockup — a camiseta do desenho técnico</h3>
+    <ul>
+      <li>Na régua da área do mockup, o botão <b>⬟ Peça</b> abre o estúdio da peça: corpo, recortes laterais, mangas, gola alta, zíper e punhos, de frente e de costas.</li>
+      <li><b>Onde aplicar</b>: escolha a zona (corpo, mangas, recortes, gola, punhos), pinte com a <b>cor sólida</b> ou clique numa das <b>paletas</b>. É a cor do pano, não é pintura.</li>
+      <li><b>Cores</b> e <b>textura do recorte</b>: dá para <b>esticar</b> a textura sobre o recorte (como no Photoshop) ou deixá-la <b>repetida</b> em mosaico, com tamanho, giro, posição e opacidade. A textura tinge o pano (não apaga a cor).</li>
+      <li><b>Acabamento</b>: <b>Dry fit</b> (um brilho leve) ou <b>Algodão</b> (fosco).</li>
+      <li><b>Arraste uma imagem para a peça</b>: ela entra presa ao tecido e, ao mover, <b>acompanha o ângulo</b> daquele ponto (no ombro fica em pé, na manga deita junto com o braço). A arte nunca escapa da silhueta.</li>
+      <li>Selecione a arte para <b>redimensionar</b> pelos cantos (<kbd>Shift</kbd> mantém a proporção), <b>girar</b> pela alça de cima, <b>duplicar</b>, <b>espelhar</b> ou <b>apagar</b> (✕).</li>
+      <li><b>✓ Aplicar na ficha</b> transforma a peça numa camada de imagem normal: move, gira, imprime e entra no .json como qualquer arte. Clique nela de novo com o botão da peça para <b>reabrir e editar</b>.</li>
+      <li>A <b>costura</b> de cada painel usa a <b>cor daquele painel</b> (um tom mais escuro) — mude o recorte de cor e a costura acompanha.</li>
     </ul>
 
     <h3>Páginas</h3>

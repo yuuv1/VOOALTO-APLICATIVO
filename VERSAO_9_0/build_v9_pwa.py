@@ -35,6 +35,12 @@ CORE_FILES = [
     'README.txt',
     'criador_ficha_tecnica/index.html',
     'criador_orcamento/index.html',
+    # V9.3 — estúdio da peça (camiseta de pescador): geometria, render, editor
+    'mockup/peca.js',
+    'mockup/peca_render.js',
+    'mockup/peca_editor.js',
+    'mockup/peca_editor.css',
+    'mockup/index.html',
     'assets/cropper.min.css',
     'assets/cropper.min.js',
     'assets/html2canvas.min.js',

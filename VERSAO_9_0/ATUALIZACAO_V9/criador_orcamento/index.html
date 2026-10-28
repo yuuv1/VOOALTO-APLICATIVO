@@ -12,7 +12,7 @@
      o módulo nascia azul-escuro fixo e só depois trocava. */
   (function(){try{
     var antigos={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
-    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro';
     var escuro=(salvo==='escuro')||!!antigos[salvo];
     document.documentElement.setAttribute('data-theme',escuro?'escuro':'claro');
     document.documentElement.style.colorScheme=escuro?'dark':'light';
@@ -3264,7 +3264,7 @@ function v7TemaValido(t){if(t==='escuro')return 'escuro';if(t==='claro')return '
 function applyGlobalTheme(t){ t=v7TemaValido(t); document.documentElement.dataset.theme=(t==='escuro')?'escuro':'claro'; document.documentElement.style.colorScheme=(t==='escuro')?'dark':'light'; }
 window.addEventListener('message', e=>{ if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme); });
 /* V8 — chave nova 'vooalto_tema', com a antiga 'vooalto_theme_v5' como reserva. */
-function v8TemaSalvo(){try{return localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro'}catch(e){return 'claro'}}
+function v8TemaSalvo(){try{return localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro'}catch(e){return 'claro'}}
 window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()); });
 </script>
 
