@@ -1065,6 +1065,42 @@ function check(label, ok, extra) {
   check('nova ficha também zera as páginas extras',
     t(`paginas.length`) === 0 && !t(`document.querySelector('#pw .folha-branca, #pw .folha:not(#folha1)')`));
 
+  /* 22.12 "Ocultar camada" do menu de contexto numa página extra (antes a
+     ação procurava a camada só na folha 1 e não fazia nada fora da página 1) */
+  t(`v7AdicionarPaginaComUndo('normal')`); await new Promise(r => setTimeout(r, 500));
+  const pagOc = t(`paginas[paginas.length-1].id`);
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagOc}';})[0];
+      var l={type:'rect',id:'oc1',fillColor:'#eee',strokeColor:'#333',strokeWidth:2,xp:.3,yp:.3,wp:.2,hp:.2,rot:0,z:++p.zCnt};
+      p.layers.push(l);renderRectLayerExtra(p,l);v7MostrarToolbar({id:p.id,tipo:'normal',p1:false});selLayerExtra(p,'oc1');return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 300));
+  t(`mkeAcao('ocultar')`);
+  await new Promise(r => setTimeout(r, 200));
+  const oc1 = t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagOc}';})[0];var l=p.layers.filter(function(x){return x.id==='oc1';})[0];
+      var el=document.getElementById('ly_${pagOc}_oc1');return [l.hidden?1:0, el?el.style.display:'sem-el'];})()`);
+  check('ocultar camada pela página extra esconde de verdade',
+    Array.isArray(oc1) && oc1[0] === 1 && oc1[1] === 'none', oc1);
+  t(`mkeAcao('ocultar')`);
+  await new Promise(r => setTimeout(r, 200));
+  const oc1b = t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagOc}';})[0];var l=p.layers.filter(function(x){return x.id==='oc1';})[0];return l.hidden?1:0;})()`);
+  check('o mesmo clique mostra a camada de novo', oc1b === 0, oc1b);
+
+  /* 22.13 abrir uma ficha zera o histórico: Ctrl+Z logo depois não pode
+     desfazer uma operação de PÁGINA da ficha anterior */
+  t(`v7AdicionarPaginaComUndo('normal')`); await new Promise(r => setTimeout(r, 500));
+  const jsonHist = t(`JSON.stringify(capturarFichaParaJSON())`);
+  t(`restaurarDeJSON(${jsonHist})`);
+  await new Promise(r => setTimeout(r, 1200));
+  const antesUndoHist = t(`({p:paginas.length,d:document.querySelectorAll('#pw .folha, #pw .folha-branca').length})`);
+  t(`undo(); 'ok'`);
+  await new Promise(r => setTimeout(r, 600));
+  const depoisUndoHist = t(`({p:paginas.length,d:document.querySelectorAll('#pw .folha, #pw .folha-branca').length})`);
+  check('Ctrl+Z após abrir uma ficha não apaga página da ficha aberta',
+    !!antesUndoHist && antesUndoHist.p === depoisUndoHist.p && antesUndoHist.d === depoisUndoHist.d,
+    [antesUndoHist, depoisUndoHist]);
+  check('o histórico de páginas é limpo ao abrir a ficha',
+    t(`v7PageUndoStack.length`) === 0 && t(`undoStack.length`) === 0,
+    [t(`v7PageUndoStack.length`), t(`undoStack.length`)]);
+
   if (errs.length) fail++;
   console.log('  erros de página:', errs.length ? errs : 'nenhum ✓');
   console.log(`\n═══ MOCKUP V9.1: ${pass} OK, ${fail} FAIL ═══`);

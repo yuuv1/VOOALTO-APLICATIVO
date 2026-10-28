@@ -203,6 +203,20 @@ function check(label, ok, extra) {
     (doc.getElementById('orcToast') || {}).textContent);
   w.Storage.prototype.setItem = setItemOriginal;
 
+
+  /* adicionar/duplicar página precisa agendar o autosave (antes a página nova
+     se perdia se a pessoa fechasse a aba em seguida) */
+  t(`localStorage.removeItem('vooalto_orcamento_autosave_v7'); 'ok'`);
+  const paginasAntesAuto = t(`documentPages.length`);
+  t(`addDocumentPage(); 'ok'`);
+  await new Promise(r => setTimeout(r, 900));
+  const autoDepoisAdd = t(`(function(){try{return JSON.parse(localStorage.getItem('vooalto_orcamento_autosave_v7')||'{}').pages.length}catch(e){return -1}})()`);
+  check('adicionar página agenda o autosave', autoDepoisAdd === paginasAntesAuto + 1, [paginasAntesAuto, autoDepoisAdd]);
+  t(`duplicateDocumentPage(0); 'ok'`);
+  await new Promise(r => setTimeout(r, 900));
+  const autoDepoisDup = t(`(function(){try{return JSON.parse(localStorage.getItem('vooalto_orcamento_autosave_v7')||'{}').pages.length}catch(e){return -1}})()`);
+  check('duplicar página também agenda o autosave', autoDepoisDup === autoDepoisAdd + 1, [autoDepoisAdd, autoDepoisDup]);
+
   if(errs.length)fail++;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   console.log(`\n═══ RESULTADO ORÇAMENTO FEATURES: ${pass} OK, ${fail} FAIL ═══`);
