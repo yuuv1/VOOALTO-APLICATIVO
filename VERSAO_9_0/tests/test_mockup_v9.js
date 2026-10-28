@@ -487,7 +487,9 @@ function check(label, ok, extra) {
   const copiaPag = t(`(function(){var p=paginas.filter(function(x){return x.id==='${pag2.id}';})[0];
       var i=paginas.indexOf(p);var c=paginas[i+1];return {id:c.id,layers:(c.layers||[]).length,folha:!!document.getElementById('folha_'+c.id)};})()`);
   check('a cópia tem a área da página montada', !!(copiaPag && copiaPag.folha), copiaPag);
-  check('a cópia leva as camadas da original', copiaPag && copiaPag.layers === t(`paginas.filter(function(x){return x.id==='${pag2.id}';})[0].layers.filter(function(l){return l.type!=='img'||!!l.src;}).length`), copiaPag);
+  check('a cópia leva as camadas da original',
+    copiaPag && copiaPag.layers === t(`paginas.filter(function(x){return x.id==='${pag2.id}';})[0].layers.length`),
+    [copiaPag && copiaPag.layers, t(`paginas.filter(function(x){return x.id==='${pag2.id}';})[0].layers.length`)]);
   check('a cópia leva a grade preenchida',
     t(`(function(){var c=paginas[paginas.indexOf(paginas.filter(function(x){return x.id==='${pag2.id}';})[0])+1];
         var g=document.querySelectorAll('.gi[data-g="'+c.id+'m"]');return g[0]?g[0].value:'';})()`) === '7');
@@ -860,6 +862,195 @@ function check(label, ok, extra) {
   docEl.textContent = '12345678901';
   check('formatar o campo do CPF mexe no texto', t(`v9FormatarCampo(document.getElementById('dc_doc'),'doc')`) === true && docEl.textContent === '123.456.789-01', docEl.textContent);
   check('formatar de novo não altera nada', t(`v9FormatarCampo(document.getElementById('dc_doc'),'doc')`) === false);
+
+  /* ── 22. Pente fino: desfazer, remoção da página em foco e ações que não
+     salvavam (bugs encontrados na revisão da V9.1) ── */
+
+  /* 22.1 mover camada na folha 1 entra no desfazer e volta para o lugar */
+  t(`v7PageUndoStack=[];v7PageRedoStack=[];undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];estadoAtual=null;snapLastSig=''; 'ok'`);
+  t(`(function(){var l={type:'rect',id:'pf1',fillColor:'#eee',strokeColor:'#333',strokeWidth:2,xp:.2,yp:.2,wp:.3,hp:.3,rot:0,z:250};layers.push(l);renderRectLayer(l);selLayer('pf1');snap();return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 950));
+  const pilhaAntes = t(`undoStack.length`);
+  t(`(function(){var l=layers.filter(function(x){return x.id==='pf1';})[0];l.xp=.65;l.yp=.65;snap();return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 950));
+  check('mover a camada cria passo de desfazer',
+    t(`undoStack.length`) === pilhaAntes + 1, [pilhaAntes, t(`undoStack.length`)]);
+  t(`undo(); 'ok'`);
+  await new Promise(r => setTimeout(r, 400));
+  check('um Ctrl+Z volta a camada para a posição anterior',
+    Math.abs((t(`(layers.filter(function(x){return x.id==='pf1';})[0]||{}).xp`) ?? -1) - 0.2) < 1e-6,
+    t(`(layers.filter(function(x){return x.id==='pf1';})[0]||{}).xp`));
+  t(`redo(); 'ok'`);
+  await new Promise(r => setTimeout(r, 400));
+  check('Ctrl+Y refaz o movimento',
+    Math.abs((t(`(layers.filter(function(x){return x.id==='pf1';})[0]||{}).xp`) ?? -1) - 0.65) < 1e-6,
+    t(`(layers.filter(function(x){return x.id==='pf1';})[0]||{}).xp`));
+
+  /* 22.2 o mesmo numa página extra */
+  t(`v7PageUndoStack=[];v7PageRedoStack=[]; 'ok'`);
+  t(`v7AdicionarPaginaComUndo('normal')`);
+  await new Promise(r => setTimeout(r, 400));
+  const pagPF = t(`paginas.length ? paginas[paginas.length-1].id : null`);
+  t(`v7PageUndoStack=[];v7PageRedoStack=[]; 'ok'`);
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagPF}';})[0];
+      p.layers.push({type:'rect',id:'pf2',fillColor:'#eee',strokeColor:'#333',strokeWidth:2,xp:.15,yp:.15,wp:.2,hp:.2,rot:0,z:11});
+      renderRectLayerExtra(p,p.layers[0]);v7MostrarToolbar({id:p.id,tipo:'normal',p1:false});return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 950));
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagPF}';})[0];
+      var l=p.layers.filter(function(x){return x.id==='pf2';})[0];l.xp=.7;snap();return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 950));
+  const xpPagDepois = t(`(paginas.filter(function(x){return x.id==='${pagPF}';})[0].layers.filter(function(l){return l.id==='pf2';})[0]||{}).xp`);
+  t(`undo(); 'ok'`);
+  await new Promise(r => setTimeout(r, 450));
+  const xpPagUndo = t(`(paginas.filter(function(x){return x.id==='${pagPF}';})[0].layers.filter(function(l){return l.id==='pf2';})[0]||{}).xp`);
+  check('mover camada na página extra também entra no desfazer',
+    Math.abs(xpPagDepois - 0.7) < 1e-6 && Math.abs(xpPagUndo - 0.15) < 1e-6, [xpPagDepois, xpPagUndo]);
+
+  /* 22.3 remover a página em foco devolve o estúdio para a folha 1 */
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagPF}';})[0];
+      v7MostrarToolbar({id:p.id,tipo:'normal',p1:false});mkeMoverUI();return 1;})(); 'ok'`);
+  const railNaPagina = t(`!!document.querySelector('#folha_${pagPF} #mkeRail')`);
+  check('a régua realmente vai para dentro da página em foco', railNaPagina === true, railNaPagina);
+  t(`v7RemoverPaginaComUndo('${pagPF}')`);
+  await new Promise(r => setTimeout(r, 500));
+  check('remover a página em foco não leva a régua junto',
+    !!t(`document.getElementById('mkeRail')`) && !!t(`document.getElementById('canvasOuter').contains(document.getElementById('mkeRail'))`));
+  check('o painel volta a dizer que age na folha 1',
+    !/P\d/.test(doc.getElementById('mkeHdr').textContent || ''), doc.getElementById('mkeHdr').textContent);
+  t(`undo(); 'ok'`);
+  await new Promise(r => setTimeout(r, 500));
+
+  /* 22.4 "preencher" na página extra usa cover (sem faixa vazia) */
+  const pagFill = t(`paginas.length ? paginas[paginas.length-1].id : null`);
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagFill}';})[0];
+      var l={type:'img',id:'pf3',src:'data:image/png;base64,AAAA',ratio:1.5,xp:.1,yp:.1,wp:.2,hp:.4,rot:0,prop:true,z:++p.zCnt,fit:'contain'};
+      p.layers.push(l);renderImgLayerExtra(p,l);selLayerExtra(p,'pf3');lFillExtra(p.id);return 1;})(); 'ok'`);
+  check('preencher na página extra deixa a imagem em cover',
+    t(`(paginas.filter(function(x){return x.id==='${pagFill}';})[0].layers.filter(function(l){return l.id==='pf3';})[0].fit)`) === 'cover',
+    t(`(paginas.filter(function(x){return x.id==='${pagFill}';})[0].layers.filter(function(l){return l.id==='pf3';})[0].fit)`));
+
+  /* 22.4b setas: girar e espelhar funcionam (antes o painel dizia que girou e
+     a seta ficava parada, porque seta não usa "rot") */
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagFill}';})[0];
+      var l={type:'arr',id:'fa1',x1p:.2,y1p:.5,x2p:.6,y2p:.5,xp:.2,yp:.5,wp:.4,hp:.05,rot:0,color:'#111',stroke:3,arStyle:'full',z:++p.zCnt};
+      p.layers.push(l);renderArrLayerExtra(p,l);selLayerExtra(p,'fa1');return 1;})(); 'ok'`);
+  const setaAntes = t(`(function(){var l=paginas.filter(function(x){return x.id==='${pagFill}';})[0].layers.filter(function(x){return x.id==='fa1';})[0];return [l.x1p,l.y1p,l.x2p,l.y2p];})()`);
+  t(`mkeAcao('rot-p15'); 'ok'`);
+  const setaGir = t(`(function(){var l=paginas.filter(function(x){return x.id==='${pagFill}';})[0].layers.filter(function(x){return x.id==='fa1';})[0];return [l.x1p,l.y1p,l.x2p,l.y2p];})()`);
+  check('girar em graus mexe nas pontas da seta',
+    Array.isArray(setaGir) && JSON.stringify(setaGir) !== JSON.stringify(setaAntes), [setaAntes, setaGir]);
+  check('girar a seta mantém as pontas dentro da área',
+    (setaGir || []).every(v => v >= 0 && v <= 1), setaGir);
+  t(`(function(){var l=paginas.filter(function(x){return x.id==='${pagFill}';})[0].layers.filter(function(x){return x.id==='fa1';})[0];
+      l.x1p=.2;l.y1p=.5;l.x2p=.6;l.y2p=.5;selLayerExtra(paginas.filter(function(x){return x.id==='${pagFill}';})[0],'fa1');return 1;})(); 'ok'`);
+  t(`mkeAcao('flipH'); 'ok'`);
+  const setaFlip = t(`(function(){var l=paginas.filter(function(x){return x.id==='${pagFill}';})[0].layers.filter(function(x){return x.id==='fa1';})[0];return [l.x1p,l.y1p,l.x2p,l.y2p];})()`);
+  check('espelhar a seta reflete as duas pontas',
+    Math.abs(setaFlip[0] - 0.8) < 1e-6 && Math.abs(setaFlip[2] - 0.4) < 1e-6, setaFlip);
+
+  /* 22.5 recorte sem a biblioteca não quebra a página */
+  check('abrirCrop sem Cropper não lança erro', (function(){
+    try { t(`(function(){var l=layers.filter(function(x){return x.type==='img';})[0];if(l)selLayer(l.id);abrirCrop('camada');return 1;})(); 'ok'`); return true; }
+    catch (e) { return false; }
+  })());
+
+  /* 22.6 salvar em .json e reabrir devolve as camadas da página extra
+     (o jsdom não carrega imagens, então o Image é trocado por um que dispara
+     onload como o navegador — sem isso a camada nem chega a ser criada) */
+  w.Image = class {
+    constructor(){ this.naturalWidth = 1; this.naturalHeight = 1; }
+    set src(v){ this._src = v; setTimeout(() => { try { this.onload && this.onload(); } catch (e) {} }, 0); }
+    get src(){ return this._src; }
+  };
+  t(`v7AdicionarPaginaComUndo('normal')`);
+  await new Promise(r => setTimeout(r, 500));
+  const pagRT = t(`paginas.length ? paginas[paginas.length-1].id : null`);
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagRT}';})[0];
+      var l={type:'img',id:'rt1',src:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',ratio:1,xp:.2,yp:.25,wp:.3,hp:.2,rot:5,prop:true,z:++p.zCnt,hidden:0,locked:1,op:.6,_fileName:'frente polo'};
+      p.layers.push(l);renderImgLayerExtra(p,l);return 1;})(); 'ok'`);
+  const camAntesRT = t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagRT}';})[0];return {id:p.id,n:p.layers.length,l:p.layers.map(function(l){return [l.id,l.xp,l.yp,l.op,l.locked,l._fileName];})};})()`);
+  const jsonRT = t(`JSON.stringify(capturarFichaParaJSON())`);
+  const pagJsonRT = (JSON.parse(jsonRT)._paginas || []).filter(pg => (pg.layers || []).some(l => l.id === 'rt1'))[0];
+  check('o JSON salvo guarda a camada da página extra',
+    !!pagJsonRT && pagJsonRT.layers.length === 1,
+    pagJsonRT ? pagJsonRT.layers.length : 'página não encontrada no JSON');
+  t(`restaurarDeJSON(${jsonRT})`);
+  await new Promise(r => setTimeout(r, 1100));
+  const camDepoisRT = t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagRT}';})[0]||paginas[0];return p?{id:p.id,n:p.layers.length,l:p.layers.map(function(l){return [l.id,l.xp,l.yp,l.op,l.locked,l._fileName];})}:null;})()`);
+  check('reabrir o .json devolve a camada da página extra (id, posição, opacidade, trava e nome)',
+    !!camDepoisRT && JSON.stringify(camDepoisRT.l) === JSON.stringify(camAntesRT.l),
+    [camAntesRT, camDepoisRT && camDepoisRT.l]);
+
+  /* 22.7 imagem que não carrega não apaga mais a moldura salva */
+  w.Image = class {
+    constructor(){ this.naturalWidth = 0; this.naturalHeight = 0; }
+    set src(v){ this._src = v; setTimeout(() => { try { this.onerror && this.onerror(); } catch (e) {} }, 0); }
+    get src(){ return this._src; }
+  };
+  t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagRT}';})[0]||paginas[0];
+      addImgLayerExtra(p,'data:image/png;base64,QUJD',{id:'qb2',xp:.4,yp:.4,wp:.2,hp:.1,rot:0,name:'foto sumida'});return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 400));
+  const quebradaExtra = t(`(function(){var p=paginas.filter(function(x){return x.id==='${pagRT}';})[0]||paginas[0];
+      var l=p.layers.filter(function(x){return x.id==='qb2';})[0];return l?[l.xp,l.yp,l._semImagem]:null;})()`);
+  check('página extra: imagem quebrada mantém a moldura no lugar',
+    Array.isArray(quebradaExtra) && Math.abs(quebradaExtra[0] - 0.4) < 1e-6 && quebradaExtra[2] === 1, quebradaExtra);
+  t(`addImgLayer('data:image/png;base64,QUJD',{id:'qb1',xp:.3,yp:.3,wp:.2,hp:.2,rot:0},'quebrada')`);
+  await new Promise(r => setTimeout(r, 400));
+  const quebradaFolha1 = t(`(function(){var l=layers.filter(function(x){return x.id==='qb1';})[0];return l?[l.xp,l.yp,l._semImagem]:null;})()`);
+  check('folha 1: imagem quebrada mantém a moldura no lugar',
+    Array.isArray(quebradaFolha1) && Math.abs(quebradaFolha1[0] - 0.3) < 1e-6 && quebradaFolha1[2] === 1, quebradaFolha1);
+
+  /* 22.8 a cópia de emergência do localStorage não pode guardar base64 de
+     imagem (regra do PLANO: estoura a cota e trava a interface) */
+  t(`(function(){var l={type:'img',id:'ls1',src:'data:image/png;base64,AAAAAAAAAAAAAAAAAAAA',ratio:1,xp:.1,yp:.1,wp:.2,hp:.2,rot:0,prop:true,z:++zCnt};
+      layers.push(l);renderImgLayer(l);return 1;})(); 'ok'`);
+  t(`savLayers(); 'ok'`);
+  const va3 = t(`localStorage.getItem('va3_layers') || ''`);
+  check('va3_layers guarda a camada sem o base64 da imagem',
+    va3.indexOf('data:image') < 0 && va3.indexOf('"ls1"') >= 0, va3.slice(0, 80));
+
+  /* 22.9 cota estourada: o autosave guarda a ficha SEM as fotos em vez de
+     falhar e perder o trabalho todo; ao reabrir, a moldura volta no lugar */
+  const setItemOriginal = w.Storage.prototype.setItem;
+  w.Storage.prototype.setItem = function (k, v) {
+    if (k === 'vooalto_v7_ficha_ativa' && String(v).length > 50000) {
+      const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e;
+    }
+    return setItemOriginal.call(this, k, v);
+  };
+  t(`(function(){var l={type:'img',id:'gorda',src:'data:image/png;base64,'+new Array(120000).join('A'),ratio:1,xp:.44,yp:.33,wp:.2,hp:.2,rot:0,prop:true,z:++zCnt};
+      layers.push(l);renderImgLayer(l);return 1;})(); 'ok'`);
+  const salvou = t(`v7SalvarAutosaveAgora()`);
+  const rawAuto = t(`localStorage.getItem('vooalto_v7_ficha_ativa') || ''`);
+  w.Storage.prototype.setItem = setItemOriginal;
+  check('autosave com a cota cheia ainda salva a ficha',
+    salvou === true && rawAuto.length > 10, [salvou, rawAuto.length]);
+  check('rascunho de emergência fica sem o base64 das fotos',
+    rawAuto.indexOf('data:image/png;base64,AAAA') < 0 && /"_semImagens":1/.test(rawAuto));
+  const autoJson = rawAuto ? JSON.parse(rawAuto) : {};
+  const camGorda = (autoJson._layers || []).filter(l => l.id === 'gorda')[0] || {};
+  check('a moldura da foto continua salva (posição, tamanho e aviso)',
+    Math.abs(camGorda.xp - 0.44) < 1e-6 && camGorda._semImagem === 1, camGorda);
+  t(`(function(){clearAllLayers();restaurarDeJSON(${JSON.stringify(autoJson)});return 1;})(); 'ok'`);
+  await new Promise(r => setTimeout(r, 900));
+  const camVoltou = t(`(function(){var l=layers.filter(function(x){return x.id==='gorda';})[0];return l?[l.xp,l.yp,l._semImagem]:null;})()`);
+  check('reabrir o rascunho sem fotos devolve a moldura no mesmo lugar',
+    Array.isArray(camVoltou) && Math.abs(camVoltou[0] - 0.44) < 1e-6 && camVoltou[2] === 1, camVoltou);
+
+  /* 22.10 remover uma página do meio não deixa buraco na numeração */
+  t(`v7AdicionarPaginaComUndo('normal')`); await new Promise(r => setTimeout(r, 350));
+  t(`v7AdicionarPaginaComUndo('normal')`); await new Promise(r => setTimeout(r, 350));
+  const numsAntes = t(`paginas.map(function(p){return p.num;})`);
+  const alvoMeio = t(`paginas[0].id`);
+  t(`v7RemoverPaginaComUndo('${alvoMeio}')`);
+  await new Promise(r => setTimeout(r, 700));
+  const numsDepois = t(`paginas.map(function(p){return p.num;})`);
+  check('numeração das páginas extras fica em sequência (sem buraco)',
+    numsDepois.length === numsAntes.length - 1 && numsDepois.every((n, i) => n === i + 2),
+    [numsAntes, numsDepois]);
+  check('a ordem do modelo bate com a ordem das folhas na tela',
+    JSON.stringify(t(`paginas.map(function(p){return 'folha_'+p.id;})`))
+      === JSON.stringify(t(`Array.from(document.querySelectorAll('#pw .folha:not(#folha1), #pw .folha-branca')).map(function(e){return e.id;})`)));
 
   if (errs.length) fail++;
   console.log('  erros de página:', errs.length ? errs : 'nenhum ✓');
