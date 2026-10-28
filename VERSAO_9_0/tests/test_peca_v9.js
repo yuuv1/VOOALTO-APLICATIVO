@@ -134,6 +134,10 @@ check('arte respeita posição, rotação e opacidade',
 const comEspelho = R.svg({ artes: [{ id: 'a2', src: 'data:image/png;base64,AAA', x: 500, y: 400, flip: 1 }] }, { id: 'fl' });
 check('espelhar arte usa escala -1', /scale\(-1 1\)/.test(comEspelho));
 
+/* volume: a manga não pode ser um retângulo chapado */
+check('manga tem degradê de volume (tubo de tecido)', /id="sleeve_/.test(svg) && svg.includes('url(#sleeve_t)'));
+check('o volume da manga só aparece nas mangas', (svg.match(/url\(#sleeve_t\)/g) || []).length === 2);
+
 /* acabamento: dry fit tem brilho, algodão é fosco */
 const dry = R.svg({ acabamento: 'dryfit' }, { id: 'd1' }), cot = R.svg({ acabamento: 'algodao' }, { id: 'd2' });
 check('dry fit usa o degradê de brilho', dry.includes('url(#sheen_d1)'));
@@ -289,6 +293,69 @@ check('semCostura tira o tracejado e semArte tira a imagem (modo leve)',
     !/savLayers[^\n]*_peca/.test(ficha));
   check('peça entra no .json do projeto (para reabrir e editar)',
     /b\._peca=ep|_peca\s*=\s*ep/.test(ficha));
+
+  /* ── 3. A PEÇA DENTRO DA FICHA (jsdom de verdade) ─────────────────────────
+     O estúdio só vale se abrir na ficha e virar camada. Aqui a ficha é
+     carregada como o usuário carrega: os scripts da peça entram por <script>,
+     o jsdom não busca arquivos, então são injetados na mão (é o único atalho). */
+  console.log('===== PEÇA V9.3 — DENTRO DA FICHA (jsdom) =====');
+  const errosFicha = [];
+  const fichaHtml = fs.readFileSync(path.join(BASE, 'criador_ficha_tecnica/index.html'), 'utf8');
+  const domFicha = new JSDOM(fichaHtml, {
+    url: 'http://localhost:4800/criador_ficha_tecnica/',
+    runScripts: 'dangerously',
+    pretendToBeVisual: true,
+    beforeParse(w) {
+      w.matchMedia = q => ({ matches: false, media: q, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
+      w.print = () => {};
+      w.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+      w.HTMLCanvasElement.prototype.getContext = function () { return new Proxy({}, { get: (t, p) => (p === 'canvas' ? this : () => ({})), set: () => true }); };
+      w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,AAAA';
+      w.Image = class {
+        constructor() { this.naturalWidth = 900; this.naturalHeight = 1116; this._src = ''; }
+        set src(v) { this._src = v; setTimeout(() => { if (this.onload) this.onload(); }, 0); }
+        get src() { return this._src; }
+      };
+      w.addEventListener('error', e => errosFicha.push(e.message || String(e.error)));
+    }
+  });
+  const wf = domFicha.window, docf = wf.document;
+  await new Promise(r => setTimeout(r, 1500));
+  ['peca.js', 'peca_render.js', 'peca_editor.js'].forEach(f => wf.eval(ler(f)));
+
+  const btnPeca = docf.querySelector('#mkeRail [data-acao="peca"]');
+  check('a régua do mockup tem o botão da peça', !!btnPeca);
+  if (btnPeca) btnPeca.click();
+  await new Promise(r => setTimeout(r, 150));
+  check('clicar abre o estúdio da peça em tela cheia', !!docf.getElementById('pecaOverlay'));
+  check('o estúdio montou dentro da ficha', !!docf.querySelector('#pecaOverlay .pk-studio'));
+  check('o estúdio da peça desenha o SVG da peça', !!docf.querySelector('#pecaOverlay .pk-canvas svg'));
+
+  /* aplicar: vira camada de imagem da ficha */
+  const camadasAntes = wf.eval('layers.length');
+  const estadoPeca = wf.eval('PecaEditor.estado()');
+  wf.eval('mkeFecharPeca()');
+  wf.eval('mkeAplicarPeca(' + JSON.stringify(estadoPeca) + ',null)');
+  await new Promise(r => setTimeout(r, 400));
+  const camadasDepois = wf.eval('layers.length');
+  check('aplicar cria uma camada de imagem na ficha', camadasDepois === camadasAntes + 1, [camadasAntes, camadasDepois]);
+  const camada = wf.eval('JSON.stringify(layers[layers.length-1])');
+  const objCamada = JSON.parse(camada || '{}');
+  check('a camada guarda o estado da peça para reeditar', !!objCamada._peca && !!objCamada._peca.frente);
+  /* no jsdom a área do mockup é quadrada (400×400), então a caixa da camada
+     tem que sair com a proporção do desenho: 1240/1000 de altura por largura */
+  check('a camada nasce com a proporção do desenho (1000×1240)',
+    Math.abs(objCamada.hp / objCamada.wp - 1240 / 1000) < 0.06, [objCamada.wp, objCamada.hp]);
+  check('a peça aplicada não passa por cima de nada nem estoura a página',
+    objCamada.wp > 0.1 && objCamada.wp < 0.9 && objCamada.hp > 0.1 && objCamada.hp <= 0.95, [objCamada.wp, objCamada.hp]);
+
+  /* reabrir a peça a partir da camada aplicada */
+  wf.eval('mkeAbrirPeca(layers[layers.length-1])');
+  await new Promise(r => setTimeout(r, 150));
+  check('clicar de novo na peça reabre o estúdio com o estado salvo', !!docf.querySelector('#pecaOverlay .pk-studio'));
+  wf.eval('mkeFecharPeca()');
+  check('fechar o estúdio limpa a tela (sem overlay sobrando)', !docf.getElementById('pecaOverlay'));
+  check('nenhum erro de página na ficha com o estúdio aberto', errosFicha.length === 0, errosFicha.slice(0, 3));
 
   console.log('===== PEÇA V9.3 — BUILD =====');
   const build = fs.readFileSync(path.join(BASE, '..', 'build_v9_pwa.py'), 'utf8');

@@ -147,6 +147,15 @@
       '<stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>' +
       '<stop offset="1" stop-color="#000000" stop-opacity="0.16"/></radialGradient>');
 
+    /* volume da manga: escuro nas duas bordas e claro no meio, como um tubo de
+       tecido. Sem isso a manga é um retângulo chapado e a peça parece de papel. */
+    defs.push('<linearGradient id="sleeve_' + ids + '" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0" stop-color="#000" stop-opacity="0.20"/>' +
+      '<stop offset="0.30" stop-color="#fff" stop-opacity="0.07"/>' +
+      '<stop offset="0.55" stop-color="#fff" stop-opacity="0.03"/>' +
+      '<stop offset="0.82" stop-color="#000" stop-opacity="0.10"/>' +
+      '<stop offset="1" stop-color="#000" stop-opacity="0.22"/></linearGradient>');
+
     defs.push(defsTexturas(est, lado, ids));
     /* a arte não pode sair da peça: recorte pela silhueta */
     defs.push('<clipPath id="clip_' + ids + '"><path d="' + (P.silhuetaFechada ? P.silhuetaFechada(lado) : P.silhueta(lado)) + '"/></clipPath>');
@@ -196,6 +205,12 @@
       });
       out.push('</g>');
     }
+
+    /* volume das mangas (por cima da cor, embaixo da sombra de sobreposição) */
+    lista.forEach(function (p) {
+      if (p.cor !== 'mangas') return;
+      out.push('<path d="' + p.d + '" fill="url(#sleeve_' + ids + ')" opacity="0.55"/>');
+    });
 
     /* brilho/opacidade do tecido por cima das cores */
     var silhueta = P.silhueta(lado);
