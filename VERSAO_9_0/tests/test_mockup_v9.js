@@ -1052,6 +1052,19 @@ function check(label, ok, extra) {
     JSON.stringify(t(`paginas.map(function(p){return 'folha_'+p.id;})`))
       === JSON.stringify(t(`Array.from(document.querySelectorAll('#pw .folha:not(#folha1), #pw .folha-branca')).map(function(e){return e.id;})`)));
 
+  /* 22.11 "Nova ficha" não pode deixar o mockup antigo voltar no próximo
+     carregamento (a cópia de emergência va3_layers ficava intacta) */
+  t(`(function(){var l={type:'rect',id:'velho',fillColor:'#eee',strokeColor:'#333',strokeWidth:2,xp:.3,yp:.3,wp:.2,hp:.2,rot:0,z:900};layers.push(l);renderRectLayer(l);savLayers();return 1;})(); 'ok'`);
+  const va3AntesDeNova = t(`localStorage.getItem('va3_layers') || ''`);
+  t(`limparParaNovaFicha(1); 'ok'`);
+  await new Promise(r => setTimeout(r, 700));
+  const va3DepoisDeNova = t(`localStorage.getItem('va3_layers') || ''`);
+  check('a ficha antiga estava guardada antes de limpar', va3AntesDeNova.indexOf('velho') >= 0);
+  check('nova ficha apaga a cópia de emergência das camadas',
+    va3DepoisDeNova.indexOf('velho') < 0 && JSON.parse(va3DepoisDeNova || '[]').length === 0, va3DepoisDeNova.slice(0, 60));
+  check('nova ficha também zera as páginas extras',
+    t(`paginas.length`) === 0 && !t(`document.querySelector('#pw .folha-branca, #pw .folha:not(#folha1)')`));
+
   if (errs.length) fail++;
   console.log('  erros de página:', errs.length ? errs : 'nenhum ✓');
   console.log(`\n═══ MOCKUP V9.1: ${pass} OK, ${fail} FAIL ═══`);

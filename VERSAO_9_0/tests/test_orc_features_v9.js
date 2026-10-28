@@ -158,6 +158,51 @@ function check(label, ok, extra) {
     t(`currentSignatureBase64`) === 'data:image/png;base64,AAAA',
     t(`currentSignatureBase64`));
 
+
+  /* ── Pente fino V9.1.1: espaço cheio no localStorage ───────────────── */
+
+  /* autosave: grava o orçamento sem a assinatura em vez de não gravar nada */
+  const setItemOriginal = w.Storage.prototype.setItem;
+  w.Storage.prototype.setItem = function (k, v) {
+    if (k === 'vooalto_orcamento_autosave_v7' && String(v).length > 5000) throw new Error('QuotaExceededError');
+    return setItemOriginal.call(this, k, v);
+  };
+  t(`currentSignatureBase64='data:image/png;base64,'+new Array(30000).join('B'); 'ok'`);
+  const salvouAuto = t(`saveOrcautosaveNow()`);
+  const autoRaw = t(`localStorage.getItem('vooalto_orcamento_autosave_v7') || ''`);
+  check('autosave com a cota cheia ainda grava o orçamento', salvouAuto === true && autoRaw.length > 10, [salvouAuto, autoRaw.length]);
+  check('orçamento de emergência fica sem a assinatura',
+    autoRaw.indexOf('base64,BBBB') < 0 && JSON.parse(autoRaw).signature === '');
+  check('o selo de salvamento avisa que foi sem a assinatura',
+    /sem a assinatura/.test((doc.getElementById('orcSaveChip') || {}).textContent || ''),
+    (doc.getElementById('orcSaveChip') || {}).textContent);
+
+  /* rascunho: quando NADA couber, não pode dizer "salvo com sucesso" */
+  w.prompt = () => 'Rascunho de teste';
+  w.Storage.prototype.setItem = function (k, v) {
+    if (k === 'vooalto_orcamento_rascunhos_v7') throw new Error('QuotaExceededError');
+    return setItemOriginal.call(this, k, v);
+  };
+  t(`salvarRascunhoOrcamento(); 'ok'`);
+  check('rascunho que não coube avisa em vez de dizer que salvou',
+    /NÃO foi salvo/.test((doc.getElementById('orcToast') || {}).textContent || ''),
+    (doc.getElementById('orcToast') || {}).textContent);
+
+  /* rascunho: cabendo sem a assinatura, ele é salvo e avisa do corte */
+  w.Storage.prototype.setItem = function (k, v) {
+    if (k === 'vooalto_orcamento_rascunhos_v7' && String(v).length > 20000) throw new Error('QuotaExceededError');
+    return setItemOriginal.call(this, k, v);
+  };
+  const draftsAntes = t(`orcGetDrafts().length`);
+  t(`salvarRascunhoOrcamento(); 'ok'`);
+  const draftsDepois = t(`orcGetDrafts().length`);
+  check('rascunho é salvo mesmo sem espaço para a assinatura',
+    draftsDepois === draftsAntes + 1, [draftsAntes, draftsDepois]);
+  check('e o usuário é avisado de que a assinatura ficou de fora',
+    /sem a assinatura/.test((doc.getElementById('orcToast') || {}).textContent || ''),
+    (doc.getElementById('orcToast') || {}).textContent);
+  w.Storage.prototype.setItem = setItemOriginal;
+
   if(errs.length)fail++;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   console.log(`\n═══ RESULTADO ORÇAMENTO FEATURES: ${pass} OK, ${fail} FAIL ═══`);

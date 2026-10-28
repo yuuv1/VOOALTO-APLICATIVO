@@ -1441,8 +1441,26 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     function fecharAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento');if(el)el.classList.remove('open')}
     function saveOrcautosaveNow(){
       clearTimeout(orcSaveTimer);orcSaveTimer=null;
-      try{localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(orcCollectState()));orcMarcarSalvo(true);return true}
-      catch(e){console.warn('Autosave do orçamento falhou',e);orcMarcarSalvo(false);return false}
+      const estado=orcCollectState();
+      try{localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(estado));orcMarcarSalvo(true);return true}
+      catch(e){
+        /* Cota cheia: a assinatura desenhada é o que pesa. Guardar o
+           orçamento sem ela é melhor do que não guardar nada (antes o
+           trabalho do dia inteiro ficava só na aba aberta). */
+        try{
+          const leve=JSON.parse(JSON.stringify(estado));
+          const tinhaAssinatura=!!leve.signature;
+          leve.signature='';
+          localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(leve));
+          const chip=document.getElementById('orcSaveChip');
+          if(chip){chip.textContent='💾 Salvo sem a assinatura';
+            chip.title='A memória do navegador encheu: o orçamento foi guardado sem a assinatura. Libere espaço (ou baixe o .json) e desenhe a assinatura de novo.';}
+          if(tinhaAssinatura)orcToast('⚠️ Memória cheia: orçamento salvo sem a assinatura');
+          return true;
+        }catch(e2){
+          console.warn('Autosave do orçamento falhou',e2);orcMarcarSalvo(false);return false;
+        }
+      }
     }
     /* ao abrir, mostra a hora do último salvamento guardado */
     try{const h=localStorage.getItem(ORC_SAVE_HORA_KEY);if(h){const el=document.getElementById('orcSaveChip');if(el){el.textContent='💾 Salvo '+h;el.title='Última gravação automática às '+h+' (sessão anterior).'}}}catch(e){}
@@ -1939,15 +1957,39 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const drafts = orcGetDrafts();
       drafts.unshift(draft);
       if (drafts.length > 30) drafts.pop();
+      let gravou = true, semAssinatura = false, antigos = null;
       try {
         localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
       } catch(e) {
+        /* 1ª tentativa sem espaço: tira a assinatura do rascunho novo. Se
+           ainda não couber, tenta de novo descartando os rascunhos mais
+           antigos — e, se nada couber, AVISA em vez de dizer "salvo". */
         console.warn('Falha ao salvar rascunho', e);
+        gravou = false;
+        try {
+          const leve = JSON.parse(JSON.stringify(draft));
+          leve.state = Object.assign({}, leve.state, { signature: '' });
+          drafts[0] = leve;
+          localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
+          gravou = true; semAssinatura = true;
+        } catch(e2) {
+          antigos = drafts.slice(0, Math.max(1, Math.ceil(drafts.length / 2)));
+          try {
+            localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(antigos));
+            gravou = true; semAssinatura = true;
+          } catch(e3) { gravou = false; }
+        }
       }
 
       orcUpdateDraftsBadge();
       renderOrcDraftsList();
-      if (typeof toastOrc === 'function') toastOrc(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
+      if (!gravou) {
+        orcToast('⚠️ Sem espaço: o rascunho NÃO foi salvo. Exclua rascunhos antigos ou baixe o .json.');
+        if (typeof toastOrc === 'function') toastOrc('⚠️ Sem espaço: o rascunho NÃO foi salvo');
+        return;
+      }
+      if (semAssinatura) orcToast('⚠️ Memória cheia: rascunho salvo sem a assinatura' + (antigos ? ' (rascunhos antigos removidos)' : ''));
+      else if (typeof toastOrc === 'function') toastOrc(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
       else orcToast(`💾 Rascunho "${draft.name}" salvo com sucesso!`);
     }
     window.salvarRascunhoOrcamento = salvarRascunhoOrcamento;
@@ -1980,7 +2022,10 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       drafts = drafts.filter(d => d.id !== draftId);
       try {
         localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
-      } catch(e) {}
+      } catch(e) {
+        orcToast('⚠️ Não foi possível excluir o rascunho agora');
+        return;
+      }
       orcUpdateDraftsBadge();
       renderOrcDraftsList();
       if (typeof toastOrc === 'function') toastOrc('🗑 Rascunho excluído.');

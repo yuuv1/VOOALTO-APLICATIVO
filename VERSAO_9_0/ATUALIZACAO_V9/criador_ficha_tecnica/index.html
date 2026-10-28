@@ -3317,7 +3317,10 @@ document.addEventListener('click',e=>{const _ls=$('logoStage');if(logoSt.ativo&&
 let layers=[],selId=null,zCnt=10;
 const cw=()=>canvasInner.clientWidth||400;
 const ch=()=>canvasInner.clientHeight||400;
-function clearAllLayers(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)el.remove();});layers=[];selId=null;}
+/* savLayers aqui é essencial: sem ele a cópia de emergência continuava com as
+   camadas antigas e, depois de "Nova ficha", elas voltavam no próximo
+   carregamento (o autosave é apagado, mas o va3_layers não era). */
+function clearAllLayers(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)el.remove();});layers=[];selId=null;try{if(typeof savLayers==='function')savLayers();}catch(e){}}
 function posEl(l,el,usePct){
 const W=cw(),H=ch();
 if(l.type==='arr'){posArrEl(l,el,usePct,W,H);return;}
