@@ -2563,7 +2563,7 @@ function updPhExtra(p){const ph=$('canvasPh_'+p.id);if(ph)ph.style.display=p.lay
 
 function addImgLayerExtra(p,src,ov){
 const id=(ov&&ov.id)||uid();
-if(!src&&ov&&ov.xp!==undefined){
+if((!src||src===MKE_PIXEL)&&ov&&ov.xp!==undefined){
   const l0=Object.assign({type:'img',id,src:MKE_PIXEL,ratio:1,rot:0,prop:true,z:++p.zCnt},ov,{id,src:MKE_PIXEL,ratio:ov.ratio||1,type:'img'});
   l0._semImagem=1;
   p.layers.push(l0);renderImgLayerExtra(p,l0);updPhExtra(p);snap();return l0;
@@ -2600,8 +2600,8 @@ function renderImgLayerExtra(p,l){
 const pid=p.id,ci=$('canvasInner_'+pid);if(!ci)return;
 const old=document.getElementById('ly_'+pid+'_'+l.id);if(old)old.remove();
 const el=document.createElement('div');el.className='img-layer';el.id='ly_'+pid+'_'+l.id;posElExtra(p,l,el,false);
-const img=document.createElement('img');img.src=(l._semImagem||!l.src)?MKE_PIXEL:l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
-if(l._semImagem){el.classList.add('mke-sem-img');img.title='Imagem não disponível neste rascunho — use \"Revincular imagens\"';}
+const img=document.createElement('img');img.src=(!l.src||l.src===MKE_PIXEL)?MKE_PIXEL:l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+if(!l.src||l.src===MKE_PIXEL){l._semImagem=1;el.classList.add('mke-sem-img');img.title='Imagem não disponível neste rascunho — use \"Revincular imagens\"';}
 img.addEventListener('load',function(){
   try{
     mkeGuardarPx(l.src,img.naturalWidth,img.naturalHeight);
@@ -3401,7 +3401,7 @@ function addImgLayer(src,ov,nome){
 const id=(ov&&ov.id)||uid();
 /* camada salva cuja imagem se perdeu: mantém a moldura na posição e no
    tamanho em vez de sumir com ela (o usuário revincula a foto depois) */
-if(!src&&ov&&ov.xp!==undefined){
+if((!src||src===MKE_PIXEL)&&ov&&ov.xp!==undefined){
   const l0=Object.assign({type:'img',id,src:MKE_PIXEL,ratio:1,rot:0,prop:true,z:++zCnt},ov,{id,src:MKE_PIXEL,ratio:ov.ratio||1,type:'img'});
   l0._semImagem=1;
   layers.push(l0);renderImgLayer(l0);updPh();updList();savLayers();return l0;
@@ -3443,8 +3443,8 @@ tmp.src=src;
 function renderImgLayer(l){
 const old=document.getElementById('ly_'+l.id);if(old)old.remove();
 const el=document.createElement('div');el.className='img-layer';el.id='ly_'+l.id;posEl(l,el,false);
-const img=document.createElement('img');img.src=(l._semImagem||!l.src)?MKE_PIXEL:l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
-if(l._semImagem){el.classList.add('mke-sem-img');img.title='Imagem não disponível neste rascunho — use \"Revincular imagens\"';}
+const img=document.createElement('img');img.src=(!l.src||l.src===MKE_PIXEL)?MKE_PIXEL:l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+if(!l.src||l.src===MKE_PIXEL){l._semImagem=1;el.classList.add('mke-sem-img');img.title='Imagem não disponível neste rascunho — use \"Revincular imagens\"';}
 img.addEventListener('load',function(){try{mkeGuardarPx(l.src,img.naturalWidth,img.naturalHeight);}catch(e){}});
 el.appendChild(img);
 ['tl','tr','bl','br'].forEach(c=>{const h=document.createElement('div');h.className=`lyr-h lyr-${c}`;h.dataset.c=c;el.appendChild(h);});
