@@ -1,5 +1,51 @@
 # VOOALTO V9 — Registro de alterações
 
+## V9.1.1 — Pente fino: o que estava perdendo trabalho (2026-10-28)
+
+Segunda rodada de auditoria sobre a V9.1.0, com a mesma regra: **nem a ficha
+técnica nem o orçamento mudam de estrutura**. Tudo aqui é correção de
+comportamento, provada por teste automatizado.
+
+### 1. Correções que salvavam dado errado
+
+| O que acontecia | O que ficou |
+|---|---|
+| **Duplicar página** inseria a cópia **antes** da original (`v7DuplicarPagina` usava a posição no array, mas `v7CriarPaginaRestaurada` conta as folhas na tela, onde a folha 1 entra na conta) | a cópia fica logo depois da original e a numeração sai certa (1, 2, 3, 4) |
+| Ao duplicar, o **array `paginas` ficava fora da ordem da tela** — e é esse array que o `.json`, o autosave e a impressão percorrem | `v7Renumerar` reordena o array pela ordem real das folhas |
+| Girar a camada em 90° numa folha A4 (794 × 1123) girava de verdade ~36°, porque a conta usava % puro | `mkeRotPonto` virou **consciente da proporção** da área: 90° é 90°, `Alt+←/→` e o campo de graus batem com o que se vê |
+| Girar uma **seta** não fazia nada (seta não usa `rot`, e o código só mexia nele) | a seta gira movendo as duas pontas, presas dentro da área |
+| Espelhar uma **seta** não fazia nada | as duas pontas são refletidas (`x = 1 − x`, `y = 1 − y`) |
+| O `.json` gravava as camadas da folha 1 sem `name/hidden/locked/op/flip/fit` → reabrir **ressuscitava camada oculta** e perdia o cadeado | `capturarFichaParaJSON` usa `serLayer` (a mesma serialização do autosave) |
+| Reabrir um `.json` perdia o **nome do arquivo** da foto (“frente polo” voltava a “Imagem 2”) e o tamanho real em px (aviso de foto em baixa) | `serLayer` grava `_fileName`, `_nw` e `_nh` |
+| **Imagem que não carrega** (arquivo apagado, base64 corrompido) fazia a camada **desaparecer sem aviso** — posição, tamanho e nome iam junto | a moldura continua na ficha, marcada com `_semImagem` e tracejado na tela (não sai na impressão), e a foto volta por “Revincular imagens” |
+| **Cota do `localStorage` estourada** derrubava o autosave inteiro: o trabalho do dia sumia | 1ª tentativa completa; se estourar, o rascunho é gravado **sem o base64 das fotos** (páginas, textos, grade, produção e molduras preservados) e o selo avisa “Salvo sem as fotos” |
+| `savLayers` (`va3_layers`) guardava **base64 de imagem no `localStorage`** — justamente o que o PLANO §10 proíbe (cota e travamento) | a cópia de emergência guarda geometria e atributos, nunca a foto |
+| Excluir várias camadas com Delete dizia **“0 camadas removidas”** (a conta era feita depois de limpar a lista) | o toast mostra a quantidade certa |
+
+### 2. Orçamento
+
+| O que acontecia | O que ficou |
+|---|---|
+| **Salvar assinatura sem desenhar nada** trocava a assinatura padrão por um PNG transparente — a proposta saía sem assinatura | avisa “Desenhe sua assinatura antes de salvar” e mantém a que existia; se o navegador não entregar os pixels, também avisa em vez de quebrar |
+| **Exportar PNG** sem a `html2canvas` (CDN fora do ar/offline) escondia a barra lateral e as abas e **não devolvia mais** — a tela ficava sem interface | a checagem vem antes de esconder qualquer coisa, com aviso “use Imprimir”; a interface é restaurada mesmo se algo falhar no meio |
+
+### 3. Testes
+
+`tests/test_mockup_v9.js` — **281 verificações** (eram 258 na V9.1.0):
+além de tudo o que já existia, agora cobre desfazer/refazer na folha 1 e nas
+páginas extras, remover a página em foco sem levar a régua junto, preencher em
+`cover`, girar/espelhar seta, recorte sem a biblioteca, **ida e volta do `.json`
+com camada de imagem em página extra**, **imagem quebrada mantendo a moldura**,
+**rascunho de emergência sem fotos** (com cota simulada), `va3_layers` sem
+base64 e a numeração das páginas depois de remover uma do meio.
+
+`tests/test_orc_features_v9.js` — **40 verificações** (eram 34): assinatura em
+branco, assinatura desenhada e exportação PNG sem a biblioteca.
+
+A suíte inteira (`npm test` + `npm run test:python`) continua passando.
+
+---
+
 ## V9.1.0 — Estúdio do mockup: o que faltava para trabalhar as artes (2026-10-28)
 
 Pedido: *"melhore todos os aspectos que facilitam o preenchimento e o uso do

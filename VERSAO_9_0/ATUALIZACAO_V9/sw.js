@@ -1,9 +1,9 @@
-// Service Worker Vooalto V9 — gerado em 20261028-0312 (hash dfcb9bdbd1c4)
+// Service Worker Vooalto V9 — gerado em 20261028-1253 (hash 087569678ea2)
 const CACHE_PREFIX = 'vooalto-v9-';
 // Caches da V8 ficam para trás na mesma origem: o aviso de troca de versão
 // apaga o que a versão anterior deixou, sem tocar em outros aplicativos.
 const LEGACY_CACHE_PREFIXES = ['vooalto-v8-'];
-const CACHE = 'vooalto-v9-dfcb9bdbd1c4';
+const CACHE = 'vooalto-v9-087569678ea2';
 const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","manual.html","criador_ficha_tecnica/index.html","criador_orcamento/index.html","assets/cropper.min.css","assets/cropper.min.js","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","assets/tema-v9.css"];
 
 self.addEventListener('install', event => {

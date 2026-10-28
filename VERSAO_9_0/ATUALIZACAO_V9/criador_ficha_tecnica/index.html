@@ -1119,6 +1119,12 @@ body.mke-exportando .shape-tb,body.mke-exportando .canvas-add-img,body.mke-expor
 body.mke-exportando .layers-panel,body.mke-exportando .lyr-h,body.mke-exportando .lyr-rot,
 body.mke-exportando .tl-resize,body.mke-exportando .tl-rot,body.mke-exportando .arr-h,
 body.mke-exportando .arr-rot,body.mke-exportando .arr-ep,body.mke-exportando .mke-menu{display:none!important}
+/* moldura cuja foto se perdeu: sinaliza na tela, mas não sai no PDF/impressão */
+.img-layer.mke-sem-img{background:repeating-linear-gradient(45deg,rgba(245,158,11,.10) 0 10px,rgba(245,158,11,.03) 10px 20px)}
+.img-layer.mke-sem-img img{outline:2px dashed #f59e0b;outline-offset:-3px}
+@media print{.img-layer.mke-sem-img{background:none!important}.img-layer.mke-sem-img img{outline:none!important}}
+body.mke-exportando .img-layer.mke-sem-img{background:none!important}
+body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
 </style>
 </head>
 <body>
@@ -2041,6 +2047,22 @@ function removerPagina(pid){
 const idx=paginas.findIndex(p=>p.id===pid);
 if(idx===-1)return;
 const num=paginas[idx].num;
+/* V9.1 — a régua, o painel, a plaquinha e a lista de camadas moram DENTRO da
+   página em foco (mkeMoverUI). Sem esta devolução, remover essa página levava
+   o estúdio inteiro junto e a área ficava sem ferramentas até recarregar. */
+try{
+  const folha=$('folha_'+pid);
+  const casca=['mkeRail','mkePainel','mkeBadge','mkeStudioBar','layersPanel'];
+  const dentro=casca.some(id=>{const el=document.getElementById(id);return el&&folha&&folha.contains(el);});
+  if(dentro||(v7PaginaAtiva&&v7PaginaAtiva.p1===false&&v7PaginaAtiva.id===pid)){
+    if(typeof v7PaginaAtiva==='object'&&v7PaginaAtiva&&v7PaginaAtiva.id===pid)v7PaginaAtiva=null;
+    const outer=$('canvasOuter');
+    if(outer){
+      casca.forEach(id=>{const el=document.getElementById(id);if(el)outer.appendChild(el);});
+      ['mkeGuias','mkeSmartV','mkeSmartH'].forEach(id=>{const el=document.getElementById(id);const ci=$('canvasInner');if(el&&ci)ci.appendChild(el);});
+    }
+  }
+}catch(e){ console.warn('devolver estúdio',e); }
 const f=$('folha_'+pid);if(f)f.remove();
 const lb=$('label_'+pid);if(lb)lb.remove();
 const inp=$('canvasInput_'+pid);if(inp)inp.remove();
@@ -2050,6 +2072,11 @@ if(typeof v7PaginaAtiva==='object'&&v7PaginaAtiva&&v7PaginaAtiva.id===pid&&typeo
 atualizarNavSidebar();
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Renumerar==='function')v7Renumerar();else atualizarRodapes();
+/* o estúdio volta a apontar para a folha 1 (ou para a página que sobrou) */
+try{if(typeof v7PaginaAtiva==='object'&&v7PaginaAtiva&&!paginas.some(p=>p.id===v7PaginaAtiva.id)&&v7PaginaAtiva.p1===false)v7PaginaAtiva=null;}catch(e){}
+try{if(typeof mkeMoverUI==='function')mkeMoverUI();}catch(e){}
+try{if(typeof mkeSync==='function')mkeSync();}catch(e){}
+try{if(typeof updList==='function')updList();}catch(e){}
 toast(`Página ${num} removida.`);
 snap();
 }
@@ -2502,7 +2529,15 @@ e.target.value='';
 if(arqs.length>1&&typeof mkeLoteImagens==='function'){mkeLoteImagens(arqs,p);return;}
 arqs.forEach(f=>lerArqExtra(f,p));
 }
-function lerArqExtra(f,p){const r=new FileReader();r.onload=ev=>{v7DownscaleDataURL(ev.target.result).then(src=>addImgLayerExtra(p,src));};r.readAsDataURL(f);}
+function lerArqExtra(f,p){
+const r=new FileReader();
+r.onload=ev=>{
+  v7DownscaleDataURL(ev.target.result).then(src=>{
+    addImgLayerExtra(p,src,{_fileName:f.name||'imagem'});
+  });
+};
+r.readAsDataURL(f);
+}
 function onDragOverExtra(e,pid){e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='2px solid var(--ro)';}
 function onDragLeaveExtra(e,pid){e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='';}
 function onDropExtra(e,pid){
@@ -2527,7 +2562,13 @@ if(!p.layers.length)$('canvasInput_'+pid).click();else deselecionarTudoExtra(pid
 function updPhExtra(p){const ph=$('canvasPh_'+p.id);if(ph)ph.style.display=p.layers.length?'none':'flex';}
 
 function addImgLayerExtra(p,src,ov){
-const id=(ov&&ov.id)||uid();const tmp=new Image();
+const id=(ov&&ov.id)||uid();
+if(!src&&ov&&ov.xp!==undefined){
+  const l0=Object.assign({type:'img',id,src:MKE_PIXEL,ratio:1,rot:0,prop:true,z:++p.zCnt},ov,{id,src:MKE_PIXEL,ratio:ov.ratio||1,type:'img'});
+  l0._semImagem=1;
+  p.layers.push(l0);renderImgLayerExtra(p,l0);updPhExtra(p);snap();return l0;
+}
+const tmp=new Image();
 tmp.onload=()=>{
 const ratio=tmp.naturalWidth/tmp.naturalHeight;let l;
 if(ov&&ov.xp!==undefined){l=Object.assign({type:'img',id,src,ratio,rot:0,prop:true,z:++p.zCnt},ov,{id,src,ratio,type:'img'});}
@@ -2538,16 +2579,29 @@ else{
   const livre=(typeof mkeSlotLivre==='function'?mkeSlotLivre(wp,hp,p.layers):null)||{xp:(1-wp)/2,yp:(1-hp)/2};
   l={type:'img',id,src,ratio,xp:livre.xp,yp:livre.yp,wp,hp,rot:0,prop:true,z:++p.zCnt};
 }
+/* nome do arquivo também nas páginas extras (a lista mostra "frente polo"
+   em vez de "Imagem 2") — vem junto no ov, mas o encaixe automático monta
+   a camada do zero e perderia o nome */
+if(ov&&ov._fileName&&!l._fileName)l._fileName=String(ov._fileName).slice(0,80);
 if(tmp.naturalWidth&&tmp.naturalHeight){l._nw=tmp.naturalWidth;l._nh=tmp.naturalHeight;}
 p.layers.push(l);renderImgLayerExtra(p,l);selLayerExtra(p,id);updPhExtra(p);snap();
 if(!ov){try{mkeAvisoImagem(l);}catch(e){}}
-};tmp.src=src;
+};
+tmp.onerror=()=>{
+  if(!ov||ov.xp===undefined){ if(typeof toast==='function')toast('⚠️ A imagem não pôde ser carregada','',3200); return; }
+  const l=Object.assign({type:'img',id,src,ratio:1,rot:0,prop:true,z:++p.zCnt},ov,{id,src,ratio:1,type:'img'});
+  l._semImagem=1;
+  p.layers.push(l);renderImgLayerExtra(p,l);updPhExtra(p);snap();
+  if(typeof toast==='function')toast('⚠️ Imagem não carregou — moldura mantida na ficha','',3600);
+};
+tmp.src=src;
 }
 function renderImgLayerExtra(p,l){
 const pid=p.id,ci=$('canvasInner_'+pid);if(!ci)return;
 const old=document.getElementById('ly_'+pid+'_'+l.id);if(old)old.remove();
 const el=document.createElement('div');el.className='img-layer';el.id='ly_'+pid+'_'+l.id;posElExtra(p,l,el,false);
-const img=document.createElement('img');img.src=l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+const img=document.createElement('img');img.src=(l._semImagem||!l.src)?MKE_PIXEL:l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+if(l._semImagem){el.classList.add('mke-sem-img');img.title='Imagem não disponível neste rascunho — use \"Revincular imagens\"';}
 img.addEventListener('load',function(){
   try{
     mkeGuardarPx(l.src,img.naturalWidth,img.naturalHeight);
@@ -2768,10 +2822,22 @@ document.querySelectorAll(`#canvasInner_${pid} .img-layer,#canvasInner_${pid} .t
 const ct=$('canvasTb_'+pid),tt=$('textTb_'+pid),at=$('arrTb_'+pid);
 if(ct)ct.classList.remove('vis');if(tt)tt.classList.remove('vis');if(at)at.classList.remove('vis');
 }
-function lFrenteExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;l.z=++p.zCnt;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.style.zIndex=l.z;}
-function lTrasExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;const mz=Math.min(...p.layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.style.zIndex=l.z;}
-function lCentroExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)posArrElExtra(p,l,el,false,cwExtra(pid),chExtra(pid));}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el){el.style.left=(l.xp*cwExtra(pid))+'px';el.style.top=(l.yp*chExtra(pid))+'px';}}}
-function lFillExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;const rc=cwExtra(pid)/chExtra(pid);let wp,hp;if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el){posElExtra(p,l,el,false);el.style.transform='';}}
+function lFrenteExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;l.z=++p.zCnt;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.style.zIndex=l.z;updList();snap();}
+function lTrasExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;const mz=Math.min(...p.layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.style.zIndex=l.z;updList();snap();}
+function lCentroExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)posArrElExtra(p,l,el,false,cwExtra(pid),chExtra(pid));}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el){el.style.left=(l.xp*cwExtra(pid))+'px';el.style.top=(l.yp*chExtra(pid))+'px';}}snap();}
+function lFillExtra(pid){
+  const p=paginas.find(x=>x.id===pid);if(!p)return;
+  const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;
+  /* V9.1 — igual à folha 1: "preencher" precisa de fit=cover, senão a imagem
+     ficava com faixas vazias dentro de uma moldura que já era do tamanho dela */
+  l.fit='cover';
+  const rc=cwExtra(pid)/chExtra(pid);let wp,hp;
+  if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}
+  l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;
+  const el=document.getElementById('ly_'+pid+'_'+l.id);
+  if(el){posElExtra(p,l,el,false);el.style.transform='';const im=el.querySelector('img');if(im)im.style.objectFit='cover';}
+  updList();snap();
+}
 function lCaberExtra(pid){
 const p=paginas.find(x=>x.id===pid);if(!p)return;
 const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;
@@ -2782,7 +2848,7 @@ l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;
 const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)posElExtra(p,l,el,false);
 snap();toast('⤡ Imagem cabendo na área','',1600);
 }
-function togglePropExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;l.prop=!l.prop;const pb=$('propBtn_'+pid);if(pb)pb.classList.toggle('on',l.prop);}
+function togglePropExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;l.prop=!l.prop;const pb=$('propBtn_'+pid);if(pb)pb.classList.toggle('on',l.prop);snap();}
 function excluirSelExtra(pid,idFixo){
 const p=paginas.find(x=>x.id===pid);if(!p||(!p.selId&&!idFixo))return;
 const id=idFixo||p.selId;const el=document.getElementById('ly_'+pid+'_'+id);if(el)el.remove();
@@ -2837,6 +2903,41 @@ return d;
 }
 // Assinatura LEVE do estado — NÃO inclui src de imagens (que podem ser MBs), mas cobre todos os campos de texto e metadados das camadas.
 // Serve para detectar "nada mudou" sem serializar o blob das imagens.
+/* Assinatura leve de UMA camada (sem dataURL): serve para saber se a arte de
+   uma página mudou sem serializar o estado inteiro. */
+function _layerSig(l){
+  if(!l||!l.type)return '';
+  var n=function(v){return typeof v==='number'?v.toFixed(4):'x';};
+  var s=l.type+'|'+(l.id||'')+'|'+n(l.xp)+','+n(l.yp)+','+n(l.wp)+','+n(l.hp)+'|'+(l.rot||0)+'|'+(l.z||0);
+  s+='|'+(l.hidden?'h':'')+(l.locked?'l':'')+(l.op!==undefined&&l.op!==null?('o'+l.op):'')+(l.name?('n'+l.name):'');
+  if(l.type==='img')s+='|'+(l.src?'img':l.src)+'|'+(l.flipH?'fh':'')+(l.flipV?'fv':'');
+  if(l.type==='txt')s+='|'+(l.txt||'').slice(0,30)+'|'+(l.size||'');
+  if(l.type==='arr')s+='|'+n(l.x1p)+','+n(l.y1p)+','+n(l.x2p)+','+n(l.y2p)+'|'+(l.color||'');
+  if(l.type==='rect'||l.type==='circle')s+='|'+(l.fillColor||'');
+  return s;
+}
+/* Assinatura do conjunto de páginas extras (ordem + camadas de cada uma). */
+function _paginasSig(lista){
+  var arr=lista||(typeof paginas!=='undefined'?paginas:[]);
+  return arr.map(function(p){
+    return p.id+'#'+p.layers.length+'#['+p.layers.map(_layerSig).join(';')+']';
+  }).join('&');
+}
+/* Assinatura do ESTADO salvo (capState), sem dataURL: diz se mudou algo que
+   importa para o desfazer. Antes o snap comparava só "quantas camadas" e por
+   isso mover/girar/redimensionar nunca virava passo de desfazer. */
+function _estadoSig(st){
+  if(!st)return '';
+  var p=[];
+  CAMPOS_INPUT.forEach(function(k){p.push(k+'='+(st[k]||''));});
+  CAMPOS_CE.forEach(function(k){p.push(k+'='+(st[k]||''));});
+  var g=st._grade||{};for(var i in g)p.push('g'+i+'='+g[i]);
+  p.push('C='+(st._cores||[]).map(function(c){return (c.hex||'')+(c.nome||'');}).join('~'));
+  p.push('L='+(st._layers||[]).map(_layerSig).join(';'));
+  p.push('P='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+(x.layers||[]).map(_layerSig).join(';');}).join('&'));
+  return p.join('\u0002');
+}
+let estadoAtual=null;   /* último estado já capturado (o "antes" do próximo snap) */
 function _snapSig(){
 const p=[];
 CAMPOS_INPUT.forEach(id=>{const el=$(id);p.push(id+'='+(el?el.value:''));});
@@ -2852,7 +2953,10 @@ layers.forEach((l,i)=>{
   if(l.type==='rect'||l.type==='circle')s+='|'+(l.fillColor||'')+'|'+(l.strokeColor||'')+'|'+(l.strokeWidth||0);
   p.push('L'+i+':'+s);
 });
-paginas.forEach(pg=>{p.push('pg'+pg.id+'='+pg.layers.length);});
+/* V9.1 — antes era só "página X tem N camadas": mover, girar ou apagar
+   numa página extra NÃO entrava na assinatura, então o Ctrl+Z desfazia uma
+   ação antiga da folha 1 em vez do gesto que a pessoa acabou de fazer. */
+p.push('PGS='+_paginasSig());
 return p.join('');
 }
 function serLayer(l){
@@ -2866,7 +2970,11 @@ if(l.op!==undefined&&l.op!==null&&l.op!==1)b.op=l.op;
 if(l.flipH)b.flipH=1;
 if(l.flipV)b.flipV=1;
 if(l.fit&&l.fit!=='contain')b.fit=l.fit;
-if(l.type==='img'){b.src=l.src;b.ratio=l.ratio;b.prop=l.prop;}
+if(l.type==='img'){b.src=l.src;b.ratio=l.ratio;b.prop=l.prop;
+  /* nome do arquivo e tamanho real: sem isso, ao reabrir o .json a lista
+     voltava a mostrar "Imagem 2" e perdia o aviso de foto em baixa. */
+  if(l._fileName)b._fileName=String(l._fileName).slice(0,80);
+  if(l._nw&&l._nh){b._nw=l._nw;b._nh=l._nh;}}
 if(l.type==='txt'){b.txt=l.txt;b.font=l.font;b.size=l.size;b.color=l.color;b.bold=l.bold;b.italic=l.italic;b.richHtml=l.richHtml||'';}
 if(l.type==='arr'){b.color=l.color;b.stroke=l.stroke;b.arStyle=l.arStyle||'full';b.x1p=l.x1p;b.y1p=l.y1p;b.x2p=l.x2p;b.y2p=l.y2p;}
 if(l.type==='rect'||l.type==='circle'){b.fillColor=l.fillColor;b.strokeColor=l.strokeColor;b.strokeWidth=l.strokeWidth;}
@@ -2902,29 +3010,35 @@ function snap(){
 if(v7SuppressSnap)return;
 clearTimeout(snapTimer);snapTimer=setTimeout(()=>{
 // Compara por assinatura leve primeiro — evita JSON.stringify pesado quando nada mudou
-const sig=_snapSig();
-if(sig===snapLastSig)return;
 const st=capState();
-// Serialização SÓ quando realmente há mudança (e apenas uma vez para comparação/push)
-if(undoStack.length){
-  try{
-    const prev=undoStack[undoStack.length-1];
-    // Comparação estruturada rápida: mesmos campos + layers iguais (src de imagem compara por referência, não stringify)
-    let eq=true;
-    for(const k of CAMPOS_INPUT){if((st[k]||'')!==(prev[k]||'')){eq=false;break;}}
-    if(eq)for(const k of CAMPOS_CE){if((st[k]||'')!==(prev[k]||'')){eq=false;break;}}
-    if(eq){const g1=st._grade||{},g2=prev._grade||{};for(const i in g1){if(g1[i]!==g2[i]){eq=false;break;}}}
-    if(eq)eq=(st._layers||[]).length===(prev._layers||[]).length;
-    if(eq)eq=(st._paginasDetalhe||[]).length===(prev._paginasDetalhe||[]).length;
-    if(eq)return;
-  }catch(_){}
+const sig=_estadoSig(st);
+if(sig===snapLastSig)return;
+/* Empilha o estado ANTERIOR: assim o primeiro Ctrl+Z volta exatamente para
+   como estava antes do gesto (antes empilhava o estado já modificado). */
+if(estadoAtual&&_estadoSig(estadoAtual)!==sig){
+  undoStack.push(estadoAtual);undoSeqStack.push(++v7OpSeq);
+  if(undoStack.length>40){undoStack.shift();undoSeqStack.shift();}
 }
-snapLastSig=sig;
-undoStack.push(st);undoSeqStack.push(++v7OpSeq);if(undoStack.length>40){undoStack.shift();undoSeqStack.shift();}redoStack=[];redoSeqStack=[];updUR();
+estadoAtual=st;snapLastSig=sig;
+redoStack=[];redoSeqStack=[];updUR();
 },800);
 }
-function undo(){if(!undoStack.length)return;redoStack.push(capState());redoSeqStack.push(undoSeqStack.pop());restState(undoStack.pop());updUR();toast('↩ Desfeito');}
-function redo(){if(!redoStack.length)return;undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop());restState(redoStack.pop());updUR();toast('↪ Refeito');}
+function undo(){
+  if(!undoStack.length)return;
+  redoStack.push(capState());redoSeqStack.push(undoSeqStack.pop()||0);
+  const alvo=undoStack.pop();
+  restState(alvo);
+  estadoAtual=alvo;snapLastSig=_estadoSig(alvo);
+  updUR();toast('↩ Desfeito');
+}
+function redo(){
+  if(!redoStack.length)return;
+  undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop()||0);
+  const alvo=redoStack.pop();
+  restState(alvo);
+  estadoAtual=alvo;snapLastSig=_estadoSig(alvo);
+  updUR();toast('↪ Refeito');
+}
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
 document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select')&&!e.target.matches('.gi'))snap();if(e.target.matches('[contenteditable]'))snap();});
 
@@ -3046,7 +3160,6 @@ if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='v'||e.key==='V')){if(_digitando)retu
 /* Ctrl+A: a ficha seleciona uma camada por vez, então selecionar "tudo" não
    existe. Fica com o navegador (seleciona o texto da tela) em vez de fingir
    que fez algo. */
-if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
 /* V9.1 — atalhos do estúdio do mockup. Todos respeitam o campo em foco:
    dentro de um input/textarea quem manda é o navegador. */
 if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='d'||e.key==='D')){if(_digitando)return;e.preventDefault();mkeDuplicarCamada();return;}
@@ -3277,8 +3390,20 @@ function onDrop(e){
   arqs.forEach(lerArq);
 }
 function bgClick(e){if(eyeAtivo||modoSeta)return;if(e.target===canvasInner||e.target===canvasPh||canvasPh.contains(e.target)){if(!layers.length)$('canvasInput').click();else deselecionarTudo();}}
+/* Píxel transparente: ocupa o lugar da foto quando o arquivo não está mais
+   disponível (rascunho guardado sem imagens, .json sem as fotos). Evita que o
+   <img> fique pedindo a própria página como imagem. */
+const MKE_PIXEL='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 function addImgLayer(src,ov,nome){
-const id=(ov&&ov.id)||uid();const tmp=new Image();
+const id=(ov&&ov.id)||uid();
+/* camada salva cuja imagem se perdeu: mantém a moldura na posição e no
+   tamanho em vez de sumir com ela (o usuário revincula a foto depois) */
+if(!src&&ov&&ov.xp!==undefined){
+  const l0=Object.assign({type:'img',id,src:MKE_PIXEL,ratio:1,rot:0,prop:true,z:++zCnt},ov,{id,src:MKE_PIXEL,ratio:ov.ratio||1,type:'img'});
+  l0._semImagem=1;
+  layers.push(l0);renderImgLayer(l0);updPh();updList();savLayers();return l0;
+}
+const tmp=new Image();
 tmp.onload=()=>{
   const ratio=(tmp.naturalWidth||1)/(tmp.naturalHeight||1);let l;
   if(ov&&ov.xp!==undefined){
@@ -3300,12 +3425,23 @@ tmp.onload=()=>{
   layers.push(l);renderImgLayer(l);selLayer(id);updPh();updList();savLayers();snap();
   if(!ov){try{mkeAvisoImagem(l)}catch(e){}}
 };
+/* imagem que não carrega (arquivo apagado, base64 corrompido): antes a camada
+   sumia sem aviso e o usuário perdia o posicionamento salvo. Agora a moldura
+   continua na ficha, marcada como vazia, e o usuário é avisado. */
+tmp.onerror=()=>{
+  if(!ov||ov.xp===undefined){ if(typeof toast==='function')toast('⚠️ A imagem não pôde ser carregada','',3200); return; }
+  const l=Object.assign({type:'img',id,src,ratio:1,rot:0,prop:true,z:++zCnt},ov,{id,src,ratio:1,type:'img'});
+  l._semImagem=1;
+  layers.push(l);renderImgLayer(l);updPh();updList();savLayers();snap();
+  if(typeof toast==='function')toast('⚠️ Imagem não carregou — moldura mantida na ficha','',3600);
+};
 tmp.src=src;
 }
 function renderImgLayer(l){
 const old=document.getElementById('ly_'+l.id);if(old)old.remove();
 const el=document.createElement('div');el.className='img-layer';el.id='ly_'+l.id;posEl(l,el,false);
-const img=document.createElement('img');img.src=l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+const img=document.createElement('img');img.src=(l._semImagem||!l.src)?MKE_PIXEL:l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+if(l._semImagem){el.classList.add('mke-sem-img');img.title='Imagem não disponível neste rascunho — use \"Revincular imagens\"';}
 img.addEventListener('load',function(){try{mkeGuardarPx(l.src,img.naturalWidth,img.naturalHeight);}catch(e){}});
 el.appendChild(img);
 ['tl','tr','bl','br'].forEach(c=>{const h=document.createElement('div');h.className=`lyr-h lyr-${c}`;h.dataset.c=c;el.appendChild(h);});
@@ -3762,7 +3898,9 @@ document.addEventListener('keydown',function(ev){
     const tag=(ev.target&&(ev.target.tagName||''));
     if(tag==='INPUT'||tag==='TEXTAREA'||(ev.target&&ev.target.isContentEditable))return;
     ev.preventDefault();
-    multiSelIds.forEach(id=>excluirId(id));multiSelIds=[];clearGroupBox();toast('🗑 '+multiSelIds.length+' camadas removidas','',1800);
+    const quantasFolha1=multiSelIds.length;   /* contar ANTES de limpar a lista */
+    multiSelIds.forEach(id=>excluirId(id));multiSelIds=[];clearGroupBox();
+    toast('🗑 '+quantasFolha1+' camadas removidas','',1800);
   }
 });
 
@@ -3796,10 +3934,10 @@ function aninharImagens(){
   toast('🧩 Imagens aninhadas!','sucesso',1800);
 }
 
-function lFrente(){const l=layers.find(x=>x.id===selId);if(!l)return;l.z=++zCnt;const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();}
-function lTras(){const l=layers.find(x=>x.id===selId);if(!l)return;const mz=Math.min(...layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();}
-function lCentro(){const l=layers.find(x=>x.id===selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+l.id);if(el)posArrEl(l,el,false,cw(),ch());}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+l.id);if(el){el.style.left=(l.xp*cw())+'px';el.style.top=(l.yp*ch())+'px';}}savLayers();}
-function lFill(){const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;l.fit='cover';const rc=cw()/ch();let wp,hp;if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;const el=document.getElementById('ly_'+l.id);if(el){posEl(l,el,false);el.style.transform='';}savLayers();}
+function lFrente(){const l=layers.find(x=>x.id===selId);if(!l)return;l.z=++zCnt;const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();updList();snap();}
+function lTras(){const l=layers.find(x=>x.id===selId);if(!l)return;const mz=Math.min(...layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();updList();snap();}
+function lCentro(){const l=layers.find(x=>x.id===selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+l.id);if(el)posArrEl(l,el,false,cw(),ch());}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+l.id);if(el){el.style.left=(l.xp*cw())+'px';el.style.top=(l.yp*ch())+'px';}}savLayers();snap();}
+function lFill(){const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;l.fit='cover';const rc=cw()/ch();let wp,hp;if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;const el=document.getElementById('ly_'+l.id);if(el){posEl(l,el,false);el.style.transform='';}savLayers();updList();snap();}
 function lCaber(){
 const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;
 const W=cw(),H=ch(),rc=H?W/H:1;
@@ -3905,7 +4043,7 @@ function updList(){
     }
     row.querySelector('.lp-name').textContent=mkeNomeCamada(l);
     if(l.type==='img'){
-      var q=null;try{q=mkeQualidade(l);}catch(e){}
+      var q=null;try{q=mkeQualidade(l,foco.page||null);}catch(e){}
       if(q&&!q.ok){
         var av=document.createElement('span');
         av.className='mke-warn';
@@ -4046,10 +4184,18 @@ function mkePxImagem(l){
   if(im&&im.naturalWidth)return {w:im.naturalWidth,h:im.naturalHeight};
   return null;
 }
-function mkeQualidade(l){
+function mkeQualidade(l,pagina){
   if(!l||l.type!=='img')return null;
   var px=mkePxImagem(l);if(!px)return null;
-  var ctx=mkeCtx(),W=ctx.W()||1,H=ctx.H()||1;
+  /* V9.1 — o tamanho no papel vem da PÁGINA da camada. Antes usava sempre a
+     página em foco: avisando a arte da página 2 enquanto a 1 estava aberta,
+     o "mm" saía do tamanho errado e o ⚠ mentia. */
+  var W,H;
+  if(pagina&&pagina.id){
+    W=cwExtra(pagina.id)||1;H=chExtra(pagina.id)||1;
+  }else{
+    var ctx=mkeCtx();W=ctx.W()||1;H=ctx.H()||1;
+  }
   var mmW=mkeMm(l.wp*W),mmH=mkeMm((typeof l.hp==='number'?l.hp:0)*H);
   /* 300 dpi é o que a gráfica pede: quantos px a foto deveria ter na largura
      em que ela vai sair no papel */
@@ -4446,6 +4592,14 @@ function mkeEspelhar(eixo){
   var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
   if(!alvos.length){toast('Selecione uma camada','erro');return;}
   alvos.forEach(function(l){
+    if(l.type==='arr'&&typeof l.x1p==='number'){
+      /* seta não tem flip de CSS: espelhar é refletir as duas pontas (a ponta
+         da flecha continua sendo a segunda) */
+      if(eixo==='h'){l.x1p=1-l.x1p;l.x2p=1-l.x2p;}
+      else{l.y1p=1-l.y1p;l.y2p=1-l.y2p;}
+      mkePos(ctx,l);
+      return;
+    }
     if(eixo==='h')l.flipH=!l.flipH;else l.flipV=!l.flipV;
     mkePos(ctx,l);
   });
@@ -4460,7 +4614,7 @@ function mkeGirar(dir){
     if(l.type==='arr'&&typeof l.x1p==='number'){
       /* seta: gira os dois pontos ao redor do centro da própria seta */
       var cx=(l.x1p+l.x2p)/2,cy=(l.y1p+l.y2p)/2;
-      var r1=mkeRotPonto(l.x1p,l.y1p,cx,cy,d),r2=mkeRotPonto(l.x2p,l.y2p,cx,cy,d);
+      var r1=mkeRotPonto(l.x1p,l.y1p,cx,cy,d,ctx.W(),ctx.H()),r2=mkeRotPonto(l.x2p,l.y2p,cx,cy,d,ctx.W(),ctx.H());
       var lim=function(v){return Math.max(0,Math.min(1,v));};
       l.x1p=lim(r1.x);l.y1p=lim(r1.y);l.x2p=lim(r2.x);l.y2p=lim(r2.y);
     }else{
@@ -4478,9 +4632,13 @@ function mkeGirar(dir){
   mkeSalvar(ctx);
   toast('⟳ Girado 90°','',1400);
 }
-function mkeRotPonto(x,y,cx,cy,graus){
-  var a=graus*Math.PI/180,dx=x-cx,dy=y-cy;
-  return {x:cx+dx*Math.cos(a)-dy*Math.sin(a),y:cy+dx*Math.sin(a)+dy*Math.cos(a)};
+function mkeRotPonto(x,y,cx,cy,graus,W,H){
+  /* Em % da área: sem converter para px antes, um "90°" numa folha A4 (794×1123)
+     saía como ~36° na tela. W/H zerados mantêm o comportamento antigo. */
+  W=W||1;H=H||1;
+  var a=graus*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);
+  var dx=(x-cx)*W,dy=(y-cy)*H;
+  return {x:cx+(dx*c-dy*sn)/W,y:cy+(dx*sn+dy*c)/H};
 }
 function mkeResetCamada(){
   var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
@@ -4511,7 +4669,17 @@ function mkeAjuda(){
 function mkeGirarGraus(d){
   var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
   if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  var W=ctx.W(),H=ctx.H();
+  var lim=function(v){return Math.max(0,Math.min(1,v));};
   alvos.forEach(function(l){
+    if(l.type==='arr'&&typeof l.x1p==='number'){
+      /* seta não tem "rot": o jeito de girar é mexer nas pontas */
+      var cx=(l.x1p+l.x2p)/2,cy=(l.y1p+l.y2p)/2;
+      var r1=mkeRotPonto(l.x1p,l.y1p,cx,cy,d,W,H),r2=mkeRotPonto(l.x2p,l.y2p,cx,cy,d,W,H);
+      l.x1p=lim(r1.x);l.y1p=lim(r1.y);l.x2p=lim(r2.x);l.y2p=lim(r2.y);
+      mkePos(ctx,l);
+      return;
+    }
     var a=((l.rot||0)+d)%360;
     if(a>180)a-=360;
     if(a<-180)a+=360;
@@ -4519,8 +4687,8 @@ function mkeGirarGraus(d){
     mkePos(ctx,l);
   });
   mkeSalvar(ctx);
-  var um=alvos[0];
-  toast('⟲ '+Math.round(um.rot||0)+'°','',1200);
+  var ehSeta=alvos[0]&&alvos[0].type==='arr';
+  toast(ehSeta?('⟲ Seta girada '+Math.round(d)+'°'):('⟲ '+Math.round(alvos[0].rot||0)+'°'),'',1200);
 }
 function mkeRotacao0(){
   var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
@@ -5642,7 +5810,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else mkeIniciar();
 setTimeout(mkeIniciar,400);
 
-function savLayers(){try{localStorage.setItem('va3_layers',JSON.stringify(layers.map(serLayer)));}catch(e){}}
+/* V9.1 — a cópia de emergência do localStorage NÃO leva as fotos (base64).
+   Guardar imagem aqui estourava a cota de ~5 MB e derrubava junto o autosave
+   da ficha inteira; agora ficam só geometria, texto e atributos. Ao reabrir, a
+   moldura aparece vazia e a foto volta pelo "Revincular imagens". */
+function savLayers(){try{localStorage.setItem('va3_layers',JSON.stringify(layers.map(function(l){var b=serLayer(l);if(b&&b.type==='img'){delete b.src;b._semImagem=1;}return b;})));}catch(e){}}
 new ResizeObserver(()=>{layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});}).observe(canvasInner);
 
 
@@ -5863,7 +6035,17 @@ if(tgt==='logo'){toast('Logo fixo, não pode ser recortado.','erro');return;}
 else{const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l){toast('Selecione uma camada de imagem.','erro');return;}src=l.src;}
 const img=$('cropImg');if(cropInst){cropInst.destroy();cropInst=null;}img.src=src;$('cropModal').classList.add('open');
 document.querySelectorAll('.ar-btn').forEach(b=>b.classList.remove('ar-on'));document.querySelector('.ar-btn').classList.add('ar-on');
-setTimeout(()=>{cropInst=new Cropper(img,{viewMode:2,autoCropArea:.95,movable:true,rotatable:true,scalable:true,zoomable:true,background:true,responsive:true});},200);
+setTimeout(()=>{
+  /* Sem a biblioteca (arquivo faltando/offline quebrado) a tela ficava com o
+     modal aberto e um erro no console. Avisa e fecha em vez de travar. */
+  if(typeof Cropper==='undefined'){
+    toast('⚠ Recorte indisponível neste navegador','erro');
+    try{fecharCrop();}catch(e){}
+    return;
+  }
+  try{cropInst=new Cropper(img,{viewMode:2,autoCropArea:.95,movable:true,rotatable:true,scalable:true,zoomable:true,background:true,responsive:true});}
+  catch(e){console.warn('cropper',e);toast('⚠ Não foi possível abrir o recorte','erro');try{fecharCrop();}catch(_e){}}
+},200);
 }
 function fecharCrop(){$('cropModal').classList.remove('open');if(cropInst){cropInst.destroy();cropInst=null;}}
 function setAR(btn,val){document.querySelectorAll('.ar-btn').forEach(b=>b.classList.remove('ar-on'));btn.classList.add('ar-on');if(cropInst)cropInst.setAspectRatio(val==='livre'?NaN:val);}
@@ -6104,12 +6286,13 @@ function capturarFichaParaJSON() {
     prod.push({ modelo: inps[0]?inps[0].value:'', valor: inps[1]?inps[1].value:'', qtd: inps[2]?inps[2].value:'' });
   });
   d._prod = prod;
+  /* serLayer guarda TAMBÉM o que o estúdio criou (nome, oculta, travada,
+     opacidade, espelho, encaixe). Sem isso, salvar em .json e reabrir
+     ressuscitava camada oculta e perdia o cadeado — e oculta volta a sair
+     na impressão, o que é erro de produção. */
   d._layers = layers.map(l => {
-    const b = { id:l.id, type:l.type, xp:l.xp, yp:l.yp, wp:l.wp, hp:l.hp, rot:l.rot||0, z:l.z };
-    if(l.type==='img') { b.ratio=l.ratio; b.prop=l.prop; b.imgName=l._fileName||('imagem_'+(layers.filter(x=>x.type==='img').indexOf(l)+1)+'.png'); b.imgIncluded=true; b.src=l.src; }
-    if(l.type==='txt') { b.txt=l.txt; b.font=l.font; b.size=l.size; b.color=l.color; b.bold=l.bold; b.italic=l.italic; b.richHtml=l.richHtml||''; }
-    if(l.type==='arr') { b.color=l.color; b.stroke=l.stroke; b.arStyle=l.arStyle||'full'; b.x1p=l.x1p; b.y1p=l.y1p; b.x2p=l.x2p; b.y2p=l.y2p; }
-    if(l.type==='rect'||l.type==='circle') { b.fillColor=l.fillColor; b.strokeColor=l.strokeColor; b.strokeWidth=l.strokeWidth; }
+    const b = serLayer(l);
+    if(l.type==='img') { b.imgName=l._fileName||('imagem_'+(layers.filter(x=>x.type==='img').indexOf(l)+1)+'.png'); b.imgIncluded=true; b.src=l.src; }
     return b;
   });
   d._paginas = paginas.map(p => {
@@ -6657,7 +6840,7 @@ function v8LimparPaginasExtras(){
 function limparParaNovaFicha(novoNum) {
   v7SuppressSnap=true;
   try{ localStorage.removeItem('vooalto_v7_ficha_ativa'); }catch(e){}
-  try{ undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];snapLastSig='';updUR(); }catch(e){}
+  try{ undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];snapLastSig='';estadoAtual=null;updUR(); }catch(e){}
   try{ v7PageUndoStack=[]; v7PageRedoStack=[]; }catch(e){}
   v8FichaAtualId=null;   /* V8: a ficha limpa não pertence a nenhum registro salvo */
   if(!document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
@@ -7623,12 +7806,35 @@ function v7MostrarHoraSalva(){try{const h=localStorage.getItem(V7_SAVE_HORA_KEY)
   if(h&&el){el.textContent='Salvo '+h;el.className='v7-save-chip salvo';el.title='Última gravação automática às '+h+' (sessão anterior).'}}catch(e){}}
 window.addEventListener('load',v7MostrarHoraSalva);
 window.abrirAjudaFicha=abrirAjudaFicha;window.fecharAjudaFicha=fecharAjudaFicha;
+/* Cópia da ficha sem o base64 das fotos: usada quando a cota do localStorage
+   estoura. Preserva páginas, textos, grades, produção e a posição das molduras
+   — antes, o autosave simplesmente falhava e TODO o trabalho recente sumia. */
+function v7FichaSemImagens(d){
+  const copia=JSON.parse(JSON.stringify(d));
+  const tirar=function(arr){(arr||[]).forEach(function(l){if(l&&l.type==='img'){delete l.src;l._semImagem=1;}});};
+  tirar(copia._layers);
+  (copia._paginas||[]).forEach(function(pg){tirar(pg.layers);});
+  copia._semImagens=1;
+  return copia;
+}
 function v7SalvarAutosaveAgora(){
   clearTimeout(v7AutosaveTimer);v7AutosaveTimer=null;
   try{
     if(typeof capturarFichaParaJSON!=='function')return false;
     const dados=capturarFichaParaJSON();
-    localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(dados));
+    try{
+      localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(dados));
+    }catch(eCota){
+      /* 2ª tentativa sem as fotos: melhor perder a imagem do que a ficha */
+      localStorage.setItem(V7_AUTOSAVE_KEY,JSON.stringify(v7FichaSemImagens(dados)));
+      v7MarcarSalvo(true);
+      const chip=document.getElementById('v7SaveChip');
+      if(chip){chip.textContent='Salvo sem as fotos';chip.className='v7-save-chip erro';
+        chip.title='A memória do navegador encheu: o rascunho foi guardado sem as imagens. Use "Salvar ficha" (.json) para não perder as fotos.';}
+      try{toast('⚠️ Memória cheia: rascunho guardado SEM as fotos. Salve a ficha em .json para não perder as imagens.','erro');}catch(_){}
+      try{if(typeof v8RascunhoMarcarSalvo==='function')v8RascunhoMarcarSalvo(true)}catch(_){}
+      return true;
+    }
     v7MarcarSalvo(true);
     /* V8.1 — o cartão de rascunho da barra lateral precisa saber se o que
        está guardado tem conteúdo ou é uma ficha em branco. */
@@ -7803,8 +8009,14 @@ function v7DuplicarPagina(pid){
   /* camadas com ids novos: sem isso o Ctrl+Z e o “excluir” de uma página
      mexeriam na cópia da outra */
   snap.layers=(snap.layers||[]).map(function(l){var n=Object.assign({},l);n.id=uid();return n;});
-  (snap.cores||[]).forEach(function(c){});
-  const idx=paginas.indexOf(p)+1;
+  /* A posição é contada no DOM (que inclui a folha 1), não no array: antes a
+     cópia entrava ANTES da original e a numeração saía trocada. */
+  let idx=paginas.indexOf(p)+1;
+  try{
+    const folhas=[...document.querySelectorAll('#pw .folha,#pw .folha-branca')];
+    const posDom=folhas.indexOf(document.getElementById('folha_'+p.id));
+    if(posDom>=0)idx=posDom+1;
+  }catch(e){}
   v7CriarPaginaRestaurada(snap,idx);
   try{if(typeof v7PushPageUndo==='function')v7PushPageUndo({type:'add',index:idx,id:novoId});}catch(e){}
   try{if(typeof atualizarNavSidebar==='function')atualizarNavSidebar();}catch(e){}
@@ -7994,6 +8206,16 @@ function v7Renumerar(){
       }
     }
   });
+  /* O array `paginas` precisa seguir a ordem do DOM: ele é o que vai salvo em
+     _paginasDetalhe (autosave/JSON) e o que a exportação percorre. Sem isso,
+     duplicar/arrastar uma página deixava o arquivo salvo em outra ordem. */
+  try{
+    const idsExtras=ordem.filter(id=>id!=='folha1').map(id=>id.replace('folha_',''));
+    paginas.sort((a,b)=>{
+      const ia=idsExtras.indexOf(a.id), ib=idsExtras.indexOf(b.id);
+      return (ia<0?1e9:ia)-(ib<0?1e9:ib);
+    });
+  }catch(e){}
   /* recalcula o total de páginas a partir da ordem real */
   try{ totalPaginas = ordem.length; }catch(e){}
   if(typeof atualizarRodapes==='function')atualizarRodapes();

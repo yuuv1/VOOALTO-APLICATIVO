@@ -2496,14 +2496,22 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
 
     // Apply drawn signature to all pages
     function saveSignaturePad() {
+      /* Salvar sem desenhar nada trocava a assinatura padrão por um PNG
+         transparente (a proposta saía sem assinatura). Agora avisa. */
+      if (!canvas) { orcToast('⚠️ Assinatura indisponível — reabra o painel'); return; }
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
       const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) { orcToast('⚠️ Seu navegador não permitiu preparar a assinatura'); return; }
       tempCtx.drawImage(canvas, 0, 0);
 
-      const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      let imgData;
+      try { imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height); }
+      catch (e) { orcToast('⚠️ Não foi possível ler a assinatura'); return; }
+      if (!imgData || !imgData.data) { orcToast('⚠️ Não foi possível ler a assinatura'); return; }
       const data = imgData.data;
+      let tinta = 0;
 
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
@@ -2512,8 +2520,11 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         const gray = 0.299*r + 0.587*g + 0.114*b;
         if (gray > 220) {
           data[i+3] = 0; // Transparent
+        } else if (data[i+3] > 0) {
+          tinta++;
         }
       }
+      if (!tinta) { orcToast('✍️ Desenhe sua assinatura antes de salvar'); return; }
       tempCtx.putImageData(imgData, 0, 0);
 
       currentSignatureBase64 = tempCanvas.toDataURL('image/png');
@@ -2585,6 +2596,12 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     
     // Export PNG captures all pages one by one as dynamic downloads
     function exportPNG() {
+      /* Sem a biblioteca o clique derrubava a função no meio, depois de
+         esconder a barra lateral e as abas — a tela ficava sem a interface. */
+      if (typeof html2canvas !== 'function') {
+        orcToast('⚠️ Exportar PNG indisponível (biblioteca não carregou) — use Imprimir');
+        return;
+      }
       /* Hide ALL editor UI elements before capturing — must stay hidden
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
@@ -2602,6 +2619,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
          all renders complete */
       const promises = documentPages.map(pState => {
         const page = document.getElementById(`printable-a4-page-${pState.id}`);
+        if (!page) return Promise.resolve();
         const prevShadow = page.style.boxShadow;
         page.style.boxShadow = 'none';
 
@@ -2621,13 +2639,16 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         });
       });
 
-      /* Restore editor UI only after ALL captures finish */
-      Promise.all(promises).finally(() => {
+      /* Restore editor UI only after ALL captures finish — e também se algo
+         estourar antes, para a interface nunca ficar escondida. */
+      const devolverUI = () => {
         saved.forEach(({el, prevDisplay, prevVisibility}) => {
           el.style.display = prevDisplay || '';
           el.style.visibility = prevVisibility || '';
         });
-      });
+      };
+      try { Promise.all(promises).finally(devolverUI); }
+      catch (e) { devolverUI(); orcToast('⚠️ Falha ao exportar o PNG'); }
     }
   </script>
 

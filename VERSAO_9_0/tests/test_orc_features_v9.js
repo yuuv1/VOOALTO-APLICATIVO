@@ -122,6 +122,42 @@ function check(label, ok, extra) {
   t(`removeLastDocumentPage(); 'ok'`);
   check('removeLastDocumentPage remove a última folha do DOM', doc.querySelectorAll('#preview-pages-container .page').length === 1 && !doc.getElementById('printable-a4-page-2'));
 
+
+  /* ── Pente fino V9.1: exportar PNG e assinatura ─────────────────────── */
+
+  /* exportPNG sem a biblioteca html2canvas (CDN caiu / offline) */
+  const sidebarEl = doc.querySelector('.editor-sidebar');
+  const displayAntes = sidebarEl ? sidebarEl.style.display : null;
+  check('a página do orçamento não tem html2canvas carregado', t(`typeof html2canvas`) !== 'function');
+  t(`exportPNG(); 'ok'`);
+  check('exportar PNG sem a biblioteca não esconde a barra lateral',
+    !!sidebarEl && sidebarEl.style.display === displayAntes, sidebarEl && sidebarEl.style.display);
+  check('exportar PNG sem a biblioteca avisa o usuário',
+    /PNG|Imprimir/.test((doc.getElementById('orcToast') || {}).textContent || ''), (doc.getElementById('orcToast') || {}).textContent);
+
+  /* salvar assinatura em branco não pode apagar a assinatura padrão */
+  const sigAntes = t(`currentSignatureBase64`);
+  t(`(function(){var falso={fillRect:function(){},beginPath:function(){},moveTo:function(){},lineTo:function(){},
+        stroke:function(){},drawImage:function(){},putImageData:function(){},
+        getImageData:function(){return {data:new Uint8ClampedArray(16).fill(255)};}};
+      HTMLCanvasElement.prototype.getContext=function(){return falso;};return 1;})(); 'ok'`);
+  t(`saveSignaturePad(); 'ok'`);
+  check('assinatura em branco avisa em vez de salvar',
+    /Desenhe/.test((doc.getElementById('orcToast') || {}).textContent || ''), (doc.getElementById('orcToast') || {}).textContent);
+  check('assinatura em branco mantém a assinatura que já existia',
+    t(`currentSignatureBase64`) === sigAntes);
+
+  /* com tinta no papel a assinatura é gravada normalmente */
+  t(`(function(){var d=new Uint8ClampedArray(16).fill(255);d[0]=0;d[1]=0;d[2]=0;d[3]=255;
+      var falso={fillRect:function(){},beginPath:function(){},moveTo:function(){},lineTo:function(){},
+        stroke:function(){},drawImage:function(){},putImageData:function(){},
+        getImageData:function(){return {data:d};}};
+      HTMLCanvasElement.prototype.getContext=function(){return falso;};return 1;})(); 'ok'`);
+  t(`saveSignaturePad(); 'ok'`);
+  check('assinatura desenhada é salva e aplicada às páginas',
+    t(`currentSignatureBase64`) === 'data:image/png;base64,AAAA',
+    t(`currentSignatureBase64`));
+
   if(errs.length)fail++;
   console.log('  page errors:', errs.length ? errs : 'none ✓');
   console.log(`\n═══ RESULTADO ORÇAMENTO FEATURES: ${pass} OK, ${fail} FAIL ═══`);
