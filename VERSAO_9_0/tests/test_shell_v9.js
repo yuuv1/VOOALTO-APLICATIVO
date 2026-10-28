@@ -79,10 +79,18 @@ const { BASE } = require('./_base');
     Object.defineProperty(ev, 'source', { value: frame });
     w.dispatchEvent(ev);
   };
+  /* V9.3 — o shell nasce no escuro: para testar a troca é preciso sair dele */
+  w.eval(`applyThemeFromShell('claro')`);
+  await new Promise(r => setTimeout(r, 100));
+  ok('claro remove o atributo', !doc.documentElement.dataset.theme);
+  ok('claro ajusta as variáveis', doc.documentElement.style.getPropertyValue('--shell-bg') === '#eef0ff' && doc.documentElement.style.getPropertyValue('--bar-text') === '#17172a');
+
+  /* o boot já manda o tema inicial para os módulos: zera antes de testar a volta */
+  frames.ficha.got.length = 0;
   postarDe(frames.ficha, { type: 'vooalto-theme', theme: 'escuro' });
   await new Promise(r => setTimeout(r, 100));
   ok('escuro aplica data-theme', doc.documentElement.dataset.theme === 'escuro');
-  ok('escuro ajusta as variáveis', doc.documentElement.style.getPropertyValue('--shell-bg') === '#0b0f17' && doc.documentElement.style.getPropertyValue('--bar-text') === '#fff');
+  ok('escuro ajusta as variáveis', doc.documentElement.style.getPropertyValue('--shell-bg') === '#04060a' && doc.documentElement.style.getPropertyValue('--bar-text') === '#fff');
   ok('orçamento recebe escuro', ultimoTema('orcamento') === 'escuro');
   ok('não devolve o tema para quem enviou', !frames.ficha.got.some(m => m.type === 'vooalto-theme' && m.theme === 'escuro'));
 

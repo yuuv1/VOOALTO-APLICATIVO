@@ -19,9 +19,9 @@
 (function(){
   try{
     var ANTIGOS_ESCUROS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
-    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro';
+    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro';
     var escuro=(salvo==='escuro')||!!ANTIGOS_ESCUROS[salvo];
-    var v=escuro?['#0b0f17','#0b0f17','#fff']:['#eef0ff','#eef0ff','#17172a'];
+    var v=escuro?['#04060a','#04060a','#fff']:['#eef0ff','#eef0ff','#17172a'];
     var scheme=escuro?'dark':'light';
     var css=':root{--shell-bg:'+v[0]+';--top-solid:'+v[1]+';--bar-text:'+v[2]+'!important}'
       +'html,body{background:'+v[0]+'!important;color:'+v[2]+'!important;color-scheme:'+scheme+'}'
@@ -41,7 +41,7 @@
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--shell-bg);color:#111827}
 /* Anima só trocas manuais (classe .theme-animating); na carga inicial não pisca. */
 html.theme-animating body,html.theme-animating .app-shell,html.theme-animating .topbar,html.theme-animating .frame-wrap,html.theme-animating .project-frame{transition:background-color .18s ease,color .18s ease}
-html[data-theme="escuro"]{--bar-text:#fff;--shell-bg:#0b0f17;--top-solid:#0b0f17}
+html[data-theme="escuro"]{--bar-text:#fff;--shell-bg:#04060a;--top-solid:#04060a}
 /* controles do topo no escuro: fundo escuro com texto claro */
 html[data-theme="escuro"] .theme-select,html[data-theme="escuro"] .utility-btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.20);color:#f8fafc}
 html[data-theme="escuro"] .utility-btn:hover{background:rgba(255,255,255,.24)}
@@ -77,31 +77,31 @@ html[data-theme="escuro"] .switch-btn.active{background:#f8fafc;color:#050505}
 .modal{position:fixed;inset:0;background:rgba(5,5,10,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:18px}
 .modal.open{display:flex}
 .card{position:relative;background:#fff;color:#111827;color-scheme:light;border-radius:18px;width:100%;max-height:88vh;overflow-y:auto;padding:22px 24px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
-html[data-theme="escuro"] .card{background:#171b24;color:#e7ebf2;color-scheme:dark;border:1px solid rgba(255,255,255,.12)}
-html[data-theme="escuro"] .card .sub,html[data-theme="escuro"] .help-item p,html[data-theme="escuro"] .tour-step p,html[data-theme="escuro"] .remember{color:#98a2b3}
-html[data-theme="escuro"] .card-x{background:#1e232e;color:#e7ebf2}
-html[data-theme="escuro"] .card-x:hover{background:#2a3140}
-html[data-theme="escuro"] .tour-step{background:#101319;border-color:rgba(255,255,255,.10);color:#e7ebf2}
+html[data-theme="escuro"] .card{background:#0f131a;color:#e9eef7;color-scheme:dark;border:1px solid rgba(255,255,255,.12)}
+html[data-theme="escuro"] .card .sub,html[data-theme="escuro"] .help-item p,html[data-theme="escuro"] .tour-step p,html[data-theme="escuro"] .remember{color:#8d99ac}
+html[data-theme="escuro"] .card-x{background:#151a23;color:#e9eef7}
+html[data-theme="escuro"] .card-x:hover{background:#1d2330}
+html[data-theme="escuro"] .tour-step{background:#0a0d13;border-color:rgba(255,255,255,.10);color:#e9eef7}
 html[data-theme="escuro"] .tour-step .num{background:#F0449F;color:#fff}
 html[data-theme="escuro"] .card-foot,html[data-theme="escuro"] .help-item,html[data-theme="escuro"] .help-keys td{border-top-color:rgba(255,255,255,.10)}
-html[data-theme="escuro"] .help-keys td:first-child{color:#e7ebf2}
+html[data-theme="escuro"] .help-keys td:first-child{color:#e9eef7}
 html[data-theme="escuro"] .btn.primary{background:#D4187A;color:#fff}
-html[data-theme="escuro"] .btn.ghost{background:#1e232e;color:#e7ebf2}
+html[data-theme="escuro"] .btn.ghost{background:#151a23;color:#e9eef7}
 .bkp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:16px}
 .bkp-stat{border:1px solid #e5e7eb;background:#fafbff;border-radius:13px;padding:12px 14px}
-html[data-theme="escuro"] .bkp-stat{background:#101319;border-color:rgba(255,255,255,.10)}
+html[data-theme="escuro"] .bkp-stat{background:#0a0d13;border-color:rgba(255,255,255,.10)}
 .bkp-stat-num{font-size:21px;font-weight:900;color:#D4187A;line-height:1.1}
 html[data-theme="escuro"] .bkp-stat-num{color:#F0449F}
 .bkp-stat-lbl{font-size:12px;font-weight:800;margin-top:4px}
 .bkp-stat-sub{font-size:11px;color:#6b7280;margin-top:2px;line-height:1.35}
-html[data-theme="escuro"] .bkp-stat-sub{color:#98a2b3}
+html[data-theme="escuro"] .bkp-stat-sub{color:#8d99ac}
 .bkp-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:560px){.bkp-actions{grid-template-columns:1fr}}
 .bkp-action-card{border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 16px;background:#fafbff;display:flex;flex-direction:column;gap:8px}
-html[data-theme="escuro"] .bkp-action-card{background:#101319;border-color:rgba(255,255,255,.12)}
+html[data-theme="escuro"] .bkp-action-card{background:#0a0d13;border-color:rgba(255,255,255,.12)}
 .bkp-action-card b{font-size:13.5px}
 .bkp-action-card p{font-size:12px;color:#4b5563;line-height:1.5;flex:1}
-html[data-theme="escuro"] .bkp-action-card p{color:#98a2b3}
+html[data-theme="escuro"] .bkp-action-card p{color:#8d99ac}
 .btn.pink{background:linear-gradient(180deg,#E0278A,#C4146F);color:#fff}
 .btn.pink:hover{filter:brightness(1.07)}
 .btn.danger{background:#dc2626;color:#fff}
@@ -934,7 +934,7 @@ const PROJECTS={
 const THEME_KEY='vooalto_tema';
 const THEME_KEY_LEGADO='vooalto_theme_v5';
 const TEMA_CLARO={bg:'#eef0ff',top:'#eef0ff',text:'#17172a'};
-const TEMA_ESCURO={bg:'#0b0f17',top:'#0b0f17',text:'#fff'};
+const TEMA_ESCURO={bg:'#04060a',top:'#04060a',text:'#fff'};
 /* Nomes de tema de versões antigas (antes da V7.3, que já tinha só 2).
    Mantido para quem vier de uma versão antiga não cair no tema errado. */
 const TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
@@ -949,7 +949,7 @@ function v8TemaValido(t){
   return TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro';
 }
 function v8TemaSalvo(){
-  try{return localStorage.getItem(THEME_KEY)||localStorage.getItem(THEME_KEY_LEGADO)||'claro'}catch(e){return 'claro'}
+  try{return localStorage.getItem(THEME_KEY)||localStorage.getItem(THEME_KEY_LEGADO)||'escuro'}catch(e){return 'escuro'}
 }
 function v8NomeTema(t){return t==='escuro'?'Escuro':'Claro'}
 

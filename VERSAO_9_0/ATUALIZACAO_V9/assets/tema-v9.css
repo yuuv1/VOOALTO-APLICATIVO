@@ -63,18 +63,21 @@
 }
 
 [data-theme="escuro"]{
-  --v9-bg:#0b0f17;
-  --v9-bg-2:#0e131c;
-  --v9-surface:#101319;
-  --v9-surface-2:#171b24;
-  --v9-surface-3:#1e232e;
+  /* V9.3 — "escuro de verdade": o painel era #101319 e a janela #0b0f17, um
+     cinza-azulado que no monitor grande parece claro. Agora o fundo é quase
+     preto e as superfícies sobem em degraus curtos, para o conteúdo brilhar. */
+  --v9-bg:#04060a;
+  --v9-bg-2:#06090e;
+  --v9-surface:#0a0d13;
+  --v9-surface-2:#0f131a;
+  --v9-surface-3:#151a23;
 
-  --v9-line:rgba(255,255,255,.09);
-  --v9-line-2:rgba(255,255,255,.18);
+  --v9-line:rgba(255,255,255,.08);
+  --v9-line-2:rgba(255,255,255,.16);
 
-  --v9-t1:#e7ebf2;
-  --v9-t2:#98a2b3;
-  --v9-t3:#76839a;
+  --v9-t1:#e9eef7;
+  --v9-t2:#8d99ac;
+  --v9-t3:#66707f;
 
   --v9-hover:rgba(255,255,255,.055);
   --v9-active:rgba(255,255,255,.09);

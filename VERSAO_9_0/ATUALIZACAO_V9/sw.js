@@ -1,10 +1,10 @@
-// Service Worker Vooalto V9 — gerado em 20261028-1305 (hash 243f6cf9c87f)
+// Service Worker Vooalto V9 — gerado em 20261028-1921 (hash d7db20a82e7e)
 const CACHE_PREFIX = 'vooalto-v9-';
 // Caches da V8 ficam para trás na mesma origem: o aviso de troca de versão
 // apaga o que a versão anterior deixou, sem tocar em outros aplicativos.
 const LEGACY_CACHE_PREFIXES = ['vooalto-v8-'];
-const CACHE = 'vooalto-v9-243f6cf9c87f';
-const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","manual.html","criador_ficha_tecnica/index.html","criador_orcamento/index.html","assets/cropper.min.css","assets/cropper.min.js","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","assets/tema-v9.css"];
+const CACHE = 'vooalto-v9-d7db20a82e7e';
+const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","manual.html","criador_ficha_tecnica/index.html","criador_orcamento/index.html","mockup/peca.js","mockup/peca_render.js","mockup/peca_editor.js","mockup/peca_editor.css","mockup/index.html","assets/cropper.min.css","assets/cropper.min.js","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","assets/tema-v9.css"];
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {

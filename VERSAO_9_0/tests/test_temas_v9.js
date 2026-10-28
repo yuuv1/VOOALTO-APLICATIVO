@@ -30,7 +30,15 @@ statik('shell: seletor com exatamente Claro e Escuro', (() => {
   return opts.length === 2 && opts[0] === 'claro' && opts[1] === 'escuro';
 })());
 statik('shell: converte nome antigo de tema (mapa + função)', shell.includes('TEMAS_ESCUROS_ANTIGOS') && shell.includes('function v8TemaValido'));
-statik('shell: boot anti-flash já entende claro/escuro', shell.includes("var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'claro'") && shell.includes("if(escuro)document.documentElement.setAttribute('data-theme','escuro')"));
+/* V9.3 — o escuro virou o padrão: quem nunca escolheu tema abre direto no escuro. */
+statik('shell: boot anti-flash entende claro/escuro e nasce no escuro', shell.includes("var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro'") && shell.includes("if(escuro)document.documentElement.setAttribute('data-theme','escuro')"));
+statik('ficha, orçamento e manual também nascem no escuro', [ficha,orc,fs.readFileSync(BASE+'/manual.html','utf-8')].every(x=>x.includes("localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro'")));
+statik('escuro é escuro de verdade (fundo quase preto, superfícies em degraus)', /\[data-theme="escuro"\]\{[\s\S]*?--v9-bg:#04060a[\s\S]*?--v9-surface:#0a0d13/.test(tema));
+statik('superfície escura mais clara que o fundo e mais escura que o texto', (() => {
+  const lum = h => { const n = parseInt(h.slice(1), 16); const c = [16, 8, 0].map(i => ((n >> i) & 255) / 255).map(v => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const bloco = tema.slice(tema.indexOf('[data-theme="escuro"]'));
+  return lum('#04060a') < 0.01 && lum('#0a0d13') < 0.01 && lum('#0a0d13') > lum('#04060a') && lum('#e9eef7') > 0.8;
+})());
 /* V8: o shell passou a gravar em 'vooalto_tema', lendo a chave antiga como reserva. */
 statik('shell: grava na chave nova e lê a antiga', shell.includes("THEME_KEY='vooalto_tema'") && shell.includes("localStorage.getItem(THEME_KEY_LEGADO)"));
 statik('ficha e orçamento leem as duas chaves de tema', ficha.includes("localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')") && orc.includes("localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')"));
@@ -39,7 +47,7 @@ statik('ficha: folha A4 continua branca (--br aponta para o papel e sem regra es
   /:root\{[\s\S]{0,900}--br:(#fff|var\(--v9-paper\))/.test(ficha) && !/\[data-theme="escuro"\][^{]*\.folha/.test(ficha));
 statik('base compartilhada: --v9-paper é branco e o escuro NÃO o reescreve (ficha impressa não sai cinza)',
   /--v9-paper:#fff/.test(tema) && !/\[data-theme="escuro"\]\{[\s\S]*?--v9-paper:/.test(tema));
-statik('base compartilhada: uma paleta só, com claro e escuro', /:root\{[\s\S]*?--v9-bg:#eef0ff/.test(tema) && /\[data-theme="escuro"\]\{[\s\S]*?--v9-bg:#0b0f17/.test(tema));
+statik('base compartilhada: uma paleta só, com claro e escuro', /:root\{[\s\S]*?--v9-bg:#eef0ff/.test(tema) && /\[data-theme="escuro"\]\{[\s\S]*?--v9-bg:#04060a/.test(tema));
 statik('ficha e orçamento carregam a base compartilhada antes do próprio CSS',
   ficha.indexOf('assets/tema-v9.css') > -1 && orc.indexOf('assets/tema-v9.css') > -1 &&
   ficha.indexOf('assets/tema-v9.css') < ficha.indexOf('<style>') + 4000 && orc.indexOf('assets/tema-v9.css') < orc.indexOf('<style>') + 4000);
@@ -101,7 +109,7 @@ async function carregar(src, url, preparar) {
       if (!ok) fail++;
     };
     t('tema antigo salvo abre como escuro', `document.documentElement.dataset.theme === 'escuro'`);
-    t('barra do shell escura', `document.documentElement.style.getPropertyValue('--shell-bg') === '#0b0f17'`);
+    t('barra do shell escura', `document.documentElement.style.getPropertyValue('--shell-bg') === '#04060a'`);
     t('valor salvo é normalizado na chave nova', `localStorage.getItem('vooalto_tema') === 'escuro'`);
     console.log('  erros de página:', erros.length ? erros : 'nenhum ✓');
     if (erros.length) fail++;
