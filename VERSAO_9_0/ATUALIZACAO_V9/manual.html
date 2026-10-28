@@ -137,16 +137,45 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
 
     <h3>Ferramentas de desenho</h3>
     <ul>
-      <li><b>Imagem</b> · <b>Texto</b> · <b>Seta/anotação</b> · <b>Retângulo</b> · <b>Círculo</b> · <b>Conta-gotas</b> (pega uma cor da imagem) · <b>Painel de camadas</b> (o que fica na frente e atrás).</li>
-      <li>Clique num item da página para selecioná-lo: aparece a barrinha com <b>⬆/⬇</b> (frente/trás), <b>⊕ Centro</b>, <b>⤢ Fill</b> (preenche a página), <b>✂️</b> recortar, <b>🔒</b> travar e <b>🗑</b> apagar.</li>
-      <li>O cadeado <b>🔒</b> é o "não mexa sem querer": o item continua salvo, só não se move. O <b>✕</b> apenas tira a seleção.</li>
-      <li>Arraste a imagem do computador direto para a página; fotos grandes são reduzidas automaticamente para não travar.</li>
+      <li><b>Imagem</b> · <b>Texto</b> · <b>Seta/anotação</b> · <b>Retângulo</b> · <b>Círculo</b> · <b>Conta-gotas</b> (pega uma cor da imagem) · <b>Painel de camadas</b> (o que fica na frente e atrás) · <b>Estúdio</b> (amplia a área do mockup).</li>
+      <li>Clique num item da página para selecioná-lo: aparece a barrinha com <b>⬆/⬇</b> (frente/trás), <b>⊕</b> centro, <b>⤢</b> preencher a área, <b>⤡</b> caber na área, <b>⇄</b> trocar a imagem, <b>✂</b> recortar, <b>🔒</b> travar a proporção, <b>⋯</b> mais ferramentas e <b>🗑</b> apagar.</li>
+      <li>O <b>🔒</b> da barra mantém a <b>proporção</b> ao redimensionar (<kbd>Shift</kbd> inverte na hora). Travar a <b>posição</b> é o cadeado da lista de camadas ou o botão <b>🔒 Travar posição</b> do painel. O <b>✕</b> apenas tira a seleção.</li>
+      <li>Arraste a imagem do computador direto para a página (ou cole um print com <kbd>Ctrl</kbd>+<kbd>V</kbd>); fotos grandes são reduzidas automaticamente para não travar. A partir da segunda imagem, cada uma entra num espaço livre — nunca em cima da anterior.</li>
+      <li>Escolhendo <b>várias fotos de uma vez</b> (frente e costas), elas entram <b>lado a lado</b>, no mesmo tamanho e alinhadas pela altura.</li>
+      <li>Se a foto tiver pouca resolução para o tamanho em que vai sair no papel, a lista de camadas marca <b>⚠</b> e a aba <b>Precisão</b> mostra o tamanho em px e se está “boa para 300 dpi”.</li>
+    </ul>
+
+    <h3>Preenchimento mais rápido</h3>
+    <ul>
+      <li><b>CPF/CNPJ, telefone e CEP</b> são formatados sozinhos ao sair do campo (e no Preenchimento rápido). Digite só os números.</li>
+      <li><kbd>Enter</kbd> e <kbd>Tab</kbd> levam ao campo seguinte nos dados do cliente, nas <b>medidas</b>, na <b>grade</b> e na <b>produção</b>. Na produção, <kbd>Enter</kbd> no último campo (Qtd) já cria a linha seguinte.</li>
+      <li><b>Colar uma coluna do Excel</b> na grade, nas medidas ou na produção espalha os valores pelas células seguintes. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> copia a tabela inteira de volta para a planilha.</li>
+    </ul>
+
+    <h3>Estúdio do mockup — a área das artes</h3>
+    <ul>
+      <li><b>⤢ Estúdio</b> (régua da área, barra lateral ou barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta.</li>
+      <li>A régua da esquerda da área: <b>+ imagem</b>, <b>⤢ ampliar</b>, <b>📐 guias</b> (centro / grade / margem), <b>🗂 camadas</b>, <b>🧲 ímã</b> e <b>🎛 ferramentas</b>.</li>
+      <li>O painel <b>⋯</b> reúne: <b>⇄ trocar imagem</b> sem perder lugar e tamanho · <b>espelhar</b> · <b>girar 90°</b> · <b>opacidade</b> · <b>travar</b> · <b>alinhar/distribuir</b> · <b>organizar</b> (frente e costas <b>lado a lado</b>, empilhado ou em grade) · <b>precisão em %</b> com leitura em <b>mm</b> · <b>baixar só a área em PNG</b>.</li>
+      <li><b>Lista de camadas</b>: o olho mostra/oculta (o que está oculto não sai na impressão), o cadeado trava a posição, o <b>duplo clique no nome</b> renomeia e as setas ↑↓ mudam a ordem na pilha.</li>
+      <li><b>Ímã</b>: encosta nas bordas, no centro e nas outras camadas; segure <kbd>Alt</kbd> para soltar. A camada nunca se perde: sempre sobra um pedaço dentro da área.</li>
+      <li><b>Botão direito</b> na camada abre as ações rápidas (no tablet, segure o dedo). <kbd>Ctrl</kbd>+<kbd>D</kbd> duplica · <b>setas</b> movem 1 px (<kbd>Shift</kbd> = 10 px) · <kbd>[</kbd> <kbd>]</kbd> mudam a ordem.</li>
+      <li>A lista 🗂 mostra as camadas <b>da página em foco</b> e usa o <b>nome do arquivo</b> da foto (“frente polo”), o que facilita achar a arte certa.</li>
+      <li><b>Shift+clique</b> junta camadas em qualquer página; <kbd>Delete</kbd> apaga o grupo inteiro e <b>🖼 Selecionar todas as imagens</b> marca as fotos da página de uma vez.</li>
+      <li><b>Endireitar</b> em −15°/−1°/+1° ou <kbd>Alt</kbd>+<kbd>←</kbd> <kbd>→</kbd>, e <b>posição no papel em mm</b> (X/Y) na aba Precisão — sem mexer no tamanho.</li>
+      <li><b>Levar / copiar a camada para outra página</b> na aba Ajustes (escolhe a página de destino) e <kbd>Ctrl</kbd>+<kbd>S</kbd> para salvar na hora.</li>
+      <li><b>🔒 Travar tudo</b> (aba Organizar) trava todas as camadas da página — a arte pronta não se mexe por acidente.</li>
+      <li>“Moldura justa” tira a tarja branca em volta de uma imagem; “Mesmo tamanho” deixa todas as artes na mesma altura.</li>
+      <li>As ferramentas <b>acompanham a página em foco</b>: clicar numa arte da página 2 leva a régua, o painel e o estúdio para lá. Cada página tem ⤢ e 🎛 na sua barrinha.</li>
+      <li><b>Solte uma foto em cima de outra</b> para trocar só aquela arte. Na aba <b>Precisão</b> dá para digitar o tamanho <b>em milímetros</b> (largura da arte no papel).</li>
+      <li>Com <b>Shift+clique</b> em várias camadas, <b>alinhar</b> encosta uma na outra — o jeito rápido de deixar frente e costas na mesma altura.</li>
     </ul>
 
     <h3>Páginas</h3>
     <ul>
       <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia.</li>
       <li>Na faixa de baixo (estilo Canva) clique numa miniatura para ir até ela e <b>arraste para reordenar</b>. Na barra lateral, o <b>✕</b> ao lado do número da página apaga essa página (aparece quando o mouse passa por cima).</li>
+      <li>O <b>⧉</b> da barra lateral <b>duplica a página</b> inteira — campos, grade, medidas, produção e artes. Serve para fichas com várias peças iguais.</li>
     </ul>
 
     <h3>Salvar, baixar e começar outra</h3>
@@ -204,6 +233,9 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
       <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Desfazer / refazer na Ficha Técnica <b>e no Orçamento</b> (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> também refaz)</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>Ctrl</kbd>+<kbd>X</kbd> / <kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Na Ficha: copia, recorta e cola a camada selecionada (imagem, texto, seta ou forma) — dá para colar em outra página. No Orçamento: clique no cartão de um item para selecioná-lo e use os mesmos atalhos para copiar, recortar e colar o item. Dentro de um campo de texto, os atalhos são os do próprio campo.</td></tr>
       <tr><td><kbd>Delete</kbd></td><td>Apaga a imagem/texto/forma selecionada na Ficha Técnica ou o item selecionado no Orçamento</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplica a camada selecionada na área do mockup</td></tr>
+      <tr><td>Setas · <kbd>Shift</kbd>+setas</td><td>Movem a camada selecionada 1 px (com <kbd>Shift</kbd>, 10 px) na Ficha Técnica</td></tr>
+      <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>Manda a camada uma posição para trás / para frente na pilha</td></tr>
       <tr><td><kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>No Orçamento, vai para a próxima caixa (ou para a anterior) na lista de itens e de célula em célula na folha A4, sem parar nos botões ⧉/✕ de cada cartão. Nas pontas o Tab volta a ser o do navegador, para alcançar os botões do painel</td></tr>
       <tr><td><kbd>Enter</kbd></td><td>No Orçamento, pula para o próximo campo do item (no último campo, cria um item novo); no preenchimento rápido da Ficha, avança de etapa</td></tr>
       <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Aplica tudo no preenchimento rápido da Ficha</td></tr>
