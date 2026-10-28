@@ -5628,7 +5628,9 @@ function mkeAcao(nome){
     case 'mm-pos':mkeAplicarMmPos();break;
     case 'mm-a4':mkeAplicarMm(true);break;
     case 'exportar-area':mkeExportarArea();break;
-    case 'ocultar':{var c=mkeCtx();if(c.layer)mkeAlternarOculto(c.layer.id);break;}
+    /* o pid é obrigatório nas páginas extras: sem ele a busca era feita só na
+       folha 1 e o menu "Ocultar camada" não fazia nada fora da página 1 */
+    case 'ocultar':{var c=mkeCtx();if(c.layer)mkeAlternarOculto(c.layer.id,c.page?c.page.id:null);break;}
     case 'frente':mkeFrenteZ(1);break;
     case 'tras':mkeFrenteZ(-1);break;
     case 'excluir':try{v8ExcluirSelecionada();}catch(e){}break;
@@ -6929,6 +6931,12 @@ function importarFichaJSON(e) {
 
 function restaurarDeJSON(d) {
   v8FichaAtualId=null;   /* V8: quem chama decide se isto é um registro salvo */
+  /* Documento novo = histórico novo. Sem limpar, o primeiro Ctrl+Z depois de
+     abrir outra ficha desfazia uma operação de PÁGINA da ficha anterior
+     (v7PageUndoStack), apagando uma página da ficha que acabou de abrir. */
+  try{undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];snapLastSig='';estadoAtual=null;
+      if(typeof updUR==='function')updUR();}catch(e){}
+  try{if(typeof v7PageUndoStack!=='undefined'){v7PageUndoStack=[];v7PageRedoStack=[];}}catch(e){}
   if(!d._folha1Removida && !document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
     try{ v7RestaurarPaginaP1(null); }catch(e){}
   }

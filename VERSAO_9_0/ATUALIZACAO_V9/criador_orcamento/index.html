@@ -1858,6 +1858,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       syncDocumentPagesDOM();
       renderItemsEditor();
       updatePreviewFromForm();
+      /* gravar já: quem adiciona a página e fecha a aba em seguida perdia a
+         página nova (o autosave só era agendado por mudança de campo) */
+      if (typeof scheduleOrcautosave === 'function') scheduleOrcautosave();
       if (typeof toastOrc === 'function') toastOrc(`➕ Página ${documentPages.length} adicionada.`);
       else orcToast(`➕ Página ${documentPages.length} adicionada.`);
     }
@@ -1877,6 +1880,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       syncDocumentPagesDOM();
       renderItemsEditor();
       updatePreviewFromForm();
+      if (typeof scheduleOrcautosave === 'function') scheduleOrcautosave();
       if (typeof toastOrc === 'function') toastOrc(`⧉ Página ${pageIdx + 1} duplicada com sucesso! (${clonedItems.length} itens)`);
       else orcToast(`⧉ Página ${pageIdx + 1} duplicada!`);
     }

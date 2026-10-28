@@ -22,6 +22,8 @@ comportamento, provada por teste automatizado.
 | `savLayers` (`va3_layers`) guardava **base64 de imagem no `localStorage`** — justamente o que o PLANO §10 proíbe (cota e travamento) | a cópia de emergência guarda geometria e atributos, nunca a foto |
 | Excluir várias camadas com Delete dizia **“0 camadas removidas”** (a conta era feita depois de limpar a lista) | o toast mostra a quantidade certa |
 | **“Nova ficha”** apagava o autosave, mas deixava a cópia de emergência (`va3_layers`) com as camadas antigas — no próximo carregamento o mockup da ficha anterior **voltava** | `clearAllLayers` também atualiza a cópia de emergência: ficha nova começa limpa de verdade |
+| **Abrir outra ficha e apertar Ctrl+Z** desfazia uma operação de **página** da ficha anterior (a pilha de páginas não era limpa) — dava para apagar uma página da ficha recém-aberta | `restaurarDeJSON` zera as pilhas de páginas e de camadas: documento novo, histórico novo |
+| **“Ocultar camada”** no menu de contexto não fazia nada nas **páginas extras** (a ação procurava a camada só na folha 1) | a ação recebe o id da página em foco e esconde/mostra de verdade |
 
 ### 2. Orçamento
 
@@ -32,21 +34,24 @@ comportamento, provada por teste automatizado.
 | **Autosave do orçamento** com a cota cheia não gravava nada (só o selo “não salvou”) | tenta de novo **sem a assinatura** (que é o que pesa) e avisa “Salvo sem a assinatura” |
 | **Salvar rascunho de orçamento** falhava em silêncio e ainda dizia “salvo com sucesso!” | grava sem a assinatura; se ainda não couber, descarta os mais antigos; se nada couber, **avisa que NÃO foi salvo** (nada de elogio falso) |
 | **Excluir rascunho** dizia “excluído” mesmo quando a gravação falhava | avisa “não foi possível excluir agora” |
+| **Adicionar ou duplicar página** não agendava o autosave | a página nova é gravada na hora (antes, fechar a aba em seguida perdia a página) |
 
 ### 3. Testes
 
-`tests/test_mockup_v9.js` — **284 verificações** (eram 258 na V9.1.0):
+`tests/test_mockup_v9.js` — **288 verificações** (eram 258 na V9.1.0):
 além de tudo o que já existia, agora cobre desfazer/refazer na folha 1 e nas
 páginas extras, remover a página em foco sem levar a régua junto, preencher em
 `cover`, girar/espelhar seta, recorte sem a biblioteca, **ida e volta do `.json`
 com camada de imagem em página extra**, **imagem quebrada mantendo a moldura**,
 **rascunho de emergência sem fotos** (com cota simulada), `va3_layers` sem
-base64, a numeração das páginas depois de remover uma do meio e **“Nova ficha”
-apagando o mockup antigo da cópia de emergência**.
+base64, a numeração das páginas depois de remover uma do meio, **“Nova ficha”
+apagando o mockup antigo da cópia de emergência**, **ocultar camada na página
+extra** e **Ctrl+Z logo depois de abrir uma ficha**.
 
-`tests/test_orc_features_v9.js` — **46 verificações** (eram 34): assinatura em
+`tests/test_orc_features_v9.js` — **48 verificações** (eram 34): assinatura em
 branco, assinatura desenhada, exportação PNG sem a biblioteca, autosave com a
-cota cheia (sem a assinatura) e rascunho que não cabe avisando em vez de mentir.
+cota cheia (sem a assinatura), rascunho que não cabe avisando em vez de mentir
+e o autosave disparado ao adicionar/duplicar página.
 
 A suíte inteira (`npm test` + `npm run test:python`) continua passando.
 
