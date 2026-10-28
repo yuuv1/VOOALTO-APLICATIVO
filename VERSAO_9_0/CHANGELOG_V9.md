@@ -1,5 +1,247 @@
 # VOOALTO V9 — Registro de alterações
 
+## V9.1.0 — Estúdio do mockup: o que faltava para trabalhar as artes (2026-10-28)
+
+Pedido: *"melhore todos os aspectos que facilitam o preenchimento e o uso do
+aplicativo. ponto principal pra utilidade dos materiais de edição da parte onde
+coloco os mockups na ficha técnica"*.
+
+**Regra do pedido respeitada à risca: a estrutura da ficha técnica e do
+orçamento não muda.** Nenhum campo, seção, tabela ou medida da folha A4 foi
+criado, removido ou deslocado. Tudo o que entrou é **ferramenta**: fica em volta
+da área do mockup, é escondido na impressão e na pré-visualização, e usa os
+tokens do tema (a folha continua branca no claro e no escuro).
+
+### 1. O que era ruim antes
+
+| Situação | Por que atrapalhava |
+|---|---|
+| A 2ª imagem entrava **exatamente sobre a 1ª** (todas no centro, com o mesmo tamanho) | depois de soltar duas fotos, uma cobria a outra e não dava para saber o que havia embaixo |
+| A barra só aparecia **depois** de selecionar, e era a única porta para as ações | trocar uma arte exigia apagar, procurar o arquivo e reposicionar tudo |
+| A área do mockup tem ~500 × 300 px | impossível alinhar detalhe, e uma arte arrastada para fora "sumia" (a área recorta) |
+| Lista de camadas só com ícone + nome + ✕ | sem olho, sem cadeado, sem renomear, sem ordem |
+| Não havia espelhar, girar 90°, opacidade, alinhar, distribuir nem precisão | tudo era feito a olho, no mouse |
+| O botão 🔒 dizia "travar a posição", mas o código travava a **proporção** | a pessoa "travava" e a camada continuava se movendo |
+| `toggleProp()` não gravava (`savLayers`/`snap` faltando) | a trava se perdia ao recarregar |
+| Colar um print (Ctrl+V) não fazia nada | obrigava a salvar o print em arquivo antes de importar |
+| Nome da camada era escrito com `innerHTML` | texto digitado podia injetar marcação na lista |
+
+### 2. Ferramentas novas (todas fora do documento impresso)
+
+**Régua presa na área** (`+ imagem`, `⤢ ampliar`, `📐 guias`, `🗂 camadas`,
+`🧲 ímã`, `🎛 ferramentas`) e **painel com 4 abas**:
+
+* **Ajustes** — duplicar, espelhar H/V, girar 90° (⟲/⟳), zerar rotação,
+  **substituir a imagem mantendo tamanho e posição**, recortar, opacidade
+  (10–100%), travar posição, travar proporção.
+* **Alinhar** — encostar à esquerda/direita/topo/base, centralizar em cada eixo,
+  centralizar na área, caber na área e **distribuir** com espaçamento igual
+  (3+ camadas selecionadas com Shift+clique).
+* **Organizar** — **lado a lado** (frente e costas na mesma altura, o caso mais
+  comum), empilhado, grade automática, encaixe, **moldura justa** (tira a tarja
+  em volta da imagem) e **mesmo tamanho**.
+* **Precisão** — X, Y, largura, altura em % da área, rotação em graus, leitura
+  do **tamanho impresso em milímetros** (calculado pela largura de 210 mm da
+  folha) e **baixar só a área em PNG** (para mandar a arte ao fornecedor).
+
+**Modo ampliado (⤢)** — a área do mockup ocupa a janela, com fundo escurecido e
+uma barra própria (lado a lado, guias, fechar). `Esc` volta. Ao imprimir,
+exportar PNG/PDF, gerar miniatura ou abrir o modo de pré-visualização o modo é
+encerrado automaticamente; além disso, há regra `@media print` que devolve a
+área ao papel.
+
+**Ímã com guias** — ao arrastar, a camada encosta nas bordas da área, no centro
+e nas bordas/centros das outras camadas, com uma linha ciano mostrando o
+encaixe. `Alt` solta o ímã. A camada é limitada a nunca sair inteira da área
+(antes ela "desaparecia" e só o Ctrl+Z trazia de volta).
+
+**Guias fixas (📐)** — ciclo desligado → centro → grade de terços → margem 5%.
+Não saem na impressão.
+
+**Lista de camadas nova** — miniatura real, nome editável (duplo clique), olho
+(mostrar/ocultar — oculto não imprime), cadeado (travar posição), ↑↓ (ordem na
+pilha) e ✕. Linhas ocultas ficam esmaecidas.
+
+**Menu de contexto** (botão direito na camada): duplicar, substituir, recortar,
+espelhar, girar, **voltar ao original**, travar, ocultar, frente/trás,
+centralizar, excluir.
+
+**“↺ Voltar ao original”** — tira giro, espelho, opacidade e devolve a
+proporção travada de uma vez, para desfazer uma experiência sem procurar cada
+botão.
+
+**Várias fotos de uma vez** — escolher (ou arrastar) **frente e costas juntas**
+agora encaixa as duas lado a lado, com a mesma largura de célula, a mesma
+altura e o mesmo centro vertical, respeitando a proporção de cada foto. Antes,
+cada arquivo entrava no meio da área e a segunda foto caía exatamente em cima
+da primeira. A conta é uma função pura (`mkeGradeLote`), testada à parte:
+2 fotos → 2 colunas; 3–4 → 2 colunas em 2 linhas; 5+ → 3 colunas, sem
+sobreposição e sem sair da área.
+
+**Aviso de resolução** — a lista de camadas marca com **⚠** a foto que não tem
+pixels suficientes para o tamanho com que vai ser impressa (conta de 300 dpi a
+partir dos 210 mm da folha). A aba **Precisão** mostra `largura × altura em px`
+e diz se está “boa para 300 dpi”. Serve para o erro clássico: print de tela de
+800 px esticado até a largura da área e impresso serrilhado. A marca **não sai
+na impressão** e não é gravada no arquivo.
+
+### 3. Comportamento que mudou (para melhor)
+
+* **Encaixe automático da imagem nova**: procura o primeiro espaço livre
+  (2 colunas × 2–3 linhas) olhando as caixas das imagens que já estão na área;
+  se não houver espaço, entra deslocada em cascata. A moldura já nasce com a
+  proporção da imagem (`hp = wp × (W/H) / ratio`) — antes sobrava tarja por
+  causa do `object-fit: contain`.
+* **Preencher × Caber**: `lFill` (⤢) agora marca a camada como `cover` (cobre a
+  área, cortando o que sobra) e o novo `lCaber` (⤡) como `contain` (aparece
+  inteira). O `fit` é salvo por camada.
+* **Redimensionar**: `Shift` inverte a trava de proporção durante o arraste.
+  Alças de canto passaram de 10 px para 12 px (mais fáceis de acertar numa área
+  pequena).
+* **Girar**: Shift prende em passos de 15°; a rotação é arredondada a 0,1°.
+* **Atalhos**: `Ctrl+D` duplica · setas movem 1 px (`Shift` = 10 px) · `[`/`]`
+  mudam a ordem · `Ctrl+V` de imagem cola o print direto na área.
+* **Colar texto** continua igual e não é afetado (a imagem tem prioridade só
+  quando existe imagem na área de transferência).
+* **A exportação em PNG não fotografa mais a ferramenta.** As regras
+  `@media print` não valem para o `html2canvas`, então a régua, o painel,
+  o botão “+ Imagem” e o painel de camadas saíam dentro do PNG da folha.
+  `prepPrint()` agora marca `body.mke-exportando` (que esconde tudo isso) e
+  `restAllPx()` desmarca ao terminar — o mesmo caminho que a impressão usa.
+
+### 2.1 Estúdio em todas as páginas
+
+* **A régua, o painel, as guias e o ímã acompanham a página em foco**
+  (`mkeMoverUI`). Antes eles existiam só na folha 1: para mexer numa arte da
+  página 2 era preciso rolar de volta até a página 1, e a ferramenta de lá
+  (por causa do `mkeCtx`) acabava agindo na página 2 — funcionava, mas por
+  acidente. Agora clicar numa arte leva a ferramenta para a página dela.
+* **⤢ e 🎛 em todas as barras de página**; o modo ampliado passou a valer
+  também para `.canvas-inner` das páginas extras (antes só a folha 1 sabia
+  entrar em tela cheia).
+* **Botão direito (menu de contexto) em qualquer área do mockup** — antes o
+  listener estava preso ao `#canvasInner` da folha 1.
+* **A barra da imagem das páginas extras ficou igual à da folha 1** (⤢, ⤡
+  caber, ⇄ trocar, ⋯ mais ferramentas); novo `lCaberExtra`.
+* **Botão 🗂** fora da folha 1 avisa onde ficam as camadas em vez de abrir uma
+  lista vazia.
+
+### 2.2 Precisão em milímetros e alinhamento entre camadas
+
+* **Campos em mm** na aba Precisão: digite “100 mm” de largura (ou de altura)
+  e a arte assume exatamente aquele tamanho no papel. “Largura da folha” ocupa
+  a área toda. Cada campo aplica o seu eixo — antes, se os dois valessem
+  sempre juntos, a altura antiga voltaria por cima do valor novo.
+* **Alinhar com várias camadas selecionadas** (Shift+clique) agora encosta
+  uma na outra (esquerda/direita/topo/base/centro do grupo), não na área.
+  Com uma camada só continua alinhando na área. O painel mostra
+  “N camadas selecionadas · as ações valem para todas”.
+
+### 2.3 Importar e reaproveitar sem refazer
+
+* **Soltar uma foto em cima de outra troca só aquela arte** (mantendo lugar,
+  tamanho e rotação). O caminho de arquivo do “⇄ Substituir” virou
+  `mkeTrocarArte`, reaproveitado pelo arraste.
+* **Colar uma coluna do Excel** dentro da grade, das medidas ou da produção
+  distribui os valores pelas células seguintes (aceita Tab, quebra de linha,
+  ponto e vírgula). `Ctrl+Shift+C` copia a tabela inteira de volta para a
+  planilha — útil para conferir com o fornecedor.
+* **⧉ Duplicar página** na barra lateral: copia campos, grade, medidas,
+  produção, cores e artes da página com ids novos (sem isso o Ctrl+Z de uma
+  página mexeria na cópia da outra).
+
+### 2.4 Lista de camadas em todas as páginas
+
+A lista 🗂 deixou de ser só da folha 1: ela mostra as camadas da **página em
+foco** (cabeçalho diz “Camadas P2”), e olho, cadeado, nome, ↑↓ e ✕ agem naquela
+página — `mkeListaFoco`, `mkeCamadaPor`, `mkeExcluirCamada`. O `[`/`]` também
+respeita a página em foco. A miniatura mostra no `title` o nome do arquivo e o
+tamanho em px.
+
+### 2.5 Várias camadas em qualquer página
+
+* **Shift+clique funciona nas páginas extras** (antes só na folha 1) e o
+  painel conta “3 camadas selecionadas · as ações valem para todas”.
+* **🗑 Delete apaga o grupo inteiro** e o ✕ do painel também.
+* **🖼 Selecionar todas as imagens** marca as fotos da página em foco para
+  alinhar, girar ou distribuir de uma vez.
+* **Distribuir** deixou de ser exclusivo da folha 1 e usa a altura real de
+  textos e setas (antes o espaço saía errado e as caixas se amontoavam).
+
+### 2.6 Endireitar e posicionar em mm
+
+* **−15° / −1° / +1°** no painel e **Alt+←/→** (Shift = 15°) para endireitar
+  foto torta sem mexer no tamanho.
+* **Posição no papel (mm)**: X e Y em milímetros, presos à borda da folha —
+  a mesma linguagem da ficha técnica.
+* A guia de **margem** agora é 5 mm de papel de verdade (2,4 % na largura e
+  1,7 % na altura em A4), não 5 % “no olho”, e o rótulo diz “5 mm”.
+
+### 2.7 Arte na página certa, sem refazer
+
+* **➜ Levar / ⧉ Copiar para outra página** (aba Ajustes): escolhe a página de
+  destino na lista e leva a camada com lugar e tamanho. Antes, arte montada na
+  página errada era refeita à mão.
+* **Ctrl+S** salva a ficha na hora e confirma (“💾 Ficha salva neste
+  computador”) em vez de abrir o “salvar página” do navegador.
+* **Plaquinha de medida** durante o arraste agora mostra também **X e Y em mm**
+  (tamanho + onde a arte começa no papel).
+* O **ímã** (🧲) passou a valer nas páginas extras: antes só a folha 1 encostava
+  em bordas, centro e outras camadas.
+* **🔒 Travar tudo** (aba Organizar) protege as camadas da página de uma vez —
+  depois que a arte está pronta, revisar a ficha não arrasta foto sem querer.
+* **Colar imagem (Ctrl+V) vai para a página em foco** — antes um print colado
+  com a página 3 aberta caía sempre na folha 1, e o toast dizia “na área do
+  mockup”, sem avisar onde tinha ido.
+
+### 2.8 Tablet e nome das camadas
+
+* **Segurar o dedo (≈0,5 s) na camada abre o mesmo menu** do botão direito —
+  a PWA também é usada em tablet, onde “botão direito” não existe.
+* **O nome da camada vem do arquivo** (`frente_polo.jpg` → “frente polo”),
+  tanto na lista quanto na barra da imagem. “Imagem 2” não dizia nada.
+* **Aviso de resolução também na importação**: foto pequena para o tamanho em
+  que vai sair no papel avisa por toast na hora, em vez da surpresa no PDF.
+
+### 3.1 Preenchimento da ficha (o outro lado do pedido)
+
+* **CPF/CNPJ, telefone e CEP se arrumam sozinhos** ao sair do campo:
+  `12345678901` vira `123.456.789-01`, `6299990000` vira `(62) 9999-0000`,
+  `74000000` vira `74000-000`. Vale também para os campos do **Preenchimento
+  rápido**. Só mexe quando o conteúdo é realmente um número — “a definir”
+  continua “a definir” e número incompleto não é cortado.
+* **Enter e Tab andam de campo em campo**: dados do cliente (nome → CPF →
+  telefone → endereço → cidade → CEP), tabela de **medidas**, **grade** de
+  tamanhos e **produção**. Antes, Enter no meio da ficha não fazia nada e
+  preencher 12 células de medida era 12 cliques de mouse.
+* **Enter no último campo da produção abre a linha seguinte**, já com o cursor
+  no “Modelo / Descrição”. O total é recalculado na hora.
+
+### 4. Compatibilidade de dados
+
+Os campos novos são **aditivos** e só são gravados quando diferentes do padrão
+(`name`, `hidden`, `locked`, `op`, `flipH`, `flipV`, `fit`). Ficha antiga abre
+sem conversão; o `.json` só engorda quando a pessoa usa um recurso novo. As
+chaves de dado (`vooalto_v7_ficha_ativa`, IndexedDB `vooalto_ficha_rascunhos_db_v4`,
+backup `vooalto_backup_v9`) não mudaram.
+
+### 5. Testes
+
+`tests/test_mockup_v9.js` — **258 verificações** em jsdom: interface montada,
+ações (alinhar, espelhar, girar com troca de eixos, opacidade, travar,
+ocultar, renomear, ordem, menu de contexto, precisão, guias, ímã, limite,
+encaixe, organizar em 2 colunas, estúdio, `prepPrint` saindo do estúdio,
+persistência em `serLayer` e ausência de campos padrão no arquivo), geometria
+do lote de fotos (2/3/4/5 imagens, sem sobreposição, proporção respeitada),
+aviso de resolução, navegação por Enter nas tabelas, linha nova na produção,
+as máscaras de CPF/CNPJ/telefone/CEP, “voltar ao original”, o botão de ajuda do
+estúdio, a sincronização do botão 🗂 com a lista de camadas e as ferramentas
+fora do PNG exportado.
+A suíte inteira (`npm test`) continua passando, incluindo o teste estático que
+proíbe regra de tema escuro dentro da folha.
+
+---
+
 ## V9.0.0 — limpeza do repositório, identidade V9 e continuidade de dados (2026-10-27)
 
 Pedido: *"tire todas as versões anteriores a v8, e agora vamos trabalhar na v9"*.

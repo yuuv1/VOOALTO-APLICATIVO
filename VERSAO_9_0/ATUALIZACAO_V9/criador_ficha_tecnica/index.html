@@ -642,10 +642,10 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .img-layer:active{cursor:grabbing}
 .img-layer.sel{outline:2px solid var(--hd);outline-offset:1px}
 .img-layer img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
-.lyr-h{width:10px;height:10px;border:2px solid var(--hd)}
+.lyr-h{width:12px;height:12px;border:2px solid var(--hd);box-shadow:0 1px 3px rgba(15,23,42,.25)}
 .img-layer.sel .lyr-h{display:block}
-.lyr-tl{top:-5px;left:-5px;cursor:nw-resize}.lyr-tr{top:-5px;right:-5px;cursor:ne-resize}
-.lyr-bl{bottom:-5px;left:-5px;cursor:sw-resize}.lyr-br{bottom:-5px;right:-5px;cursor:se-resize}
+.lyr-tl{top:-6px;left:-6px;cursor:nw-resize}.lyr-tr{top:-6px;right:-6px;cursor:ne-resize}
+.lyr-bl{bottom:-6px;left:-6px;cursor:sw-resize}.lyr-br{bottom:-6px;right:-6px;cursor:se-resize}
 .lyr-rot,.tl-rot,.arr-rot{width:12px;height:12px;border:2px solid #F59E0B;cursor:crosshair;top:-22px;left:50%;transform:translateX(-50%)}
 .img-layer.sel .lyr-rot,.txt-layer.sel .tl-rot,.arr-layer.sel .arr-rot{display:block}
 .txt-layer{cursor:move;min-width:30px;min-height:16px;z-index:50}
@@ -653,15 +653,15 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .txt-layer.editing{cursor:text;outline:2px solid var(--ro);outline-offset:3px}
 .txt-layer .tc{white-space:pre-wrap;line-height:1.3;padding:2px 4px;outline:none;cursor:inherit;border-radius:2px;display:inline-block;min-width:20px}
 .txt-layer .tc[contenteditable="true"]{cursor:text}
-.tl-resize{width:10px;height:10px;border:2px solid var(--ro);bottom:-5px;right:-5px;cursor:se-resize;z-index:201}
+.tl-resize{width:12px;height:12px;border:2px solid var(--ro);bottom:-6px;right:-6px;cursor:se-resize;z-index:201;box-shadow:0 1px 3px rgba(15,23,42,.25)}
 .txt-layer.sel .tl-resize{display:block}
 .arr-layer{cursor:move;z-index:50;overflow:visible}
 .arr-layer.sel{outline:2px dashed var(--ar);outline-offset:4px;border-radius:2px}
 .arr-layer svg{width:100%;height:100%;overflow:visible;display:block}
-.arr-h{width:10px;height:10px;border:2px solid var(--ar);z-index:201}
+.arr-h{width:12px;height:12px;border:2px solid var(--ar);z-index:201}
 .arr-layer.sel .arr-h{display:block}
 .arr-br{bottom:-5px;right:-5px;cursor:se-resize}.arr-bl{bottom:-5px;left:-5px;cursor:sw-resize}
-.arr-ep{width:12px;height:12px;border:2.5px solid var(--ar);z-index:202;transform:translate(-50%,-50%)}
+.arr-ep{width:14px;height:14px;border:2.5px solid var(--ar);z-index:202;transform:translate(-50%,-50%)}
 .arr-layer.sel .arr-ep{display:block}
 
 /* ══ Marquee de seleção múltipla + caixa do grupo ══ */
@@ -911,6 +911,214 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 [data-theme="escuro"] .rb-label{color:var(--v9-t2)}
 [data-theme="escuro"] .lp-name{color:var(--v9-t1)}
 [data-theme="escuro"] .v7-dl-card{background:var(--v9-surface);color:var(--v9-t1)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   V9.1 — ESTÚDIO DO MOCKUP
+   ──────────────────────────────────────────────────────────────────────────
+   Tudo aqui é FERRAMENTA, não documento: a moldura da folha A4 não muda de
+   lugar nem de tamanho. As peças ficam soltas sobre a área do mockup, são
+   escondidas na impressão e na pré-visualização, e usam só os tokens do tema
+   — nenhuma regra de tema novo, então a folha continua branca.
+
+   Organização:
+   • .mke-rail     régua de ícones presa no canto da área do mockup;
+   • .mke-panel    painel de ferramentas (ajustes, alinhar, organizar, precisão);
+   • .mke-guias    linhas de centro/terços/margem e ímãs do arraste;
+   • #canvasOuter.mke-studio  modo ampliado (a área ocupa a janela).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Régua de ferramentas do mockup ── */
+.mke-rail{
+  position:absolute;left:5px;top:5px;z-index:640;
+  display:flex;flex-direction:column;gap:2px;padding:3px;
+  background:var(--v9-surface);border:1px solid var(--v9-line-2);border-radius:9px;
+  box-shadow:var(--v9-shadow);opacity:.93;transition:opacity .15s;
+}
+.mke-rail:hover{opacity:1}
+.mke-rail{opacity:.8}
+.mke-rail button{
+  width:23px;height:23px;padding:0;display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:6px;background:transparent;color:var(--v9-t2);cursor:pointer;font-family:inherit;
+}
+.mke-rail button:hover{background:var(--v9-hover);color:var(--v9-t1)}
+.mke-rail button.on{background:var(--v9-pink-soft);color:var(--v9-pink)}
+.mke-rail svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mke-rail .mke-rail-sep{height:1px;background:var(--v9-line);margin:2px 1px}
+
+/* ── Painel de ferramentas ── */
+.mke-panel{
+  position:absolute;top:5px;left:34px;z-index:650;width:250px;max-height:calc(100% - 46px);
+  display:none;flex-direction:column;overflow:hidden;
+  background:var(--v9-surface);border:1px solid var(--v9-line-2);border-radius:9px;
+  box-shadow:var(--v9-shadow);color:var(--v9-t1);
+}
+.mke-panel.vis{display:flex}
+.mke-hdr{
+  display:flex;align-items:center;gap:5px;padding:5px 6px;
+  border-bottom:1px solid var(--v9-line);background:var(--v9-surface-2);
+}
+.mke-hdr b{font-size:8px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--v9-t1);flex:1}
+.mke-x{width:18px;height:18px;border:0;background:transparent;color:var(--v9-t3);cursor:pointer;border-radius:5px;font-size:10px;line-height:1;padding:0}
+.mke-x:hover{background:var(--v9-hover);color:var(--v9-t1)}
+.mke-tabs{display:flex;gap:2px;padding:4px;border-bottom:1px solid var(--v9-line);background:var(--v9-surface-2)}
+.mke-tab{
+  flex:1;border:0;background:transparent;color:var(--v9-t3);border-radius:5px;
+  padding:4px 2px;font-size:7px;font-weight:900;letter-spacing:.2px;text-transform:uppercase;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.mke-tab:hover{background:var(--v9-hover);color:var(--v9-t1)}
+.mke-tab.on{background:var(--v9-surface);color:var(--v9-pink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.mke-body{overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px}
+.mke-sec{display:none;flex-direction:column;gap:5px}
+.mke-sec.on{display:flex}
+.mke-lbl{font-size:7px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--v9-t3)}
+.mke-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.mke-grid.g3{grid-template-columns:1fr 1fr 1fr}
+.mke-grid.g6{grid-template-columns:repeat(6,1fr)}
+.mke-btn{
+  display:flex;align-items:center;justify-content:center;gap:3px;
+  padding:5px 3px;border:1px solid var(--v9-line-2);border-radius:6px;background:var(--v9-surface-2);
+  color:var(--v9-t1);font-family:inherit;font-size:7.5px;font-weight:800;cursor:pointer;white-space:nowrap;
+  transition:background .12s,border-color .12s;
+}
+.mke-btn:hover{background:var(--v9-hover);border-color:var(--v9-t3)}
+.mke-btn.on{background:var(--v9-pink-soft);border-color:var(--v9-pink);color:var(--v9-pink)}
+.mke-btn.sq{padding:3px 0;font-size:9px}
+.mke-btn:disabled{opacity:.45;cursor:not-allowed}
+.mke-row{display:flex;align-items:center;gap:4px}
+.mke-row label{font-size:7px;font-weight:800;color:var(--v9-t2);width:15px;text-align:center;flex-shrink:0}
+.mke-inp{
+  width:100%;min-width:0;border:1px solid var(--v9-line-2);border-radius:5px;background:var(--v9-surface-2);
+  color:var(--v9-t1);font-family:inherit;font-size:8px;font-weight:700;padding:4px;text-align:center;
+}
+.mke-inp:focus{outline:1.5px solid var(--v9-pink);border-color:transparent}
+.mke-range{width:100%;accent-color:var(--v9-pink);height:14px;margin:0}
+.mke-mono{font-size:7.5px;font-weight:800;color:var(--v9-t2);font-variant-numeric:tabular-nums}
+.mke-hint{font-size:6.5px;line-height:1.45;color:var(--v9-t3)}
+.mke-empty{font-size:7.5px;color:var(--v9-t3);text-align:center;padding:8px 4px;line-height:1.5}
+
+/* ── Guias, ímãs e medida durante o arraste ── */
+.mke-guias{position:absolute;inset:0;z-index:150;pointer-events:none;display:none}
+.mke-guias.on{display:block}
+.mke-guia{position:absolute;background:rgba(212,24,122,.55)}
+.mke-guia.v{top:0;bottom:0;width:1px}
+.mke-guia.h{left:0;right:0;height:1px}
+.mke-guia.terco{background:rgba(212,24,122,.26)}
+.mke-margem{position:absolute;border:1px dashed rgba(212,24,122,.5);border-radius:2px}
+.mke-guia-tag{
+  position:absolute;top:2px;left:26px;font-size:6px;font-weight:900;letter-spacing:.4px;
+  color:var(--v9-pink);background:var(--v9-surface);border:1px solid var(--v9-line);
+  border-radius:4px;padding:1px 3px;line-height:1.4;
+}
+.mke-smart{position:absolute;background:#06B6D4;display:none;z-index:160;box-shadow:0 0 3px rgba(6,182,212,.7);pointer-events:none}
+.mke-smart.v{top:0;bottom:0;width:1px}
+.mke-smart.h{left:0;right:0;height:1px}
+.mke-badge{
+  position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  display:none;z-index:655;pointer-events:none;
+  background:rgba(17,24,39,.9);color:#fff;border-radius:20px;padding:3px 9px;
+  font-size:7.5px;font-weight:800;letter-spacing:.3px;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.mke-badge.on{display:block}
+
+/* ── Menu de contexto (botão direito na camada) ── */
+.mke-menu{
+  position:fixed;z-index:99995;min-width:168px;padding:4px;display:flex;flex-direction:column;gap:1px;
+  background:var(--v9-surface);border:1px solid var(--v9-line-2);border-radius:9px;
+  box-shadow:0 18px 46px rgba(10,14,25,.28);color:var(--v9-t1);
+}
+.mke-menu button{
+  display:flex;align-items:center;gap:6px;width:100%;padding:4px 7px;border:0;border-radius:6px;
+  background:transparent;color:inherit;font-family:inherit;font-size:8px;font-weight:700;text-align:left;cursor:pointer;
+  white-space:nowrap;
+}
+.mke-menu button:hover{background:var(--v9-hover)}
+.mke-menu button:disabled{opacity:.4;cursor:not-allowed}
+.mke-menu .mke-menu-sep{height:1px;background:var(--v9-line);margin:3px 2px}
+.mke-menu .mke-menu-perigo{color:#E11D48}
+.mke-menu kbd{margin-left:auto;font-size:6.5px;font-weight:800;color:var(--v9-t3);background:var(--v9-surface-3);border-radius:4px;padding:1px 4px}
+
+/* ── Modo ampliado (a área do mockup ocupa a janela) ── */
+body.mke-studio-on::after{
+  content:'';position:fixed;inset:0;z-index:99989;
+  background:var(--v9-overlay);backdrop-filter:blur(2px);
+}
+#canvasOuter.mke-studio{
+  position:fixed;inset:16px;z-index:99990;width:auto;height:auto;flex:none;
+  border:1px solid var(--v9-line-2);border-radius:12px;background:var(--v9-surface-3);
+  box-shadow:0 30px 90px rgba(0,0,0,.5);
+}
+#canvasOuter.mke-studio .canvas-inner{inset:30px 0 0 0;background:#F7F8FB}
+/* a área das páginas extras é .canvas-inner dentro de .fb-canvas-area:
+   o mesmo modo ampliado vale para ela */
+.canvas-inner.mke-studio{
+  position:fixed!important;inset:16px!important;width:auto!important;height:auto!important;
+  z-index:99990;border:1px solid var(--v9-line-2);border-radius:12px;background:#F7F8FB;
+  box-shadow:0 30px 90px rgba(0,0,0,.5);
+}
+.canvas-inner.mke-studio .mke-studio-bar{display:flex}
+.mke-studio-bar{
+  position:absolute;top:0;left:0;right:0;height:29px;z-index:660;display:none;align-items:center;gap:6px;
+  padding:0 6px;background:var(--v9-surface);border-bottom:1px solid var(--v9-line);border-radius:12px 12px 0 0;
+}
+#canvasOuter.mke-studio .mke-studio-bar{display:flex}
+.mke-studio-bar b{font-size:8px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--v9-pink)}
+.mke-studio-bar .mke-hint{flex:1;min-width:0;font-size:7px;color:var(--v9-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mke-studio-bar .mke-btn{padding:3px 7px}
+
+/* ── Painel de camadas reformulado (continua fora da impressão) ── */
+.layers-panel{width:212px;max-height:calc(100% - 16px);display:none;flex-direction:column}
+.layers-panel.vis{display:flex}
+.layers-panel .lp-list{overflow:auto;flex:1;min-height:0}
+.lp-row{gap:3px;padding:3px 5px;font-size:7.5px}
+.lp-thumb{width:20px;height:20px;border-radius:3px;object-fit:contain;background:var(--v9-surface-3);flex-shrink:0}
+.lp-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:var(--v9-surface-3);border-radius:3px;flex-shrink:0}
+.lp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--v9-t1);font-size:8px}
+.lp-name[contenteditable="true"]{outline:1px solid var(--v9-pink);border-radius:3px;background:var(--v9-surface)}
+.lp-mini{
+  width:15px;height:15px;flex-shrink:0;padding:0;border:0;background:transparent;border-radius:4px;
+  color:var(--v9-t3);font-size:8px;line-height:1;cursor:pointer;font-family:inherit;
+}
+.lp-mini:hover{background:var(--v9-hover);color:var(--v9-t1)}
+.lp-mini.off{color:#E11D48}
+.lp-del{width:15px;height:15px;padding:0;border:0;background:transparent;border-radius:4px;color:var(--v9-t3);cursor:pointer;font-size:8px}
+.lp-del:hover{background:rgba(239,68,68,.14);color:#E11D48}
+.lp-row.mke-hid .lp-name,.lp-row.mke-hid .lp-thumb,.lp-row.mke-hid .lp-icon{opacity:.45}
+.lp-row.mke-lock .lp-lock{color:#B45309}
+/* Shift+clique na lista: mesma marca azul da área, para ver o grupo inteiro */
+.lp-row.msel-row{background:rgba(59,130,246,.12);box-shadow:inset 2px 0 0 #3B82F6}
+.sb-dup-page{font-size:11px;font-weight:900;line-height:1}
+.mke-warn{color:#B45309;font-size:8px;line-height:1;cursor:help}
+
+/* ── Camada travada: sem alças, sem cursor de arraste ── */
+.mke-travada{cursor:default!important}
+.mke-travada.sel .lyr-h,.mke-travada.sel .lyr-rot,.mke-travada.sel .tl-resize,.mke-travada.sel .tl-rot,
+.mke-travada.sel .arr-h,.mke-travada.sel .arr-rot,.mke-travada.sel .arr-ep,.mke-travada.sel .tl-fontsize-handle{display:none!important}
+
+/* a miniatura da faixa de páginas é um clone reduzido da folha: o modo
+   ampliado não pode "vazar" para dentro dela */
+.v7-thumb-scale #canvasOuter.mke-studio{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;flex:1 1 auto!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#F0F2F5!important}
+.v7-thumb-scale #canvasOuter.mke-studio .canvas-inner{inset:0!important}
+.v7-thumb-scale .canvas-inner.mke-studio{position:absolute!important;inset:0!important;box-shadow:none!important;border:0!important;border-radius:0!important;background:#F0F2F5!important}
+.v7-thumb-scale .mke-rail,.v7-thumb-scale .mke-panel,.v7-thumb-scale .mke-studio-bar,.v7-thumb-scale .mke-guias,.v7-thumb-scale .mke-badge{display:none!important}
+
+/* ── Fora do documento: impressão e pré-visualização limpa ── */
+@media print{
+  body.mke-studio-on::after{display:none!important}
+  .mke-rail,.mke-panel,.mke-studio-bar,.mke-guias,.mke-badge,.mke-smart,.mke-guia-tag,.mke-menu{display:none!important}
+  #canvasOuter.mke-studio{position:static!important;inset:auto!important;box-shadow:none!important;border:0!important;border-radius:0!important;background:transparent!important}
+  #canvasOuter.mke-studio .canvas-inner{inset:0!important}
+  .canvas-inner.mke-studio{position:absolute!important;inset:0!important;box-shadow:none!important;border:0!important;border-radius:0!important;background:transparent!important}
+}
+body.v4-preview-clean .mke-rail,body.v4-preview-clean .mke-panel,body.v4-preview-clean .mke-studio-bar,
+body.v4-preview-clean .mke-guias,body.v4-preview-clean .mke-badge,body.v4-preview-clean .mke-smart,body.v4-preview-clean .mke-menu{display:none!important}
+body.mke-exportando .mke-rail,body.mke-exportando .mke-panel,body.mke-exportando .mke-studio-bar,
+body.mke-exportando .mke-guias,body.mke-exportando .mke-badge,body.mke-exportando .mke-smart,
+body.mke-exportando .canvas-tb,body.mke-exportando .text-tb,body.mke-exportando .arr-tb,
+body.mke-exportando .shape-tb,body.mke-exportando .canvas-add-img,body.mke-exportando .canvas-ph,
+body.mke-exportando .layers-panel,body.mke-exportando .lyr-h,body.mke-exportando .lyr-rot,
+body.mke-exportando .tl-resize,body.mke-exportando .tl-rot,body.mke-exportando .arr-h,
+body.mke-exportando .arr-rot,body.mke-exportando .arr-ep,body.mke-exportando .mke-menu{display:none!important}
 </style>
 </head>
 <body>
@@ -947,6 +1155,10 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 <symbol id="i-pen"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
 <symbol id="i-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
 <symbol id="i-chevron"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-expand"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></symbol>
+<symbol id="i-grid"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></symbol>
+<symbol id="i-sliders"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></symbol>
+<symbol id="i-swap"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></symbol>
 </defs></svg>
 
 <!-- ═══ SIDEBAR ═══ -->
@@ -1026,6 +1238,10 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
           <button title="Painel de camadas: o que está na frente e nos fundos" class="sb-btn" onclick="toggleLayersPanel()">
             <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg></span>
             <span class="sb-btn-label">Camadas</span>
+          </button>
+          <button title="Estúdio do mockup: amplia a área e abre trocar imagem, espelhar, girar, alinhar e organizar" class="sb-btn" onclick="mkeAbrirEstudio()">
+            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg></span>
+            <span class="sb-btn-label">Estúdio</span>
           </button>
           <button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCor()">
             <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-palette"/></svg></span>
@@ -1409,8 +1625,8 @@ ondragover="onDragOver(event)" ondragleave="onDragLeave(event)"
 ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="canvas-ph" id="canvasPh">
 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-<p>Clique ou arraste imagens aqui</p>
-<p style="font-size:7.5px;color:#CBD5E1">PNG, JPG · Use "Texto" ou "Seta" no menu lateral</p>
+<p>Clique, arraste ou cole (<b>Ctrl+V</b>) as fotos aqui</p>
+<p style="font-size:7.5px;color:#CBD5E1">PNG, JPG · duas fotos entram lado a lado · <b>⤢</b> amplia a área</p>
 </div>
 <div id="eyedropOverlay" onclick="eyedropCapturar(event)"></div>
 <div id="arrowPreview"></div>
@@ -1420,11 +1636,14 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="ct-sep"></div>
 <button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrente()">⬆</button>
 <button title="Enviar para trás" class="ct-btn" onclick="lTras()">⬇</button>
-<button title="Centralizar na página" class="ct-btn" onclick="lCentro()">⊕ Centro</button>
-<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFill()">⤢ Fill</button>
-<button class="ct-btn" onclick="aninharImagens()" title="Aninhar/encaixar imagens (aproxima aproveitando os espaços)">🧩 Aninhar</button>
-<button title="Recortar a imagem" class="ct-btn" onclick="abrirCrop('layer')">✂️</button>
-<button title="Travar/destravar a posição (evita mexer sem querer)" class="ct-btn" id="propBtn" onclick="toggleProp()">🔒</button>
+<button title="Centralizar na área do mockup" class="ct-btn" onclick="lCentro()">⊕</button>
+<button title="Preencher a área (a imagem cobre tudo, cortando o que sobra)" class="ct-btn" onclick="lFill()">⤢</button>
+<button title="Caber na área (a imagem inteira aparece, sem cortar)" class="ct-btn" onclick="lCaber()">⤡</button>
+<div class="ct-sep"></div>
+<button title="Substituir a imagem mantendo tamanho e posição" class="ct-btn" onclick="mkeSubstituir()">⇄</button>
+<button title="Recortar a imagem (zoom, giro e proporção)" class="ct-btn" onclick="abrirCrop('layer')">✂</button>
+<button title="Travar a proporção ao redimensionar (Shift inverte durante o arraste)" class="ct-btn" id="propBtn" onclick="toggleProp()">🔒</button>
+<button title="Mais ferramentas: espelhar, girar, opacidade, alinhar, organizar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
 <button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
@@ -1451,6 +1670,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
 <button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Mais ferramentas: espelhar, girar, opacidade, alinhar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 </div>
 <div class="arr-tb" id="arrTb">
 <span class="tt-label">Cor:</span>
@@ -1469,6 +1689,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
 <button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Mais ferramentas: espelhar, girar, opacidade, alinhar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 </div>
 <div class="shape-tb" id="shapeTb">
 <input type="color" class="tt-color" id="shFillColor" value="#E5E7EB" oninput="applyShapeProps()">
@@ -1486,6 +1707,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
 <button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudo()">✕</button>
+<button title="Mais ferramentas: espelhar, girar, opacidade, alinhar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 </div>
 <div class="layers-panel" id="layersPanel">
 <div class="lp-hdr">
@@ -1747,7 +1969,7 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <div class="canvas-ph" id="canvasPh_${pid}">
 <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
 <p>Página em branco · Arraste ou adicione imagens</p>
-<p style="font-size:7.5px;color:#CBD5E1">Use os botões no menu lateral para adicionar conteúdo</p>
+<p style="font-size:7.5px;color:#CBD5E1">Duas fotos entram lado a lado · <b>+ Imagem</b> no canto da área</p>
 </div>
 <div id="arrowPreview_${pid}" style="position:absolute;pointer-events:none;z-index:9999;display:none;overflow:visible"></div>
 <div class="arr-draw-hint" id="arrDrawHint_${pid}">✏️ Clique e arraste para desenhar · ESC cancela</div>
@@ -1757,11 +1979,14 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
 <button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
 <button title="Centralizar na página" class="ct-btn" onclick="lCentroExtra('${pid}')">⊕ Centro</button>
-<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFillExtra('${pid}')">⤢ Fill</button>
-<button title="Travar/destravar a posição (evita mexer sem querer)" class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
+<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFillExtra('${pid}')">⤢</button>
+<button title="Caber na área (a imagem inteira aparece)" class="ct-btn" onclick="lCaberExtra('${pid}')">⤡</button>
+<button title="Trocar a imagem mantendo tamanho e posição" class="ct-btn" onclick="mkeSubstituir()">⇄</button>
+<button title="Travar a proporção ao redimensionar" class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
 <button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Mais ferramentas: espelhar, girar, opacidade, alinhar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 </div>
 <div class="text-tb" id="textTb_${pid}">
 <span class="tt-label">Fonte:</span>
@@ -1842,6 +2067,7 @@ grp.innerHTML=`
 <div class="sb-page-num">${p.num}</div>
 <span class="sb-page-title">Página ${p.num}</span>
 ${isBranca?'<span class="sb-page-branca">BRANCA</span>':''}
+<button title="Duplicar esta página (campos, grade, medidas e artes)" class="sb-remove-page sb-dup-page" onclick="v7DuplicarPagina('${p.id}')">⧉</button>
 <button title="Remover esta página" class="sb-remove-page" onclick="removerPagina('${p.id}')"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
 </div>
 <div class="sb-page-actions">
@@ -2011,11 +2237,14 @@ ondrop="onDropExtra(event,'${pid}')" onclick="bgClickExtra(event,'${pid}')">
 <button title="Trazer para frente (na frente dos outros)" class="ct-btn" onclick="lFrenteExtra('${pid}')">⬆</button>
 <button title="Enviar para trás" class="ct-btn" onclick="lTrasExtra('${pid}')">⬇</button>
 <button title="Centralizar na página" class="ct-btn" onclick="lCentroExtra('${pid}')">⊕ Centro</button>
-<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFillExtra('${pid}')">⤢ Fill</button>
-<button title="Travar/destravar a posição (evita mexer sem querer)" class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
+<button title="Preencher a página (mantém a proporção)" class="ct-btn" onclick="lFillExtra('${pid}')">⤢</button>
+<button title="Caber na área (a imagem inteira aparece)" class="ct-btn" onclick="lCaberExtra('${pid}')">⤡</button>
+<button title="Trocar a imagem mantendo tamanho e posição" class="ct-btn" onclick="mkeSubstituir()">⇄</button>
+<button title="Travar a proporção ao redimensionar" class="ct-btn" id="propBtn_${pid}" onclick="togglePropExtra('${pid}')">🔒</button>
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSelExtra('${pid}')">🗑</button>
 <button title="Tirar a seleção" class="ct-btn" onclick="deselecionarTudoExtra('${pid}')">✕</button>
+<button title="Mais ferramentas: espelhar, girar, opacidade, alinhar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 </div>
 <div class="text-tb" id="textTb_${pid}">
 <span class="tt-label">Fonte:</span>
@@ -2243,8 +2472,9 @@ if(l.type==='arr'){posArrElExtra(p,l,el,usePct,W,H);return;}
 el.style.left=usePct?(l.xp*100)+'%':(l.xp*W)+'px';
 el.style.top=usePct?(l.yp*100)+'%':(l.yp*H)+'px';
 el.style.width=usePct?(l.wp*100)+'%':(l.wp*W)+'px';
-el.style.zIndex=l.z;el.style.transform=`rotate(${l.rot||0}deg)`;
+el.style.zIndex=l.z;el.style.transform=mkeTransform(l);
 if(l.type==='img'||l.type==='rect'||l.type==='circle')el.style.height=usePct?(l.hp*100)+'%':(l.hp*H)+'px';
+mkeAplicarVisual(l,el);
 }
 function posArrElExtra(p,l,el,usePct,W,H){
 if(l.x1p!==undefined){
@@ -2265,14 +2495,26 @@ document.addEventListener('mousemove',onMove);
 document.addEventListener('mouseup',function up(ev){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',up);onUp&&onUp(ev);});
 e.preventDefault();
 }
-function onCanvasFilesExtra(e,p){Array.from(e.target.files).forEach(f=>{if(f.type.startsWith('image/'))lerArqExtra(f,p);});e.target.value='';}
+function onCanvasFilesExtra(e,p){
+/* V9.1 — várias fotos de uma vez entram alinhadas também nas páginas extras */
+const arqs=Array.from(e.target.files||[]).filter(f=>f.type&&f.type.indexOf('image/')===0);
+e.target.value='';
+if(arqs.length>1&&typeof mkeLoteImagens==='function'){mkeLoteImagens(arqs,p);return;}
+arqs.forEach(f=>lerArqExtra(f,p));
+}
 function lerArqExtra(f,p){const r=new FileReader();r.onload=ev=>{v7DownscaleDataURL(ev.target.result).then(src=>addImgLayerExtra(p,src));};r.readAsDataURL(f);}
 function onDragOverExtra(e,pid){e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='2px solid var(--ro)';}
 function onDragLeaveExtra(e,pid){e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='';}
 function onDropExtra(e,pid){
 e.preventDefault();const ci=$('canvasInner_'+pid);if(ci)ci.style.outline='';
 const p=paginas.find(x=>x.id===pid);if(!p)return;
-Array.from(e.dataTransfer.files).forEach(f=>{if(f.type.startsWith('image/'))lerArqExtra(f,p);});
+const arqs=Array.from(e.dataTransfer.files||[]).filter(f=>f.type&&f.type.indexOf('image/')===0);
+if(!arqs.length)return;
+if(arqs.length===1){
+  try{if(typeof mkeSoltarSobre==='function'&&mkeSoltarSobre(e,arqs[0],p))return;}catch(err){}
+}
+if(arqs.length>1&&typeof mkeLoteImagens==='function'){mkeLoteImagens(arqs,p);return;}
+arqs.forEach(f=>lerArqExtra(f,p));
 }
 function bgClickExtra(e,pid){
 const p=paginas.find(x=>x.id===pid);if(!p)return;
@@ -2289,15 +2531,31 @@ const id=(ov&&ov.id)||uid();const tmp=new Image();
 tmp.onload=()=>{
 const ratio=tmp.naturalWidth/tmp.naturalHeight;let l;
 if(ov&&ov.xp!==undefined){l=Object.assign({type:'img',id,src,ratio,rot:0,prop:true,z:++p.zCnt},ov,{id,src,ratio,type:'img'});}
-else{let wp=0.5,hp=wp/ratio;if(hp>0.8){hp=0.8;wp=hp*ratio;}l={type:'img',id,src,ratio,xp:(1-wp)/2,yp:(1-hp)/2,wp,hp,rot:0,prop:true,z:++p.zCnt};}
+else{
+  const W=cwExtra(p.id)||400,H=chExtra(p.id)||400,rc=H?W/H:1;
+  let wp=0.52,hp=wp*rc/ratio;
+  if(hp>0.82){hp=0.82;wp=hp*ratio/rc;}
+  const livre=(typeof mkeSlotLivre==='function'?mkeSlotLivre(wp,hp,p.layers):null)||{xp:(1-wp)/2,yp:(1-hp)/2};
+  l={type:'img',id,src,ratio,xp:livre.xp,yp:livre.yp,wp,hp,rot:0,prop:true,z:++p.zCnt};
+}
+if(tmp.naturalWidth&&tmp.naturalHeight){l._nw=tmp.naturalWidth;l._nh=tmp.naturalHeight;}
 p.layers.push(l);renderImgLayerExtra(p,l);selLayerExtra(p,id);updPhExtra(p);snap();
+if(!ov){try{mkeAvisoImagem(l);}catch(e){}}
 };tmp.src=src;
 }
 function renderImgLayerExtra(p,l){
 const pid=p.id,ci=$('canvasInner_'+pid);if(!ci)return;
 const old=document.getElementById('ly_'+pid+'_'+l.id);if(old)old.remove();
 const el=document.createElement('div');el.className='img-layer';el.id='ly_'+pid+'_'+l.id;posElExtra(p,l,el,false);
-const img=document.createElement('img');img.src=l.src;img.draggable=false;el.appendChild(img);
+const img=document.createElement('img');img.src=l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+img.addEventListener('load',function(){
+  try{
+    mkeGuardarPx(l.src,img.naturalWidth,img.naturalHeight);
+    if(!l._nw&&img.naturalWidth){l._nw=img.naturalWidth;l._nh=img.naturalHeight;}
+    if(document.getElementById('layersList')&&!document.querySelector('.mke-editando'))updList();
+  }catch(e){}
+});
+el.appendChild(img);
 ['tl','tr','bl','br'].forEach(c=>{const h=document.createElement('div');h.className=`lyr-h lyr-${c}`;h.dataset.c=c;el.appendChild(h);});
 const rot=document.createElement('div');rot.className='lyr-rot';el.appendChild(rot);
 el.addEventListener('mousedown',e=>{if(p.modoSeta)return;if(e.target.classList.contains('lyr-h')||e.target.classList.contains('lyr-rot'))return;e.stopPropagation();selLayerExtra(p,l.id);initDragXYExtra(e,p,l,el);});
@@ -2434,27 +2692,40 @@ function applyArrPropsExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)retur
 
 /* ═══ DRAG/RESIZE/ROT EXTRA ═══ */
 function initDragXYExtra(e,p,l,el){
+if(l&&l.locked)return;
 const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,ox=l.xp,oy=l.yp;
 if(l.type==='txt')el.style.cursor='grabbing';
-makeDragExtra(e,ev=>{l.xp=ox+(ev.clientX-sx)/W;l.yp=oy+(ev.clientY-sy)/H;el.style.left=(l.xp*W)+'px';el.style.top=(l.yp*H)+'px';},()=>{if(l.type==='txt')el.style.cursor='move';snap();});
+mkeArrasteInicio();
+makeDragExtra(e,ev=>{
+  var nxp=ox+(ev.clientX-sx)/W, nyp=oy+(ev.clientY-sy)/H;
+  /* O ímã também vale nas páginas extras (antes só a folha 1 encostava). */
+  if(!ev.altKey && mkeImaLigado()){try{var s2=mkeSnapXY(l,nxp,nyp,W,H,p.layers);nxp=s2.xp;nyp=s2.yp;}catch(e3){}}
+  l.xp=nxp;l.yp=nyp;
+  el.style.left=(l.xp*W)+'px';el.style.top=(l.yp*H)+'px';
+  try{mkeMostrarMedida(l,W,H);}catch(e2){}
+},()=>{if(l.type==='txt')el.style.cursor='move';mkeArrasteFim();snap();});
 }
 function initDragArrExtra(e,p,l,el){
+if(l&&l.locked)return;
 const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,ox1=l.x1p,oy1=l.y1p,ox2=l.x2p,oy2=l.y2p;
 makeDragExtra(e,ev=>{const dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H;l.x1p=ox1+dx;l.y1p=oy1+dy;l.x2p=ox2+dx;l.y2p=oy2+dy;posArrElExtra(p,l,el,false,W,H);},()=>{snap();});
 }
 function initResizeImgExtra(e,p,l,el,c){
+if(l&&l.locked)return;
 const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp,oxp=l.xp,oyp=l.yp;
 makeDragExtra(e,ev=>{let dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H,nwp=swp,nhp=shp,nxp=oxp,nyp=oyp;
 if(c==='br'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp+dy);}
 if(c==='bl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp+dy);nxp=oxp+dx;}
 if(c==='tr'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp-dy);nyp=oyp+dy;}
 if(c==='tl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp-dy);nxp=oxp+dx;nyp=oyp+dy;}
-if(l.prop){nhp=nwp/l.ratio*(W/H);if(c==='tl'||c==='tr')nyp=oyp+(shp-nhp);if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);}
+const manter = ev.shiftKey ? !l.prop : !!l.prop;
+if(manter){nhp=nwp/l.ratio*(W/H);if(c==='tl'||c==='tr')nyp=oyp+(shp-nhp);if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);}
 l.wp=nwp;l.hp=nhp;l.xp=nxp;l.yp=nyp;
 el.style.width=(nwp*W)+'px';el.style.height=(nhp*H)+'px';el.style.left=(nxp*W)+'px';el.style.top=(nyp*H)+'px';
 },()=>{snap();});
 }
 function initResizeTxtExtra(e,p,l,el){
+  if(l&&l.locked)return;
   const pid=p.id,W=cwExtra(pid),sx=e.clientX,sy=e.clientY,sw=l.wp*W,startSize=parseInt(l.size)||20;
   const tc=el.querySelector('.tc');
   makeDragExtra(e,ev=>{
@@ -2468,26 +2739,32 @@ function initResizeTxtExtra(e,p,l,el){
     const slider=document.querySelector('.v4-font-slider'); if(slider)slider.value=l.size;
   },()=>{snap();if(typeof v7Autosave==='function')v7Autosave();});
 }
-function initResizeArrExtra(e,p,l,el){const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDragExtra(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{snap();});}
-function initRotElExtra(e,p,l,el){const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;makeDragExtra(e,ev=>{l.rot=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;el.style.transform=`rotate(${l.rot}deg)`;},()=>{snap();});}
+function initResizeArrExtra(e,p,l,el){if(l&&l.locked)return;const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDragExtra(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{snap();});}
+function initRotElExtra(e,p,l,el){if(l&&l.locked)return;const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;makeDragExtra(e,ev=>{let a=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;if(ev.shiftKey)a=Math.round(a/15)*15;l.rot=Math.round(a*10)/10;el.style.transform=mkeTransform(l);},()=>{snap();});}
 
 /* ═══ SELECT/DESELECT EXTRA ═══ */
 function selLayerExtra(p,id){
-const pid=p.id;p.selId=id;
-document.querySelectorAll(`#canvasInner_${pid} .img-layer,#canvasInner_${pid} .txt-layer,#canvasInner_${pid} .arr-layer,#canvasInner_${pid} .rect-layer,#canvasInner_${pid} .circle-layer`).forEach(el=>el.classList.remove('sel'));
+const pid=p.id;p.selId=id;if(p.msel&&p.msel.length)p.msel=[];
+/* V9.1 — a página do clique passa a ser a página em foco: a barra flutuante,
+   a régua e o painel do estúdio acompanham (mkeMoverUI). */
+try{
+  if(typeof v7MostrarToolbar==='function'&&!(v7PaginaAtiva&&v7PaginaAtiva.p1===false&&v7PaginaAtiva.id===pid))
+    v7MostrarToolbar({id:pid,tipo:p.tipo||'normal',p1:false});
+}catch(e){}
+document.querySelectorAll(`#canvasInner_${pid} .img-layer,#canvasInner_${pid} .txt-layer,#canvasInner_${pid} .arr-layer,#canvasInner_${pid} .rect-layer,#canvasInner_${pid} .circle-layer`).forEach(el=>{el.classList.remove('sel');el.classList.remove('msel');});
 const target=document.getElementById('ly_'+pid+'_'+id);if(target)target.classList.add('sel');
 const l=p.layers.find(x=>x.id===id);if(!l)return;
 const ct=$('canvasTb_'+pid),tt=$('textTb_'+pid),at=$('arrTb_'+pid);
 if(ct)ct.classList.remove('vis');if(tt)tt.classList.remove('vis');if(at)at.classList.remove('vis');
-if(l.type==='img'){if(ct)ct.classList.add('vis');const tn=$('tbNome_'+pid);if(tn)tn.textContent=`Imagem ${p.layers.filter(x=>x.type==='img').indexOf(l)+1}`;const pb=$('propBtn_'+pid);if(pb)pb.classList.toggle('on',l.prop);}
+if(l.type==='img'){if(ct)ct.classList.add('vis');const tn=$('tbNome_'+pid);if(tn)tn.textContent=(function(){try{return mkeNomeCamada(l);}catch(e){return 'Imagem '+(p.layers.filter(x=>x.type==='img').indexOf(l)+1);}})();const pb=$('propBtn_'+pid);if(pb)pb.classList.toggle('on',l.prop);}
 else if(l.type==='txt'){if(tt)tt.classList.add('vis');const tf=$('ttFont_'+pid),ts=$('ttSize_'+pid),tc2=$('ttColor_'+pid),tb=$('ttBold_'+pid),ti=$('ttItalic_'+pid);if(tf)tf.value=l.font;if(ts)ts.value=l.size;if(tc2)tc2.value=l.color;if(tb)tb.classList.toggle('on',l.bold);if(ti)ti.classList.toggle('on',l.italic);}
 else if(l.type==='arr'){if(at)at.classList.add('vis');const ac=$('arColor_'+pid),as=$('arStroke_'+pid);if(ac)ac.value=l.color;if(as)as.value=l.stroke;const s=l.arStyle||'full';p.currentArrStyle=s;['Full','Open','None'].forEach(k=>$('arStyle'+k+'_'+pid)?.classList.toggle('on',k.toLowerCase()===s));}
 }
 function deselecionarTudoExtra(pid){
 const p=paginas.find(x=>x.id===pid);if(!p)return;
 p.layers.filter(x=>x.type==='txt'&&x._editing).forEach(l=>{l._editing=false;const el=document.getElementById('ly_'+pid+'_'+l.id);if(!el)return;el.classList.remove('editing');const tc=el.querySelector('.tc');if(tc){tc.contentEditable='false';l.richHtml=tc.innerHTML;l.txt=tc.textContent||'Texto';}});
-p.selId=null;
-document.querySelectorAll(`#canvasInner_${pid} .img-layer,#canvasInner_${pid} .txt-layer,#canvasInner_${pid} .arr-layer,#canvasInner_${pid} .rect-layer,#canvasInner_${pid} .circle-layer`).forEach(el=>el.classList.remove('sel'));
+p.selId=null;p.msel=[];
+document.querySelectorAll(`#canvasInner_${pid} .img-layer,#canvasInner_${pid} .txt-layer,#canvasInner_${pid} .arr-layer,#canvasInner_${pid} .rect-layer,#canvasInner_${pid} .circle-layer`).forEach(el=>{el.classList.remove('sel');el.classList.remove('msel');});
 const ct=$('canvasTb_'+pid),tt=$('textTb_'+pid),at=$('arrTb_'+pid);
 if(ct)ct.classList.remove('vis');if(tt)tt.classList.remove('vis');if(at)at.classList.remove('vis');
 }
@@ -2495,8 +2772,24 @@ function lFrenteExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;cons
 function lTrasExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;const mz=Math.min(...p.layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.style.zIndex=l.z;}
 function lCentroExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)posArrElExtra(p,l,el,false,cwExtra(pid),chExtra(pid));}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el){el.style.left=(l.xp*cwExtra(pid))+'px';el.style.top=(l.yp*chExtra(pid))+'px';}}}
 function lFillExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;const rc=cwExtra(pid)/chExtra(pid);let wp,hp;if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;const el=document.getElementById('ly_'+pid+'_'+l.id);if(el){posElExtra(p,l,el,false);el.style.transform='';}}
+function lCaberExtra(pid){
+const p=paginas.find(x=>x.id===pid);if(!p)return;
+const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;
+const W=cwExtra(pid),H=chExtra(pid),rc=H?W/H:1;
+let wp=1,hp=wp*rc/l.ratio;
+if(hp>1){hp=1;wp=hp*l.ratio/rc;}
+l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;l.fit='contain';
+const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)posElExtra(p,l,el,false);
+snap();toast('⤡ Imagem cabendo na área','',1600);
+}
 function togglePropExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p)return;const l=p.layers.find(x=>x.id===p.selId&&x.type==='img');if(!l)return;l.prop=!l.prop;const pb=$('propBtn_'+pid);if(pb)pb.classList.toggle('on',l.prop);}
-function excluirSelExtra(pid){const p=paginas.find(x=>x.id===pid);if(!p||!p.selId)return;const id=p.selId;const el=document.getElementById('ly_'+pid+'_'+id);if(el)el.remove();p.layers=p.layers.filter(l=>l.id!==id);deselecionarTudoExtra(pid);updPhExtra(p);snap();}
+function excluirSelExtra(pid,idFixo){
+const p=paginas.find(x=>x.id===pid);if(!p||(!p.selId&&!idFixo))return;
+const id=idFixo||p.selId;const el=document.getElementById('ly_'+pid+'_'+id);if(el)el.remove();
+p.layers=p.layers.filter(l=>l.id!==id);
+if(!idFixo)deselecionarTudoExtra(pid);
+if(p.selId===id)p.selId=null;
+updPhExtra(p);updList();snap();}
 
 /* ═══ RICH FORMAT BAR ═══ */
 const richBar=$('richBar');
@@ -2564,6 +2857,15 @@ return p.join('');
 }
 function serLayer(l){
 const b={id:l.id,type:l.type,xp:l.xp,yp:l.yp,wp:l.wp,hp:l.hp,rot:l.rot||0,z:l.z};
+/* V9.1 — atributos do estúdio. Só entram no arquivo quando diferentes do
+   padrão: ficha antiga continua abrindo e o .json não engorda à toa. */
+if(l.name)b.name=String(l.name).slice(0,60);
+if(l.hidden)b.hidden=1;
+if(l.locked)b.locked=1;
+if(l.op!==undefined&&l.op!==null&&l.op!==1)b.op=l.op;
+if(l.flipH)b.flipH=1;
+if(l.flipV)b.flipV=1;
+if(l.fit&&l.fit!=='contain')b.fit=l.fit;
 if(l.type==='img'){b.src=l.src;b.ratio=l.ratio;b.prop=l.prop;}
 if(l.type==='txt'){b.txt=l.txt;b.font=l.font;b.size=l.size;b.color=l.color;b.bold=l.bold;b.italic=l.italic;b.richHtml=l.richHtml||'';}
 if(l.type==='arr'){b.color=l.color;b.stroke=l.stroke;b.arStyle=l.arStyle||'full';b.x1p=l.x1p;b.y1p=l.y1p;b.x2p=l.x2p;b.y2p=l.y2p;}
@@ -2727,6 +3029,15 @@ document.addEventListener('keydown',e=>{
 const _ctrl=e.ctrlKey||e.metaKey;
 const _alvo=e.target||document.activeElement;
 const _digitando=!!(_alvo&&(_alvo.tagName==='INPUT'||_alvo.tagName==='TEXTAREA'||_alvo.tagName==='SELECT'||_alvo.isContentEditable||(_alvo.closest&&_alvo.closest('[contenteditable="true"]'))));
+/* Ctrl+S: salva agora (o autosave espera 0,7 s) e confirma, em vez de abrir
+   o "salvar página" do navegador — que só gerava um HTML sem os dados. */
+if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='s'||e.key==='S')){
+  e.preventDefault();
+  try{v7SalvarAutosaveAgora();}catch(_e){}
+  try{if(typeof v8RascunhoSalvarAgora==='function')v8RascunhoSalvarAgora();}catch(_e){}
+  toast('💾 Ficha salva neste computador','',1800);
+  return;
+}
 if(_ctrl&&!e.shiftKey&&(e.key==='z'||e.key==='Z')){if(_digitando)return;e.preventDefault();undo();return;}
 if(_ctrl&&(e.key==='y'||e.key==='Y'||(e.shiftKey&&(e.key==='z'||e.key==='Z')))){if(_digitando)return;e.preventDefault();redo();return;}
 if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='c'||e.key==='C')){if(_digitando)return;if(v8CopiarCamada(false))e.preventDefault();return;}
@@ -2736,21 +3047,102 @@ if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='v'||e.key==='V')){if(_digitando)retu
    existe. Fica com o navegador (seleciona o texto da tela) em vez de fingir
    que fez algo. */
 if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='z'))){e.preventDefault();redo();}
+/* V9.1 — atalhos do estúdio do mockup. Todos respeitam o campo em foco:
+   dentro de um input/textarea quem manda é o navegador. */
+if(_ctrl&&!e.shiftKey&&!e.altKey&&(e.key==='d'||e.key==='D')){if(_digitando)return;e.preventDefault();mkeDuplicarCamada();return;}
+/* Alt + ← → endireita a foto 1 grau por toque (Shift = 15°). */
+if(!_digitando&&e.altKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){
+  const _c3=mkeCtx();if(!_c3.layer)return;
+  e.preventDefault();
+  mkeGirarGraus((e.key==='ArrowRight'?1:-1)*(e.shiftKey?15:1));
+  return;
+}
+if(!_digitando&&(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown')){
+  const _ctx=mkeCtx();if(!_ctx.layer)return;
+  e.preventDefault();
+  const _p=(e.shiftKey?10:1)/Math.max(_ctx.W(),1);
+  mkeNudge(e.key==='ArrowLeft'?-_p:e.key==='ArrowRight'?_p:0,e.key==='ArrowUp'?-_p:e.key==='ArrowDown'?_p:0);
+  return;
+}
+if(!_digitando&&(e.key==='['||e.key===']')){
+  const _c2=mkeCtx();if(!_c2.layer)return;
+  e.preventDefault();
+  mkeMoverZ(_c2.layer.id,e.key===']'?1:-1,_c2.page?_c2.page.id:null);
+  return;
+}
 if(e.key==='Escape'){
+try{mkeSairEstudio();mkeFecharPainel();mkeMenuFechar();}catch(_e){}
 fecharAjudaFicha();rfHide();deselecionarTudo();fecharLogo();
 if(eyeAtivo)desativarEye();
 if(modoSeta)desativarModoSeta();
 paginas.forEach(p=>{if(p.modoSeta)desativarModoSetaExtra(p);deselecionarTudoExtra(p.id);});
 }
 if(e.key==='Delete'&&!_digitando&&selId){const l=layers.find(x=>x.id===selId);if(l&&!(l.type==='txt'&&l._editing))excluirSel();}
-paginas.forEach(p=>{if(e.key==='Delete'&&!_digitando&&p.selId){const l=p.layers.find(x=>x.id===p.selId);if(l&&!(l.type==='txt'&&l._editing))excluirSelExtra(p.id);}});
+paginas.forEach(p=>{
+  if(e.key!=='Delete'||_digitando)return;
+  if(p.msel&&p.msel.length>1){
+    const quantas=p.msel.length;
+    p.msel.slice().forEach(function(mid){
+      const l=p.layers.find(x=>x.id===mid);
+      if(!l||(l.type==='txt'&&l._editing))return;
+      excluirSelExtra(p.id,mid);
+    });
+    p.msel=[];updList();snap();
+    toast('🗑 '+quantas+' camadas removidas','',1600);
+    return;
+  }
+  if(p.selId){const l=p.layers.find(x=>x.id===p.selId);if(l&&!(l.type==='txt'&&l._editing))excluirSelExtra(p.id);}
+});
 });
 
 /* Colar TEXTO de fora (Word, WhatsApp, bloco de notas) direto na folha:
    sem campo em foco, o texto vira uma caixa de texto na página ativa. */
 document.addEventListener('paste',e=>{
   const alvo=e.target||document.activeElement;
+  /* V9.1 — colar uma coluna da planilha dentro da grade/medidas/produção:
+     os valores se espalham pelas células seguintes em vez de cair todos na
+     célula que está com o cursor. */
+  if(alvo&&typeof v9ColarSerie==='function'&&v9CampoSerie(alvo)){
+    try{
+      const txt=e.clipboardData&&e.clipboardData.getData('text/plain');
+      const n=v9ColarSerie(alvo,txt);
+      if(n){e.preventDefault();toast('📋 '+n+' valores preenchidos','',2200);return;}
+    }catch(err){console.warn('colar série',err);}
+  }
   if(alvo&&(alvo.tagName==='INPUT'||alvo.tagName==='TEXTAREA'||alvo.isContentEditable||(alvo.closest&&alvo.closest('[contenteditable="true"]'))))return;
+  /* V9.1 — print da tela (ou imagem copiada do WhatsApp/Explorer) colada com
+     Ctrl+V entra direto na área do mockup. Antes, colar imagem não fazia nada
+     e a pessoa tinha que salvar o print em arquivo para depois importar. */
+  try{
+    const itens=e.clipboardData&&e.clipboardData.items;
+    if(itens){
+      for(const it of itens){
+        if(it.type&&it.type.indexOf('image')===0){
+          const arq=it.getAsFile&&it.getAsFile();
+          if(arq){
+            e.preventDefault();
+            /* Cola na página em foco, não sempre na folha 1: quem está na
+               página 3 e cola um print quer o print na página 3. */
+            let _dest=null;
+            try{
+              if(typeof v7PaginaAtiva!=='undefined'&&v7PaginaAtiva){
+                /* a página EM FOCO manda; só olha a camada selecionada se não
+                   houver página ativa definida */
+                _dest=(v7PaginaAtiva.p1===false)
+                  ?(paginas.filter(function(x){return x.id===v7PaginaAtiva.id;})[0]||null)
+                  :null;
+              }else{
+                _dest=v8CamadaAlvoColar();
+              }
+            }catch(_e){}
+            if(_dest)lerArqExtra(arq,_dest);else lerArq(arq);
+            toast('🖼 Imagem colada '+( _dest?('na página '+(_dest.num||'?')):'na área do mockup'),'',2200);
+            return;
+          }
+        }
+      }
+    }
+  }catch(err){console.warn('colar imagem',err);}
   const texto=(e.clipboardData&&e.clipboardData.getData('text/plain'))||'';
   if(!texto.trim())return;
   e.preventDefault();
@@ -2817,14 +3209,16 @@ function posEl(l,el,usePct){
 const W=cw(),H=ch();
 if(l.type==='arr'){posArrEl(l,el,usePct,W,H);return;}
 el.style.left=usePct?(l.xp*100)+'%':(l.xp*W)+'px';el.style.top=usePct?(l.yp*100)+'%':(l.yp*H)+'px';
-el.style.width=usePct?(l.wp*100)+'%':(l.wp*W)+'px';el.style.zIndex=l.z;el.style.transform=`rotate(${l.rot||0}deg)`;
+el.style.width=usePct?(l.wp*100)+'%':(l.wp*W)+'px';el.style.zIndex=l.z;el.style.transform=mkeTransform(l);
 if(l.type==='img'||l.type==='rect'||l.type==='circle')el.style.height=usePct?(l.hp*100)+'%':(l.hp*H)+'px';
+mkeAplicarVisual(l,el);
 }
 function posArrEl(l,el,usePct,W,H){
 if(l.x1p!==undefined){const x1=l.x1p*W,y1=l.y1p*H,x2=l.x2p*W,y2=l.y2p*H;const len=Math.sqrt((x2-x1)**2+(y2-y1)**2),ang=Math.atan2(y2-y1,x2-x1)*(180/Math.PI);el.style.left=usePct?(l.x1p*100)+'%':x1+'px';el.style.top=usePct?(l.y1p*100)+'%':y1+'px';el.style.width=usePct?(len/W*100)+'%':len+'px';el.style.height='20px';el.style.transformOrigin='0 50%';el.style.transform=`rotate(${ang}deg)`;el.style.marginTop='-10px';el.style.zIndex=l.z;}
 else{el.style.left=usePct?(l.xp*100)+'%':(l.xp*W)+'px';el.style.top=usePct?(l.yp*100)+'%':(l.yp*H)+'px';el.style.width=usePct?(l.wp*100)+'%':(l.wp*W)+'px';el.style.height=usePct?(l.hp*100)+'%':(l.hp*H)+'px';el.style.transform=`rotate(${l.rot||0}deg)`;el.style.zIndex=l.z;}
+mkeAplicarVisual(l,el);
 }
-function restAllPx(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});document.documentElement.classList.remove('v7-exporting');}
+function restAllPx(){layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});document.documentElement.classList.remove('v7-exporting');try{document.body.classList.remove('mke-exportando');}catch(e){}}
 function makeDrag(e,onMove,onUp){document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',function up(ev){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',up);onUp&&onUp(ev);});e.preventDefault();}
 /* ══ V7.1.1 — Fotos gigantes travavam tudo (anti-travamento) ══
    Uma foto de celular (12MP ≈ 5–15MB em base64) ia inteira para a memória, para
@@ -2862,20 +3256,58 @@ function v7DownscaleDataURL(dataURL,maxDim,qualidade){
     }catch(e){resolve(dataURL);}
   });
 }
-function onCanvasFiles(e){Array.from(e.target.files).forEach(f=>{if(f.type.startsWith('image/'))lerArq(f);});e.target.value='';}
+function onCanvasFiles(e){
+  const arqs=Array.from(e.target.files||[]).filter(f=>f.type&&f.type.indexOf('image/')===0);
+  e.target.value='';
+  if(arqs.length>1&&typeof mkeLoteImagens==='function'){mkeLoteImagens(arqs);return;}
+  arqs.forEach(f=>lerArq(f));
+}
 function lerArq(f){const r=new FileReader();r.onload=ev=>{v7DownscaleDataURL(ev.target.result).then(src=>addImgLayer(src));};r.readAsDataURL(f);}
 function onDragOver(e){e.preventDefault();canvasInner.style.outline='2px solid var(--ro)';}
 function onDragLeave(e){e.preventDefault();canvasInner.style.outline='';}
-function onDrop(e){e.preventDefault();canvasInner.style.outline='';Array.from(e.dataTransfer.files).forEach(f=>{if(f.type.startsWith('image/'))lerArq(f);});}
+function onDrop(e){
+  e.preventDefault();canvasInner.style.outline='';
+  const arqs=Array.from(e.dataTransfer.files||[]).filter(f=>f.type&&f.type.indexOf('image/')===0);
+  if(!arqs.length)return;
+  /* soltar uma foto em cima de outra: troca a arte daquela camada */
+  if(arqs.length===1){
+    try{if(mkeSoltarSobre(e,arqs[0],null))return;}catch(err){console.warn('soltar em cima',err);}
+  }
+  if(arqs.length>1&&typeof mkeLoteImagens==='function'){mkeLoteImagens(arqs);return;}
+  arqs.forEach(lerArq);
+}
 function bgClick(e){if(eyeAtivo||modoSeta)return;if(e.target===canvasInner||e.target===canvasPh||canvasPh.contains(e.target)){if(!layers.length)$('canvasInput').click();else deselecionarTudo();}}
-function addImgLayer(src,ov){
+function addImgLayer(src,ov,nome){
 const id=(ov&&ov.id)||uid();const tmp=new Image();
-tmp.onload=()=>{const ratio=tmp.naturalWidth/tmp.naturalHeight;let l;if(ov&&ov.xp!==undefined){l=Object.assign({type:'img',id,src,ratio,rot:0,prop:true,z:++zCnt},ov,{id,src,ratio,type:'img'});}else{let wp=0.5,hp=wp/ratio;if(hp>0.8){hp=0.8;wp=hp*ratio;}l={type:'img',id,src,ratio,xp:(1-wp)/2,yp:(1-hp)/2,wp,hp,rot:0,prop:true,z:++zCnt};}layers.push(l);renderImgLayer(l);selLayer(id);updPh();updList();savLayers();snap();};tmp.src=src;
+tmp.onload=()=>{
+  const ratio=(tmp.naturalWidth||1)/(tmp.naturalHeight||1);let l;
+  if(ov&&ov.xp!==undefined){
+    l=Object.assign({type:'img',id,src,ratio,rot:0,prop:true,z:++zCnt},ov,{id,src,ratio,type:'img'});
+  }else{
+    /* V9.1 — a 2ª foto não cai mais em cima da 1ª: o encaixe procura um
+       espaço livre na área e, se não houver, desloca em cascata. O quadro
+       já nasce com a proporção da imagem (antes sobrava tarja do object-fit). */
+    const W=cw(),H=ch(),rc=H?W/H:1;
+    let wp=0.52,hp=wp*rc/ratio;
+    if(hp>0.82){hp=0.82;wp=hp*ratio/rc;}
+    const livre=mkeSlotLivre(wp,hp)||{xp:(1-wp)/2,yp:(1-hp)/2};
+    l={type:'img',id,src,ratio,xp:livre.xp,yp:livre.yp,wp,hp,rot:0,prop:true,z:++zCnt};
+  }
+  if(nome)l._fileName=nome;
+  /* tamanho real em px: a lista de camadas avisa quando a foto é pequena
+     demais para o tamanho com que ela vai ser impressa. */
+  if(tmp.naturalWidth&&tmp.naturalHeight){l._nw=tmp.naturalWidth;l._nh=tmp.naturalHeight;}
+  layers.push(l);renderImgLayer(l);selLayer(id);updPh();updList();savLayers();snap();
+  if(!ov){try{mkeAvisoImagem(l)}catch(e){}}
+};
+tmp.src=src;
 }
 function renderImgLayer(l){
 const old=document.getElementById('ly_'+l.id);if(old)old.remove();
 const el=document.createElement('div');el.className='img-layer';el.id='ly_'+l.id;posEl(l,el,false);
-const img=document.createElement('img');img.src=l.src;img.draggable=false;el.appendChild(img);
+const img=document.createElement('img');img.src=l.src;img.draggable=false;img.style.objectFit=l.fit||'contain';
+img.addEventListener('load',function(){try{mkeGuardarPx(l.src,img.naturalWidth,img.naturalHeight);}catch(e){}});
+el.appendChild(img);
 ['tl','tr','bl','br'].forEach(c=>{const h=document.createElement('div');h.className=`lyr-h lyr-${c}`;h.dataset.c=c;el.appendChild(h);});
 const rot=document.createElement('div');rot.className='lyr-rot';el.appendChild(rot);
 el.addEventListener('mousedown',e=>{if(eyeAtivo||modoSeta)return;if(e.target.classList.contains('lyr-h')||e.target.classList.contains('lyr-rot'))return;e.stopPropagation();selLayer(l.id);initDragXY(e,l,el);});
@@ -3044,28 +3476,78 @@ canvasInner.appendChild(el);
 }
 function refreshArrSVG(l){const el=document.getElementById('ly_'+l.id);if(!el)return;const svg=el.querySelector('svg');if(!svg)return;const tmp=document.createElement('div');tmp.innerHTML=buildArrSVG(l);el.replaceChild(tmp.firstChild,svg);}
 function applyArrProps(){const l=layers.find(x=>x.id===selId&&x.type==='arr');if(!l)return;l.color=$('arColor').value;l.stroke=parseInt($('arStroke').value)||3;refreshArrSVG(l);savLayers();snap();}
-function initDragXY(e,l,el){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,ox=l.xp,oy=l.yp;if(l.type==='txt')el.style.cursor='grabbing';makeDrag(e,ev=>{l.xp=ox+(ev.clientX-sx)/W;l.yp=oy+(ev.clientY-sy)/H;el.style.left=(l.xp*W)+'px';el.style.top=(l.yp*H)+'px';},()=>{if(l.type==='txt')el.style.cursor='move';savLayers();snap();});}
+function initDragXY(e,l,el){
+if(l&&l.locked){toast('🔒 Camada travada — destrave no painel de camadas para mover','',2200);return;}
+const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,ox=l.xp,oy=l.yp;
+if(l.type==='txt')el.style.cursor='grabbing';
+mkeArrasteInicio();
+makeDrag(e,ev=>{
+  let nxp=ox+(ev.clientX-sx)/W, nyp=oy+(ev.clientY-sy)/H;
+  /* V9.1 — ímã: encosta nas bordas/centro da área e nas outras camadas.
+     Segurar Alt solta o ímã (para posicionar livre), como nos editores gráficos. */
+  if(!ev.altKey && mkeImaLigado()){const s=mkeSnapXY(l,nxp,nyp,W,H);nxp=s.xp;nyp=s.yp;}
+  l.xp=mkeLimite(nxp,l.wp);l.yp=mkeLimite(nyp,l.hp,true);
+  el.style.left=(l.xp*W)+'px';el.style.top=(l.yp*H)+'px';
+  mkeMostrarMedida(l,W,H);
+},()=>{if(l.type==='txt')el.style.cursor='move';mkeArrasteFim();savLayers();snap();});
+}
 function initDragArr(e,l,el){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,ox1=l.x1p,oy1=l.y1p,ox2=l.x2p,oy2=l.y2p;makeDrag(e,ev=>{const dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H;l.x1p=ox1+dx;l.y1p=oy1+dy;l.x2p=ox2+dx;l.y2p=oy2+dy;posArrEl(l,el,false,W,H);},()=>{savLayers();snap();});}
-function initResizeImg(e,l,el,c){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp,oxp=l.xp,oyp=l.yp;makeDrag(e,ev=>{let dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H,nwp=swp,nhp=shp,nxp=oxp,nyp=oyp;if(c==='br'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp+dy);}if(c==='bl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp+dy);nxp=oxp+dx;}if(c==='tr'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp-dy);nyp=oyp+dy;}if(c==='tl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp-dy);nxp=oxp+dx;nyp=oyp+dy;}if(l.prop){nhp=nwp/l.ratio*(W/H);if(c==='tl'||c==='tr')nyp=oyp+(shp-nhp);if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);}l.wp=nwp;l.hp=nhp;l.xp=nxp;l.yp=nyp;el.style.width=(nwp*W)+'px';el.style.height=(nhp*H)+'px';el.style.left=(nxp*W)+'px';el.style.top=(nyp*H)+'px';},()=>{savLayers();snap();});}
-function initResizeTxt(e,l,el){const W=cw(),sx=e.clientX,sw=l.wp*W;makeDrag(e,ev=>{const nwp=Math.max(.06,(sw+(ev.clientX-sx))/W);l.wp=nwp;el.style.width=(nwp*W)+'px';},()=>{savLayers();snap();});}
-function initResizeArr(e,l,el){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDrag(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{savLayers();snap();});}
-function initRotEl(e,l,el){const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;makeDrag(e,ev=>{l.rot=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;el.style.transform=`rotate(${l.rot}deg)`;},()=>{savLayers();snap();});}
+function initResizeImg(e,l,el,c){
+if(l&&l.locked)return;
+const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp,oxp=l.xp,oyp=l.yp;
+mkeArrasteInicio();
+makeDrag(e,ev=>{
+  let dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H,nwp=swp,nhp=shp,nxp=oxp,nyp=oyp;
+  if(c==='br'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp+dy);}
+  if(c==='bl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp+dy);nxp=oxp+dx;}
+  if(c==='tr'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp-dy);nyp=oyp+dy;}
+  if(c==='tl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp-dy);nxp=oxp+dx;nyp=oyp+dy;}
+  /* V9.1 — o botão 🔒 da barra trava a PROPORÇÃO. Segurar Shift durante o
+     arraste inverte o que está ligado (prender/soltar sem ir ao botão). */
+  const manter = ev.shiftKey ? !l.prop : !!l.prop;
+  if(manter){nhp=nwp/l.ratio*(W/H);if(c==='tl'||c==='tr')nyp=oyp+(shp-nhp);if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);}
+  l.wp=nwp;l.hp=nhp;l.xp=nxp;l.yp=nyp;
+  el.style.width=(nwp*W)+'px';el.style.height=(nhp*H)+'px';el.style.left=(nxp*W)+'px';el.style.top=(nyp*H)+'px';
+  mkeMostrarMedida(l,W,H);
+},()=>{mkeArrasteFim();savLayers();snap();});
+}
+function initResizeTxt(e,l,el){if(l&&l.locked)return;const W=cw(),sx=e.clientX,sw=l.wp*W;makeDrag(e,ev=>{const nwp=Math.max(.06,(sw+(ev.clientX-sx))/W);l.wp=nwp;el.style.width=(nwp*W)+'px';},()=>{savLayers();snap();});}
+function initResizeArr(e,l,el){if(l&&l.locked)return;const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDrag(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{savLayers();snap();});}
+function initRotEl(e,l,el){
+if(l&&l.locked)return;
+const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+mkeArrasteInicio();
+makeDrag(e,ev=>{
+  let a=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;
+  /* Shift prende a rotação de 15 em 15 graus — o jeito rápido de deixar reto. */
+  if(ev.shiftKey)a=Math.round(a/15)*15;
+  l.rot=Math.round(a*10)/10;
+  el.style.transform=mkeTransform(l);
+  mkeMostrarAngulo(l);
+},()=>{mkeArrasteFim();savLayers();snap();});
+}
 function selLayer(id){
 selId=id;multiSelIds=[];clearGroupBox();clearMarquee();
+try{
+  if(typeof v7MostrarToolbar==='function'&&v7PaginaAtiva&&v7PaginaAtiva.p1===false)
+    v7MostrarToolbar({id:'folha1',tipo:'normal',p1:true});
+}catch(e){}
 document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(el=>{el.classList.remove('sel','msel');});
 const target=document.getElementById('ly_'+id);if(target)target.classList.add('sel');const l=layers.find(x=>x.id===id);if(!l)return;fecharLogo();
 canvasTb.classList.remove('vis');textTb.classList.remove('vis');arrTb.classList.remove('vis');$('shapeTb').classList.remove('vis');
-if(l.type==='img'){canvasTb.classList.add('vis');$('tbNome').textContent=`Imagem ${layers.filter(x=>x.type==='img').indexOf(l)+1}`;$('propBtn').classList.toggle('on',l.prop);}
+if(l.type==='img'){canvasTb.classList.add('vis');$('tbNome').textContent=(function(){try{return mkeNomeCamada(l);}catch(e){return 'Imagem '+(layers.filter(x=>x.type==='img').indexOf(l)+1);}})();$('propBtn').classList.toggle('on',l.prop);}
 else if(l.type==='txt'){textTb.classList.add('vis');$('ttFont').value=l.font;$('ttSize').value=l.size;$('ttColor').value=l.color;$('ttBold').classList.toggle('on',l.bold);$('ttItalic').classList.toggle('on',l.italic);}
 else if(l.type==='arr'){arrTb.classList.add('vis');$('arColor').value=l.color;$('arStroke').value=l.stroke;const s=l.arStyle||'full';currentArrStyle=s;['Full','Open','None'].forEach(k=>document.getElementById('arStyle'+k).classList.toggle('on',k.toLowerCase()===s));}
 else if(l.type==='rect'||l.type==='circle'){$('shapeTb').classList.add('vis');$('shFillColor').value=l.fillColor||'#E5E7EB';$('shStrokeColor').value=l.strokeColor||'#374151';$('shStrokeWidth').value=l.strokeWidth||2;}
 updList();
+try{mkeSync();}catch(e){}
 }
 function deselecionarTudo(){
 layers.filter(x=>x.type==='txt'&&x._editing).forEach(l=>{l._editing=false;const el=document.getElementById('ly_'+l.id);if(!el)return;el.classList.remove('editing');const tc=el.querySelector('.tc');if(tc){tc.contentEditable='false';l.richHtml=tc.innerHTML;l.txt=tc.textContent||'Texto';}});
 selId=null;multiSelIds=[];clearGroupBox();clearMarquee();
 document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(el=>{el.classList.remove('sel','msel');});
 canvasTb.classList.remove('vis');textTb.classList.remove('vis');arrTb.classList.remove('vis');$('shapeTb').classList.remove('vis');
+try{mkeSync();}catch(e){}
 }
 
 /* ══════ MULTI-SELEÇÃO + MARQUEE + ANINHAR + ROTAÇÃO LIVRE DE GRUPO ══════ */
@@ -3192,6 +3674,40 @@ canvasInner.addEventListener('mousedown',function(ev){
   }
 },true);
 
+/* V9.1 — Shift+clique também junta camadas nas páginas extras. Antes só a
+   folha 1 tinha multiseleção; quem montava 4 fotos na página 2 tinha de
+   alinhar uma por uma. */
+document.addEventListener('mousedown',function(ev){
+  if(!ev.shiftKey||(ev.button!==0&&ev.button!==undefined))return;
+  var alvo=ev.target,teto=null;
+  while(alvo&&alvo!==document){
+    if(alvo.id&&/^canvasInner_/.test(alvo.id)){teto=alvo;break;}
+    alvo=alvo.parentElement;
+  }
+  if(!teto)return;
+  var pid=teto.id.replace('canvasInner_','');
+  var p=paginas.filter(function(x){return x.id===pid;})[0];
+  if(!p)return;
+  var cam=ev.target;
+  while(cam&&cam!==teto){
+    if(cam.classList&&(cam.classList.contains('img-layer')||cam.classList.contains('txt-layer')||cam.classList.contains('arr-layer')||cam.classList.contains('rect-layer')||cam.classList.contains('circle-layer'))){
+      var id=(cam.id||'').replace('ly_'+pid+'_','');
+      if(!p.layers.some(function(l){return l.id===id;}))return;
+      ev.stopPropagation();ev.preventDefault();
+      p.msel=p.msel||[];
+      var i=p.msel.indexOf(id);
+      if(i>=0){p.msel.splice(i,1);cam.classList.remove('msel');}
+      else{p.msel.push(id);cam.classList.add('msel');}
+      p.selId=p.msel.length===1?p.msel[0]:null;
+      document.querySelectorAll('#canvasInner_'+pid+' .img-layer,#canvasInner_'+pid+' .txt-layer,#canvasInner_'+pid+' .arr-layer,#canvasInner_'+pid+' .rect-layer,#canvasInner_'+pid+' .circle-layer').forEach(function(n){n.classList.remove('sel');});
+      if(p.selId){var so=document.getElementById('ly_'+pid+'_'+p.selId);if(so)so.classList.add('sel');}
+      try{mkeSync();}catch(e){}
+      return;
+    }
+    cam=cam.parentElement;
+  }
+},true);
+
 // Rotação LIVRE de grupo (rotaciona todas as camadas selecionadas ao redor do centro do grupo)
 function startGroupRotate(e){
   e.stopPropagation();e.preventDefault();
@@ -3283,18 +3799,2061 @@ function aninharImagens(){
 function lFrente(){const l=layers.find(x=>x.id===selId);if(!l)return;l.z=++zCnt;const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();}
 function lTras(){const l=layers.find(x=>x.id===selId);if(!l)return;const mz=Math.min(...layers.map(x=>x.z));l.z=Math.max(1,mz-1);const el=document.getElementById('ly_'+l.id);if(el)el.style.zIndex=l.z;savLayers();}
 function lCentro(){const l=layers.find(x=>x.id===selId);if(!l)return;if(l.x1p!==undefined){const dx=(l.x2p-l.x1p)/2,dy=(l.y2p-l.y1p)/2;l.x1p=.5-dx;l.y1p=.5-dy;l.x2p=.5+dx;l.y2p=.5+dy;const el=document.getElementById('ly_'+l.id);if(el)posArrEl(l,el,false,cw(),ch());}else{l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;const el=document.getElementById('ly_'+l.id);if(el){el.style.left=(l.xp*cw())+'px';el.style.top=(l.yp*ch())+'px';}}savLayers();}
-function lFill(){const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;const rc=cw()/ch();let wp,hp;if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;const el=document.getElementById('ly_'+l.id);if(el){posEl(l,el,false);el.style.transform='';}savLayers();}
-function toggleProp(){const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;l.prop=!l.prop;$('propBtn').classList.toggle('on',l.prop);}
+function lFill(){const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;l.fit='cover';const rc=cw()/ch();let wp,hp;if(rc>l.ratio){wp=1;hp=1/l.ratio*rc;}else{hp=1;wp=l.ratio/rc;}l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;const el=document.getElementById('ly_'+l.id);if(el){posEl(l,el,false);el.style.transform='';}savLayers();}
+function lCaber(){
+const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;
+const W=cw(),H=ch(),rc=H?W/H:1;
+let wp=1,hp=wp*rc/l.ratio;
+if(hp>1){hp=1;wp=hp*l.ratio/rc;}
+l.wp=Math.min(1,wp);l.hp=Math.min(1,hp);l.xp=(1-l.wp)/2;l.yp=(1-l.hp)/2;l.rot=0;l.fit='contain';
+const el=document.getElementById('ly_'+l.id);if(el){posEl(l,el,false);}
+savLayers();snap();toast('⤡ Imagem cabendo na área','',1600);
+}
+function toggleProp(){
+const l=layers.find(x=>x.id===selId&&x.type==='img');if(!l)return;
+l.prop=!l.prop;$('propBtn').classList.toggle('on',l.prop);
+if(l.prop){const W=cw(),H=ch();if(H&&W)l.hp=l.wp*(W/H)/l.ratio;const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);}
+savLayers();snap();
+toast(l.prop?'🔒 Proporção travada':'🔓 Proporção livre','',1600);
+}
 function excluirSel(){if(selId)excluirId(selId);}
 function excluirId(id){const el=document.getElementById('ly_'+id);if(el)el.remove();layers=layers.filter(l=>l.id!==id);if(selId===id)deselecionarTudo();updPh();updList();savLayers();snap();}
-function toggleLayersPanel(){$('layersPanel').classList.toggle('vis');}
+function toggleLayersPanel(){
+  var p=$('layersPanel');if(!p)return;
+  p.classList.toggle('vis');
+  /* abrir a lista mostra o estado de agora; fechar pelo ✕ também precisa
+     apagar o destaque do botão 🗂 na régua do mockup */
+  if(p.classList.contains('vis')){try{updList();}catch(e){}}
+  try{mkeSync();}catch(e){}
+}
+/* ═══ V9.1 — LISTA DE CAMADAS ═══
+   A lista antiga só mostrava um ícone, um nome curto e o ✕. Não dava para
+   renomear, esconder, travar nem mudar a ordem — e era justamente aí que a
+   pessoa precisava mexer quando uma foto cobria a outra. Agora cada linha
+   tem: olho (mostrar/ocultar), cadeado (travar), miniatura, nome editável
+   com duplo clique e setas para subir/descer na pilha. */
+function mkeNomeCamada(l){
+  if(l.name)return l.name;
+  if(l.type==='txt')return 'Texto: "'+String(l.txt||'').slice(0,14)+'"';
+  if(l.type==='arr')return 'Seta';
+  if(l.type==='rect')return 'Retângulo';
+  if(l.type==='circle')return 'Círculo';
+  /* V9.1 — o nome do arquivo ("frente_polo.jpg") diz muito mais do que
+     "Imagem 2" na hora de achar a arte certa na lista. */
+  var arq=String(l._fileName||'').replace(/\.[a-z0-9]{2,5}$/i,'').replace(/[_]+/g,' ').trim();
+  if(arq)return arq.slice(0,28);
+  var lista=(function(){
+    try{var f=mkeListaFoco();return f.lista||[];}catch(e){return layers;}
+  })();
+  var imgs=lista.filter(function(x){return x.type==='img';});
+  var n=imgs.indexOf(l)+1;
+  if(n<1){
+    /* camada de outra página: conta na lista de onde ela realmente está */
+    n=1;
+    try{
+      paginas.forEach(function(p){
+        var i=p.layers.indexOf(l);
+        if(i>=0)n=p.layers.filter(function(x,k){return x.type==='img'&&k<=i;}).length;
+      });
+    }catch(e){}
+  }
+  return 'Imagem '+(n||1);
+}
 function updList(){
-const ll=$('layersList');if(!ll)return;ll.innerHTML='';
-[...layers].reverse().forEach((l,i)=>{const row=document.createElement('div');row.className='lp-row'+(l.id===selId?' sel-row':'');row.onclick=()=>selLayer(l.id);const icon=l.type==='txt'?`<div class="lp-icon" style="font-size:10px;font-weight:900;color:var(--az)">T</div>`:l.type==='arr'?`<div class="lp-icon" style="font-size:11px">➜</div>`:`<img class="lp-thumb" src="${l.src}" alt="">`;const name=l.type==='txt'?`Texto: "${(l.txt||'').slice(0,8)}"`:l.type==='arr'?'Seta':`Img ${layers.length-i}`;row.innerHTML=`${icon}<span class="lp-name">${name}</span><button title="Remover esta camada" class="lp-del" onclick="event.stopPropagation();excluirId('${l.id}')">✕</button>`;ll.appendChild(row);});
+  const ll=$('layersList');if(!ll)return;
+  /* V9.1 — a lista mostra a página em foco (não só a folha 1): olho, cadeado,
+     nome e ordem agem na camada daquela página. */
+  var foco={page:null,lista:layers};
+  try{foco=mkeListaFoco();}catch(e){}
+  const pid=foco.page?foco.page.id:null;
+  const lista=foco.lista||[];
+  const selAtual=pid?(foco.page.selId||null):selId;
+  const hdr=ll.parentElement?ll.parentElement.querySelector('.lp-hdr span'):null;
+  if(hdr)hdr.textContent=pid?('Camadas P'+(foco.page.num||'?')):'Camadas P1';
+  if(!lista.length){
+    ll.innerHTML='<div class="mke-empty">Nenhuma camada ainda.<br>Clique em <b>+ Imagem</b> ou arraste as fotos para cá.</div>';
+    return;
+  }
+  ll.innerHTML='';
+  [...lista].sort((a,b)=>(b.z||0)-(a.z||0)).forEach(l=>{
+    const row=document.createElement('div');
+    var multAqui=(function(){
+      try{ if(pid) return !!(foco.page.msel&&foco.page.msel.indexOf(l.id)>=0);
+           return !!(typeof multiSelIds!=='undefined'&&multiSelIds.indexOf(l.id)>=0); }catch(e){return false;}
+    })();
+    row.className='lp-row'+(l.id===selAtual?' sel-row':'')+(multAqui?' msel-row':'')+(l.hidden?' mke-hid':'')+(l.locked?' mke-lock':'');
+    row.dataset.id=l.id;
+    if(pid)row.dataset.page=pid;
+    const icon = l.type==='img'
+      ? '<img class="lp-thumb" alt="">'
+      : l.type==='txt' ? '<span class="lp-icon">T</span>'
+      : l.type==='arr' ? '<span class="lp-icon">➜</span>'
+      : l.type==='rect' ? '<span class="lp-icon">▭</span>' : '<span class="lp-icon">●</span>';
+    row.innerHTML = icon
+      + '<span class="lp-name" title="Duplo clique para renomear"></span>'
+      + '<button class="lp-mini lp-eye" title="Mostrar / ocultar"></button>'
+      + '<button class="lp-mini lp-lock" title="Travar / destravar a posição"></button>'
+      + '<button class="lp-mini lp-up" title="Subir uma posição na pilha">↑</button>'
+      + '<button class="lp-mini lp-down" title="Descer uma posição na pilha">↓</button>'
+      + '<button class="lp-del" title="Remover esta camada">✕</button>';
+    const thumb=row.querySelector('.lp-thumb');
+    if(thumb&&l.src){
+      thumb.src=l.src;
+      var px=null;try{px=mkePxImagem(l);}catch(e){}
+      thumb.title=(l._fileName?l._fileName+' · ':'')+(px?(px.w+'×'+px.h+' px'):'')+(px?' · ':'')+
+                   Math.round(l.wp*100)+'% da largura';
+    }
+    row.querySelector('.lp-name').textContent=mkeNomeCamada(l);
+    if(l.type==='img'){
+      var q=null;try{q=mkeQualidade(l);}catch(e){}
+      if(q&&!q.ok){
+        var av=document.createElement('span');
+        av.className='mke-warn';
+        av.textContent=' ⚠';
+        av.title='Foto com '+q.w+'×'+q.h+' px para sair em '+q.mmW+'×'+q.mmH+' mm. '+
+                 'Na impressão ela pode ficar serrilhada — use um arquivo maior (perto de '+q.precisa+' px de largura).';
+        row.querySelector('.lp-name').appendChild(av);
+      }
+    }
+    const eye=row.querySelector('.lp-eye');eye.textContent=l.hidden?'○':'👁';eye.classList.toggle('off',!!l.hidden);
+    const lock=row.querySelector('.lp-lock');lock.textContent=l.locked?'🔒':'🔓';
+    row.addEventListener('click',ev=>{
+      if(ev.target.closest('button'))return;
+      /* Shift+clique na lista faz o mesmo que Shift+clique na área: junta
+         camadas pelo nome, sem precisar acertar o desenho no papel. */
+      if(ev.shiftKey){
+        ev.preventDefault();
+        if(pid){
+          var pg=foco.page;pg.msel=pg.msel||[];
+          var i=pg.msel.indexOf(l.id);
+          if(i>=0)pg.msel.splice(i,1);else pg.msel.push(l.id);
+          pg.selId=pg.msel.length===1?pg.msel[0]:null;
+          var cw2=document.getElementById('canvasInner_'+pg.id);
+          if(cw2)cw2.querySelectorAll('.img-layer,.txt-layer,.arr-layer,.rect-layer,.circle-layer').forEach(function(n){
+            var nid=(n.id||'').replace('ly_'+pg.id+'_','');
+            n.classList.toggle('msel',pg.msel.indexOf(nid)>=0);
+            n.classList.remove('sel');
+          });
+          if(pg.selId){var so=document.getElementById('ly_'+pg.id+'_'+pg.selId);if(so)so.classList.add('sel');}
+        }else{
+          try{
+            var i2=multiSelIds.indexOf(l.id);
+            if(i2>=0)multiSelIds.splice(i2,1);else multiSelIds.push(l.id);
+            selId=multiSelIds.length===1?multiSelIds[0]:null;
+            document.querySelectorAll('#canvasInner .img-layer,#canvasInner .txt-layer,#canvasInner .arr-layer,#canvasInner .rect-layer,#canvasInner .circle-layer').forEach(function(n){
+              var nid=(n.id||'').replace('ly_','');
+              n.classList.toggle('msel',multiSelIds.indexOf(nid)>=0);
+              n.classList.remove('sel');
+            });
+            if(selId){var so2=document.getElementById('ly_'+selId);if(so2)so2.classList.add('sel');}
+            if(multiSelIds.length>=1)updGroupBox();else clearGroupBox();
+          }catch(e){}
+        }
+        try{updList();}catch(e){}   /* repinta as linhas com a marca azul */
+        try{mkeSync();}catch(e){}
+        return;
+      }
+      if(pid){try{selLayerExtra(foco.page,l.id);}catch(e){}}
+      else selLayer(l.id);
+    });
+    row.querySelector('.lp-name').addEventListener('dblclick',ev=>{
+      ev.stopPropagation();mkeRenomear(l.id,pid);
+    });
+    eye.addEventListener('click',ev=>{ev.stopPropagation();mkeAlternarOculto(l.id,pid);});
+    lock.addEventListener('click',ev=>{ev.stopPropagation();mkeAlternarTrava(l.id,pid);});
+    row.querySelector('.lp-up').addEventListener('click',ev=>{ev.stopPropagation();mkeMoverZ(l.id,1,pid);});
+    row.querySelector('.lp-down').addEventListener('click',ev=>{ev.stopPropagation();mkeMoverZ(l.id,-1,pid);});
+    row.querySelector('.lp-del').addEventListener('click',ev=>{ev.stopPropagation();mkeExcluirCamada(l.id,pid);});
+    ll.appendChild(row);
+  });
 }
 function updPh(){canvasPh.style.display=layers.length?'none':'flex';}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   V9.1 — ESTÚDIO DO MOCKUP
+   ──────────────────────────────────────────────────────────────────────────
+   A área onde os mockups entram sempre foi a parte mais artesanal da ficha:
+   a barra só aparecia depois de selecionar, cada foto nova caía em cima da
+   anterior e não havia como trocar uma arte sem refazer posição e tamanho.
+
+   O que este bloco acrescenta (sem mexer no layout da folha A4):
+
+   • régua de ferramentas presa na área + painel com 4 abas;
+   • trocar a imagem mantendo lugar, espelhar, girar, opacidade, travar;
+   • alinhar / centralizar / distribuir e organizar frente-e-costas em 2 colunas;
+   • ímã com guias (bordas, centro e outras camadas) e limite que evita
+     "perder" a camada fora da área;
+   • lista de camadas com olho, cadeado, renomear e ordem;
+   • precisão em % com leitura em milímetros + exportar só a área em PNG;
+   • modo ampliado: a área do mockup ocupa a janela para trabalhar com folga.
+
+   Regra que não muda: NADA daqui sai na impressão. As regras @media print e
+   o modo de pré-visualização escondem a ferramenta inteira, e a folha
+   continua branca nos dois temas (só tokens --v9-*, nenhuma regra de tema).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+var MKE_SNAP_KEY='vooalto_v9_mockup_ima';
+var MKE_GUIA_KEY='vooalto_v9_mockup_guia';
+var mkeImaPref=true;
+var mkeGuiaModo='off';
+var mkeAbaAtual='ajustes';
+var mkePronto=false;
+var MKE_MM_PX=210/794;   /* a folha tem 794 px de largura por 210 mm */
+
+(function(){
+  try{
+    if(localStorage.getItem(MKE_SNAP_KEY)==='0')mkeImaPref=false;
+    var g=localStorage.getItem(MKE_GUIA_KEY);
+    if(g==='centro'||g==='grade'||g==='margem')mkeGuiaModo=g;
+  }catch(e){}
+})();
+
+/* ─────────────────────────── estado visual ─────────────────────────── */
+
+/* Transformação única da camada: rotação + espelhamentos. Fica num lugar só
+   para que tela, impressão e html2canvas enxerguem a mesma coisa. */
+function mkeTransform(l){
+  var t='rotate('+(l.rot||0)+'deg)';
+  if(l.flipH)t+=' scaleX(-1)';
+  if(l.flipV)t+=' scaleY(-1)';
+  return t;
+}
+function mkeAplicarVisual(l,el){
+  if(!l||!el)return;
+  if(l.type==='img'){
+    var im=el.querySelector('img');
+    if(im&&im.style.objectFit!==(l.fit||'contain'))im.style.objectFit=l.fit||'contain';
+  }
+  var op=(l.op===undefined||l.op===null)?1:l.op;
+  el.style.opacity=(op>=1?'':String(op));
+  if(l.hidden)el.style.display='none';
+  else if(el.style.display==='none')el.style.display='';
+  if(l.locked)el.classList.add('mke-travada');
+  else el.classList.remove('mke-travada');
+}
+function mkeMm(px){return Math.round(px*MKE_MM_PX*10)/10;}
+
+/* Resolução: guarda o tamanho natural de cada imagem (nunca vai para o
+   arquivo — serve só para avisar "esta foto vai sair serrilhada"). */
+var MKE_PX={};
+function mkeGuardarPx(src,w,h){if(src&&w&&h)MKE_PX[src]={w:w,h:h};}
+function mkePxImagem(l){
+  if(!l)return null;
+  if(l._nw&&l._nh)return {w:l._nw,h:l._nh};
+  if(l.src&&MKE_PX[l.src])return MKE_PX[l.src];
+  var el=document.getElementById('ly_'+l.id),im=el?el.querySelector('img'):null;
+  if(im&&im.naturalWidth)return {w:im.naturalWidth,h:im.naturalHeight};
+  return null;
+}
+function mkeQualidade(l){
+  if(!l||l.type!=='img')return null;
+  var px=mkePxImagem(l);if(!px)return null;
+  var ctx=mkeCtx(),W=ctx.W()||1,H=ctx.H()||1;
+  var mmW=mkeMm(l.wp*W),mmH=mkeMm((typeof l.hp==='number'?l.hp:0)*H);
+  /* 300 dpi é o que a gráfica pede: quantos px a foto deveria ter na largura
+     em que ela vai sair no papel */
+  var precisa=Math.max(1,mmW/25.4*300);
+  var usa=px.w;
+  if((l.fit||'contain')==='cover'){
+    /* no "preencher" a foto é cortada: só a fatia visível conta */
+    var rImg=px.w/Math.max(1,px.h),rBox=(l.wp*W)/Math.max(1,(l.hp||0.01)*H);
+    if(rImg>rBox)usa=px.w*(rBox/rImg);
+  }
+  return {w:px.w,h:px.h,mmW:mmW,mmH:mmH,precisa:Math.round(precisa),usa:Math.round(usa),ok:usa>=precisa*0.7};
+}
+
+/* ─────────────────────────── contexto e utilidades ─────────────────────────── */
+
+/* Qual camada está em foco? Vale a página extra selecionada (igual ao
+   Ctrl+C/Ctrl+V) e, se não houver, a página 1. */
+function mkeCtx(){
+  /* A página que está em foco manda. Cada página guarda o seu próprio
+     selId, então sem esta ordem o painel agiria na camada errada quando
+     sobrasse uma seleção antiga na folha 1. */
+  var ativa=null;
+  try{ativa=(typeof v7PaginaAtiva!=='undefined'&&v7PaginaAtiva)?v7PaginaAtiva:null;}catch(e){}
+  var achaPagina=function(p){
+    if(!p||!p.selId)return null;
+    var lp=p.layers.filter(function(x){return x.id===p.selId;})[0];
+    if(!lp)return null;
+    return {page:p,layer:lp,W:function(){return cwExtra(p.id);},H:function(){return chExtra(p.id);}};
+  };
+  if(ativa&&ativa.p1===false){
+    var pag=paginas.filter(function(x){return x.id===ativa.id;})[0];
+    if(pag){
+      var ctxPag=achaPagina(pag);
+      if(ctxPag)return ctxPag;
+      return {page:pag,layer:null,W:function(){return cwExtra(pag.id);},H:function(){return chExtra(pag.id);}};
+    }
+  }
+  var l1=null;
+  try{l1=layers.filter(function(x){return x.id===selId;})[0]||null;}catch(e){}
+  if(l1)return {page:null,layer:l1,W:cw,H:ch};
+  try{
+    for(var i=0;i<paginas.length;i++){
+      var c=achaPagina(paginas[i]);
+      if(c)return c;
+    }
+  }catch(e){}
+  return {page:null,layer:null,W:cw,H:ch};
+}
+/* Lista de camadas da página em foco (folha 1 ou extra). A lista 🗂 usa
+   sempre esta — antes ela só mostrava a folha 1, mesmo com a página 2 em
+   foco, e o olho/cadeado/ordem mexiam em camadas que não estavam lá. */
+function mkeListaFoco(){
+  var f=null;try{f=mkePaginaFoco();}catch(e){}
+  if(f&&f.page)return {page:f.page,lista:f.page.layers};
+  return {page:null,lista:layers};
+}
+function mkeCamadaPor(id,pid){
+  if(pid){
+    var p=paginas.filter(function(x){return x.id===pid;})[0];
+    return p?(p.layers.filter(function(x){return x.id===id;})[0]||null):null;
+  }
+  return layers.filter(function(x){return x.id===id;})[0]||null;
+}
+function mkeElemento(id,pid){
+  return document.getElementById(pid?('ly_'+pid+'_'+id):('ly_'+id));
+}
+function mkeReposCamada(l,pid){
+  var el=mkeElemento(l.id,pid);if(!el)return;
+  if(pid){
+    var p=paginas.filter(function(x){return x.id===pid;})[0];
+    if(p)posElExtra(p,l,el,false);
+  }else posEl(l,el,false);
+}
+function mkeExcluirCamada(id,pid){
+  if(!pid)return excluirId(id);
+  var p=paginas.filter(function(x){return x.id===pid;})[0];
+  /* Com várias camadas juntas (Shift+clique), apaga todas de uma vez —
+     antes só a primeira saía e a pessoa repetia o gesto camada por camada. */
+  if(p&&p.msel&&p.msel.length>1){
+    var quantas=p.msel.length,lista=p.msel.slice();
+    p.msel=[];                       /* evita reentrar neste mesmo ramo */
+    lista.forEach(function(mid){mkeExcluirCamada(mid,pid);});
+    p.msel=[];p.selId=null;
+    document.querySelectorAll('#canvasInner_'+pid+' .msel').forEach(function(n){n.classList.remove('msel');});
+    updList();snap();
+    toast('🗑 '+quantas+' camadas removidas','',1600);
+    return;
+  }
+  if(!p)return;
+  var el=mkeElemento(id,pid);if(el)el.remove();
+  p.layers=p.layers.filter(function(l){return l.id!==id;});
+  if(p.selId===id){try{deselecionarTudoExtra(pid);}catch(e){}}
+  try{updPhExtra(p);}catch(e){}
+  updList();snap();
+}
+function mkeAlvos(ctx){
+  if(!ctx)return [];
+  if(ctx.page&&ctx.page.msel&&ctx.page.msel.length>1){
+    var arrP=ctx.page.msel.map(function(id){
+      return ctx.page.layers.filter(function(l){return l.id===id;})[0];
+    }).filter(Boolean);
+    if(arrP.length)return arrP;
+  }
+  if(!ctx.page&&typeof multiSelIds!=='undefined'&&multiSelIds.length>1){
+    var arr=multiSelIds.map(function(id){return layers.filter(function(l){return l.id===id;})[0];}).filter(Boolean);
+    if(arr.length)return arr;
+  }
+  return ctx.layer?[ctx.layer]:[];
+}
+function mkeElem(ctx,l){
+  if(!ctx||!l)return null;
+  return document.getElementById((ctx.page?'ly_'+ctx.page.id+'_':'ly_')+l.id);
+}
+function mkePos(ctx,l){
+  var el=mkeElem(ctx,l);if(!el)return;
+  if(ctx.page)posElExtra(ctx.page,l,el,false);else posEl(l,el,false);
+}
+function mkePosTodos(ctx){
+  var lista=ctx.page?ctx.page.layers:layers;
+  lista.forEach(function(l){mkePos(ctx,l);});
+}
+function mkeSalvar(ctx){
+  try{if(ctx&&ctx.page)updPhExtra(ctx.page);else updPh();}catch(e){}
+  try{updList();}catch(e){}
+  if(!ctx||!ctx.page){try{savLayers();}catch(e){}}
+  try{snap();}catch(e){}
+  try{mkeSync();}catch(e){}
+}
+function mkeAlturaReal(ctx,l){
+  var el=mkeElem(ctx,l);
+  var h=el?(el.offsetHeight||el.clientHeight):0;
+  if(!h){var H=ctx?ctx.H():400;h=(typeof l.hp==='number'?l.hp:0.15)*H;}
+  return h||24;
+}
+
+/* ─────────────────────────── ímã, limite e medida ─────────────────────────── */
+
+function mkeImaLigado(){return !!mkeImaPref;}
+function mkeAlternarIma(){
+  mkeImaPref=!mkeImaPref;
+  try{localStorage.setItem(MKE_SNAP_KEY,mkeImaPref?'1':'0');}catch(e){}
+  mkeSync();
+  toast(mkeImaPref?'🧲 Ímã ligado — encosta nas bordas e no centro':'🧲 Ímã desligado','',1800);
+}
+/* Mantém pelo menos ~10% da camada dentro da área. Antes dava para arrastar
+   uma foto para fora e ela "sumia" (a área recorta) sem jeito de voltar. */
+function mkeLimite(v,tamanho){
+  var s=(typeof tamanho==='number'&&tamanho>0)?tamanho:0.1;
+  var min=-(s-0.1), max=0.9;
+  if(!isFinite(v))return 0;
+  return Math.max(min,Math.min(max,v));
+}
+function mkeMelhorSnap(ancoras,alvos,tol){
+  var melhor=null;
+  for(var i=0;i<ancoras.length;i++){
+    for(var j=0;j<alvos.length;j++){
+      var d=alvos[j]-ancoras[i];
+      if(Math.abs(d)<=tol&&(!melhor||Math.abs(d)<Math.abs(melhor.d)))melhor={d:d,t:alvos[j]};
+    }
+  }
+  return melhor;
+}
+function mkeSnapXY(l,xp,yp,W,H,lista){
+  var tolX=7/Math.max(W,1),tolY=7/Math.max(H,1);
+  var alvosX=[0,0.5,1],alvosY=[0,0.5,1];
+  var hp=(typeof l.hp==='number'?l.hp:0.15);
+  /* lista = camadas da página em foco; sem ela, a folha 1. */
+  var origem=(lista&&lista.length!==undefined)?lista:layers;
+  for(var i=0;i<origem.length;i++){
+    var o=origem[i];
+    if(o===l||o.hidden||typeof o.xp!=='number')continue;
+    alvosX.push(o.xp,o.xp+o.wp/2,o.xp+o.wp);
+    var oh=(typeof o.hp==='number'?o.hp:0.15);
+    alvosY.push(o.yp,o.yp+oh/2,o.yp+oh);
+  }
+  var mx=mkeMelhorSnap([xp,xp+l.wp/2,xp+l.wp],alvosX,tolX);
+  var my=mkeMelhorSnap([yp,yp+hp/2,yp+hp],alvosY,tolY);
+  var nx=xp,ny=yp;
+  if(mx){nx=xp+mx.d;mkeGuiaViva('v',mx.t,W);}else mkeGuiaViva('v',null,W);
+  if(my){ny=yp+my.d;mkeGuiaViva('h',my.t,H);}else mkeGuiaViva('h',null,H);
+  return {xp:nx,yp:ny};
+}
+function mkeGuiaViva(eixo,pos,tam){
+  var el=document.getElementById(eixo==='v'?'mkeSmartV':'mkeSmartH');
+  if(!el){
+    el=document.createElement('div');el.id=eixo==='v'?'mkeSmartV':'mkeSmartH';el.className='mke-smart '+eixo;
+    var host=null;try{host=(mkePaginaFoco()||{}).canvas||null;}catch(e2){}
+    if(!host)host=document.getElementById('canvasInner');
+    if(host)host.appendChild(el);
+  }
+  if(!el)return;
+  if(pos===null||pos===undefined){el.style.display='none';return;}
+  el.style.display='block';
+  if(eixo==='v')el.style.left=Math.round(pos*tam)+'px';
+  else el.style.top=Math.round(pos*tam)+'px';
+}
+function mkeArrasteInicio(){
+  var b=document.getElementById('mkeBadge');if(b)b.classList.add('on');
+}
+function mkeArrasteFim(){
+  var b=document.getElementById('mkeBadge');if(b)b.classList.remove('on');
+  mkeGuiaViva('v',null,1);mkeGuiaViva('h',null,1);
+}
+function mkeMostrarMedida(l,W,H){
+  var b=document.getElementById('mkeBadge');if(!b)return;
+  b.classList.add('on');
+  /* A plaquinha mostra tamanho E posição: quem posiciona a arte no papel
+     precisa saber "começa a 20 mm da esquerda", não só o tamanho. */
+  b.textContent=Math.round(l.wp*100)+'% × '+Math.round((l.hp||0)*100)+'%  ·  '+
+                mkeMm(l.wp*W)+' × '+mkeMm((l.hp||0)*H)+' mm  ·  X '+mkeMm(l.xp*W)+
+                ' · Y '+mkeMm(l.yp*H)+' mm';
+}
+function mkeMostrarAngulo(l){
+  var b=document.getElementById('mkeBadge');if(!b)return;
+  b.classList.add('on');
+  b.textContent='Rotação '+Math.round(((l.rot||0)%360+360)%360)+'°';
+}
+
+/* ─────────────────────────── encaixe de imagem nova ─────────────────────────── */
+
+/* Procura um espaço livre para a próxima imagem (2 colunas × 2/3 linhas).
+   Sem isso, a segunda foto nascia exatamente sobre a primeira. */
+function mkeSlotLivre(wp,hp,lista){
+  var origem=lista||layers;
+  var imgs=origem.filter(function(l){return l.type==='img'&&!l.hidden;});
+  if(!imgs.length)return {xp:(1-wp)/2,yp:(1-hp)/2};
+  var cands=[];
+  [0,0.5].forEach(function(y){[0,0.5].forEach(function(x){cands.push({xp:x,yp:y});});});
+  [0,1/3,2/3].forEach(function(y){[0,0.5].forEach(function(x){cands.push({xp:x,yp:y});});});
+  var lim=function(v,max){return Math.max(0,Math.min(max,v));};
+  for(var i=0;i<cands.length;i++){
+    var x=lim(cands[i].xp,1-wp),y=lim(cands[i].yp,1-hp);
+    if(x+wp>1.0001||y+hp>1.0001)continue;
+    var bate=imgs.some(function(o){
+      var ox=o.xp,oy=o.yp,ow=o.wp,oh=(typeof o.hp==='number'?o.hp:0.2);
+      return !(x+wp<=ox+0.001||ox+ow<=x+0.001||y+hp<=oy+0.001||oy+oh<=y+0.001);
+    });
+    if(!bate)return {xp:x,yp:y};
+  }
+  var k=imgs.length%6;
+  return {xp:lim(0.04+k*0.05,1-wp),yp:lim(0.04+k*0.05,1-hp)};
+}
+/* ─────────────────── importar VÁRIAS imagens de uma vez ───────────────────
+   Quando a pessoa seleciona frente e costas juntas (ou arrasta duas fotos),
+   elas entram como uma dupla alinhada: mesma largura de célula, mesma altura,
+   centradas na vertical. Antes cada uma caía num canto e ficava torta. */
+
+/* geometria pura (sem DOM) — dá para testar: devolve xp/yp/wp/hp de cada
+   imagem numa grade de células iguais, respeitando a proporção de cada foto */
+function mkeGradeLote(n,ratios,rc,gap){
+  gap=(typeof gap==='number'&&gap>0)?gap:0.025;
+  n=Math.max(1,parseInt(n,10)||1);
+  var cols=n<=1?1:(n===2?2:(n<=4?2:3));
+  var rows=Math.ceil(n/cols);
+  var cwv=(1-gap*(cols+1))/cols, chv=(1-gap*(rows+1))/rows;
+  var out=[];
+  for(var i=0;i<n;i++){
+    var c=i%cols,r=Math.floor(i/cols);
+    var rw=(ratios&&ratios[i]>0)?ratios[i]:1;
+    var wp=cwv,hp=wp*rc/rw;
+    if(hp>chv){hp=chv;wp=hp*rw/rc;}
+    wp=Math.max(0.02,Math.min(1,wp));hp=Math.max(0.02,Math.min(1,hp));
+    var cellX=gap+c*(cwv+gap),cellY=gap+r*(chv+gap);
+    out.push({xp:cellX+(cwv-wp)/2,yp:cellY+(chv-hp)/2,wp:wp,hp:hp});
+  }
+  return out;
+}
+function mkeLerImagemArquivo(f){
+  return new Promise(function(res){
+    try{
+      var r=new FileReader();
+      r.onload=function(ev){
+        var bruto=ev.target.result;
+        Promise.resolve(typeof v7DownscaleDataURL==='function'?v7DownscaleDataURL(bruto):bruto).then(function(src){
+          var im=new Image();
+          im.onload=function(){res({src:src,w:im.naturalWidth||1,h:im.naturalHeight||1,nome:f.name||''});};
+          im.onerror=function(){res(null);};
+          im.src=src;
+        },function(){res(null);});
+      };
+      r.onerror=function(){res(null);};
+      r.readAsDataURL(f);
+    }catch(e){res(null);}
+  });
+}
+function mkeLoteImagens(arqs,page){
+  var lista=Array.prototype.slice.call(arqs||[]).filter(function(f){return f&&f.type&&f.type.indexOf('image/')===0;});
+  if(lista.length<2)return false;
+  Promise.all(lista.map(mkeLerImagemArquivo)).then(function(itens){
+    var bons=(itens||[]).filter(function(x){return !!x;});
+    if(!bons.length)return;
+    if(bons.length===1){
+      if(page&&typeof addImgLayerExtra==='function')addImgLayerExtra(page,bons[0].src);
+      else addImgLayer(bons[0].src,null,bons[0].nome);
+      return;
+    }
+    var W=page?cwExtra(page.id):cw(),H=page?chExtra(page.id):ch();
+    var rc=(W&&H)?W/H:1;
+    var geos=mkeGradeLote(bons.length,bons.map(function(x){return x.w/x.h;}),rc);
+    bons.forEach(function(it,i){
+      var g=geos[i];
+      var ov={xp:g.xp,yp:g.yp,wp:g.wp,hp:g.hp,prop:true};
+      if(page){try{addImgLayerExtra(page,it.src,ov);}catch(e){}}
+      else addImgLayer(it.src,ov,it.nome);
+    });
+    try{snap();}catch(e){}
+    toast('🖼 '+bons.length+' imagens encaixadas lado a lado','',2600);
+  });
+  return true;
+}
+
+function mkeAvisoImagem(l){
+  var ehPagina1=(typeof l!=='undefined'&&typeof layers!=='undefined'&&layers.indexOf(l)>=0);
+  if(ehPagina1&&layers.filter(function(x){return x.type==='img';}).length===1){
+    toast('🖼 Imagem na área · ⤢ amplia · ⋯ abre trocar/espelhar/alinhar','',3600);
+  }
+  /* foto pequena para o tamanho em que vai ser impressa: avisa na hora, em
+     vez de deixar a surpresa para o PDF */
+  try{
+    var q=mkeQualidade(l);
+    if(q&&!q.ok){
+      toast('⚠ Foto com '+q.w+'×'+q.h+' px para sair em '+q.mmW+' mm — pode ficar serrilhada','',4600);
+    }
+  }catch(e){}
+}
+
+/* ─────────────────────────── ações por camada ─────────────────────────── */
+
+function mkeRenomear(id,pid){
+  var row=document.querySelector('#layersList .lp-row[data-id="'+id+'"]');
+  var span=row?row.querySelector('.lp-name'):null;
+  var l=mkeCamadaPor(id,pid);
+  if(!span||!l)return;
+  span.setAttribute('contenteditable','true');
+  span.classList.add('mke-editando');
+  span.textContent=mkeNomeCamada(l);
+  try{span.focus();var r=document.createRange();r.selectNodeContents(span);var s=window.getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}
+  var fim=function(){
+    span.setAttribute('contenteditable','false');
+    span.classList.remove('mke-editando');
+    var v=(span.textContent||'').trim();
+    if(v)l.name=v.slice(0,60);
+    span.removeEventListener('blur',fim);
+    updList();if(!pid)savLayers();snap();
+  };
+  span.addEventListener('blur',fim);
+  span.addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'){ev.preventDefault();span.blur();}
+    if(ev.key==='Escape'){span.textContent=mkeNomeCamada(l);span.blur();}
+  });
+}
+function mkeAlternarOculto(id,pid){
+  var l=mkeCamadaPor(id,pid);if(!l)return;
+  l.hidden=!l.hidden;
+  mkeReposCamada(l,pid);
+  updList();if(!pid)savLayers();snap();
+  toast(l.hidden?'○ Camada oculta (não sai na impressão)':'👁 Camada visível','',1600);
+}
+function mkeAlternarTrava(id,pid){
+  var l=mkeCamadaPor(id,pid);if(!l)return;
+  l.locked=!l.locked;
+  mkeReposCamada(l,pid);
+  updList();if(!pid)savLayers();snap();
+  toast(l.locked?'🔒 Camada travada':'🔓 Camada destravada','',1600);
+}
+function mkeMoverZ(id,dir,pid){
+  var l=mkeCamadaPor(id,pid);if(!l)return;
+  var lista=pid?((paginas.filter(function(x){return x.id===pid;})[0]||{}).layers||[]):layers;
+  var ord=lista.slice().sort(function(a,b){return (a.z||0)-(b.z||0);});
+  var i=ord.indexOf(l),j=i+dir;
+  if(j<0||j>=ord.length)return;
+  var viz=ord[j];
+  ord[i]=viz;ord[j]=l;
+  ord.forEach(function(x,k){
+    x.z=10+k;
+    var el=mkeElemento(x.id,pid);if(el)el.style.zIndex=x.z;
+  });
+  updList();if(!pid)savLayers();snap();
+}
+
+function mkeDuplicarCamada(){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada para duplicar','erro');return;}
+  var n=0;
+  alvos.forEach(function(l){
+    try{
+      var def=v8CamadaParaColar(serLayer(l),true);
+      if(v8InserirCamada(def,ctx.page||null))n++;
+    }catch(e){console.warn('duplicar',e);}
+  });
+  if(n){toast('⧉ Camada duplicada'+(n>1?' ('+n+'×)':''),'',1600);try{snap();}catch(e){}}
+}
+function mkeEspelhar(eixo){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  alvos.forEach(function(l){
+    if(eixo==='h')l.flipH=!l.flipH;else l.flipV=!l.flipV;
+    mkePos(ctx,l);
+  });
+  mkeSalvar(ctx);
+  toast(eixo==='h'?'⇋ Espelhado na horizontal':'⇅ Espelhado na vertical','',1400);
+}
+function mkeGirar(dir){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  var d=dir<0?-90:90;
+  alvos.forEach(function(l){
+    if(l.type==='arr'&&typeof l.x1p==='number'){
+      /* seta: gira os dois pontos ao redor do centro da própria seta */
+      var cx=(l.x1p+l.x2p)/2,cy=(l.y1p+l.y2p)/2;
+      var r1=mkeRotPonto(l.x1p,l.y1p,cx,cy,d),r2=mkeRotPonto(l.x2p,l.y2p,cx,cy,d);
+      var lim=function(v){return Math.max(0,Math.min(1,v));};
+      l.x1p=lim(r1.x);l.y1p=lim(r1.y);l.x2p=lim(r2.x);l.y2p=lim(r2.y);
+    }else{
+      var c2x=l.xp+l.wp/2,c2y=l.yp+((typeof l.hp==='number'?l.hp:0.05))/2;
+      if(l.type==='img'||l.type==='rect'||l.type==='circle'){
+        var W=ctx.W(),H=ctx.H();
+        var wpx=l.wp*W,hpx=(l.hp||0)*H;
+        l.wp=Math.min(1,hpx/Math.max(W,1));l.hp=Math.min(1,wpx/Math.max(H,1));
+      }
+      l.rot=(((l.rot||0)+d)%360+540)%360-180;
+      l.xp=c2x-l.wp/2;l.yp=c2y-((typeof l.hp==='number'?l.hp:0.05))/2;
+    }
+    mkePos(ctx,l);
+  });
+  mkeSalvar(ctx);
+  toast('⟳ Girado 90°','',1400);
+}
+function mkeRotPonto(x,y,cx,cy,graus){
+  var a=graus*Math.PI/180,dx=x-cx,dy=y-cy;
+  return {x:cx+dx*Math.cos(a)-dy*Math.sin(a),y:cy+dx*Math.sin(a)+dy*Math.cos(a)};
+}
+function mkeResetCamada(){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  alvos.forEach(function(l){
+    l.rot=0;l.flipH=0;l.flipV=0;l.op=undefined;l.fit='contain';
+    if(l.type==='img')l.prop=true;
+    mkePos(ctx,l);
+  });
+  mkeSalvar(ctx);
+  toast('↺ Camada de volta ao estado original','',1700);
+}
+function mkeAjuda(){
+  try{
+    if(typeof abrirAjudaFicha==='function')abrirAjudaFicha();
+    setTimeout(function(){
+      var alvo=document.getElementById('ajudaMockup');
+      var caixa=document.querySelector('#v7AjudaFicha .v7-ajuda-card');
+      if(alvo&&caixa&&caixa.scrollTo){
+        caixa.scrollTo({top:Math.max(0,alvo.offsetTop-14),behavior:'smooth'});
+      }else if(alvo&&alvo.scrollIntoView){
+        alvo.scrollIntoView({block:'start'});
+      }
+    },110);
+  }catch(e){console.warn('ajuda mockup',e);}
+}
+/* Girar alguns graus sem mexer no tamanho (endireitar uma foto torta). */
+function mkeGirarGraus(d){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  alvos.forEach(function(l){
+    var a=((l.rot||0)+d)%360;
+    if(a>180)a-=360;
+    if(a<-180)a+=360;
+    l.rot=Math.round(a*10)/10;
+    mkePos(ctx,l);
+  });
+  mkeSalvar(ctx);
+  var um=alvos[0];
+  toast('⟲ '+Math.round(um.rot||0)+'°','',1200);
+}
+function mkeRotacao0(){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  alvos.forEach(function(l){l.rot=0;mkePos(ctx,l);});
+  mkeSalvar(ctx);toast('↺ Rotação zerada','',1400);
+}
+function mkeDefinirOpacidade(v){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  var n=Math.max(0,Math.min(100,parseInt(v,10)));
+  if(isNaN(n))n=100;
+  alvos.forEach(function(l){l.op=n>=100?undefined:(n/100);mkePos(ctx,l);});
+  var out=document.getElementById('mkeOpVal');if(out)out.textContent=n+'%';
+  mkeSalvar(ctx);
+}
+function mkeTravarPosicao(){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  var travar=!alvos.every(function(l){return !!l.locked;});
+  alvos.forEach(function(l){l.locked=travar;mkePos(ctx,l);});
+  mkeSalvar(ctx);
+  toast(travar?'🔒 Posição travada':'🔓 Posição liberada','',1500);
+}
+function mkeTravarProporcao(){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx).filter(function(l){return l.type==='img';});
+  if(!alvos.length){toast('Selecione uma imagem','erro');return;}
+  var travar=!alvos.every(function(l){return !!l.prop;});
+  alvos.forEach(function(l){l.prop=travar;});
+  mkeSalvar(ctx);
+  toast(travar?'🔗 Proporção travada':'🔓 Proporção livre','',1500);
+}
+
+/* ─────────────────────────── alinhar / distribuir ─────────────────────────── */
+
+function mkeAlinhar(modo){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada para alinhar','erro');return;}
+  var H=ctx.H();
+  var medir=function(l){
+    var temCaixa=(l.type==='img'||l.type==='rect'||l.type==='circle')&&typeof l.hp==='number';
+    return {x:l.xp,y:l.yp,w:l.wp,h:temCaixa?l.hp:(mkeAlturaReal(ctx,l)/Math.max(H,1))};
+  };
+  /* Com mais de uma camada selecionada (Shift+clique), "alinhar à esquerda"
+     encosta todas na camada mais à esquerda do grupo — que é o que a pessoa
+     quer quando está montando frente e costas. Com uma só, alinha na área. */
+  var grupo=alvos.filter(function(l){return typeof l.xp==='number';}).length>1;
+  var cx0=1,cy0=1,cx1=0,cy1=0;
+  if(grupo){
+    alvos.forEach(function(l){
+      if(typeof l.xp!=='number')return;
+      var m=medir(l);
+      cx0=Math.min(cx0,m.x);cy0=Math.min(cy0,m.y);
+      cx1=Math.max(cx1,m.x+m.w);cy1=Math.max(cy1,m.y+m.h);
+    });
+  }
+  alvos.forEach(function(l){
+    if(l.type==='arr'||typeof l.xp!=='number')return;
+    var m=medir(l),hp=m.h;
+    if(modo==='esq')l.xp=grupo?cx0:0;
+    if(modo==='cx')l.xp=grupo?((cx0+cx1)/2-l.wp/2):(1-l.wp)/2;
+    if(modo==='dir')l.xp=grupo?(cx1-l.wp):(1-l.wp);
+    if(modo==='topo')l.yp=grupo?cy0:0;
+    if(modo==='cy')l.yp=grupo?((cy0+cy1)/2-hp/2):(1-hp)/2;
+    if(modo==='base')l.yp=grupo?(cy1-hp):(1-hp);
+    if(modo==='centro'){l.xp=(1-l.wp)/2;l.yp=(1-hp)/2;}
+  });
+  mkePosTodos(ctx);mkeSalvar(ctx);
+}
+/* Marca todas as fotos visíveis da página em foco. É o atalho que faltava
+   para quem monta 4 fotos numa página: um clique e o "alinhar/distribuir"
+   age em todas. */
+function mkeSelecionarTodas(){
+  var ctx=mkeCtx();
+  var lista=(ctx.page?ctx.page.layers:layers).filter(function(l){return l.type==='img'&&!l.hidden;});
+  if(lista.length<2){toast('Precisa de 2 imagens ou mais nesta página','erro');return;}
+  if(ctx.page){
+    var pid=ctx.page.id;
+    ctx.page.msel=lista.map(function(l){return l.id;});
+    ctx.page.selId=null;
+    document.querySelectorAll('#canvasInner_'+pid+' .img-layer').forEach(function(n){
+      var id=(n.id||'').replace('ly_'+pid+'_','');
+      n.classList.remove('sel');
+      n.classList.toggle('msel',ctx.page.msel.indexOf(id)>=0);
+    });
+  }else{
+    try{multiSelIds=lista.map(function(l){return l.id;});}catch(e){return;}
+    document.querySelectorAll('#canvasInner .img-layer').forEach(function(n){
+      n.classList.remove('sel');
+      n.classList.toggle('msel',multiSelIds.indexOf((n.id||'').replace('ly_',''))>=0);
+    });
+    try{updGroupBox();}catch(e){}
+  }
+  mkeSync();
+  toast('🖼 '+lista.length+' imagens selecionadas — alinhe, gire ou distribua de uma vez','',2600);
+}
+function mkeDistribuir(eixo){
+  var ctx=mkeCtx();
+  var alvos=mkeAlvos(ctx).filter(function(l){return typeof l.xp==='number';});
+  if(alvos.length<3){toast('Selecione 3 ou mais camadas (Shift+clique)','erro');return;}
+  var H=ctx.H();
+  /* Texto e seta não têm hp: usar a altura medida em px, senão o espaço
+     entre eles saía errado e as caixas de texto amontoavam. */
+  var tam=function(l){
+    if(eixo==='h')return l.wp||0;
+    if(typeof l.hp==='number')return l.hp;
+    return mkeAlturaReal(ctx,l)/Math.max(H,1);
+  };
+  var pos=function(l){return eixo==='h'?l.xp:l.yp;};
+  alvos.sort(function(a,b){return pos(a)-pos(b);});
+  var primeiro=alvos[0],ultimo=alvos[alvos.length-1];
+  var ini=pos(primeiro),fim=pos(ultimo)+tam(ultimo);
+  var soma=alvos.reduce(function(s,l){return s+tam(l);},0);
+  var vao=(fim-ini-soma)/Math.max(1,alvos.length-1);
+  var cursor=ini;
+  alvos.forEach(function(l){
+    if(eixo==='h')l.xp=cursor;else l.yp=cursor;
+    cursor+=tam(l)+vao;
+  });
+  mkePosTodos(ctx);mkeSalvar(ctx);
+  toast('⋯ Espaçamento igual','',1500);
+}
+
+/* ─────────────────────────── organizar imagens ─────────────────────────── */
+
+function mkeImagensDaPagina(ctx){
+  var lista=(ctx.page?ctx.page.layers:layers).filter(function(l){return l.type==='img'&&!l.hidden;});
+  return lista.sort(function(a,b){ if(Math.abs(a.yp-b.yp)>0.12)return a.yp-b.yp; return a.xp-b.xp; });
+}
+function mkeOrganizar(modo){
+  var ctx=mkeCtx();
+  if(modo==='aninhar'){
+    if(ctx.page){toast('O encaixe automático é da página 1','erro');return;}
+    aninharImagens();return;
+  }
+  var imgs=mkeImagensDaPagina(ctx);
+  if(!imgs.length){toast('Adicione imagens na área primeiro','erro');return;}
+  var W=ctx.W(),H=ctx.H(),rc=H?W/H:1;
+  var n=imgs.length;
+  var cols = modo==='1col'?1:(modo==='2col'?Math.min(2,n):Math.ceil(Math.sqrt(n)));
+  var rows = Math.ceil(n/cols);
+  var pad=0.035;
+  var cwv=(1-pad*(cols+1))/cols;
+  var chv=(1-pad*(rows+1))/rows;
+  imgs.forEach(function(l,i){
+    var c=(cols===1?0:i%cols),r=(cols===1?i:Math.floor(i/cols));
+    var x0=pad+c*(cwv+pad), y0=pad+r*(chv+pad);
+    var celAspect=(cwv*W)/Math.max(chv*H,1);
+    var wp,hp;
+    if(l.ratio>=celAspect){wp=cwv;hp=wp*rc/l.ratio;}else{hp=chv;wp=hp*l.ratio/rc;}
+    l.wp=Math.min(cwv,wp);l.hp=Math.min(chv,hp);
+    l.xp=x0+(cwv-l.wp)/2;l.yp=y0+(chv-l.hp)/2;l.rot=0;
+  });
+  mkePosTodos(ctx);mkeSalvar(ctx);
+  toast('🧩 '+n+' imagem(ns) organizada(s)','',1800);
+}
+function mkeMolduraJusta(){
+  var ctx=mkeCtx();
+  var alvos=[];
+  if(ctx.layer&&ctx.layer.type==='img')alvos=[ctx.layer];
+  else alvos=mkeImagensDaPagina(ctx);
+  if(!alvos.length){toast('Selecione uma imagem','erro');return;}
+  var W=ctx.W(),H=ctx.H();
+  alvos.forEach(function(l){
+    var cx=l.xp+l.wp/2,cy=l.yp+(l.hp||0)/2;
+    l.hp=Math.min(1,l.wp*(W/Math.max(H,1))/l.ratio);
+    l.xp=cx-l.wp/2;l.yp=cy-l.hp/2;
+  });
+  mkePosTodos(ctx);mkeSalvar(ctx);
+  toast('🖼 Moldura ajustada à imagem','',1600);
+}
+/* Trava (ou destrava) todas as camadas da página em foco de uma vez.
+   Depois que a arte está pronta, é o que evita arrastar a foto sem querer
+   na hora de revisar a ficha. */
+function mkeTravarTudo(){
+  var ctx=mkeCtx();
+  var lista=(ctx.page?ctx.page.layers:layers).filter(function(l){return l.type!=='txt'||!l._editing;});
+  if(!lista.length){toast('Esta página ainda não tem camadas','erro');return;}
+  var travar=!lista.every(function(l){return !!l.locked;});
+  lista.forEach(function(l){l.locked=travar;});
+  mkeSalvar(ctx);
+  toast(travar?('🔒 '+lista.length+' camadas travadas'):('🔓 '+lista.length+' camadas liberadas'),'',2000);
+}
+function mkeMesmoTamanho(){
+  var ctx=mkeCtx();
+  var imgs=mkeImagensDaPagina(ctx);
+  if(imgs.length<2){toast('Precisa de 2 imagens ou mais','erro');return;}
+  var W=ctx.W(),H=ctx.H(),rc=H?W/H:1;
+  var alvo=Math.max.apply(null,imgs.map(function(l){return l.hp||0;}));
+  imgs.forEach(function(l){
+    l.hp=Math.min(0.98,alvo);
+    l.wp=Math.min(0.98,l.hp*l.ratio/rc);
+  });
+  mkePosTodos(ctx);mkeSalvar(ctx);
+  toast('⬜ Todas as imagens com a mesma altura','',1800);
+}
+
+/* ─────────────────────────── precisão ─────────────────────────── */
+
+function mkePrecisaoLer(){
+  var ctx=mkeCtx(),l=ctx.layer;
+  var ids=['mkePX','mkePY','mkePW','mkePH','mkePR'];
+  ids.forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=!l;});
+  var mmBox=document.getElementById('mkeMm');
+  var qBox=document.getElementById('mkeQual');
+  if(!l){
+    if(mmBox)mmBox.textContent='—';
+    if(qBox)qBox.textContent='—';
+    return;
+  }
+  var pct=function(v){return Math.round(v*1000)/10;};
+  var set=function(id,v){var el=document.getElementById(id);if(el&&document.activeElement!==el)el.value=v;};
+  set('mkePX',pct(l.xp));
+  set('mkePY',pct(l.yp));
+  set('mkePW',pct(l.wp));
+  set('mkePH',pct(typeof l.hp==='number'?l.hp:0.1));
+  set('mkePR',Math.round(l.rot||0));
+  var W0=ctx.W(),H0=ctx.H();
+  set('mkeMmW',Math.round(mkeMm(l.wp*W0)));
+  set('mkeMmH',Math.round(mkeMm((typeof l.hp==='number'?l.hp:0.1)*H0)));
+  set('mkeMmX',Math.round(mkeMm(l.xp*W0)));
+  set('mkeMmY',Math.round(mkeMm(l.yp*H0)));
+  ['mkeMmW','mkeMmH','mkeMmX','mkeMmY'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=!l;});
+  if(mmBox){
+    var W=ctx.W(),H=ctx.H();
+    mmBox.textContent=mkeMm(l.wp*W)+' × '+mkeMm((typeof l.hp==='number'?l.hp:0.1)*H)+' mm';
+  }
+  if(qBox){
+    var q=null;try{q=mkeQualidade(l);}catch(e){}
+    if(!q)qBox.textContent='—';
+    else qBox.textContent=q.w+' × '+q.h+' px · '+(q.ok?'boa para 300 dpi ✓':'⚠ baixa para 300 dpi');
+    qBox.style.color=(q&&!q.ok)?'#B45309':'';
+    qBox.title=(q&&!q.ok)?('A foto tem '+q.usa+' px úteis na largura; para '+q.mmW+' mm a 300 dpi seriam precisos ~'+q.precisa+' px.'):'';
+  }
+}
+function mkePrecisaoAplicar(){
+  var ctx=mkeCtx(),l=ctx.layer;
+  if(!l)return;
+  var num=function(id){var el=document.getElementById(id);return el?parseFloat(String(el.value).replace(',','.')):NaN;};
+  var x=num('mkePX'),y=num('mkePY'),w=num('mkePW'),h=num('mkePH'),r=num('mkePR');
+  var cl=function(v,a,b){return Math.max(a,Math.min(b,isFinite(v)?v:a));};
+  if(isFinite(x))l.xp=x/100;
+  if(isFinite(y))l.yp=y/100;
+  if(isFinite(w)&&w>0)l.wp=cl(w/100,0.02,1);
+  if(isFinite(h)&&h>0&&typeof l.hp==='number')l.hp=cl(h/100,0.02,1);
+  if(isFinite(r))l.rot=r;
+  mkePos(ctx,l);mkeSalvar(ctx);
+  toast('📐 Valores aplicados','',1400);
+}
+
+/* ─────────────────────────── trocar imagem ─────────────────────────── */
+
+/* Milímetros: é assim que a fábrica fala ("a estampa tem 20 cm de largura").
+   Aqui dá para digitar o tamanho no papel em vez de calcular % da área.
+   A folha tem 210 mm de largura em 794 px → MKE_MM_PX. */
+function mkeAplicarMm(larguraFolha,eixo){
+  var ctx=mkeCtx(),l=ctx.layer;
+  if(!l){toast('Selecione uma camada','erro');return;}
+  var W=ctx.W()||1,H=ctx.H()||1;
+  var num=function(id){
+    var el=document.getElementById(id);
+    if(!el||String(el.value).trim()==='')return null;
+    var v=parseFloat(String(el.value).replace(',','.'));
+    return isFinite(v)&&v>0?v:null;
+  };
+  /* eixo: 'w' = mexeu na largura, 'h' = mexeu na altura, vazio = os dois
+     (botão Aplicar). Isto importa: se os dois campos sempre valem juntos,
+     digitar 100 mm de largura "puxava" a altura antiga do outro campo. */
+  var mmW=larguraFolha?mkeMm(W):(eixo==='h'?null:num('mkeMmW'));
+  var mmH=(eixo==='w')?null:(larguraFolha?null:num('mkeMmH'));
+  if(mmW===null&&mmH===null){toast('Digite a largura ou a altura em mm','erro');return;}
+  if(mmW!==null)l.wp=Math.max(0.02,Math.min(1,(mmW/MKE_MM_PX)/W));
+  if(mmH!==null&&typeof l.hp==='number')l.hp=Math.max(0.02,Math.min(1,(mmH/MKE_MM_PX)/H));
+  var proporcional=(l.type==='img'&&l.prop&&l.ratio);
+  if(proporcional){
+    if(mmW!==null&&mmH===null)l.hp=Math.max(0.02,Math.min(1,l.wp*(W/Math.max(H,1))/l.ratio));
+    if(mmH!==null&&mmW===null)l.wp=Math.max(0.02,Math.min(1,l.hp*(H/Math.max(W,1))*l.ratio));
+  }
+  l.xp=mkeLimite(l.xp,l.wp);
+  l.yp=mkeLimite(l.yp,typeof l.hp==='number'?l.hp:0.1);
+  mkePos(ctx,l);mkeSalvar(ctx);
+  /* devolve os dois campos para o valor real da camada */
+  var fW=document.getElementById('mkeMmW'),fH=document.getElementById('mkeMmH');
+  if(fW&&document.activeElement!==fW)fW.value=Math.round(mkeMm(l.wp*W));
+  if(fH&&document.activeElement!==fH)fH.value=Math.round(mkeMm((typeof l.hp==='number'?l.hp:0.1)*H));
+  toast('📏 '+mkeMm(l.wp*W)+' × '+mkeMm((typeof l.hp==='number'?l.hp:0)*H)+' mm','',1800);
+}
+/* Levar a camada para uma posição exata no papel (mm desde o canto). */
+function mkeAplicarMmPos(eixo){
+  var ctx=mkeCtx(),l=ctx.layer;
+  if(!l){toast('Selecione uma camada','erro');return;}
+  var W=ctx.W()||1,H=ctx.H()||1;
+  var num=function(id){
+    var el=document.getElementById(id);
+    if(!el||String(el.value).trim()==='')return null;
+    var v=parseFloat(String(el.value).replace(',','.'));
+    return isFinite(v)?v:null;
+  };
+  var mmX=eixo==='y'?null:num('mkeMmX');
+  var mmY=eixo==='x'?null:num('mkeMmY');
+  if(mmX===null&&mmY===null){toast('Digite a posição em mm','erro');return;}
+  if(mmX!==null)l.xp=(mmX/MKE_MM_PX)/W;
+  if(mmY!==null)l.yp=(mmY/MKE_MM_PX)/H;
+  l.xp=Math.max(0,Math.min(1-l.wp,l.xp));
+  l.yp=Math.max(0,Math.min(1-(typeof l.hp==='number'?l.hp:0.1),l.yp));
+  mkePos(ctx,l);mkeSalvar(ctx);
+  var fX=document.getElementById('mkeMmX'),fY=document.getElementById('mkeMmY');
+  if(fX&&document.activeElement!==fX)fX.value=Math.round(mkeMm(l.xp*W));
+  if(fY&&document.activeElement!==fY)fY.value=Math.round(mkeMm(l.yp*H));
+  toast('📍 '+mkeMm(l.xp*W)+' mm da esquerda, '+mkeMm(l.yp*H)+' mm do topo','',2000);
+}
+function mkeSubstituir(){
+  var ctx=mkeCtx();
+  if(!ctx.layer||ctx.layer.type!=='img'){
+    toast('Selecione a imagem que vai ser trocada','erro');
+    return;
+  }
+  var inp=document.getElementById('mkeArquivo');
+  if(inp){inp.value='';inp.click();}
+}
+/* Troca o arquivo de uma camada que já existe: lugar, tamanho e rotação ficam.
+   Serve para o botão ⇄ e para ARRASTAR uma foto em cima de outra. */
+function mkeTrocarArte(l,arq,page){
+  if(!l||!arq)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    Promise.resolve(typeof v7DownscaleDataURL==='function'?v7DownscaleDataURL(ev.target.result):ev.target.result).then(function(src){
+      var ctx=page?{page:page,layer:l,W:function(){return cwExtra(page.id);},H:function(){return chExtra(page.id);}}
+                   :{page:null,layer:l,W:cw,H:ch};
+      var aplicar=function(){
+        l.src=src;
+        var el=mkeElem(ctx,l);
+        if(el){var im=el.querySelector('img');if(im)im.src=src;}
+        if(l.prop&&ctx.H()){
+          var W=ctx.W(),H=ctx.H();
+          if(l.ratio)l.hp=Math.min(0.98,l.wp*(W/Math.max(H,1))/l.ratio);
+        }
+        mkePos(ctx,l);mkeSalvar(ctx);
+        toast('⇄ Imagem trocada — tamanho e posição mantidos','',2200);
+      };
+      var tmp=new Image();
+      tmp.onload=function(){
+        l.ratio=(tmp.naturalWidth||1)/(tmp.naturalHeight||1);
+        l._nw=tmp.naturalWidth;l._nh=tmp.naturalHeight;
+        mkeGuardarPx(src,tmp.naturalWidth,tmp.naturalHeight);
+        aplicar();
+      };
+      tmp.onerror=aplicar;
+      tmp.src=src;
+    });
+  };
+  r.readAsDataURL(arq);
+}
+/* Soltar UMA foto em cima de uma imagem existente = trocar aquela arte. */
+function mkeSoltarSobre(ev,arq,page){
+  var alvo=ev&&ev.target&&ev.target.closest?ev.target.closest('.img-layer'):null;
+  if(!alvo||!alvo.id)return false;
+  var id=alvo.id.replace(/^ly_/,'');
+  if(page){
+    if(id.indexOf(page.id+'_')===0)id=id.slice(page.id.length+1);
+  }
+  var lista=page?page.layers:layers;
+  var l=lista.filter(function(x){return x.id===id&&x.type==='img';})[0];
+  if(!l)return false;
+  mkeTrocarArte(l,arq,page||null);
+  return true;
+}
+function mkeAoEscolherArquivo(e){
+  var f=e&&e.target&&e.target.files?e.target.files[0]:null;
+  if(e&&e.target)e.target.value='';
+  if(!f)return;
+  var ctx=mkeCtx();
+  if(!ctx.layer||ctx.layer.type!=='img'){toast('Selecione a imagem que vai ser trocada','erro');return;}
+  var l=ctx.layer;
+  var r=new FileReader();
+  r.onload=function(ev){
+    v7DownscaleDataURL(ev.target.result).then(function(src){
+      l.src=src;
+      var aplicar=function(){
+        var el=mkeElem(ctx,l);
+        if(el){var im=el.querySelector('img');if(im)im.src=src;}
+        if(l.prop&&ctx.H()){
+          var W=ctx.W(),H=ctx.H();
+          l.hp=Math.min(0.98,l.wp*(W/Math.max(H,1))/l.ratio);
+        }
+        mkePos(ctx,l);mkeSalvar(ctx);
+        toast('⇄ Imagem trocada — tamanho e posição mantidos','',2200);
+      };
+      var tmp=new Image();
+      tmp.onload=function(){l.ratio=(tmp.naturalWidth||1)/(tmp.naturalHeight||1);aplicar();};
+      tmp.onerror=aplicar;
+      tmp.src=src;
+    });
+  };
+  r.readAsDataURL(f);
+}
+
+/* ─────────────────────────── exportar só a área ─────────────────────────── */
+
+function mkeExportarArea(){
+  var outer=document.getElementById('canvasOuter');
+  if(!outer)return;
+  if(typeof html2canvas!=='function'){toast('Não foi possível carregar o gerador de imagem','erro');return;}
+  mkeSairEstudio();
+  mkeFecharPainel();
+  try{deselecionarTudo();}catch(e){}
+  document.body.classList.add('mke-exportando');
+  setTimeout(function(){
+    html2canvas(outer,{scale:3,useCORS:true,backgroundColor:'#ffffff',logging:false}).then(function(cv){
+      document.body.classList.remove('mke-exportando');
+      var nome='Mockup';
+      try{
+        var c=(document.getElementById('dc_nome')||{}).textContent||'';
+        if(c.trim())nome+='_'+c.trim().replace(/[^a-zA-Z0-9À-ÿ]/g,'_').slice(0,40);
+      }catch(e){}
+      var a=document.createElement('a');
+      a.download=nome+'.png';
+      a.href=cv.toDataURL('image/png');
+      a.click();
+      toast('✅ Área do mockup exportada em PNG','',2600);
+    }).catch(function(err){
+      console.warn('mockup png',err);
+      document.body.classList.remove('mke-exportando');
+      toast('❌ Não foi possível exportar a área','erro');
+    });
+  },80);
+}
+
+/* ─────────────────────────── modo ampliado ─────────────────────────── */
+
+/* Onde as ferramentas devem morar: na página em foco.
+   Antes a régua e o painel só existiam na folha 1 — para mexer numa arte da
+   página 2 era preciso rolar de volta até a página 1 e usar a ferramenta de
+   lá, que (por causa do mkeCtx) acabava agindo na página 2 mesmo. Aqui os
+   mesmos elementos são remontados na área que está em uso. */
+function mkePaginaFoco(){
+  var ativa=null;
+  try{ativa=(typeof v7PaginaAtiva!=='undefined'&&v7PaginaAtiva)?v7PaginaAtiva:null;}catch(e){}
+  if(ativa&&ativa.p1===false&&ativa.id){
+    var p=null;
+    try{p=paginas.filter(function(x){return x.id===ativa.id;})[0]||null;}catch(e){}
+    var ci=p?document.getElementById('canvasInner_'+p.id):null;
+    if(p&&ci)return {page:p,canvas:ci,host:ci};
+  }
+  var outer=document.getElementById('canvasOuter');
+  return {page:null,canvas:document.getElementById('canvasInner'),host:outer};
+}
+function mkeMoverUI(){
+  var f=mkePaginaFoco();
+  if(!f||!f.host||!f.canvas)return;
+  var alvosCasca=[document.getElementById('mkeRail'),document.getElementById('mkePainel'),
+                  document.getElementById('mkeBadge'),document.getElementById('mkeStudioBar'),
+                  document.getElementById('layersPanel')];
+  alvosCasca.forEach(function(el){if(el&&el.parentElement!==f.host)f.host.appendChild(el);});
+  /* guias e ímã precisam ficar DENTRO da área (usam % da área) */
+  [document.getElementById('mkeGuias'),document.getElementById('mkeSmartV'),
+   document.getElementById('mkeSmartH')].forEach(function(el){
+    if(el&&el.parentElement!==f.canvas)f.canvas.appendChild(el);
+  });
+  try{updList();}catch(e){}
+}
+function mkeEstudioLigado(){return document.body.classList.contains('mke-studio-on');}
+function mkeReposicionar(){
+  try{layers.forEach(function(l){var el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});}catch(e){}
+  try{paginas.forEach(function(p){p.layers.forEach(function(l){var el=document.getElementById('ly_'+p.id+'_'+l.id);if(el)posElExtra(p,l,el,false);});});}catch(e){}
+}
+function mkeAbrirEstudio(){
+  if(!mkeEstudioLigado())mkeEntrarEstudio();
+  mkePainelAbrir('ajustes');
+}
+function mkeAlternarEstudio(){
+  if(mkeEstudioLigado())mkeSairEstudio();else mkeEntrarEstudio();
+}
+function mkeEntrarEstudio(){
+  var f=mkePaginaFoco();
+  var alvo=f&&f.host;
+  if(!alvo)return;
+  document.body.classList.add('mke-studio-on');
+  alvo.classList.add('mke-studio');
+  mkeMoverUI();
+  mkeReposicionar();
+  setTimeout(mkeReposicionar,120);
+  mkeSync();
+  toast('⤢ Área ampliada — Esc volta ao tamanho normal','',2600);
+}
+function mkeSairEstudio(){
+  if(!mkeEstudioLigado()){return;}
+  document.body.classList.remove('mke-studio-on');
+  /* a área ampliada pode ser a folha 1 ou uma página extra */
+  try{
+    document.querySelectorAll('#canvasOuter.mke-studio,.canvas-inner.mke-studio').forEach(function(el){el.classList.remove('mke-studio');});
+  }catch(e){
+    var o=document.getElementById('canvasOuter');if(o)o.classList.remove('mke-studio');
+  }
+  mkeMoverUI();
+  mkeReposicionar();
+  setTimeout(mkeReposicionar,90);
+  mkeSync();
+}
+
+/* ─────────────────────────── guias ─────────────────────────── */
+
+/* Tamanho em px da área em foco (folha 1 ou página extra): as guias usam %
+   da área, então precisam do tamanho real para converter mm. */
+function mkeLarguraAtual(){
+  try{var c=mkeCtx();return c.W()||400;}catch(e){return 400;}
+}
+function mkeAlturaAtual(){
+  try{var c=mkeCtx();return c.H()||400;}catch(e){return 400;}
+}
+
+var MKE_GUIA_ROTULO={off:'desligadas',centro:'centro',grade:'grade',margem:'margem'};
+function mkeCicloGuia(){
+  var ordem=['off','centro','grade','margem'];
+  var i=ordem.indexOf(mkeGuiaModo);
+  mkeGuiaModo=ordem[(i+1)%ordem.length];
+  try{localStorage.setItem(MKE_GUIA_KEY,mkeGuiaModo);}catch(e){}
+  mkeRenderGuias();
+  mkeSync();
+  toast('📐 Guias '+MKE_GUIA_ROTULO[mkeGuiaModo],'',1600);
+}
+function mkeRenderGuias(){
+  var box=document.getElementById('mkeGuias');
+  if(!box)return;
+  box.innerHTML='';
+  box.classList.toggle('on',mkeGuiaModo!=='off');
+  if(mkeGuiaModo==='off')return;
+  var linha=function(cls,pos,eixo){
+    var d=document.createElement('div');
+    d.className='mke-guia '+eixo+(cls?' '+cls:'');
+    if(eixo==='v')d.style.left=(pos*100)+'%';else d.style.top=(pos*100)+'%';
+    box.appendChild(d);
+  };
+  if(mkeGuiaModo==='centro'){
+    linha('','0.5','v');linha('','0.5','h');
+  }else if(mkeGuiaModo==='grade'){
+    [1/3,2/3].forEach(function(p){linha('terco',p,'v');linha('terco',p,'h');});
+    linha('',0.5,'v');linha('',0.5,'h');
+  }else if(mkeGuiaModo==='margem'){
+    /* A margem é 5 mm de papel, não 5% da tela: em A4 isso é 2,4% na
+       largura e 1,7% na altura. Antes a guia mentia (5% nos dois lados). */
+    var m=document.createElement('div');
+    m.className='mke-margem';
+    var px=(5/MKE_MM_PX);
+    var W=mkeLarguraAtual(),H=mkeAlturaAtual();
+    m.style.inset=(px/Math.max(H,1)*100).toFixed(2)+'% '+(px/Math.max(W,1)*100).toFixed(2)+'%';
+    box.appendChild(m);
+    linha('','0.5','v');linha('','0.5','h');
+  }
+  var tag=document.createElement('div');
+  tag.className='mke-guia-tag';
+  tag.textContent='guias: '+MKE_GUIA_ROTULO[mkeGuiaModo]+(mkeGuiaModo==='margem'?' · 5 mm':'');
+  box.appendChild(tag);
+}
+
+/* ─────────────────────────── interface ─────────────────────────── */
+
+function mkeBotao(acao,rotulo,titulo,extra){
+  return '<button type="button" class="mke-btn'+(extra?' '+extra:'')+'" data-acao="'+acao+'" title="'+titulo+'">'+rotulo+'</button>';
+}
+function mkeMontarRail(){
+  var outer=document.getElementById('canvasOuter');
+  if(!outer||document.getElementById('mkeRail'))return;
+  var rail=document.createElement('div');
+  rail.className='mke-rail';
+  rail.id='mkeRail';
+  rail.innerHTML=
+    '<button type="button" data-acao="add-imagem" title="Inserir imagem (também vale arrastar as fotos para a área ou colar com Ctrl+V)"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></button>'+
+    '<button type="button" data-acao="estudio" title="Ampliar a área do mockup (Esc volta)"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg></button>'+
+    '<button type="button" data-acao="guias" title="Guias de centro, grade e margem"><svg viewBox="0 0 24 24"><use href="#i-grid"/></svg></button>'+
+    '<button type="button" data-acao="camadas" title="Lista de camadas (olho, cadeado, renomear, ordem)"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg></button>'+
+    '<button type="button" id="mkeBtnIma" data-acao="ima" title="Ímã: encosta nas bordas, no centro e nas outras camadas (segure Alt para soltar)">🧲</button>'+
+    '<span class="mke-rail-sep"></span>'+
+    '<button type="button" data-acao="painel" title="Ferramentas do mockup: trocar, espelhar, girar, alinhar, organizar"><svg viewBox="0 0 24 24"><use href="#i-sliders"/></svg></button>';
+  rail.addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-acao]');
+    if(!b)return;
+    ev.stopPropagation();
+    mkeAcao(b.dataset.acao);
+  });
+  outer.appendChild(rail);
+}
+function mkeMontarPainel(){
+  var outer=document.getElementById('canvasOuter');
+  if(!outer||document.getElementById('mkePainel'))return;
+  var p=document.createElement('div');
+  p.className='mke-panel';
+  p.id='mkePainel';
+  p.innerHTML=
+   '<div class="mke-hdr"><b id="mkeHdr">Ferramentas do mockup</b><button type="button" class="mke-x" data-acao="fechar" title="Fechar o painel">✕</button></div>'+
+   '<div class="mke-tabs">'+
+     '<button type="button" class="mke-tab on" data-tab="ajustes">Ajustes</button>'+
+     '<button type="button" class="mke-tab" data-tab="alinhar">Alinhar</button>'+
+     '<button type="button" class="mke-tab" data-tab="organizar">Organizar</button>'+
+     '<button type="button" class="mke-tab" data-tab="precisao">Precisão</button>'+
+   '</div>'+
+   '<div class="mke-body">'+
+     '<div class="mke-sec on" data-sec="ajustes">'+
+       '<div class="mke-lbl">Camada selecionada</div>'+
+       '<div class="mke-mono" id="mkeAlvo">Nenhuma camada selecionada</div>'+
+       '<div class="mke-grid g3">'+
+         mkeBotao('duplicar','⧉ Duplicar','Duplicar a camada (Ctrl+D)')+
+         mkeBotao('flipH','⇋ H','Espelhar na horizontal')+
+         mkeBotao('flipV','⇅ V','Espelhar na vertical')+
+       '</div>'+
+       '<div class="mke-grid g3">'+
+         mkeBotao('girar-90','⟲ 90°','Girar 90° para a esquerda')+
+         mkeBotao('girar90','⟳ 90°','Girar 90° para a direita')+
+         mkeBotao('rot0','↺ 0°','Voltar a rotação para zero')+
+       '</div>'+
+       '<div class="mke-grid g3">'+
+         mkeBotao('rot-m15','−15°','Endireitar: 15 graus para a esquerda')+
+         mkeBotao('rot-m1','−1°','Ajuste fino: 1 grau para a esquerda')+
+         mkeBotao('rot-p1','+1°','Ajuste fino: 1 grau para a direita')+
+       '</div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('substituir','⇄ Substituir','Trocar a imagem mantendo tamanho e posição')+
+         mkeBotao('recortar','✂ Recortar','Recortar a imagem (zoom, giro e proporção)')+
+       '</div>'+
+       '<div class="mke-lbl">Opacidade <span class="mke-mono" id="mkeOpVal">100%</span></div>'+
+       '<input class="mke-range" id="mkeOpacidade" type="range" min="10" max="100" step="5" value="100" title="Deixar a camada translúcida">'+
+       '<div class="mke-grid">'+
+         mkeBotao('travar','🔒 Travar posição','Impede mover sem querer', '')+
+         mkeBotao('proporcao','🔗 Proporção','Manter a proporção ao redimensionar')+
+       '</div>'+
+       mkeBotao('reset','↺ Voltar ao original','Tira giro, espelho, opacidade e volta a proporção')+
+       '<div class="mke-lbl">Levar a camada para outra página</div>'+
+       '<div class="mke-row"><select class="mke-inp" id="mkePagDestino" title="Página de destino"></select></div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('levar-pag','➜ Levar','Tira a camada desta página e coloca na escolhida')+
+         mkeBotao('copiar-pag','⧉ Copiar','Copia a camada para a página escolhida, sem sair desta')+
+       '</div>'+
+       '<div class="mke-hint">Duplo clique no nome da camada (lista 🗂) renomeia. Com o ímã ligado a camada encosta nas bordas, no centro e nas outras camadas; segure <b>Alt</b> para soltar.</div>'+
+     '</div>'+
+     '<div class="mke-sec" data-sec="alinhar">'+
+       '<div class="mke-lbl">Na área do mockup</div>'+
+       '<div class="mke-grid g6">'+
+         mkeBotao('al-esq','⇤','Encostar à esquerda','sq')+
+         mkeBotao('al-cx','↔','Centralizar na horizontal','sq')+
+         mkeBotao('al-dir','⇥','Encostar à direita','sq')+
+         mkeBotao('al-topo','⇡','Encostar no topo','sq')+
+         mkeBotao('al-cy','↕','Centralizar na vertical','sq')+
+         mkeBotao('al-base','⇣','Encostar na base','sq')+
+       '</div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('al-centro','◎ No centro','Colocar no centro da área')+
+         mkeBotao('caber','⤡ Caber','A imagem inteira dentro da área')+
+       '</div>'+
+       '<div class="mke-lbl">Com várias camadas</div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('dist-h','⋯ Distribuir ↔','Mesmo espaço entre as camadas na horizontal')+
+         mkeBotao('dist-v','⋯ Distribuir ↕','Mesmo espaço entre as camadas na vertical')+
+       '</div>'+
+       mkeBotao('sel-todas','🖼 Selecionar todas as imagens','Marca todas as fotos da página em foco para alinhar, girar ou distribuir de uma vez')+
+       '<div class="mke-hint"><b>Shift+clique</b> seleciona várias camadas (vale em todas as páginas). O clique no fundo da área, arrastando, também faz uma seleção em grupo na página 1.</div>'+
+     '</div>'+
+     '<div class="mke-sec" data-sec="organizar">'+
+       '<div class="mke-lbl">Todas as imagens da página</div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('org-2col','▥ Lado a lado','Frente e costas em duas colunas iguais')+
+         mkeBotao('org-1col','▤ Empilhado','Uma imagem embaixo da outra')+
+         mkeBotao('org-grade','▦ Grade','Distribuir em grade automática')+
+         mkeBotao('org-aninhar','🧩 Encaixe','Aproveitar os espaços livres')+
+       '</div>'+
+       '<div class="mke-lbl">Consertar</div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('moldura','🖼 Moldura justa','Corta a tarja em volta da imagem')+
+         mkeBotao('mesmo-tam','⬜ Mesmo tamanho','Deixar todas as imagens na mesma altura')+
+       '</div>'+
+       '<div class="mke-grid">'+
+         mkeBotao('travar-tudo','🔒 Travar tudo','Trava posição e tamanho das camadas desta página (protege a arte pronta)')+
+       '</div>'+
+       '<div class="mke-hint">“Lado a lado” é o jeito mais rápido de mostrar frente e costas na mesma altura, sem alinhar à mão.</div>'+
+     '</div>'+
+     '<div class="mke-sec" data-sec="precisao">'+
+       '<div class="mke-lbl">Posição e tamanho (% da área)</div>'+
+       '<div class="mke-row"><label>X</label><input class="mke-inp" id="mkePX" type="number" step="0.1" min="0" max="100" title="Distância da esquerda">'+
+       '<label>Y</label><input class="mke-inp" id="mkePY" type="number" step="0.1" min="0" max="100" title="Distância do topo"></div>'+
+       '<div class="mke-row"><label>L</label><input class="mke-inp" id="mkePW" type="number" step="0.1" min="1" max="100" title="Largura">'+
+       '<label>A</label><input class="mke-inp" id="mkePH" type="number" step="0.1" min="1" max="100" title="Altura"></div>'+
+       '<div class="mke-row"><label>Rot</label><input class="mke-inp" id="mkePR" type="number" step="1" min="-180" max="180" title="Rotação em graus">'+
+       mkeBotao('prec-aplicar','Aplicar','Aplicar os valores digitados')+'</div>'+
+       '<div class="mke-lbl">Tamanho no papel (mm)</div>'+
+       '<div class="mke-row"><label>L</label><input class="mke-inp" id="mkeMmW" type="number" step="1" min="5" max="210" title="Largura da arte no papel, em milímetros">'+
+       '<label>A</label><input class="mke-inp" id="mkeMmH" type="number" step="1" min="5" max="297" title="Altura da arte no papel, em milímetros"></div>'+
+       '<div class="mke-grid"><button type="button" class="mke-btn" data-acao="mm-a4" title="Deixar a arte com a largura útil da folha">↔ Largura da folha</button>'+
+       '<button type="button" class="mke-btn" data-acao="mm-aplicar" title="Aplicar os milímetros digitados">📏 Aplicar mm</button></div>'+
+       '<div class="mke-lbl">Posição no papel (mm)</div>'+
+       '<div class="mke-row"><label>X</label><input class="mke-inp" id="mkeMmX" type="number" step="1" min="0" max="210" title="Distância da esquerda até a arte, em milímetros">'+
+       '<label>Y</label><input class="mke-inp" id="mkeMmY" type="number" step="1" min="0" max="297" title="Distância do topo até a arte, em milímetros">'+
+       mkeBotao('mm-pos','📍','Levar a camada para a posição em milímetros')+'</div>'+
+       '<div class="mke-lbl">Tamanho impresso (aprox.)</div>'+
+       '<div class="mke-mono" id="mkeMm">—</div>'+
+       '<div class="mke-lbl">Resolução da foto</div>'+
+       '<div class="mke-mono" id="mkeQual">—</div>'+
+       '<div class="mke-hint">Calculado pela largura da folha A4 (210 mm). Serve para conferir se a estampa tem o tamanho combinado e se a foto tem pixels suficientes para 300 dpi.</div>'+
+       '<div class="mke-lbl">Exportar</div>'+
+       mkeBotao('exportar-area','📤 Baixar esta área em PNG','Salva só o mockup, sem a ficha em volta')+
+     '</div>'+
+   '</div>';
+  p.addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-acao]');
+    if(b){ev.stopPropagation();mkeAcao(b.dataset.acao);return;}
+    var t=ev.target.closest('[data-tab]');
+    if(t)mkeAba(t.dataset.tab);
+  });
+  outer.appendChild(p);
+  var op=p.querySelector('#mkeOpacidade');
+  if(op)op.addEventListener('input',function(ev){mkeDefinirOpacidade(ev.target.value);});
+  ['mkePX','mkePY','mkePW','mkePH','mkePR'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.addEventListener('change',mkePrecisaoAplicar);
+  });
+  var fW=document.getElementById('mkeMmW');
+  if(fW)fW.addEventListener('change',function(){mkeAplicarMm(false,'w');});
+  var fH=document.getElementById('mkeMmH');
+  if(fH)fH.addEventListener('change',function(){mkeAplicarMm(false,'h');});
+  ['mkeMmX','mkeMmY'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.addEventListener('change',function(){mkeAplicarMmPos(id==='mkeMmX'?'x':'y');});
+  });
+}
+function mkeMontarExtras(){
+  var outer=document.getElementById('canvasOuter');
+  if(!outer)return;
+  if(!document.getElementById('mkeBadge')){
+    var b=document.createElement('div');b.className='mke-badge';b.id='mkeBadge';outer.appendChild(b);
+  }
+  if(!document.getElementById('mkeStudioBar')){
+    var bar=document.createElement('div');
+    bar.className='mke-studio-bar';bar.id='mkeStudioBar';
+    bar.innerHTML='<b>Estúdio</b><span class="mke-hint">Arraste para mover · setas ajustam fino · Esc volta</span>'+
+      '<button type="button" class="mke-btn" data-acao="org-2col">Lado a lado</button>'+
+      '<button type="button" class="mke-btn" data-acao="guias">Guias</button>'+
+      '<button type="button" class="mke-btn" data-acao="ajuda" title="Abrir a ajuda no trecho do estúdio">❓</button>'+
+      '<button type="button" class="mke-btn" data-acao="estudio">Fechar ✕</button>';
+    bar.addEventListener('click',function(ev){
+      var b2=ev.target.closest('[data-acao]');
+      if(b2){ev.stopPropagation();mkeAcao(b2.dataset.acao);}
+    });
+    outer.appendChild(bar);
+  }
+  var ci=document.getElementById('canvasInner');
+  if(ci&&!document.getElementById('mkeGuias')){
+    var g=document.createElement('div');g.className='mke-guias';g.id='mkeGuias';ci.appendChild(g);
+  }
+  if(!document.getElementById('mkeArquivo')){
+    var inp=document.createElement('input');
+    inp.type='file';inp.accept='image/*';inp.id='mkeArquivo';inp.style.display='none';
+    inp.addEventListener('change',mkeAoEscolherArquivo);
+    document.body.appendChild(inp);
+  }
+}
+function mkeAba(nome){
+  mkeAbaAtual=nome||'ajustes';
+  var p=document.getElementById('mkePainel');if(!p)return;
+  p.querySelectorAll('.mke-tab').forEach(function(t){t.classList.toggle('on',t.dataset.tab===mkeAbaAtual);});
+  p.querySelectorAll('.mke-sec').forEach(function(s){s.classList.toggle('on',s.dataset.sec===mkeAbaAtual);});
+  p.dataset.tab=mkeAbaAtual;
+}
+function mkePainelAbrir(tab){
+  var p=document.getElementById('mkePainel');if(!p)return;
+  p.classList.add('vis');
+  if(tab)mkeAba(tab);
+  mkeSync();
+}
+function mkeFecharPainel(){
+  var p=document.getElementById('mkePainel');if(p)p.classList.remove('vis');
+  mkeSync();
+}
+function mkeAlternarPainel(){
+  var p=document.getElementById('mkePainel');if(!p)return;
+  if(p.classList.contains('vis'))mkeFecharPainel();else mkePainelAbrir(mkeAbaAtual);
+}
+function mkePainel(tab){mkePainelAbrir(tab||'ajustes');}
+
+/* mantém os controles com a cara da seleção atual */
+/* Lista de páginas para o "levar/copiar para outra página". */
+function mkePreencherDestinoPaginas(){
+  var sel=document.getElementById('mkePagDestino');
+  if(!sel)return;
+  var ctx=mkeCtx();
+  var atual=sel.value;
+  var opts=['<option value="folha1">Página 1</option>'];
+  (typeof paginas!=='undefined'?paginas:[]).forEach(function(p){
+    opts.push('<option value="'+p.id+'">Página '+(p.num||'?')+'</option>');
+  });
+  var html=opts.join('');
+  if(sel.innerHTML!==html)sel.innerHTML=html;
+  /* mantém a escolha da pessoa se ela ainda existir; senão volta para P1 */
+  var valida=false;
+  for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===atual){valida=true;break;}}
+  if(!valida)sel.value='folha1';
+}
+
+/* Levar (ou copiar) a camada selecionada para outra página. Montar a arte na
+   página 1 e descobrir que ela era da página 3 era motivo de refazer tudo. */
+function mkeLevarParaPagina(copiar){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length){toast('Selecione uma camada','erro');return;}
+  var sel=document.getElementById('mkePagDestino');
+  var destId=sel?sel.value:'';
+  if(!destId){toast('Escolha a página de destino','erro');return;}
+  var origemId=ctx.page?ctx.page.id:'folha1';
+  if(destId===origemId){toast('A camada já está nesta página','erro');return;}
+  var destino=(destId==='folha1')?null:(paginas.filter(function(x){return x.id===destId;})[0]||null);
+  if(destId!=='folha1'&&!destino){toast('Página de destino não encontrada','erro');return;}
+  var defs=alvos.map(function(l){try{return v8CamadaParaColar(serLayer(l),false);}catch(e){return null;}}).filter(Boolean);
+  if(!defs.length){toast('Não foi possível levar a camada','erro');return;}
+  if(!copiar){
+    alvos.forEach(function(l){
+      if(ctx.page)excluirSelExtra(ctx.page.id,l.id);
+      else excluirId(l.id);
+    });
+  }
+  var n=0;
+  defs.forEach(function(d){try{if(v8InserirCamada(d,destino))n++;}catch(e){console.warn('levar',e);}});
+  try{if(destino)updPhExtra(destino);}catch(e){}
+  try{updList();}catch(e){}
+  try{snap();}catch(e){}
+  var nome='Página '+(destino?(destino.num||'?'):'1');
+  toast((copiar?'⧉ Copiado para ':'➜ Levado para ')+nome+(n>1?' ('+n+' camadas)':''),'',2200);
+}
+
+function mkeSync(){
+  if(!mkePronto)return;
+  var ctx=mkeCtx(),l=ctx.layer;
+  var hdr=document.getElementById('mkeHdr');
+  if(hdr){
+    var _pg=ctx.page;
+    var _txt='Ferramentas do mockup'+( _pg?(' · P'+(_pg.num||'')):'');
+    if(hdr.textContent!==_txt)hdr.textContent=_txt;
+  }
+  var alvo=document.getElementById('mkeAlvo');
+  if(alvo){
+    if(l){
+      var nome=mkeNomeCamada(l)+'  ·  '+Math.round(l.wp*100)+'% × '+Math.round((typeof l.hp==='number'?l.hp:0)*100)+'%';
+      if(l.hidden)nome+='  ·  oculta';
+      if(l.locked)nome+='  ·  travada';
+      alvo.textContent=nome;
+    }else{
+      var _ms=0;
+      try{
+        _ms=(typeof multiSelIds!=='undefined'&&multiSelIds)?multiSelIds.length:0;
+        var _pp=(ctx&&ctx.page)?ctx.page.msel:null;
+        if(_pp&&_pp.length>_ms)_ms=_pp.length;
+      }catch(e){}
+      alvo.textContent=_ms>1?(_ms+' camadas selecionadas · as ações valem para todas'):'Nenhuma camada selecionada';
+    }
+  }
+  try{mkePreencherDestinoPaginas();}catch(e){}
+  var op=document.getElementById('mkeOpacidade');
+  var opv=document.getElementById('mkeOpVal');
+  var nop=l&&l.op!==undefined&&l.op!==null?Math.round(l.op*100):100;
+  if(op)op.value=String(nop);
+  if(opv)opv.textContent=nop+'%';
+  var pp=document.getElementById('mkePainel');
+  var bt=pp?pp.querySelector('[data-acao="travar"]'):null;
+  if(bt)bt.classList.toggle('on',!!(l&&l.locked));
+  var bp=pp?pp.querySelector('[data-acao="proporcao"]'):null;
+  if(bp)bp.classList.toggle('on',!!(l&&l.prop));
+  var ba=document.getElementById('mkeBtnIma');
+  if(ba)ba.classList.toggle('on',!!mkeImaPref);
+  var bg=document.getElementById('mkeBtnGuia');
+  if(bg)bg.classList.toggle('on',mkeGuiaModo!=='off');
+  var bs=document.getElementById('mkeBtnEstudio');
+  if(bs)bs.classList.toggle('on',mkeEstudioLigado());
+  var rail=document.getElementById('mkeRail');
+  if(rail){
+    var bE=rail.querySelector('[data-acao="estudio"]');if(bE)bE.classList.toggle('on',mkeEstudioLigado());
+    var bG=rail.querySelector('[data-acao="guias"]');if(bG)bG.classList.toggle('on',mkeGuiaModo!=='off');
+    var bP=rail.querySelector('[data-acao="painel"]');
+    var painel=document.getElementById('mkePainel');
+    if(bP)bP.classList.toggle('on',!!(painel&&painel.classList.contains('vis')));
+  }
+  var lb=document.getElementById('layersPanel');
+  if(rail&&lb){var bL=rail.querySelector('[data-acao="camadas"]');if(bL)bL.classList.toggle('on',lb.classList.contains('vis'));}
+  mkePrecisaoLer();
+}
+
+/* ─────────────────────────── ações nomeadas ─────────────────────────── */
+
+function mkeAcao(nome){
+  switch(nome){
+    case 'add-imagem':{
+      var _pg=mkeCtx().page;
+      var inp=document.getElementById(_pg?('canvasInput_'+_pg.id):'canvasInput');
+      if(inp)inp.click();
+      break;
+    }
+    case 'estudio':mkeAlternarEstudio();break;
+    case 'guias':mkeCicloGuia();break;
+    case 'ima':mkeAlternarIma();break;
+    case 'camadas':try{toggleLayersPanel();}catch(e){}mkeSync();break;
+    case 'painel':mkeAlternarPainel();break;
+    case 'fechar':mkeFecharPainel();break;
+    case 'duplicar':mkeDuplicarCamada();break;
+    case 'flipH':mkeEspelhar('h');break;
+    case 'flipV':mkeEspelhar('v');break;
+    case 'girar-90':mkeGirar(-1);break;
+    case 'girar90':mkeGirar(1);break;
+    case 'rot0':mkeRotacao0();break;
+    case 'reset':mkeResetCamada();break;
+    case 'rot-m15':mkeGirarGraus(-15);break;
+    case 'rot-m1':mkeGirarGraus(-1);break;
+    case 'rot-p1':mkeGirarGraus(1);break;
+    case 'rot-p15':mkeGirarGraus(15);break;
+    case 'ajuda':mkeAjuda();break;
+    case 'substituir':mkeSubstituir();break;
+    case 'recortar':try{abrirCrop('layer');}catch(e){}break;
+    case 'travar':mkeTravarPosicao();break;
+    case 'proporcao':mkeTravarProporcao();break;
+    case 'al-esq':mkeAlinhar('esq');break;
+    case 'al-cx':mkeAlinhar('cx');break;
+    case 'al-dir':mkeAlinhar('dir');break;
+    case 'al-topo':mkeAlinhar('topo');break;
+    case 'al-cy':mkeAlinhar('cy');break;
+    case 'al-base':mkeAlinhar('base');break;
+    case 'al-centro':mkeAlinhar('centro');break;
+    case 'caber':try{lCaber();}catch(e){}break;
+    case 'sel-todas':mkeSelecionarTodas();break;
+    case 'levar-pag':mkeLevarParaPagina(false);break;
+    case 'copiar-pag':mkeLevarParaPagina(true);break;
+    case 'dist-h':mkeDistribuir('h');break;
+    case 'dist-v':mkeDistribuir('v');break;
+    case 'org-2col':mkeOrganizar('2col');break;
+    case 'org-1col':mkeOrganizar('1col');break;
+    case 'org-grade':mkeOrganizar('grade');break;
+    case 'org-aninhar':mkeOrganizar('aninhar');break;
+    case 'moldura':mkeMolduraJusta();break;
+    case 'mesmo-tam':mkeMesmoTamanho();break;
+    case 'travar-tudo':mkeTravarTudo();break;
+    case 'prec-aplicar':mkePrecisaoAplicar();break;
+    case 'mm-aplicar':mkeAplicarMm(false);break;
+    case 'mm-pos':mkeAplicarMmPos();break;
+    case 'mm-a4':mkeAplicarMm(true);break;
+    case 'exportar-area':mkeExportarArea();break;
+    case 'ocultar':{var c=mkeCtx();if(c.layer)mkeAlternarOculto(c.layer.id);break;}
+    case 'frente':mkeFrenteZ(1);break;
+    case 'tras':mkeFrenteZ(-1);break;
+    case 'excluir':try{v8ExcluirSelecionada();}catch(e){}break;
+  }
+}
+
+/* ─────────────────────────── teclado ─────────────────────────── */
+
+function mkeNudge(dx,dy){
+  var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
+  if(!alvos.length)return;
+  alvos.forEach(function(l){
+    if(l.type==='arr'&&typeof l.x1p==='number'){
+      l.x1p+=dx;l.x2p+=dx;l.y1p+=dy;l.y2p+=dy;
+    }else{
+      l.xp=mkeLimite(l.xp+dx,l.wp);
+      l.yp=mkeLimite(l.yp+dy,l.hp);
+    }
+    mkePos(ctx,l);
+  });
+  mkeSalvar(ctx);
+}
+
+
+/* ─────────────────────────── menu de contexto ─────────────────────────── */
+
+/* Botão direito na camada abre as ações mais usadas no lugar do mouse.
+   Sem isso, trocar a ordem de duas fotos exigia abrir a lista de camadas. */
+function mkeMenuFechar(){
+  var m=document.getElementById('mkeMenu');
+  if(m)m.remove();
+}
+function mkeMenuAbrir(x,y){
+  mkeMenuFechar();
+  var ctx=mkeCtx(),l=ctx.layer;
+  var itens=[];
+  var add=function(rot,acao,atalho,perigo){itens.push({rot:rot,acao:acao,atalho:atalho,perigo:perigo});};
+  var sep=function(){itens.push({sep:1});};
+  if(l){
+    add('⧉ Duplicar','duplicar','Ctrl+D');
+    if(l.type==='img'){add('⇄ Substituir imagem','substituir');add('✂ Recortar','recortar');}
+    sep();
+    add('⇋ Espelhar na horizontal','flipH');
+    add('⇅ Espelhar na vertical','flipV');
+    add('⟳ Girar 90°','girar90');
+    add('↺ Voltar ao original','reset');
+    sep();
+    add(l.locked?'🔓 Destravar posição':'🔒 Travar posição','travar');
+    add(l.hidden?'👁 Mostrar camada':'○ Ocultar camada','ocultar');
+    sep();
+    add('⬆ Trazer para frente','frente');
+    add('⬇ Enviar para trás','tras');
+    add('◎ Centralizar na área','al-centro');
+    sep();
+    add('🗑 Excluir camada','excluir',null,true);
+  }else{
+    add('🖼 Inserir imagem','add-imagem');
+    add('⤢ Ampliar a área','estudio');
+    add('🎛 Ferramentas do mockup','painel');
+    add('📐 Guias','guias');
+  }
+  if(!itens.length)return;
+  var menu=document.createElement('div');
+  menu.className='mke-menu';
+  menu.id='mkeMenu';
+  itens.forEach(function(item){
+    if(item.sep){
+      var d=document.createElement('div');d.className='mke-menu-sep';menu.appendChild(d);return;
+    }
+    var b=document.createElement('button');
+    b.type='button';
+    b.innerHTML=item.rot+(item.atalho?'<kbd>'+item.atalho+'</kbd>':'');
+    if(item.perigo)b.classList.add('mke-menu-perigo');
+    b.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      mkeMenuFechar();
+      mkeAcao(item.acao);
+    });
+    menu.appendChild(b);
+  });
+  document.body.appendChild(menu);
+  var r=menu.getBoundingClientRect();
+  var px=Math.max(6,Math.min(x,Math.max(6,window.innerWidth-r.width-6)));
+  var py=Math.max(6,Math.min(y,Math.max(6,window.innerHeight-r.height-6)));
+  menu.style.left=px+'px';
+  menu.style.top=py+'px';
+}
+function mkeFrenteZ(dir){
+  var ctx=mkeCtx();
+  if(!ctx.layer)return;
+  try{
+    if(ctx.page){ if(dir>0)lFrenteExtra(ctx.page.id); else lTrasExtra(ctx.page.id); }
+    else { if(dir>0)lFrente(); else lTras(); }
+  }catch(e){console.warn('ordem',e);}
+  updList();savLayers();snap();
+}
+function mkeLigarMenuContexto(){
+  var ci=document.getElementById('canvasInner');
+  if(!ci||ci.dataset.mkeCtx==='1')return;
+  ci.dataset.mkeCtx='1';
+  /* V9.1 — um só listener no documento atende todas as áreas do mockup
+     (folha 1 e páginas extras). Antes o botão direito só funcionava na
+     folha 1, justamente onde ele é menos necessário. */
+  document.addEventListener('contextmenu',function(ev){
+    if(!ev.target||!ev.target.closest)return;
+    var area=ev.target.closest('#canvasInner,[id^="canvasInner_"]');
+    if(!area)return;
+    var page=null;
+    if(area.id&&area.id!=='canvasInner'){
+      var pid=area.id.replace('canvasInner_','');
+      page=paginas.filter(function(x){return x.id===pid;})[0]||null;
+    }
+    var alvo=ev.target.closest('.img-layer,.txt-layer,.arr-layer,.rect-layer,.circle-layer');
+    if(alvo&&alvo.id&&alvo.id.indexOf('ly_')===0){
+      var id=alvo.id.slice(3);
+      if(page){
+        id=id.indexOf(page.id+'_')===0?id.slice(page.id.length+1):id;
+        if(page.layers.some(function(l){return l.id===id;})){try{selLayerExtra(page,id);}catch(e){}}
+      }else if(layers.some(function(l){return l.id===id;})){
+        try{selLayer(id);}catch(e){}
+      }
+    }else if(page){
+      try{deselecionarTudoExtra(page.id);}catch(e){}
+    }else{
+      try{deselecionarTudo();}catch(e){}
+    }
+    ev.preventDefault();
+    mkeMenuAbrir(ev.clientX,ev.clientY);
+  });
+  /* Em tablet/celular não existe botão direito: segurar o dedo na camada
+     abre o mesmo menu (a PWA é usada no chão de fábrica). */
+  var toqueTimer=null;
+  document.addEventListener('touchstart',function(ev){
+    if(!ev.target||!ev.target.closest)return;
+    var area=ev.target.closest('#canvasInner,[id^="canvasInner_"]');
+    if(!area)return;
+    var cam=ev.target.closest('.img-layer,.txt-layer,.arr-layer,.rect-layer,.circle-layer');
+    var t0=ev.touches&&ev.touches[0];
+    if(!t0)return;
+    clearTimeout(toqueTimer);
+    toqueTimer=setTimeout(function(){
+      var pid=(area.id!=='canvasInner')?area.id.replace('canvasInner_',''):null;
+      var page=pid?paginas.filter(function(x){return x.id===pid;})[0]:null;
+      if(cam&&cam.id){
+        var id=cam.id.replace(/^ly_/,'');
+        if(page){
+          if(id.indexOf(page.id+'_')===0)id=id.slice(page.id.length+1);
+          if(page.layers.some(function(l){return l.id===id;})){try{selLayerExtra(page,id);}catch(e){}}
+        }else if(layers.some(function(l){return l.id===id;})){try{selLayer(id);}catch(e){}}
+      }
+      mkeMenuAbrir(t0.clientX,t0.clientY);
+    },520);
+  },{passive:true});
+  ['touchend','touchmove','touchcancel'].forEach(function(evt){
+    document.addEventListener(evt,function(){clearTimeout(toqueTimer);},{passive:true});
+  });
+
+  document.addEventListener('mousedown',function(ev){
+    var m=document.getElementById('mkeMenu');
+    if(m&&!m.contains(ev.target))mkeMenuFechar();
+  },true);
+  window.addEventListener('blur',mkeMenuFechar);
+  window.addEventListener('resize',mkeMenuFechar);
+}
+
+/* ─────────────────────────── inicialização ─────────────────────────── */
+
+function mkeIniciar(){
+  if(mkePronto)return;
+  if(!document.getElementById('canvasOuter'))return;
+  mkeMontarRail();
+  mkeMontarPainel();
+  mkeMontarExtras();
+  mkeMoverUI();
+  mkeRenderGuias();
+  mkeLigarMenuContexto();
+  mkeAba(mkeAbaAtual);
+  mkePronto=true;
+  mkeSync();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mkeIniciar);
+else mkeIniciar();
+setTimeout(mkeIniciar,400);
+
 function savLayers(){try{localStorage.setItem('va3_layers',JSON.stringify(layers.map(serLayer)));}catch(e){}}
 new ResizeObserver(()=>{layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,false);});}).observe(canvasInner);
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   V9.1 — CONFORTO DE PREENCHIMENTO (dados do cliente)
+   ──────────────────────────────────────────────────────────────────────────
+   Dois incômodos que apareciam em toda ficha:
+
+   1. CPF/CNPJ, telefone e CEP eram digitados como viessem. A ficha técnica
+      impressa é documento de produção — o número tem que sair legível.
+   2. Para sair do "Nome" e chegar no "CPF" era preciso clicar. Enter e Tab
+      dentro de um contenteditable não levam ao campo seguinte.
+
+   Aqui os dois são resolvidos por DELEGAÇÃO no documento (focusout/keydown),
+   porque os campos do Preenchimento rápido só existem depois que o modal abre.
+   Nada muda na estrutura da folha: só o texto que já estava sendo digitado.
+   ══════════════════════════════════════════════════════════════════════════ */
+var V9_CAMPOS_CLIENTE=['dc_nome','dc_doc','dc_vendedor','dc_tel','dc_end','dc_cidade','dc_cep'];
+var V9_MASCARA_CAMPO={'dc_doc':'doc','dc_tel':'tel','dc_cep':'cep','v4qDoc':'doc','v4qTel':'tel','v4qCep':'cep'};
+
+function v9SoDigitos(v){return String(v==null?'':v).replace(/\D+/g,'');}
+function v9PareceNumero(v){return /^[\d\s.\/\-()]*$/.test(String(v==null?'':v).trim());}
+function v9FmtDoc(v){
+  var d=v9SoDigitos(v);
+  if(!v9PareceNumero(v)||!d)return v;
+  if(d.length===11)return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  if(d.length===14)return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  return v;
+}
+function v9FmtTel(v){
+  var d=v9SoDigitos(v);
+  if(!v9PareceNumero(v)||!d)return v;
+  if(d.length===11)return d.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  if(d.length===10)return d.replace(/(\d{2})(\d{4})(\d{4})/,'($1) $2-$3');
+  if(d.length===9)return d.replace(/(\d{5})(\d{4})/,'$1-$2');
+  return v;
+}
+function v9FmtCep(v){
+  var d=v9SoDigitos(v);
+  if(!v9PareceNumero(v)||d.length!==8)return v;
+  return d.replace(/(\d{5})(\d{3})/,'$1-$2');
+}
+function v9FormatarValor(tipo,v){
+  if(tipo==='doc')return v9FmtDoc(v);
+  if(tipo==='tel')return v9FmtTel(v);
+  if(tipo==='cep')return v9FmtCep(v);
+  return v;
+}
+function v9FormatarCampo(el,tipo){
+  if(!el||!tipo)return false;
+  /* isContentEditable não existe em todo navegador antigo: o atributo manda */
+  var editavel=!!(el.isContentEditable||(el.getAttribute&&el.getAttribute('contenteditable')==='true'));
+  var antes=editavel?el.textContent:el.value;
+  var depois=v9FormatarValor(tipo,antes||'');
+  if(depois===antes)return false;
+  if(editavel){
+    el.textContent=depois;
+    try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}
+    try{if(typeof sincTodasPaginas==='function')sincTodasPaginas();}catch(e){}
+    try{if(typeof snap==='function')snap();}catch(e){}
+  }else{
+    el.value=depois;
+    try{el.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}
+  }
+  return true;
+}
+function v9IrParaCampo(id){
+  var el=document.getElementById(id);
+  if(!el)return false;
+  try{
+    el.focus();
+    if(el.isContentEditable||(el.getAttribute&&el.getAttribute('contenteditable')==='true')){
+      /* cursor no FIM do texto: entrar no campo não apaga o que já estava lá */
+      var r=document.createRange();r.selectNodeContents(el);r.collapse(false);
+      var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);
+    }else if(typeof el.select==='function'){
+      try{el.select();}catch(e){}
+    }
+  }catch(e){}
+  return true;
+}
+/* Qual é o próximo campo "de tabela" (medidas, grade ou produção)? */
+function v9ProximoCampo(el){
+  var sel=null;
+  if(!el||!el.classList)return null;
+  if(el.classList.contains('gi'))sel='.gi';
+  else if(el.classList.contains('med-inp'))sel='.med-inp';
+  else if(el.closest&&el.closest('#prodLinhas'))sel='#prodLinhas .field';
+  if(!sel)return null;
+  var lista=Array.prototype.slice.call(document.querySelectorAll(sel));
+  var i=lista.indexOf(el);
+  return i<0?null:(lista[i+1]||null);
+}
+/* ── colar uma coluna da planilha nas tabelas ───────────────────────────
+   Quem preenche ficha de produção já tem a grade e as medidas no Excel. Aqui
+   Ctrl+V numa célula da grade (ou das medidas, ou da produção) espalha os
+   valores pelas células seguintes, na ordem. Antes era copiar e colar célula
+   por célula — 12 tamanhos, 12 idas e voltas de mouse. */
+function v9CampoSerie(el){
+  if(!el||!el.classList)return null;
+  if(el.classList.contains('gi'))return '.gi';
+  if(el.classList.contains('med-inp'))return '.med-inp';
+  if(el.closest&&el.closest('#prodLinhas'))return '#prodLinhas .field';
+  return null;
+}
+function v9SerieValores(txt){
+  return String(txt==null?'':txt).split(/[\t\r\n;,]+/).map(function(s){return s.trim();}).filter(function(s){return s!=='';});
+}
+function v9ColarSerie(el,txt){
+  var sel=v9CampoSerie(el);if(!sel)return 0;
+  var vals=v9SerieValores(txt);
+  if(vals.length<2)return 0;      /* um valor só é um colar normal */
+  var lista=Array.prototype.slice.call(document.querySelectorAll(sel));
+  var i=lista.indexOf(el);
+  if(i<0)return 0;
+  var n=0;
+  for(var k=0;k<vals.length&&(i+k)<lista.length;k++){
+    var alvo=lista[i+k],v=vals[k];
+    if(alvo.type==='number')v=v.replace(/[^\d.,-]/g,'').replace(',','.');
+    alvo.value=v;
+    try{alvo.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}
+    try{alvo.dispatchEvent(new Event('change',{bubbles:true}));}catch(e){}
+    n++;
+  }
+  try{if(typeof recalcGrade==='function')recalcGrade();}catch(e){}
+  try{if(typeof calcTotal==='function')calcTotal();}catch(e){}
+  try{if(typeof snap==='function')snap();}catch(e){}
+  return n;
+}
+function v9CopiarSerie(el){
+  var sel=v9CampoSerie(el);if(!sel)return null;
+  return Array.prototype.slice.call(document.querySelectorAll(sel)).map(function(x){return x.value;}).join('\t');
+}
+
+function v9LigarConfortoPreenchimento(){
+  if(window.__v9Conforto)return;
+  window.__v9Conforto=true;
+  /* Ctrl+Shift+C copia a tabela inteira, pronta para colar no Excel */
+  document.addEventListener('keydown',function(ev){
+    if(!(ev.ctrlKey||ev.metaKey)||!ev.shiftKey||ev.altKey)return;
+    if(String(ev.key).toLowerCase()!=='c')return;
+    var el=ev.target;
+    if(!v9CampoSerie(el))return;
+    var txt=v9CopiarSerie(el);
+    if(!txt)return;
+    ev.preventDefault();
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt);
+      else{
+        var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+        document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+      }
+      toast('📋 Tabela copiada (cole no Excel)','',2200);
+    }catch(e){toast('Não foi possível copiar a tabela','erro');}
+  },true);
+  /* máscara ao sair do campo (funciona também no Preenchimento rápido) */
+  document.addEventListener('focusout',function(ev){
+    var el=ev.target;
+    if(!el||!el.id)return;
+    var tipo=V9_MASCARA_CAMPO[el.id];
+    if(!tipo)return;
+    try{v9FormatarCampo(el,tipo);}catch(e){console.warn('mascara',e);}
+  },true);
+  /* Enter e Tab andam de campo em campo nos dados do cliente, nas medidas,
+     na grade e na produção. Sem isso, Enter no meio da ficha não fazia nada e
+     preencher 12 células de tamanho virava 12 cliques de mouse. */
+  document.addEventListener('keydown',function(ev){
+    if(ev.key!=='Enter'&&ev.key!=='Tab')return;
+    var el=ev.target;
+    if(!el||el.disabled||el.readOnly)return;
+    if(ev.ctrlKey||ev.metaKey||ev.altKey)return;
+    /* 1) dados do cliente */
+    if(el.id&&V9_CAMPOS_CLIENTE.indexOf(el.id)>=0){
+      var i=V9_CAMPOS_CLIENTE.indexOf(el.id);
+      var j=i+(ev.shiftKey?-1:1);
+      if(j<0||j>=V9_CAMPOS_CLIENTE.length)return;   /* nas pontas, comportamento normal */
+      if(!document.getElementById(V9_CAMPOS_CLIENTE[j]))return;
+      ev.preventDefault();
+      var tipo=V9_MASCARA_CAMPO[el.id];
+      if(tipo){try{v9FormatarCampo(el,tipo);}catch(e){}}
+      v9IrParaCampo(V9_CAMPOS_CLIENTE[j]);
+      return;
+    }
+    /* 2) tabelas: só o Enter é nosso (o Tab do navegador já está certo) */
+    if(ev.key!=='Enter')return;
+    var prox=v9ProximoCampo(el);
+    if(prox){
+      ev.preventDefault();
+      try{prox.focus();if(prox.select)prox.select();}catch(e){}
+      return;
+    }
+    /* 3) fim da última linha da produção: Enter começa a linha seguinte */
+    try{
+      if(el.closest&&el.closest('#prodLinhas')){
+        var tb=document.getElementById('prodLinhas');
+        var tr=el.closest('tr');
+        if(!tb||!tr||tr!==tb.lastElementChild)return;
+        ev.preventDefault();
+        if(typeof criarLinha==='function')criarLinha();
+        var nova=tb.lastElementChild;
+        var f=nova?nova.querySelector('.field'):null;
+        if(f){f.focus();}
+        try{calcTotal();}catch(e){}
+        try{snap();}catch(e){}
+      }
+    }catch(e){}
+  },true);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v9LigarConfortoPreenchimento);
+else v9LigarConfortoPreenchimento();
+setTimeout(v9LigarConfortoPreenchimento,500);
 
 /* ═══ CROP ═══ */
 let cropInst=null,cropTgt=null;
@@ -3383,7 +5942,12 @@ recalcGrade();calcTotal();
 
 /* ═══ PDF ═══ */
 function prepPrint(){
+try{mkeSairEstudio();mkeFecharPainel();}catch(e){}
 document.documentElement.classList.add('v7-exporting');
+/* V9.1 — o PNG da folha (html2canvas) não é a impressão: as regras @media
+   print não valem para ele. Sem esta classe, a régua do mockup, o botão
+   "+ Imagem" e o painel de camadas saíam fotografados dentro do arquivo. */
+try{document.body.classList.add('mke-exportando');}catch(e){}
 if(modoSeta)desativarModoSeta();
 paginas.forEach(p=>{if(p.modoSeta)desativarModoSetaExtra(p);deselecionarTudoExtra(p.id);});
 fecharLogo();deselecionarTudo();
@@ -4289,16 +6853,30 @@ function lerArqComNome(f) {
   const r = new FileReader(); r.onload = ev => {
     v7DownscaleDataURL(ev.target.result).then(src=>{
     const id = uid(), tmp = new Image();
-    tmp.onload = () => { const ratio = tmp.naturalWidth/tmp.naturalHeight; let wp=0.5, hp=wp/ratio; if(hp>0.8){hp=0.8;wp=hp*ratio;}
-      const l = {type:'img',id,src,ratio,xp:(1-wp)/2,yp:(1-hp)/2,wp,hp,rot:0,prop:true,z:++zCnt,_fileName:f.name};
+    tmp.onload = () => {
+      const ratio = (tmp.naturalWidth||1)/(tmp.naturalHeight||1);
+      /* V9.1 — o mesmo encaixe da imagem sem nome: procura espaço livre na
+         área em vez de nascer no centro, por cima da foto anterior. */
+      const W = cw()||1, H = ch()||1, rc = H ? W/H : 1;
+      let wp = 0.52, hp = wp*rc/ratio;
+      if(hp > 0.82){ hp = 0.82; wp = hp*ratio/rc; }
+      let livre = {xp:(1-wp)/2, yp:(1-hp)/2};
+      try{ if(typeof mkeSlotLivre === 'function') livre = mkeSlotLivre(wp, hp); }catch(e){}
+      const l = {type:'img',id,src,ratio,xp:livre.xp,yp:livre.yp,wp,hp,rot:0,prop:true,z:++zCnt,
+                 _fileName:f.name,_nw:tmp.naturalWidth||0,_nh:tmp.naturalHeight||0};
       layers.push(l);renderImgLayer(l);selLayer(id);updPh();updList();savLayers();snap();
+      try{ mkeAvisoImagem(l); }catch(e){}
     }; tmp.src = src;
     });
   }; r.readAsDataURL(f);
 }
 function onCanvasFilesPatched(e) {
-  Array.from(e.target.files).forEach(f => { if(f.type.startsWith('image/')) lerArqComNome(f); });
+  const arqs = Array.from(e.target.files || []).filter(f => f.type && f.type.indexOf('image/') === 0);
   e.target.value = '';
+  if(!arqs.length) return;
+  /* várias fotos de uma vez: entram lado a lado, do mesmo tamanho */
+  if(arqs.length > 1 && typeof mkeLoteImagens === 'function'){ mkeLoteImagens(arqs); return; }
+  arqs.forEach(f => lerArqComNome(f));
 }
 
 /* ══ Init ══ */
@@ -5212,6 +7790,28 @@ function v7CapturarPaginaExtra(p){
     layers:(p.layers||[]).map(serLayer)
   };
 }
+/* Duplicar uma página inteira (campos, grade, medidas, produção e artes).
+   Serve para a ficha de 3 peças iguais: monta a página 2 uma vez e copia.
+   Só vale para páginas extras — a folha 1 é a ficha padrão e não se copia. */
+function v7DuplicarPagina(pid){
+  const p=paginas.find(x=>x.id===pid);
+  if(!p){toast('A folha 1 não pode ser duplicada — use “Adicionar página”.','erro',3600);return;}
+  const snap=v7CapturarPaginaExtra(p);
+  const novoId='p'+Date.now().toString(36).slice(-5)+Math.random().toString(36).slice(2,4);
+  snap.id=novoId;
+  snap.num=p.num+1;
+  /* camadas com ids novos: sem isso o Ctrl+Z e o “excluir” de uma página
+     mexeriam na cópia da outra */
+  snap.layers=(snap.layers||[]).map(function(l){var n=Object.assign({},l);n.id=uid();return n;});
+  (snap.cores||[]).forEach(function(c){});
+  const idx=paginas.indexOf(p)+1;
+  v7CriarPaginaRestaurada(snap,idx);
+  try{if(typeof v7PushPageUndo==='function')v7PushPageUndo({type:'add',index:idx,id:novoId});}catch(e){}
+  try{if(typeof atualizarNavSidebar==='function')atualizarNavSidebar();}catch(e){}
+  try{if(typeof renderPageStrip==='function')renderPageStrip();}catch(e){}
+  try{if(typeof v7Autosave==='function')v7Autosave();}catch(e){}
+  toast('⧉ Página '+p.num+' duplicada','',2200);
+}
 function v7CriarPaginaRestaurada(snap,index){
   if(!snap||!snap.id)return;
   const pid=snap.id;
@@ -5524,9 +8124,15 @@ function v7MostrarToolbar(meta){
   b('circ','●','Círculo');
   if(!isBranca)b('cor','🎨','Adicionar cor');
   if(isP1)b('camadas','☰','Painel de camadas');
+  /* V9.1 — o estúdio do mockup existe em todas as páginas: a régua, o painel
+     e as guias passam a morar na área que está em foco (mkeMoverUI). */
+  b('estudio','⤢','Ampliar a área do mockup desta página');
+  b('ferramentas','🎛','Ferramentas do mockup (trocar, espelhar, alinhar, organizar)');
   tb.innerHTML='<span class="v7-tb-label">Pág. '+numTxt+'</span>'+btns.join('');
   tb.style.display='flex';
   v7PosicionarToolbar();
+  /* as ferramentas do mockup acompanham a página que está sendo editada */
+  try{mkeMoverUI();mkeSync();}catch(e){}
 }
 function v7MostrarToolbarP1(){v7MostrarToolbar({id:'folha1',tipo:'normal',p1:true});}
 function v7ToolAcao(a){
@@ -5540,6 +8146,8 @@ function v7ToolAcao(a){
     else if(a==='circ'){if(isP1)criarCirculo();else criarCirculoExtra(pid);}
     else if(a==='cor'){if(isP1)adicionarCor();else adicionarCorExtra(pid);}
     else if(a==='camadas'){toggleLayersPanel();}
+    else if(a==='estudio'){mkeEntrarEstudio();}
+    else if(a==='ferramentas'){mkeAlternarEstudio();mkePainelAbrir('ajustes');}
   }catch(e){console.warn('v7ToolAcao',e);}
   v7PosicionarToolbar();
 }
@@ -5628,6 +8236,7 @@ function v7BaixarPNG(folhaIds){
   }
 }
 function v7BaixarPDF(folhaIds){
+  try{mkeSairEstudio();mkeFecharPainel();}catch(e){}
   const sel=new Set(folhaIds);
   document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.toggle('print-skip',!sel.has(f.id)));
   document.title='Ficha técnica de produção';
@@ -5823,8 +8432,38 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     <h4>Ferramentas (coluna da esquerda)</h4>
     <ul>
       <li><b>Imagem</b> · <b>Texto</b> · <b>Seta/anotação</b> · <b>Retângulo</b> · <b>Círculo</b> · <b>Conta-gotas</b> (pega uma cor pronta da imagem) · <b>Painel de camadas</b> (o que fica na frente e atrás).</li>
-      <li>Clique no item da página para selecioná-lo: aparece a barrinha com <b>⬆/⬇</b> (frente/trás), <b>⊕ Centro</b>, <b>⤢ Fill</b> (preenche a página), <b>✂️</b> recortar, <b>🔒</b> travar e <b>🗑</b> apagar.</li>
-      <li>O cadeado <b>🔒</b> é o "não mexa sem querer": o item continua salvo, só não se move. O <b>✕</b> apenas tira a seleção.</li>
+      <li>Clique no item da página para selecioná-lo: aparece a barrinha com <b>⬆/⬇</b> (frente/trás), <b>⊕</b> centro, <b>⤢</b> preencher a área, <b>⤡</b> caber na área, <b>⇄</b> trocar a imagem, <b>✂</b> recortar, <b>🔒</b> travar a proporção, <b>⋯</b> mais ferramentas e <b>🗑</b> apagar.</li>
+      <li>O cadeado <b>🔒</b> da barra mantém a <b>proporção</b> ao redimensionar (segure <kbd>Shift</kbd> para inverter na hora). Para <b>travar a posição</b> — o "não mexa sem querer" — use o cadeado da lista de camadas ou o botão <b>🔒 Travar posição</b> do painel de ferramentas.</li>
+      <li>O <b>✕</b> apenas tira a seleção.</li>
+    </ul>
+    <h4 id="ajudaMockup">Estúdio do mockup (área da direita)</h4>
+    <ul>
+      <li><b>⤢ Estúdio</b> (na régua da área, na barra lateral ou na barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta ao normal.</li>
+      <li>A régua da esquerda da área tem: <b>+ imagem</b>, <b>⤢ ampliar</b>, <b>📐 guias</b> (centro / grade / margem), <b>🗂 camadas</b>, <b>🧲 ímã</b> e <b>🎛 ferramentas</b>.</li>
+      <li>O <b>⋯</b> abre o painel de ferramentas: <b>⇄ trocar imagem</b> mantendo lugar e tamanho, <b>espelhar</b>, <b>girar 90°</b>, <b>opacidade</b>, <b>travar</b>, <b>alinhar e distribuir</b>, <b>organizar</b> (frente e costas lado a lado, empilhado ou em grade), <b>precisão em %</b> com leitura em <b>mm</b> e <b>baixar só esta área em PNG</b>.</li>
+      <li>Arraste as fotos para a área ou cole um print com <kbd>Ctrl</kbd>+<kbd>V</kbd>. A segunda imagem já entra ao lado da primeira, sem cobrir.</li>
+      <li>Escolhendo <b>frente e costas juntas</b> (ou arrastando as duas de uma vez), elas entram <b>lado a lado</b>, no mesmo tamanho e alinhadas — sem precisar ajustar à mão.</li>
+      <li>A lista <b>🗂</b> mostra <b>⚠</b> quando a foto tem pouca resolução para o tamanho em que vai ser impressa (a aba <b>Precisão</b> explica: “boa para 300 dpi” ou “baixa”). Troque por um arquivo maior antes de mandar para a produção.</li>
+      <li>O <b>ímã</b> encosta a camada nas bordas, no centro e nas outras camadas; segure <kbd>Alt</kbd> para soltar. A camada nunca some: fica sempre um pedaço dentro da área.</li>
+      <li><b>Botão direito</b> na camada abre as ações rápidas (duplicar, trocar, espelhar, ordem, travar, ocultar, excluir). Vale em <b>todas as páginas</b>; no tablet, é só <b>segurar o dedo</b> na camada.</li>
+      <li>A lista <b>🗂</b> mostra as camadas <b>da página em foco</b> (o título diz “Camadas P2”). O nome vem do arquivo da foto, então “frente polo” aparece no lugar de “Imagem 2”.</li>
+      <li>As ferramentas <b>acompanham a página em foco</b>: clicar numa arte da página 2 leva a régua, o painel e o <b>⤢ estúdio</b> para a página 2. O ⤢ e o 🎛 também estão na barrinha de cada página.</li>
+      <li><b>Solte uma foto em cima de outra</b> para trocar só aquela arte, mantendo lugar e tamanho.</li>
+      <li>Na aba <b>Precisão</b> dá para digitar o tamanho <b>no papel, em milímetros</b> (ex.: 100 mm de largura) — é assim que a fábrica fala. “Largura da folha” ocupa toda a área.</li>
+      <li>Com <b>Shift+clique</b> em várias camadas, <b>alinhar</b> encosta uma na outra (não na área) — o jeito rápido de deixar frente e costas na mesma altura. Vale em <b>todas as páginas</b>, e o <b>🗑 Delete</b> apaga o grupo inteiro.</li>
+      <li><b>🖼 Selecionar todas as imagens</b> (aba Alinhar) marca as fotos da página de uma vez: depois é só alinhar, girar ou distribuir.</li>
+      <li><b>Endireitar</b>: −15° / −1° / +1° no painel, ou <kbd>Alt</kbd>+<kbd>←</kbd> <kbd>→</kbd> (com <kbd>Shift</kbd> vai de 15 em 15°). Serve para foto tirada torta; o tamanho não muda.</li>
+      <li><b>Posição no papel (mm)</b>: digite a distância da esquerda e do topo em milímetros — a mesma linguagem da ficha — e a camada vai para o lugar exato.</li>
+      <li><b>Levar / copiar para outra página</b> (aba Ajustes): escolha a página e mande a camada para lá, com lugar e tamanho — serve para arte que nasceu na página errada. <kbd>Ctrl</kbd>+<kbd>S</kbd> salva na hora.</li>
+      <li><b>🔒 Travar tudo</b> (aba Organizar) protege a arte pronta da página: nenhuma camada se move por acidente até você destravar.</li>
+    </ul>
+    <h4>Preenchimento mais rápido</h4>
+    <ul>
+      <li><b>CPF/CNPJ, telefone e CEP se arrumam sozinhos</b> ao sair do campo: digite só os números (<code>12345678901</code>) e a ficha mostra <b>123.456.789-01</b>. Vale também no <b>Preenchimento rápido</b>.</li>
+      <li><kbd>Enter</kbd> e <kbd>Tab</kbd> andam de campo em campo nos dados do cliente, na tabela de <b>medidas</b>, na <b>grade</b> de tamanhos e na <b>produção</b>.</li>
+      <li>Na <b>produção</b>, <kbd>Enter</kbd> no último campo (Qtd) já abre a linha seguinte.</li>
+      <li><b>Colar uma coluna do Excel</b> dentro da grade, das medidas ou da produção espalha os valores pelas células seguintes. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> copia a tabela inteira para colar na planilha.</li>
+      <li>Cada página extra tem <b>⧉ duplicar página</b> na barra lateral: copia campos, grade, medidas, produção e artes.</li>
     </ul>
     <h4>Páginas</h4>
     <ul>
@@ -5849,7 +8488,8 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     <h4>Atalhos</h4>
     <ul>
       <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfazer · <kbd>Ctrl</kbd>+<kbd>Y</kbd> (ou Ctrl+Shift+Z) refazer · <kbd>Delete</kbd> apaga o item selecionado.</li>
-      <li><kbd>Ctrl</kbd>+<kbd>C</kbd> copia a camada selecionada · <kbd>Ctrl</kbd>+<kbd>X</kbd> recorta · <kbd>Ctrl</kbd>+<kbd>V</kbd> cola (na página ativa, um degrau abaixo do original).</li>
+      <li><kbd>Ctrl</kbd>+<kbd>C</kbd> copia a camada selecionada · <kbd>Ctrl</kbd>+<kbd>X</kbd> recorta · <kbd>Ctrl</kbd>+<kbd>V</kbd> cola (na página ativa, um degrau abaixo do original). Colar uma <b>imagem</b> vinda de outro programa coloca a imagem direto na área do mockup.</li>
+      <li><kbd>Ctrl</kbd>+<kbd>D</kbd> duplica a camada · <b>setas</b> movem 1 px (<kbd>Shift</kbd>+seta, 10 px) · <kbd>[</kbd> e <kbd>]</kbd> mudam a camada de posição na pilha.</li>
       <li>Com o cursor dentro de um campo de texto, os atalhos de copiar/colar/desfazer são os do próprio campo — a folha não é mexida.</li>
       <li><kbd>Esc</kbd> fecha a ferramenta/seleção e esta ajuda · <kbd>Enter</kbd> pula de campo no <b>preenchimento rápido</b> (Ctrl+Enter aplica tudo).</li>
     </ul>

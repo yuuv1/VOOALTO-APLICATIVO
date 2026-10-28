@@ -174,6 +174,72 @@ dar 404; não pode existir `script[src*="pdf"]`; não pode haver `ficha-popup`; 
 seletor de tema tem que ter exatamente 2 opções. Se alguém reintroduzir uma
 dessas coisas, a suíte falha.
 
+## 8.1 Estúdio do mockup (V9.1)
+
+A área onde as artes entram é a `#canvasOuter` dentro de `.col-dir` (canto
+inferior direito da folha 1, e o mesmo bloco nas páginas extras). O motor de
+camadas é o mesmo desde a V7 (`layers[]` + `posEl`/`posElExtra` + `z`), e a V9.1
+**não trocou esse motor** — acrescentou ferramenta em volta dele.
+
+```
+#canvasOuter
+  .canvas-inner        camadas + .canvas-tb/.text-tb/.arr-tb/.shape-tb
+    #mkeGuias          linhas de centro/terços/margem (não imprimem)
+    #mkeSmartV/H       linha ciano do ímã durante o arraste
+  .mke-rail            + imagem · ⤢ · 📐 · 🗂 · 🧲 · 🎛
+  .mke-panel           4 abas: Ajustes / Alinhar / Organizar / Precisão
+  .mke-studio-bar      só no modo ampliado
+  .mke-badge           medida (%) e mm durante o arraste
+```
+
+Decisões que precisam ser mantidas por quem continuar:
+
+1. **Nada disso pode imprimir.** Régua, painel, guias, menu e selo estão na
+   lista `@media print` e na lista de `body.v4-preview-clean`. O modo ampliado
+   (`#canvasOuter.mke-studio`, `position:fixed`) também é desfeito em
+   `prepPrint`, `v7BaixarPDF` e na própria `@media print` — sem isso a arte
+   sairia fora do papel.
+2. **Atributos novos de camada são opcionais**: `name`, `hidden`, `locked`,
+   `op`, `flipH`, `flipV`, `fit`. `serLayer()` só grava quando fogem do padrão,
+   para o `.json` de quem não usa os recursos não engordar.
+3. **Transformação em um lugar só**: `mkeTransform(l)` monta
+   `rotate + scaleX + scaleY` e é chamada por `posEl`/`posElExtra`. O mesmo vale
+   para `mkeAplicarVisual` (opacidade, oculto, cadeado e `object-fit`). Se
+   alguém escrever `style.transform` direto num render, o espelhamento some na
+   impressão.
+4. **Cadeado × proporção**: `l.prop` = manter proporção ao redimensionar
+   (`🔒` da barra, Shift inverte); `l.locked` = não mover (cadeado da lista de
+   camadas). Os dois existem e significam coisas diferentes — era a confusão da
+   V8.
+5. **`mkeCtx()`** decide em qual página a ação cai: página extra ativa com
+   seleção > seleção da folha 1 > primeira página com seleção > nada. Sem essa
+   ordem, uma seleção antiga numa página extra fazia o painel mexer na camada
+   errada.
+6. **Limite de arraste** (`mkeLimite`): a camada nunca sai inteira da área;
+   fica sempre ~10% dentro. É o que evita "a imagem desapareceu".
+7. **Importação em lote** (`mkeGradeLote` → `mkeLoteImagens`): com 2+ arquivos
+   escolhidos de uma vez, a geometria é calculada antes de criar as camadas
+   (2 fotos → 2 colunas; 3–4 → 2×2; 5+ → 3 colunas), sempre dentro da área e
+   sem sobreposição. `mkeGradeLote` não toca no DOM: é a parte testável.
+   Os dois caminhos de importação (`onCanvasFiles` da folha 1 e o
+   `onCanvasFilesPatched` que substitui o `onchange`, mais o das páginas
+   extras) precisam usar o mesmo encaixe — foi assim que a 2ª foto deixou de
+   cair em cima da 1ª.
+8. **Feramentas por página** (`mkePaginaFoco` + `mkeMoverUI`): a régua, o
+   painel, o selo, a barra do estúdio, as guias e os ímãs são **movidos** para a
+   área da página em foco. São os mesmos elementos (um id só para cada),
+   então não existe estado duplicado. Qualquer código novo que crie elementos
+   do estúdio precisa entrar na lista do `mkeMoverUI`, senão fica preso na
+   folha 1.
+9. **Nada de novo no papel**: toda ferramenta do estúdio mora fora de `.folha`.
+   As páginas extras usam `.canvas-inner` como área; o modo ampliado vale para
+   `#canvasOuter.mke-studio` (folha 1) e `.canvas-inner.mke-studio` (extras).
+10. **Resolução**: `mkeQualidade()` compara os pixels reais da foto com os que
+   ela precisaria para 300 dpi no tamanho impresso (a folha tem 210 mm de
+   largura em 794 px → `MKE_MM_PX = 210/794`). O `⚠` da lista de camadas e a
+   linha “Resolução da foto” da aba Precisão usam essa conta. O tamanho natural
+   fica em `l._nw/_nh` e em `MKE_PX[src]`, nunca em `serLayer`.
+
 ## 9. Caminhos possíveis a partir daqui
 
 Não estão feitos — são os pontos onde a próxima mudança encaixa com menos atrito.
