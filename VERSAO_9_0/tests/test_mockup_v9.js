@@ -1101,6 +1101,22 @@ function check(label, ok, extra) {
     t(`v7PageUndoStack.length`) === 0 && t(`undoStack.length`) === 0,
     [t(`v7PageUndoStack.length`), t(`undoStack.length`)]);
 
+  /* 22.14 a moldura sem imagem sobrevive ao .json e volta a mostrar a foto
+     quando a imagem é substituída (o marcador não pode “grudar” na camada) */
+  t(`addImgLayer('',{id:'vazia',xp:.3,yp:.35,wp:.25,hp:.2,rot:0})`);
+  await new Promise(r => setTimeout(r, 300));
+  const jsonVazia = t(`JSON.stringify(capturarFichaParaJSON())`);
+  t(`restaurarDeJSON(${jsonVazia})`);
+  await new Promise(r => setTimeout(r, 1100));
+  const vaziaVoltou = t(`(function(){var l=layers.filter(function(x){return x.id==='vazia';})[0];return l?[l.xp,l.yp,!!l._semImagem]:null;})()`);
+  check('moldura sem imagem volta do .json no mesmo lugar',
+    Array.isArray(vaziaVoltou) && Math.abs(vaziaVoltou[0] - 0.3) < 1e-6 && vaziaVoltou[2] === true, vaziaVoltou);
+  const srcDepois = t(`(function(){var l=layers.filter(function(x){return x.id==='vazia';})[0];
+      l.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      renderImgLayer(l);var im=document.querySelector('#ly_vazia img');return im?im.getAttribute('src').slice(0,22):'sem-img';})()`);
+  check('substituir a imagem da moldura vazia volta a mostrar a foto',
+    typeof srcDepois === 'string' && srcDepois.indexOf('data:image/png') === 0, srcDepois);
+
   if (errs.length) fail++;
   console.log('  erros de página:', errs.length ? errs : 'nenhum ✓');
   console.log(`\n═══ MOCKUP V9.1: ${pass} OK, ${fail} FAIL ═══`);

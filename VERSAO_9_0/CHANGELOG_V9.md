@@ -38,7 +38,7 @@ comportamento, provada por teste automatizado.
 
 ### 3. Testes
 
-`tests/test_mockup_v9.js` — **288 verificações** (eram 258 na V9.1.0):
+`tests/test_mockup_v9.js` — **290 verificações** (eram 258 na V9.1.0):
 além de tudo o que já existia, agora cobre desfazer/refazer na folha 1 e nas
 páginas extras, remover a página em foco sem levar a régua junto, preencher em
 `cover`, girar/espelhar seta, recorte sem a biblioteca, **ida e volta do `.json`
@@ -46,7 +46,8 @@ com camada de imagem em página extra**, **imagem quebrada mantendo a moldura**,
 **rascunho de emergência sem fotos** (com cota simulada), `va3_layers` sem
 base64, a numeração das páginas depois de remover uma do meio, **“Nova ficha”
 apagando o mockup antigo da cópia de emergência**, **ocultar camada na página
-extra** e **Ctrl+Z logo depois de abrir uma ficha**.
+extra**, **Ctrl+Z logo depois de abrir uma ficha** e a **moldura sem imagem
+voltando do `.json`** (e a foto reaparecendo quando a imagem é substituída).
 
 `tests/test_orc_features_v9.js` — **48 verificações** (eram 34): assinatura em
 branco, assinatura desenhada, exportação PNG sem a biblioteca, autosave com a
