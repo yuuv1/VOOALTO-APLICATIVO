@@ -2,6 +2,6 @@ node_modules/
 __pycache__/
 *.py[cod]
 
-# Artefato gerado por build_v9_pwa.py — distribuído por release, não versionado
+# Artefato gerado por build_v10_pwa.py — distribuído por release, não versionado
 # (antes cada rebuild do ZIP entrava no histórico como um blob binário novo).
-VERSAO_9_0/VOOALTO_V9_PWA.zip
+VERSAO_10_0/VOOALTO_V10_PWA.zip

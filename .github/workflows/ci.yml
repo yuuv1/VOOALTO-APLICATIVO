@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     defaults:
       run:
-        working-directory: VERSAO_9_0
+        working-directory: VERSAO_10_0
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: VERSAO_9_0/package-lock.json
+          cache-dependency-path: VERSAO_10_0/package-lock.json
 
       - uses: actions/setup-python@v5
         with:
@@ -39,16 +39,16 @@ jobs:
       - name: Suíte JS (jsdom)
         run: npm test
 
-      - name: Suíte Python (build + servidor)
+      - name: Suíte Python (build + contrato + servidor)
         run: npm run test:python
 
       - name: O sw.js commitado corresponde ao conteúdo do app?
         shell: bash
         run: |
-          python build_v9_pwa.py
-          if ! git diff --quiet -- ATUALIZACAO_V9/sw.js; then
+          python build_v10_pwa.py
+          if ! git diff --quiet -- ATUALIZACAO_V10/sw.js; then
             echo "::error::O sw.js commitado está desatualizado. Rode 'npm run build' e commite o resultado."
-            git diff --stat -- ATUALIZACAO_V9/sw.js
+            git diff --stat -- ATUALIZACAO_V10/sw.js
             exit 1
           fi
           echo "sw.js em sincronia com o conteúdo do app."

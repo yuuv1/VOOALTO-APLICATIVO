@@ -1,0 +1,114 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   VOOALTO V10 — BASE DE TEMA COMPARTILHADA
+   ──────────────────────────────────────────────────────────────────────────
+   Carregado pelo shell, pela Ficha Técnica e pelo Orçamento. Os três eram
+   três aplicativos com três paletas: o shell era #eef0ff/#0b0f17, a barra da
+   ficha era #101319 e o Orçamento era um azul-ardósia #0F172A/#1E293B que
+   nunca mudava — no tema claro o topo ficava claro e os módulos continuavam
+   escuros.
+
+   Aqui existe UMA paleta, com dois temas. Cada módulo só mapeia os seus
+   nomes antigos (--sb-*, --glass-*, as cores do Orçamento) para estes.
+
+   REGRA QUE NÃO MUDA: a folha A4 é papel. --v10-paper é #fff nos dois temas,
+   senão a ficha impressa sai cinza. Nada de tema dentro de .folha/.folha-branca.
+
+   Carregado ANTES dos <style> de cada módulo, de propósito: os módulos
+   declaram os nomes deles apontando para estes tokens, e a resolução de
+   var() acontece na hora do uso, não na hora da declaração.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* superfícies */
+  --v10-bg:#eef0ff;          /* fundo da janela (atrás dos módulos) */
+  --v10-bg-2:#e3e7f6;        /* mesa/área de trabalho (atrás da folha) */
+  --v10-surface:#ffffff;     /* barra lateral, painéis, modais */
+  --v10-surface-2:#f5f6fb;   /* cartões dentro da superfície */
+  --v10-surface-3:#eceef8;   /* realce de cartão / cabeçalho de painel */
+
+  /* linhas */
+  --v10-line:rgba(23,23,42,.12);
+  --v10-line-2:rgba(23,23,42,.22);
+
+  /* texto */
+  --v10-t1:#17172a;
+  --v10-t2:#4b5468;
+  --v10-t3:#78839b;
+
+  /* interação */
+  --v10-hover:rgba(23,23,42,.05);
+  --v10-active:rgba(23,23,42,.09);
+  --v10-sel:rgba(212,24,122,.10);
+
+  /* marca */
+  --v10-pink:#D4187A;
+  --v10-pink-2:#F0449F;
+  --v10-pink-soft:rgba(212,24,122,.10);
+
+  /* apoio */
+  --v10-shadow:0 18px 50px rgba(20,24,50,.18);
+  --v10-overlay:rgba(18,22,38,.45);
+  --v10-ok:#15803d;
+  --v10-warn:#b45309;
+  --v10-err:#b91c1c;
+  --v10-ok-bg:rgba(21,128,61,.10);
+  --v10-warn-bg:rgba(180,83,9,.10);
+  --v10-err-bg:rgba(185,28,28,.09);
+
+  /* papel — fixo nos dois temas */
+  --v10-paper:#ffffff;
+  --v10-paper-ink:#17172a;
+
+  color-scheme:light;
+}
+
+[data-theme="escuro"]{
+  /* V9.3 — "escuro de verdade": o painel era #101319 e a janela #0b0f17, um
+     cinza-azulado que no monitor grande parece claro. Agora o fundo é quase
+     preto e as superfícies sobem em degraus curtos, para o conteúdo brilhar. */
+  --v10-bg:#04060a;
+  --v10-bg-2:#06090e;
+  --v10-surface:#0a0d13;
+  --v10-surface-2:#0f131a;
+  --v10-surface-3:#151a23;
+
+  --v10-line:rgba(255,255,255,.08);
+  --v10-line-2:rgba(255,255,255,.16);
+
+  --v10-t1:#e9eef7;
+  --v10-t2:#8d99ac;
+  --v10-t3:#66707f;
+
+  --v10-hover:rgba(255,255,255,.055);
+  --v10-active:rgba(255,255,255,.09);
+  --v10-sel:rgba(240,68,159,.16);
+
+  --v10-pink:#F0449F;
+  --v10-pink-2:#F86BB6;
+  --v10-pink-soft:rgba(240,68,159,.14);
+
+  --v10-shadow:0 18px 50px rgba(0,0,0,.55);
+  --v10-overlay:rgba(0,0,0,.62);
+  --v10-ok:#4ade80;
+  --v10-warn:#fbbf24;
+  --v10-err:#fca5a5;
+  --v10-ok-bg:rgba(74,222,128,.14);
+  --v10-warn-bg:rgba(251,191,36,.14);
+  --v10-err-bg:rgba(252,165,165,.14);
+
+  color-scheme:dark;
+}
+
+/* Rolagem com a cara do tema (o padrão do Windows é uma barra cinza clara
+   que destoa no escuro). */
+*{scrollbar-width:thin;scrollbar-color:var(--v10-line-2) transparent}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:var(--v10-line-2);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background:var(--v10-t3);background-clip:padding-box}
+
+/* Foco de teclado consistente nos três módulos. */
+:focus-visible{outline:2px solid var(--v10-pink);outline-offset:2px}
+
+/* Campos nativos (select, date, number) seguem o esquema declarado acima. */
+input,select,textarea,button{color-scheme:inherit}
