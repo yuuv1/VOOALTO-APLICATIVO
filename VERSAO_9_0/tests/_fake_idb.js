@@ -1,7 +1,7 @@
 'use strict';
 /* IndexedDB de mentira para os testes — só o que o Vooalto usa:
-   open/upgrade, transações, object stores, put/get/delete/getAllKeys e openCursor
-   (com update/continue). Existe para testar a migração v2 → v3 (PDF base64 → Blob)
+   open/upgrade, transações, object stores, put/get/delete/getAll/getAllKeys/clear
+   e openCursor (com update/continue). Existe para testar a migração v2 → v3 (PDF base64 → Blob)
    e o coletor de arquivos órfãos sem depender de navegador.
    Detalhe proposital: os callbacks (onsuccess/oncomplete) só disparam em setTimeout,
    igual ao IndexedDB de verdade — é isso que faz o código assíncrono do app funcionar. */
@@ -77,6 +77,10 @@ function criarIDBFalso(iniciais = {}) {
       get(chave) { return disparar(pedido(), () => (store().has(chave) ? store().get(chave) : undefined)); },
       delete(chave) { return disparar(pedido(), () => { store().delete(chave); return undefined; }); },
       getAllKeys() { return disparar(pedido(), () => [...store().keys()]); },
+      /* getAll e clear existem no IndexedDB de verdade desde sempre; o app
+         passou a usar os dois para ler/gravar em uma transação só. */
+      getAll() { return disparar(pedido(), () => [...store().values()]); },
+      clear() { return disparar(pedido(), () => { store().clear(); return undefined; }); },
       openCursor() {
         const rq = pedido();
         const chaves = [...store().keys()];

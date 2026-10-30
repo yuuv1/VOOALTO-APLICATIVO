@@ -73,6 +73,14 @@ class VooaltoPythonServerTests(unittest.TestCase):
         self.assertEqual(status, 405)
         self.assertEqual(headers.get("Allow"), "GET, HEAD")
 
+        # V9.1.2 — paridade com o server.js: tudo que não é GET/HEAD é 405.
+        # OPTIONS caía no 501 padrão do http.server, e o .bat usa este servidor
+        # quando a máquina não tem Node.
+        for metodo in ("OPTIONS", "PATCH", "DELETE", "PUT"):
+            status, headers, _body = self.fetch("/", metodo)
+            self.assertEqual(status, 405, metodo)
+            self.assertEqual(headers.get("Allow"), "GET, HEAD", metodo)
+
 
 if __name__ == "__main__":
     unittest.main()

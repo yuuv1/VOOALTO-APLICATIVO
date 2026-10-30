@@ -7,8 +7,22 @@ const { spawn } = require('child_process');
 
 const ROOT = path.resolve(__dirname);
 const HOST = '127.0.0.1';
-const APP_ID = 'vooalto-v9';
-const APP_VERSION = '9.1.1';
+/* V9.1.2 — identidade em UM lugar (version.json), lida pelos dois servidores.
+   Antes o número estava copiado em server.js, server.py e package.json, e o
+   health check compara a versão EXATA: quando um deles atrasava, o .bat
+   acusava "outra versão do Vooalto na porta" para o próprio app. */
+function lerIdentidade() {
+  try {
+    const dados = JSON.parse(fs.readFileSync(path.join(__dirname, 'version.json'), 'utf8'));
+    if (dados && typeof dados.app === 'string' && typeof dados.version === 'string') return dados;
+  } catch (error) {
+    /* fallback silencioso: o servidor precisa subir mesmo sem o arquivo */
+  }
+  return { app: 'vooalto-v9', version: '0.0.0' };
+}
+const IDENTIDADE = lerIdentidade();
+const APP_ID = IDENTIDADE.app;
+const APP_VERSION = IDENTIDADE.version;
 const HEALTH_PATH = '/__vooalto_health';
 const requestedPort = Number(process.env.PORT);
 const PORT = Number.isInteger(requestedPort) && requestedPort > 0 && requestedPort <= 65535
@@ -254,6 +268,7 @@ if (require.main === module) startServer();
 
 module.exports = {
   APP_ID,
+  IDENTIDADE,
   APP_VERSION,
   HEALTH_PATH,
   HOST,

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ficha técnica de produção</title>
 <link rel="stylesheet" href="../assets/tema-v9.css">
+<link rel="stylesheet" href="../assets/fonts.css">
 <link rel="stylesheet" href="../mockup/peca_editor.css">
 <script>
 /* V8.1 — anti-piscada. O tema era aplicado só no DOMContentLoaded, então quem
@@ -1824,13 +1825,37 @@ const fmt=n=>{
   partes[0]=partes[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   return partes.join(',');
 };
-/* Converte string formatada em BRL ("1.234,56") para Number (1234.56) */
+/* Converte valor digitado/colado em Number.
+   V9.1.2 — antes o ponto era SEMPRE tratado como milhar e apagado, então
+   "10.50" digitado com ponto decimal virava 1050 (100×). Agora vale a regra
+   que o brasileiro espera e que também aceita valor colado de planilha:
+     "1.234,56" -> 1234.56   (vírgula decimal manda)
+     "1,234.56" -> 1234.56   (ponto decimal manda)
+     "10.50"    -> 10.5      (1–2 casas depois do ponto = decimal)
+     "1.234"    -> 1234      (3 casas depois do ponto = milhar)
+     "10,5"     -> 10.5      (vírgula única = decimal)
+   Sempre devolve Number finito: entrada inválida = 0 (nunca NaN). */
 function parseBRL(s){
   if(typeof s==='number')return isFinite(s)?s:0;
-  if(!s)return 0;
-  // remove R$, espaços, e o ponto de milhar; troca a vírgula decimal por ponto
-  const v=String(s).replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.').trim();
-  const n=parseFloat(v);
+  if(s==null)return 0;
+  let t=String(s).replace(/[R$\s\u00a0]/g,'');
+  if(!t)return 0;
+  const temVirgula=t.indexOf(',')>=0, temPonto=t.indexOf('.')>=0;
+  if(temVirgula&&temPonto){
+    /* o separador que aparece por último é o decimal */
+    t=(t.lastIndexOf(',')>t.lastIndexOf('.'))
+      ? t.replace(/\./g,'').replace(',','.')
+      : t.replace(/,/g,'');
+  }else if(temVirgula){
+    const partes=t.split(',');
+    /* uma vírgula = decimal; várias = milhar ("1,234,56" é digitação errada) */
+    t=partes.length===2?(partes[0]+'.'+partes[1]):partes.join('');
+  }else if(temPonto){
+    const partes=t.split('.');
+    if(partes.length>2)t=partes.join('');
+    else if(partes[0]!==''&&partes[1].length===3&&partes[0].length<=3)t=partes.join('');
+  }
+  const n=parseFloat(t);
   return isFinite(n)?n:0;
 }
 const uid=()=>'_'+Math.random().toString(36).slice(2,9);
@@ -2481,12 +2506,13 @@ _addCorExtra(p||paginas.find(x=>x.id===realPid),hex,nome);
 }
 function _addCorExtra(p,hex,nome){
 if(!p)return;
-p.corId++;const id=p.id+'c'+p.corId;const hx=hex||'#3B82F6',nm=nome||'COR',tc=contraste(hx);
+p.corId++;const id=p.id+'c'+p.corId;const hx=corHexSeguro(hex),nm=String(nome==null||nome===''?'COR':nome),tc=contraste(hx);
+const idA=escHtml(id),nmTxt=escHtml(nm.toUpperCase()),nmVal=escHtml(nm);
 const div=document.createElement('div');div.className='cor-item';div.id=`ci_${id}`;
-div.innerHTML=`<div class="cor-rect" id="cr_${id}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${id}" oninput="onCorPickerExtra('${id}',this.value)"><span class="cor-nome-disp" id="cn_${id}" style="color:${tc}">${nm.toUpperCase()}</span></div>
-<div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${id}" value="${nm}" placeholder="NOME" oninput="onCorNomeExtra('${id}',this.value)">
-<div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${id}" value="${hx.toUpperCase()}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHexExtra('${id}',this.value)">
-<button title="Remover esta cor da paleta" class="cor-del" onclick="excluirCorExtra('${id}')">✕ del</button></div>`;
+div.innerHTML=`<div class="cor-rect" id="cr_${idA}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${idA}" oninput="onCorPickerExtra('${idA}',this.value)"><span class="cor-nome-disp" id="cn_${idA}" style="color:${tc}">${nmTxt}</span></div>
+<div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${idA}" value="${nmVal}" placeholder="NOME" oninput="onCorNomeExtra('${idA}',this.value)">
+<div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${idA}" value="${hx}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHexExtra('${idA}',this.value)">
+<button title="Remover esta cor da paleta" class="cor-del" onclick="excluirCorExtra('${idA}')">✕ del</button></div>`;
 const lista=$('coresList_'+p.id);if(lista)lista.appendChild(div);
 }
 function onCorPickerExtra(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const chi=$(`chi_${id}`);if(chi)chi.value=hex.toUpperCase();}
@@ -6188,11 +6214,22 @@ fecharCrop();
 
 /* ═══ CORES P1 ═══ */
 let corId=0;
+/* V9.1.2 — o nome da cor vem de digitação E de .json/backup importado.
+   Antes ele era interpolado cru no innerHTML (nome com "><img onerror=...>
+   executava script e podia reescrever todas as fichas salvas). Agora todo
+   valor passa por aqui: hex validado, texto escapado. */
+function corHexSeguro(h){
+  let v=String(h==null?'':h).trim();
+  if(/^#[0-9A-Fa-f]{3}$/.test(v))v='#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3];
+  return /^#[0-9A-Fa-f]{6}$/.test(v)?v.toUpperCase():'#3B82F6';
+}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function iniciarCores(){const saved=localStorage.getItem('va3_cores');if(saved){try{const arr=JSON.parse(saved);if(arr.length){arr.forEach(c=>adicionarCor(c.hex,c.nome));return;}}catch(e){}}adicionarCor();}
 function adicionarCor(hex,nome){
-corId++;const id=corId,hx=hex||'#3B82F6',nm=nome||'COR',tc=contraste(hx);
+corId++;const id=corId,hx=corHexSeguro(hex),nm=String(nome==null||nome===''?'COR':nome),tc=contraste(hx);
+const nmTxt=escHtml(nm.toUpperCase()),nmVal=escHtml(nm);
 const div=document.createElement('div');div.className='cor-item';div.id=`ci_${id}`;
-div.innerHTML=`<div class="cor-rect" id="cr_${id}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${id}" oninput="onCorPicker(${id},this.value)"><span class="cor-nome-disp" id="cn_${id}" style="color:${tc}">${nm.toUpperCase()}</span></div><div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${id}" value="${nm}" placeholder="NOME" oninput="onCorNome(${id},this.value)"><div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${id}" value="${hx.toUpperCase()}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHex(${id},this.value)"><button title="Remover esta cor da paleta" class="cor-del" onclick="excluirCor(${id})">✕ del</button></div>`;
+div.innerHTML=`<div class="cor-rect" id="cr_${id}" style="background:${hx}"><input type="color" value="${hx}" id="cp_${id}" oninput="onCorPicker(${id},this.value)"><span class="cor-nome-disp" id="cn_${id}" style="color:${tc}">${nmTxt}</span></div><div class="cor-painel"><div class="cor-p-lbl">Nome</div><input class="cor-inp nome" type="text" id="cni_${id}" value="${nmVal}" placeholder="NOME" oninput="onCorNome(${id},this.value)"><div class="cor-p-lbl" style="margin-top:1px">Hex</div><input class="cor-inp hex" type="text" id="chi_${id}" value="${hx}" placeholder="#FFFFFF" maxlength="7" oninput="onCorHex(${id},this.value)"><button title="Remover esta cor da paleta" class="cor-del" onclick="excluirCor(${id})">✕ del</button></div>`;
 $('coresList').appendChild(div);savCores();
 }
 function updCorVisual(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;savCores();}
@@ -7285,7 +7322,7 @@ function v7EnhanceTxtTb(tbId){
   const isExtra = tbId.indexOf('textTb_')===0;
   const suf = isExtra ? tbId.replace('textTb','') : '';
   const font=$id('ttFont'+suf);
-  if(font){const fonts=[['Montserrat','Montserrat, Arial, sans-serif'],['Poppins','Poppins, Arial, sans-serif'],['Arial Black','Arial Black, Arial, sans-serif'],['Impact','Impact, sans-serif'],['Georgia','Georgia, serif'],['Courier','Courier New, monospace']]; fonts.forEach(f=>{if(![...font.options].some(o=>o.value===f[1])){const op=document.createElement('option');op.textContent=f[0];op.value=f[1];font.appendChild(op);}});}
+  if(font){const fonts=[['Poppins','Poppins, Arial, sans-serif'],['Arial Black','Arial Black, Arial, sans-serif'],['Impact','Impact, sans-serif'],['Georgia','Georgia, serif'],['Courier','Courier New, monospace']]; fonts.forEach(f=>{if(![...font.options].some(o=>o.value===f[1])){const op=document.createElement('option');op.textContent=f[0];op.value=f[1];font.appendChild(op);}});}
   const sizeIn=$id('ttSize'+suf);
   const slider=document.createElement('input'); slider.type='range'; slider.min='6'; slider.max='120'; slider.value=sizeIn?.value||20; slider.className='v4-font-slider';
   slider.oninput=()=>{if(sizeIn){sizeIn.value=slider.value;} if(isExtra){const pid=suf.replace('_',''); if(typeof applyTxtPropsExtra==='function')applyTxtPropsExtra(pid);} else if(typeof applyTxtProps==='function')applyTxtProps();};
@@ -7645,7 +7682,11 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   const OLD_KEY='vooalto_ficha_rascunhos_v4';      /* lista antiga, tudo junto no localStorage */
   const DB_NAME='vooalto_ficha_rascunhos_db_v4';
   const STORE='drafts';
-  const MAX=200;
+  /* V9.1.2 — antes era 200 fichas e o corte era SILENCIOSO: a 201ª ficha
+     continuava no IndexedDB mas desaparecia da lista, sem aviso. O índice
+     custa ~120 bytes por ficha, então o teto subiu para 1000 e, se ainda
+     assim estourar, o usuário é avisado em vez de perder o acesso. */
+  const MAX=1000;
 
   function toastSafe(msg,tipo=''){try{toast(msg,tipo)}catch(e){alert(msg)}}
   function esc(str){return String(str==null?'':str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
@@ -7682,7 +7723,14 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 
   /* ── Índice (metadados) ── */
   function getMeta(){try{const a=JSON.parse(localStorage.getItem(META_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
-  function setMeta(v){try{localStorage.setItem(META_KEY,JSON.stringify(v.slice(0,MAX)));return true}catch(e){return false}}
+  function setMeta(v){
+    const lista=Array.isArray(v)?v:[];
+    if(lista.length>MAX){
+      /* Não corta em silêncio: avisa e mantém as mais recentes na lista. */
+      try{toastSafe('⚠ Limite de '+MAX+' fichas na lista. As mais antigas continuam no navegador, mas não aparecem. Exporte um backup (.json) para não perder o acesso.','erro',8000)}catch(e){}
+    }
+    try{localStorage.setItem(META_KEY,JSON.stringify(lista.slice(0,MAX)));return true}catch(e){return false}
+  }
 
   /* ── Migração: rascunhos antigos que ficavam todos dentro do localStorage ── */
   async function migrarAntigos(){
@@ -8779,7 +8827,11 @@ function v7MascaraEntradaBlur(el){
 const V7_TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
 function v7TemaValido(t){if(t==='escuro')return 'escuro';if(t==='claro')return 'claro';return V7_TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro'}
 function applyGlobalTheme(t){ t=v7TemaValido(t); document.documentElement.dataset.theme=(t==='escuro')?'escuro':''; document.documentElement.style.colorScheme=(t==='escuro')?'dark':'light'; }
-window.addEventListener('message', e=>{ if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme); });
+window.addEventListener('message', e=>{
+  /* V9.1.2 — só a própria origem (o shell) pode trocar o tema daqui. */
+  if(e.origin&&e.origin!==location.origin)return;
+  if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme);
+});
 /* V8 — o tema vem do shell; se o modulo abrir sozinho, le o valor salvo.
    Chave nova 'vooalto_tema', com a antiga 'vooalto_theme_v5' como reserva. */
 function v8TemaSalvo(){try{return localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro'}catch(e){return 'claro'}}
@@ -9428,7 +9480,7 @@ window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
     try{window.dispatchEvent(new CustomEvent('vooalto-backup-restaurado',{detail:msg}))}catch(e){}
     try{
       if(window.parent&&window.parent!==window){
-        window.parent.postMessage(msg,'*');
+        window.parent.postMessage(msg,location.origin);
       }
     }catch(e){}
   }
@@ -9635,7 +9687,7 @@ async function exportarBackupCompletoV8(){
 }
 function abrirCentralBackupV8(){
   if(window.parent&&window.parent!==window){
-    try{window.parent.postMessage({type:'vooalto-abrir-backup'},'*');return}catch(e){}
+    try{window.parent.postMessage({type:'vooalto-abrir-backup'},location.origin);return}catch(e){}
   }
   exportarBackupCompletoV8();
 }
@@ -9653,6 +9705,8 @@ async function v8RecarregarPosBackup(){
 }
 window.addEventListener('vooalto-backup-restaurado',()=>v8RecarregarPosBackup());
 window.addEventListener('message',ev=>{
+  /* V9.1.2 — só a própria origem pode mandar recarregar o estado. */
+  if(ev&&ev.origin&&ev.origin!==location.origin)return;
   if(ev&&ev.data&&ev.data.type==='vooalto-backup-restaurado')v8RecarregarPosBackup();
 });
 </script>

@@ -1,5 +1,61 @@
 # VOOALTO V9 — Registro de alterações
 
+## V9.1.2 — Auditoria de código: dinheiro, backup e injeção (2026-10-30)
+
+Rodada de revisão do repositório inteiro. Nenhuma estrutura de ficha ou de
+orçamento mudou; o que mudou é o que estava errado em silêncio. Tudo com teste
+automatizado novo (`tests/test_melhorias_v9.js`, 39 verificações, mais 5 testes
+Python).
+
+### 1. Dinheiro (o único item que podia imprimir número errado)
+
+| O que acontecia | O que ficou |
+|---|---|
+| `parseBRL` apagava **todo** ponto antes de converter: `"10.50"` virava **1050** (100×). Quem digitava com ponto decimal, colava de planilha ou usava teclado numérico vendia por 100 vezes o preço | leitor único e tolerante: `1234.56`, `1.234,56`, `1,234.56`, `10,50`, `1.234` e `0.5` todos corretos; entrada inválida = 0 (nunca `NaN`) |
+| A **mesma** célula de valor unitário do orçamento tinha dois leitores: a barra lateral lia `10.50` como 10,5 e a edição na folha A4 como 1050 | `orcParseMoney` é a regra única dos dois caminhos |
+| Total da linha do orçamento saía com 3 casas quando o valor tinha centavos fracionados (`1.234,568`) | sempre 2 casas |
+
+### 2. Backup e restauração
+
+| O que acontecia | O que ficou |
+|---|---|
+| `gravarFichasIDB`, ao não abrir o IndexedDB (ou falhar no meio), jogava **todas** as fichas — fotos em base64 incluídas — no `localStorage`, e gravava o índice de qualquer jeito. A lista mostrava ficha que não existia | o dado nunca vai para o `localStorage`; a falha vira `{ok:false}` com motivo, e o índice só é gravado depois do dado |
+| `restaurar()` devolvia `{ok:true}` sempre: a tela dizia "Backup importado com sucesso" mesmo sem gravar nada | devolve `ok:false` com a explicação; a UI mostra "O backup NÃO foi importado" e garante que os dados atuais continuam intactos |
+| No modo "substituir", o `localStorage` era apagado **antes** de gravar as fichas: uma falha deixava o usuário sem os rascunhos e sem o backup | grava as fichas primeiro; só depois substitui o `localStorage` |
+| O selo "último backup" era gravado antes de o arquivo sair (e o seletor de pasta pode ser cancelado) | só é gravado depois que o arquivo foi gerado |
+| Leitura do banco abria **uma transação por ficha** (N+1) — segundos de interface travada com muitas fichas | uma transação, dois pedidos (`getAllKeys` + `getAll`); gravação do lote em uma transação só |
+
+### 3. Segurança
+
+| O que acontecia | O que ficou |
+|---|---|
+| Nome de cor vinha de digitação **e de `.json` importado** e entrava cru no `innerHTML`: `"><img src=x onerror=...>` executava script na página (e podia reescrever todas as fichas) | hex validado e texto escapado nos dois construtores de chip (folha 1 e páginas extras) |
+| Ouvintes de `postMessage` aceitavam mensagem de **qualquer origem** e todo envio usava `'*'`: uma página que obtivesse um handle da janela trocava aba, tema ou disparava recarga | só a própria origem é aceita (`e.origin`), e os envios usam `targetOrigin` explícito |
+
+### 4. Interface e PWA
+
+| O que acontecia | O que ficou |
+|---|---|
+| O `<style>` anti-flash era criado sem nunca ser anexado e escrito sem `id`: a remoção em `setShellTheme` não achava nada e as regras `!important` ficavam **para sempre** — quem trocava para o claro continuava com o shell escuro | o estilo é escrito com `id="__theme_boot"` e removido quando o tema é aplicado |
+| Lista "Minhas fichas" cortava em **200** em silêncio: a ficha continuava no IndexedDB mas sumia da tela | teto de 1000 e aviso explícito quando estourar (com dica de exportar backup) |
+| A Ficha Técnica oferecia "Poppins" e "Montserrat" na ferramenta de texto, mas só o Orçamento declarava `@font-face` — o mesmo `.json` imprimia com fonte diferente em outra máquina | `assets/fonts.css` compartilhado pelos quatro documentos; Montserrat (não embarcada) saiu do seletor |
+| O precache do service worker era uma lista manual: arquivo novo fora de `assets/`/`icons/` ficava fora do cache **e** do hash, então quem já tinha o app nunca recebia a atualização e tomava 404 offline | o build percorre a pasta; teste garante que todo `src`/`href` publicado existe e está no precache |
+| Versão copiada em `server.js`, `server.py` e `package.json`; o health check compara a versão exata, então divergir fazia o `.bat` acusar "outra versão do Vooalto" na porta | `version.json` é a fonte única, lida pelos dois servidores |
+| `OPTIONS` dava **501** no `server.py` e **405** no `server.js` (e o `.bat` usa o Python quando não há Node) | os dois respondem 405 com `Allow: GET, HEAD` |
+
+### 5. Repositório
+
+- CI em `.github/workflows/ci.yml`: `npm test`, `npm run test:python` e a
+  conferência de que o `sw.js` commitado corresponde ao conteúdo do app
+  (Ubuntu e Windows). Antes não havia automação nenhuma.
+- `uploads/` (5,2 MB de uma cópia da **V5**, com README falando da porta 4280 e
+  de um `.bat` que não existe) saiu do repositório — era o arquivo que alguém
+  editaria por engano no lugar do app.
+- `VOOALTO_V9_PWA.zip` deixou de ser versionado (vai como artefato de release).
+- `PLANO_V9.md`, `manual.html` e `README.md` corrigidos onde diziam que o tema
+  padrão era o claro (é escuro desde a V9.3), que a suíte tinha "330
+  verificações em 12 arquivos" e que a versão era 9.0.0.
+
 ## V9.1.1 — Pente fino: o que estava perdendo trabalho (2026-10-28)
 
 Segunda rodada de auditoria sobre a V9.1.0, com a mesma regra: **nem a ficha

@@ -39,7 +39,9 @@ function request(port, method, requestPath, headers = {}) {
     assert.equal(await isVooaltoAlreadyRunning(port), true, 'server health route confirms the running V7 instance');
     const health = await request(port, 'GET', HEALTH_PATH);
     assert.equal(health.status, 200);
-    assert.deepEqual(JSON.parse(health.body), { app: 'vooalto-v9', version: '9.1.1' });
+    // identidade única: o teste lê version.json em vez de repetir o número
+    const identidade = require('../ATUALIZACAO_V9/version.json');
+    assert.deepEqual(JSON.parse(health.body), identidade);
     assert.equal(health.headers['cache-control'], 'no-store');
 
     const localhostHome = await request(port, 'GET', '/', { Host: `localhost:${port}` });

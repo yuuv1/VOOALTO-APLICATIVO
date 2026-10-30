@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Manual — Vooalto V9</title>
+<link rel="stylesheet" href="assets/fonts.css">
 <script>
 /* Aplica o tema salvo ANTES de desenhar (evita o flash branco no tema escuro). */
 (function(){
@@ -230,8 +231,8 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   <section class="card" id="tema">
     <h2>🎨 4 · Tema, impressão e PDF</h2>
     <ul>
-      <li><b>Dois temas, e só dois:</b> <b>Claro</b> (padrão) e <b>Escuro</b>. O seletor no topo vale para o sistema inteiro e a escolha fica salva.</li>
-      <li>Quem vinha de uma versão antiga com outro tema (Neon, Tech, Butter…) cai no mais próximo e passa a usar claro/escuro.</li>
+      <li><b>Dois temas, e só dois:</b> <b>Escuro</b> (padrão) e <b>Claro</b>. O seletor no topo vale para o sistema inteiro e a escolha fica salva.</li>
+      <li>Quem vinha de uma versão antiga com outro tema (Neon, Tech, Butter…) cai no mais próximo (as paletas escuras viram Escuro) e passa a usar claro/escuro.</li>
       <li>A <b>folha A4 continua branca</b> nos dois temas — o escuro muda só o painel em volta, para o impresso não sair errado.</li>
       <li><b>Gerar PDF:</b> <b>⬇ Baixar (escolher páginas)</b> na Ficha, <b>Imprimir / PDF</b> no Orçamento, ou <kbd>Ctrl</kbd>+<kbd>P</kbd> em qualquer lugar (escolha "Salvar como PDF").</li>
     </ul>
@@ -323,7 +324,7 @@ function alternarTema(){
   document.documentElement.style.colorScheme=atual;
   try{localStorage.setItem('vooalto_tema',atual)}catch(e){}
   /* avisa o sistema, caso o manual esteja aberto por cima dele */
-  try{if(window.opener)window.opener.postMessage({type:'vooalto-theme',theme:atual},'*')}catch(e){}
+  try{if(window.opener)window.opener.postMessage({type:'vooalto-theme',theme:atual},location.origin)}catch(e){}
 }
 (function(){
   var b=document.getElementById('btnTema');

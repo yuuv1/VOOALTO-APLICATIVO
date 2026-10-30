@@ -17,10 +17,24 @@ from urllib.parse import unquote, urlsplit
 import webbrowser
 
 ROOT = Path(__file__).resolve().parent
-APP_ID = "vooalto-v9"
-APP_VERSION = "9.1.1"
 HEALTH_PATH = "/__vooalto_health"
 HOST = "127.0.0.1"
+
+
+def ler_identidade() -> dict:
+    """Identidade do app em UM lugar (version.json), igual ao server.js."""
+    try:
+        dados = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
+        if isinstance(dados.get("app"), str) and isinstance(dados.get("version"), str):
+            return {"app": dados["app"], "version": dados["version"]}
+    except (OSError, ValueError, AttributeError):
+        pass
+    return {"app": "vooalto-v9", "version": "0.0.0"}
+
+
+IDENTIDADE = ler_identidade()
+APP_ID = IDENTIDADE["app"]
+APP_VERSION = IDENTIDADE["version"]
 
 
 def get_port() -> int:
@@ -106,6 +120,12 @@ class VooaltoHandler(SimpleHTTPRequestHandler):
         self._send_method_not_allowed()
 
     def do_DELETE(self):
+        self._send_method_not_allowed()
+
+    def do_OPTIONS(self):
+        self._send_method_not_allowed()
+
+    def do_PATCH(self):
         self._send_method_not_allowed()
 
     def _send_method_not_allowed(self):

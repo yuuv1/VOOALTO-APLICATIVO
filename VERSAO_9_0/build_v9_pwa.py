@@ -22,61 +22,49 @@ SRC = os.path.join(BASE, 'ATUALIZACAO_V9')
 ZIP_PATH = os.path.join(BASE, 'VOOALTO_V9_PWA.zip')
 CACHE_EPOCH = 1  # Increase only when the service-worker cache/fetch contract changes.
 
-CORE_FILES = [
-    'index.html',
-    'manifest.webmanifest',
+# V9.1.2 — a lista de arquivos deixou de ser manual.
+# Antes existia um CORE_FILES gigante e só assets/ e icons/ eram varridos: um
+# HTML/JS novo fora dessas pastas não entrava no precache NEM no hash de
+# conteúdo, então quem já tinha o app instalado nunca recebia a atualização e
+# tomava 404 offline. Agora a pasta do app é a fonte da verdade.
+IGNORADOS = {'.DS_Store', 'Thumbs.db', 'desktop.ini'}
+SUFIXOS_IGNORADOS = ('.tmp', '.swp', '.orig', '.rej', '~')
+
+# Arquivos de distribuição/hospedagem que NÃO fazem parte do app instalado no
+# navegador: ficam fora do precache e fora do hash de conteúdo (o hash é o que
+# faz o service worker novo chegar sozinho; sw.js não pode se auto-referenciar).
+NON_APP_FILES = {
     'sw.js',
     'server.js',
     'server.py',
+    'version.json',
     'instalar_e_abrir_V9.bat',
-    'limpar_cache.html',
-    'zerar_dados.html',
-    'manual.html',
     'README.txt',
-    'criador_ficha_tecnica/index.html',
-    'criador_orcamento/index.html',
-    # V9.3 — estúdio da peça (camiseta de pescador): geometria, render, editor
-    'mockup/peca.js',
-    'mockup/peca_render.js',
-    'mockup/peca_editor.js',
-    'mockup/peca_editor.css',
-    'mockup/index.html',
-    'assets/cropper.min.css',
-    'assets/cropper.min.js',
-    'assets/html2canvas.min.js',
-    'assets/logo_empresa.png',
-    'assets/logo_orcamento.png',
-    'assets/watermark_vooalto.png',
-    'assets/fonts/poppins-latin-300-normal.woff2',
-    'assets/fonts/poppins-latin-400-normal.woff2',
-    'assets/fonts/poppins-latin-500-normal.woff2',
-    'assets/fonts/poppins-latin-600-normal.woff2',
-    'assets/fonts/poppins-latin-700-normal.woff2',
-    'icons/icon-192.png',
-    'icons/icon-512-maskable.png',
-    'icons/icon-512.png',
-    'icons/icone.png',
-]
-# Arquivos de distribuição que NÃO fazem parte do app instalado no navegador:
-# ficam fora do precache e fora do hash de conteúdo (evita hash auto-referente).
-NON_APP_FILES = {
-    'sw.js', 'server.js', 'server.py', 'instalar_e_abrir_V9.bat', 'README.txt'
 }
 
 
 def file_list():
     """Return the complete distribution file list in stable order."""
-    files = list(CORE_FILES)
-    for folder in ('assets', 'icons'):
-        base = os.path.join(SRC, folder)
-        if not os.path.isdir(base):
+    files = []
+    for atual, dirs, nomes in os.walk(SRC):
+        dirs[:] = sorted(d for d in dirs if not d.startswith('.'))
+        for nome in sorted(nomes):
+            if nome.startswith('.') or nome in IGNORADOS or nome.endswith(SUFIXOS_IGNORADOS):
+                continue
+            rel = os.path.relpath(os.path.join(atual, nome), SRC).replace(os.sep, '/')
+            files.append(rel)
+    return files
+
+
+def precache_list(files):
+    """Offline precache list: '/', the entry points and every app file."""
+    precache = ['/', 'manifest.webmanifest', 'limpar_cache.html', 'zerar_dados.html']
+    for rel in files:
+        if rel in NON_APP_FILES:
             continue
-        for current, dirs, names in os.walk(base):
-            dirs.sort()
-            for name in sorted(names):
-                full = os.path.join(current, name)
-                files.append(os.path.relpath(full, SRC).replace(os.sep, '/'))
-    return list(dict.fromkeys(files))
+        if rel not in precache:
+            precache.append(rel)
+    return precache
 
 
 def content_digest(files):
@@ -184,11 +172,7 @@ def build():
 
     digest = content_digest(files)
     cache_name = f'vooalto-v9-{digest}'
-    app_files = [rel for rel in files if rel not in NON_APP_FILES]
-    precache = ['/', 'manifest.webmanifest', 'limpar_cache.html', 'zerar_dados.html']
-    for rel in app_files:
-        if rel not in precache:
-            precache.append(rel)
+    precache = precache_list(files)
 
     version = datetime.datetime.now().strftime('%Y%m%d-%H%M')
     sw_path = os.path.join(SRC, 'sw.js')
@@ -197,8 +181,11 @@ def build():
 
     normalize_bat_line_endings()
 
+    # sw.js acabou de ser gerado: entra no ZIP mesmo que não estivesse na
+    # listagem (checkout limpo não tem o arquivo antes do build).
+    zip_files = sorted(set(files) | {'sw.js'})
     with zipfile.ZipFile(ZIP_PATH, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for rel in sorted(files):
+        for rel in zip_files:
             full = os.path.join(SRC, rel)
             archive.write(full, rel)
 

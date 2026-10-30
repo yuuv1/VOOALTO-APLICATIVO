@@ -359,10 +359,15 @@ check('semCostura tira o tracejado e semArte tira a imagem (modo leve)',
 
   console.log('===== PEÇA V9.3 — BUILD =====');
   const build = fs.readFileSync(path.join(BASE, '..', 'build_v9_pwa.py'), 'utf8');
-  check('build inclui os arquivos da peça no pacote',
-    ['mockup/peca.js', 'mockup/peca_render.js', 'mockup/peca_editor.js', 'mockup/peca_editor.css']
-      .every(f => build.includes("'" + f + "'")));
-  check('build inclui a página de teste do estúdio', build.includes("'mockup/index.html'"));
+  /* V9.1.2 — o build deixou de ter lista manual de arquivos: ele percorre a
+     pasta do app. O que importa continua sendo "a peça vai no pacote", então
+     checamos que os arquivos existem e que o build varre a pasta (a inclusão
+     no precache é verificada em tests/test_build_v9.py, que roda o build). */
+  check('build percorre a pasta do app (sem lista manual para esquecer)',
+    build.includes('os.walk(SRC)') && !build.includes('CORE_FILES = ['));
+  check('arquivos da peça existem na pasta do app',
+    ['mockup/peca.js', 'mockup/peca_render.js', 'mockup/peca_editor.js', 'mockup/peca_editor.css', 'mockup/index.html']
+      .every(f => fs.existsSync(path.join(BASE, f))));
 
   console.log('\n═══ PEÇA: ' + (fail ? fail + ' FALHA(S)' : 'tudo OK') + ' — ' + pass + ' verificações ═══');
   process.exit(fail ? 1 : 0);

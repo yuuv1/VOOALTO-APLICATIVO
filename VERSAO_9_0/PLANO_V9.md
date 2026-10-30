@@ -103,7 +103,7 @@ A **única cópia que sai do navegador** é o `.json` exportado.
 
 ## 5. Temas
 
-Dois, e só dois: **Claro** (padrão) e **Escuro**.
+Dois, e só dois: **Escuro** (padrão desde a V9.3) e **Claro**.
 
 - O shell resolve o nome por `v8TemaValido()`: `'escuro'` → escuro; nomes de
   paletas antigas (`tech`, `neon`, …) → escuro; **qualquer outra coisa** → claro.
@@ -143,7 +143,8 @@ Detalhes que não podem ser perdidos:
 - Recusa `Host` que não seja `localhost`/`127.0.0.1`/`::1` (DNS rebinding).
 - Resolve o caminho **dentro** da pasta: `..` e `%00` dão 404/400.
 - Só `GET`/`HEAD`; o resto dá 405.
-- `/__vooalto_health` responde `{app: 'vooalto-v9', version: '9.0.0'}` — é o
+- `/__vooalto_health` responde `{app: 'vooalto-v9', version: '9.1.2'}` (lido de
+  `version.json`, a fonte única do número) — é o
   que permite ao `.bat` saber se já existe um Vooalto rodando naquela porta em
   vez de abrir uma página errada. Se quem estiver na porta for **outra versão**
   (`app` começando com `vooalto-v`), o servidor diz isso e manda fechar a janela
@@ -156,8 +157,8 @@ navegador, com `Cache-Control: no-store`. Não é o servidor do app.
 
 ```
 npm install
-npm test              # ~330 verificações, 12 arquivos
-npm run test:python   # 7 testes (build + servidor)
+npm test              # 15 suítes jsdom (shell, módulos, mockup, peça, melhorias)
+npm run test:python   # 11 testes (build + identidade + servidor)
 npm run build         # gera sw.js e o ZIP
 ```
 
@@ -288,9 +289,11 @@ avança**. Se algum dia precisar migrar uma chave de dados, faça leitura dupla
 ## 12. Diferenças da V9 em relação à V8 (resumo técnico)
 
 1. Repositório com uma versão só (`VERSAO_9_0`); nada de V5/V6/V7/V8.
-2. Identidade: `app: 'vooalto-v9'`, `version: '9.0.0'` (o `server.js` da V8
-   ainda respondia `7.6.1`; agora os dois servidores concordam), PWA
-   "Vooalto V9", cache `vooalto-v9-<hash>`.
+2. Identidade: `app: 'vooalto-v9'` e a versão em **`version.json`**, lida
+   pelos dois servidores (antes o número estava copiado em `server.js`,
+   `server.py` e `package.json`; como o health check compara a versão exata,
+   divergir fazia o `.bat` acusar "outra versão do Vooalto" na porta).
+   PWA "Vooalto V9", cache `vooalto-v9-<hash>`.
 3. **Mesmo endereço local** (`http://localhost:4800/`), para a atualização não
    perder dados nem o atalho instalado.
 4. `activate` do service worker recolhe também o cache da V8.

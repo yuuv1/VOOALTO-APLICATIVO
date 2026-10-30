@@ -18,13 +18,7 @@
     document.documentElement.style.colorScheme=escuro?'dark':'light';
   }catch(e){}})();
   </script>
-  <style>
-@font-face{font-family:'Poppins';font-style:normal;font-weight:300;font-display:swap;src:url('../assets/fonts/poppins-latin-300-normal.woff2') format('woff2')}
-@font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:swap;src:url('../assets/fonts/poppins-latin-400-normal.woff2') format('woff2')}
-@font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:swap;src:url('../assets/fonts/poppins-latin-500-normal.woff2') format('woff2')}
-@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url('../assets/fonts/poppins-latin-600-normal.woff2') format('woff2')}
-@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url('../assets/fonts/poppins-latin-700-normal.woff2') format('woff2')}
-</style>
+  <link rel="stylesheet" href="../assets/fonts.css">
   
   <!-- External Libraries for Export (PNG & PDF) -->
   <script src="../assets/html2canvas.min.js"></script>
@@ -1801,7 +1795,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
               <span class="orc-item-pag-tag">Pág. ${activeFormPageIndex + 1}</span>
             </div>
             <div class="orc-item-top-right">
-              <span class="orc-item-inline-total" id="form-item-total-${index}">R$ ${((item.qnt||0)*(item.unit||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+              <span class="orc-item-inline-total" id="form-item-total-${index}">R$ ${((item.qnt||0)*(item.unit||0)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
               <button type="button" class="btn-dup-row" onclick="duplicateTableRow(${index})" title="Duplicar este item">⧉</button>
               <button type="button" class="btn-delete-row" onclick="deleteTableRow(${index})" title="Remover item">✕</button>
             </div>
@@ -2399,6 +2393,33 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       isSyncing = false;
     }
 
+    /* V9.1.2 — leitor único de dinheiro do orçamento.
+       A célula da folha A4 é texto livre, então valia a mesma regra da Ficha
+       Técnica (parseBRL): antes o ponto era apagado como milhar e "10.50"
+       virava 1050, enquanto o campo numérico da barra lateral lia 10,5. Os
+       dois caminhos agora concordam. Entrada inválida = 0, nunca NaN. */
+    function orcParseMoney(valor) {
+      if (typeof valor === 'number') return isFinite(valor) ? valor : 0;
+      if (valor == null) return 0;
+      let t = String(valor).replace(/[R$\s\u00a0]/g, '');
+      if (!t) return 0;
+      const temVirgula = t.indexOf(',') >= 0, temPonto = t.indexOf('.') >= 0;
+      if (temVirgula && temPonto) {
+        t = (t.lastIndexOf(',') > t.lastIndexOf('.'))
+          ? t.replace(/\./g, '').replace(',', '.')
+          : t.replace(/,/g, '');
+      } else if (temVirgula) {
+        const partes = t.split(',');
+        t = partes.length === 2 ? (partes[0] + '.' + partes[1]) : partes.join('');
+      } else if (temPonto) {
+        const partes = t.split('.');
+        if (partes.length > 2) t = partes.join('');
+        else if (partes[0] !== '' && partes[1].length === 3 && partes[0].length <= 3) t = partes.join('');
+      }
+      const n = parseFloat(t);
+      return isFinite(n) ? n : 0;
+    }
+
     // Bidirectional sync: When table cells are edited in-place in A4 page, update state and recalculate totals
     function syncCell(pageIdx, itemIdx, field, element) {
       if (isSyncing) return;
@@ -2413,8 +2434,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         pageState.tableItems[itemIdx].qnt = parseInt(rawText) || 0;
         recalculateTotalsFromTable(pageIdx);
       } else if (field === 'unit') {
-        let clean = rawText.replace(/R\$/gi, '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
-        pageState.tableItems[itemIdx].unit = parseFloat(clean) || 0;
+        pageState.tableItems[itemIdx].unit = orcParseMoney(rawText);
         recalculateTotalsFromTable(pageIdx);
       } else {
         pageState.tableItems[itemIdx][field] = html;
@@ -2791,7 +2811,7 @@ function printProposal() {
   window.v5OrcHighlight=function(hex){execCmd('hiliteColor',hex);};
   function enhanceToolbar(){const tb=document.querySelector('.formatting-toolbar');if(!tb||tb.dataset.v5Ready)return;tb.dataset.v5Ready='1';tb.addEventListener('mousedown',e=>e.preventDefault());tb.classList.add('v5-movable');
     const drag=document.createElement('div');drag.className='v5-drag-tool';drag.textContent='☰ mover';tb.prepend(drag);makeDraggable(tb,drag);
-    const font=document.createElement('select');font.className='v5-tool-select';font.innerHTML='<option value="Arial,sans-serif">Arial</option><option value="Poppins,Arial,sans-serif">Poppins</option><option value="Montserrat,Arial,sans-serif">Montserrat</option><option value="Georgia,serif">Georgia</option><option value="Arial Black,Arial,sans-serif">Arial Black</option><option value="Impact,sans-serif">Impact</option>';font.onchange=()=>v5OrcFont(font.value);tb.appendChild(font);
+    const font=document.createElement('select');font.className='v5-tool-select';font.innerHTML='<option value="Arial,sans-serif">Arial</option><option value="Poppins,Arial,sans-serif">Poppins</option><option value="Georgia,serif">Georgia</option><option value="Arial Black,Arial,sans-serif">Arial Black</option><option value="Impact,sans-serif">Impact</option>';font.onchange=()=>v5OrcFont(font.value);tb.appendChild(font);
     const size=document.createElement('input');size.className='v5-tool-input';size.value='14';size.type='number';size.min='6';size.max='80';size.onchange=()=>applyFontSize(size.value);tb.appendChild(size);
     const grp=document.createElement('div');grp.className='v5-highlight-group';grp.innerHTML='<button title="Marcar o trecho selecionado com esta cor" class="v5-hl yellow" onclick="v5OrcHighlight(\'#FFE066\')">Amarelo</button><button title="Marcar o trecho selecionado com esta cor" class="v5-hl red" onclick="v5OrcHighlight(\'#FF6B6B\')">Vermelho</button><button title="Marcar o trecho selecionado com esta cor" class="v5-hl blue" onclick="v5OrcHighlight(\'#74C0FC\')">Azul</button>';tb.appendChild(grp);
     restoreToolbarPos(tb);
@@ -3262,7 +3282,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 const V7_TEMAS_ESCUROS_ANTIGOS={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
 function v7TemaValido(t){if(t==='escuro')return 'escuro';if(t==='claro')return 'claro';return V7_TEMAS_ESCUROS_ANTIGOS[t]?'escuro':'claro'}
 function applyGlobalTheme(t){ t=v7TemaValido(t); document.documentElement.dataset.theme=(t==='escuro')?'escuro':'claro'; document.documentElement.style.colorScheme=(t==='escuro')?'dark':'light'; }
-window.addEventListener('message', e=>{ if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme); });
+window.addEventListener('message', e=>{
+  /* V9.1.2 — só a própria origem (o shell) pode trocar o tema daqui. */
+  if(e.origin&&e.origin!==location.origin)return;
+  if(e.data&&e.data.type==='vooalto-theme') applyGlobalTheme(e.data.theme);
+});
 /* V8 — chave nova 'vooalto_tema', com a antiga 'vooalto_theme_v5' como reserva. */
 function v8TemaSalvo(){try{return localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro'}catch(e){return 'claro'}}
 window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()); });
@@ -3669,7 +3693,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     try{window.dispatchEvent(new CustomEvent('vooalto-backup-restaurado',{detail:msg}))}catch(e){}
     try{
       if(window.parent&&window.parent!==window){
-        window.parent.postMessage(msg,'*');
+        window.parent.postMessage(msg,location.origin);
       }
     }catch(e){}
   }
@@ -3883,6 +3907,8 @@ function v8OrcRecarregarPosBackup(){
 }
 window.addEventListener('vooalto-backup-restaurado',()=>v8OrcRecarregarPosBackup());
 window.addEventListener('message',ev=>{
+  /* V9.1.2 — só a própria origem pode mandar recarregar o estado. */
+  if(ev&&ev.origin&&ev.origin!==location.origin)return;
   if(ev&&ev.data&&ev.data.type==='vooalto-backup-restaurado')v8OrcRecarregarPosBackup();
 });
 </script>

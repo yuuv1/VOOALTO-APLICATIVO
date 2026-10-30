@@ -1,0 +1,11 @@
+/* V9.1.2 — fontes do produto em UM lugar.
+   Antes só o Orçamento declarava as @font-face da Poppins. A Ficha Técnica
+   oferecia "Poppins" na ferramenta de texto mas não tinha a fonte embarcada,
+   então o mesmo .json saía com uma fonte aqui e outra no computador de quem
+   abrisse — num app que gera documento impresso isso é erro de fidelidade.
+   Todo documento que usa Poppins inclui este arquivo. */
+@font-face{font-family:'Poppins';font-style:normal;font-weight:300;font-display:swap;src:url('fonts/poppins-latin-300-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/poppins-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/poppins-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/poppins-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/poppins-latin-700-normal.woff2') format('woff2')}

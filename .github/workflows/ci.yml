@@ -1,0 +1,54 @@
+name: CI
+
+# O repositório não tinha nenhuma automação: a suíte só rodava na máquina de
+# quem lembrava de rodar. São ~80 segundos e é o que impede a volta dos erros
+# de dinheiro, de restauração de backup e de precache do service worker.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  testes:
+    name: Testes (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: VERSAO_9_0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: VERSAO_9_0/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Suíte JS (jsdom)
+        run: npm test
+
+      - name: Suíte Python (build + servidor)
+        run: npm run test:python
+
+      - name: O sw.js commitado corresponde ao conteúdo do app?
+        shell: bash
+        run: |
+          python build_v9_pwa.py
+          if ! git diff --quiet -- ATUALIZACAO_V9/sw.js; then
+            echo "::error::O sw.js commitado está desatualizado. Rode 'npm run build' e commite o resultado."
+            git diff --stat -- ATUALIZACAO_V9/sw.js
+            exit 1
+          fi
+          echo "sw.js em sincronia com o conteúdo do app."

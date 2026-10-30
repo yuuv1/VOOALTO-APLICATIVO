@@ -26,12 +26,13 @@
     var css=':root{--shell-bg:'+v[0]+';--top-solid:'+v[1]+';--bar-text:'+v[2]+'!important}'
       +'html,body{background:'+v[0]+'!important;color:'+v[2]+'!important;color-scheme:'+scheme+'}'
       +'iframe.project-frame{background:'+v[0]+'!important;color-scheme:'+scheme+'!important}';
-    var st=document.createElement('style');
-    st.id='__theme_boot';
-    st.textContent=css;
     if(escuro)document.documentElement.setAttribute('data-theme','escuro');
     document.documentElement.style.colorScheme=scheme;
-    document.write('<style>'+css+'</style>');
+    /* O <style> PRECISA do id que setShellTheme() procura: antes ele era
+       escrito sem id (e o elemento com id era só criado, nunca anexado), então
+       nenhum dos dois era removível e as regras !important acima venciam o
+       tema novo — quem trocava para o claro continuava com o shell escuro. */
+    document.write('<style id="__theme_boot">'+css+'</style>');
   }catch(e){}
 })();
 </script>
@@ -466,9 +467,18 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       return [];
     }
     try{
+      /* V9.1.2 — uma transação e dois pedidos, em vez de uma transação POR
+         ficha (era N+1 e travava a interface com muitas fichas com foto).
+         Os dois pedidos são disparados antes de qualquer await, para a
+         transação não fechar no meio. */
       const tx=db.transaction(STORE,'readonly');
-      const keys=await reqProm(tx.objectStore(STORE).getAllKeys());
-      const keySet=new Set((keys||[]).map(String));
+      const store=tx.objectStore(STORE);
+      const reqKeys=store.getAllKeys();
+      const reqVals=store.getAll();
+      const keys=await reqProm(reqKeys);
+      const vals=await reqProm(reqVals);
+      const dadosPorId=new Map();
+      (keys||[]).forEach((k,i)=>dadosPorId.set(String(k),vals?vals[i]:undefined));
       const ordered=[];
       const seen=new Set();
       (Array.isArray(meta)?meta:[]).forEach(m=>{
@@ -481,11 +491,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       const out=[];
       for(let i=0;i<ordered.length;i++){
         const m=ordered[i];
-        let data=null;
-        if(keySet.has(String(m.id))){
-          const txR=db.transaction(STORE,'readonly');
-          data=await reqProm(txR.objectStore(STORE).get(m.id));
-        }
+        let data=dadosPorId.get(String(m.id))||null;
         if(!data&&Array.isArray(legacy)){
           const found=legacy.find(x=>x&&String(x.id)===String(m.id));
           if(found)data=found.data;
@@ -507,6 +513,13 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       return Array.isArray(legacy)?legacy.filter(x=>x&&x.id&&x.data):[];
     }
   }
+  /* V9.1.2 — gravar deixou de mentir.
+     Antes: se o IndexedDB não abrisse (ou estourasse no meio), o lote inteiro
+     caía no localStorage — base64 das fotos incluído, o que o PLANO §10
+     proíbe — e o índice era gravado de todo jeito. Como lsSet engole a falha
+     de cota, a lista passava a mostrar ficha que não existia e o backup
+     dizia "mesclado". Agora o dado nunca vai para o localStorage, o lote é
+     uma transação só e a falha vira {ok:false} com o motivo. */
   async function gravarFichasIDB(lista,limparAntes){
     const validas=(Array.isArray(lista)?lista:[]).filter(x=>x&&x.id&&x.data&&typeof x.data==='object');
     const meta=validas.map(x=>({
@@ -517,31 +530,27 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
     }));
     const db=await abrirIDB();
     if(!db){
-      lsSet(OLD_FICHAS_KEY,JSON.stringify(validas));
-      lsSet(META_KEY,JSON.stringify(meta));
-      return meta;
+      return {ok:false,meta:meta,gravadas:0,error:'O navegador não abriu o armazenamento local (IndexedDB). Nada foi gravado.'};
     }
     try{
-      if(limparAntes){
-        const txK=db.transaction(STORE,'readonly');
-        const oldKeys=await reqProm(txK.objectStore(STORE).getAllKeys());
-        for(let i=0;i<(oldKeys||[]).length;i++){
-          const txD=db.transaction(STORE,'readwrite');
-          await reqProm(txD.objectStore(STORE).delete(oldKeys[i]));
-        }
-      }
-      for(let i=0;i<validas.length;i++){
-        const item=validas[i];
-        const txW=db.transaction(STORE,'readwrite');
-        await reqProm(txW.objectStore(STORE).put(item.data,String(item.id)));
-      }
+      const txW=db.transaction(STORE,'readwrite');
+      const store=txW.objectStore(STORE);
+      if(limparAntes)store.clear();
+      validas.forEach(item=>store.put(item.data,String(item.id)));
+      await new Promise((resolve,reject)=>{
+        txW.oncomplete=()=>resolve();
+        txW.onerror=()=>reject(txW.error||new Error('Falha ao gravar no armazenamento local.'));
+        txW.onabort=()=>reject(txW.error||new Error('Gravação cancelada pelo navegador.'));
+      });
       db.close();
     }catch(e){
       try{db.close()}catch(_){}
-      lsSet(OLD_FICHAS_KEY,JSON.stringify(validas));
+      return {ok:false,meta:meta,gravadas:0,error:(e&&e.message)||'Falha ao gravar as fichas no navegador.'};
     }
-    lsSet(META_KEY,JSON.stringify(meta));
-    return meta;
+    if(!lsSet(META_KEY,JSON.stringify(meta))){
+      return {ok:false,meta:meta,gravadas:validas.length,error:'As fichas foram gravadas, mas o índice da lista não coube (armazenamento cheio).'};
+    }
+    return {ok:true,meta:meta,gravadas:validas.length};
   }
   async function resumir(){
     flushAtivos();
@@ -721,12 +730,12 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
     try{window.dispatchEvent(new CustomEvent('vooalto-backup-restaurado',{detail:msg}))}catch(e){}
     try{
       document.querySelectorAll('iframe.project-frame').forEach(fr=>{
-        if(fr&&fr.contentWindow)fr.contentWindow.postMessage(msg,'*');
+        if(fr&&fr.contentWindow)fr.contentWindow.postMessage(msg,location.origin);
       });
     }catch(e){}
     try{
       if(window.parent&&window.parent!==window){
-        window.parent.postMessage(msg,'*');
+        window.parent.postMessage(msg,location.origin);
       }
     }catch(e){}
   }
@@ -735,6 +744,11 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
     const norm=inspecionarArquivo(entrada);
     const hm=horaHM();
     if(m==='substituir'){
+      /* Grava as fichas ANTES de apagar o localStorage: se o banco falhar,
+         o rascunho/índice atual continua intacto e o usuário não fica no
+         meio do caminho sem nada. */
+      const gravSub=await gravarFichasIDB(norm.fichas,true);
+      if(!gravSub.ok)return {ok:false,modo:m,tipo:norm.tipo,error:gravSub.error,rotulo:norm.rotulo};
       const apagar=[];
       try{
         for(let i=0;i<localStorage.length;i++){
@@ -746,7 +760,6 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       Object.keys(norm.storage||{}).forEach(k=>{
         if(isVooaltoKey(k)&&norm.storage[k]!=null)lsSet(k,String(norm.storage[k]));
       });
-      await gravarFichasIDB(norm.fichas,true);
       if(norm.rascunhosFicha.ativo){
         const h=norm.rascunhosFicha.ativoHora||hm;
         lsSet(FICHA_LIVE_KEY,JSON.stringify(norm.rascunhosFicha.ativo));
@@ -810,7 +823,8 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
           data:item.data
         });
       });
-      await gravarFichasIDB(Array.from(mapa.values()),false);
+      const gravMerge=await gravarFichasIDB(Array.from(mapa.values()),false);
+      if(!gravMerge.ok)return {ok:false,modo:m,tipo:norm.tipo,error:gravMerge.error,rotulo:norm.rotulo};
 
       if(norm.rascunhosFicha.ativo){
         const h=norm.rascunhosFicha.ativoHora||hm;
@@ -889,7 +903,9 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
   async function exportarTudo(){
     const payload=await coletarTudo();
     const stamp=agoraBR();
-    lsSet(LAST_BKP_KEY,stamp);
+    /* O carimbo só entra no localStorage depois que o arquivo existe: antes
+       ele era gravado antes do download (que pode ser cancelado no seletor de
+       pasta), e o painel mostrava "último backup" de um backup que não saiu. */
     payload._resumo.ultimoBackup=stamp;
     payload.storage[LAST_BKP_KEY]=stamp;
     const filename='backup_vooalto_completo_'+carimboArquivo()+'.json';
@@ -907,6 +923,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       a.remove();
       setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},2000);
     }
+    lsSet(LAST_BKP_KEY,stamp);
     return {ok:true,filename:filename,payload:payload,resumo:payload._resumo};
   }
   window.VooaltoBackup={
@@ -995,7 +1012,7 @@ function broadcastTheme(t,exceto){
   Object.keys(PROJECTS).forEach(k=>{
     const fr=document.getElementById(PROJECTS[k].frame);
     if(!fr||fr===exceto)return;
-    try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:t},'*')}catch(e){}
+    try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:t},location.origin)}catch(e){}
   });
 }
 
@@ -1017,7 +1034,7 @@ function showProject(key,opts){
     document.getElementById(PROJECTS[k].frame).classList.toggle('active',k===key);
   });
   if(l)l.style.display=vaiCarregar?'':'none';
-  try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},'*')}catch(e){}
+  try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},location.origin)}catch(e){}
   if(!(opts&&opts.silent))toast('Aberto: '+p.name);
 }
 function reloadActive(){
@@ -1040,6 +1057,11 @@ function toast(msg){
 window.addEventListener('message',e=>{
   const d=e&&e.data;
   if(!d||!d.type)return;
+  /* Só a própria origem fala com o shell. Sem esta trava, qualquer página que
+     conseguisse um handle desta janela (embed, opener) podia trocar de aba,
+     trocar o tema ou disparar o recarregamento pós-backup. `e.origin` vazio
+     significa mensagem sintetizada na própria página — não é origem externa. */
+  if(e.origin&&e.origin!==location.origin)return;
   if(d.type==='vooalto-theme'){
     // Um módulo avisou que o usuário trocou o tema nele: aplica no shell e
     // repassa só para os OUTROS (nunca de volta para quem enviou — evita loop).
@@ -1062,7 +1084,7 @@ window.addEventListener('message',e=>{
     Object.keys(PROJECTS).forEach(k=>{
       const fr=document.getElementById(PROJECTS[k].frame);
       if(fr&&fr.contentWindow&&fr.contentWindow!==e.source){
-        try{fr.contentWindow.postMessage({type:'vooalto-backup-restaurado',modo:d.modo||'mesclar',tipo:d.tipo||'backup_v8'},'*')}catch(err){}
+        try{fr.contentWindow.postMessage({type:'vooalto-backup-restaurado',modo:d.modo||'mesclar',tipo:d.tipo||'backup_v8'},location.origin)}catch(err){}
       }
     });
     return;
@@ -1163,6 +1185,13 @@ async function confirmarImportacaoBackup(modo){
   }
   try{
     const res=await window.VooaltoBackup.restaurar(_backupPendenteTexto,modo);
+    /* V9.1.2 — restaurar pode falhar de verdade (banco fechado, cota cheia).
+       Antes a tela dizia "importado com sucesso" mesmo sem gravar nada. */
+    if(!res||!res.ok){
+      bkpFeedback('❌ O backup NÃO foi importado. '+(res&&res.error?res.error:'O armazenamento do navegador recusou a gravação.')+'\n\nSeus dados atuais continuam como estavam. Tente fechar outras janelas do Vooalto e repetir, ou libere espaço no navegador.','err');
+      toast('❌ Não foi possível importar o backup','erro');
+      return;
+    }
     cancelarImportacaoBackup();
     try{setShellTheme(v8TemaSalvo(),{animate:false});broadcastTheme(currentTheme||'claro',null)}catch(e){}
     await atualizarResumoBackupUI();
@@ -1258,7 +1287,7 @@ async function installPWA(){
 /* ── Inicialização ── */
 function initVooalto(){
   try{setShellTheme(v8TemaSalvo(),{animate:false})}catch(e){}
-  const syncThemeTo=fr=>{try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},'*')}catch(e){}};
+  const syncThemeTo=fr=>{try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},location.origin)}catch(e){}};
   Object.keys(PROJECTS).forEach(k=>{
     const fr=document.getElementById(PROJECTS[k].frame);
     if(!fr)return;
