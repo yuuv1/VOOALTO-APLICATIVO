@@ -21,7 +21,8 @@ function request(port, method, requestPath, headers = {}) {
 }
 
 (async () => {
-  assert.equal(resolveRequestPath('/index.html').filePath.endsWith('/index.html'), true);
+  /* path.join usa o separador do sistema: no Windows isto vem com '\\'. */
+  assert.equal(require('node:path').basename(resolveRequestPath('/index.html').filePath), 'index.html');
   assert.equal(resolveRequestPath('/%00').error, 400);
   assert.equal(resolveRequestPath('/%ZZ').error, 400);
   const traversal = resolveRequestPath('/../../etc/passwd');
@@ -82,7 +83,7 @@ function request(port, method, requestPath, headers = {}) {
     assert.equal(head.status, 200);
     assert.equal(head.body, '');
 
-    console.log('===== SERVIDOR V8: verificações OK =====');
+    console.log('===== SERVIDOR V10: verificações OK =====');
   } finally {
     await new Promise(resolve => server.close(resolve));
   }
