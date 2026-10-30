@@ -112,7 +112,7 @@ def content_digest(files):
 def make_service_worker(cache_name, digest, precache, version, pesados=()):
     precache_json = json.dumps(precache, ensure_ascii=False, separators=(',', ':'))
     pesados_json = json.dumps(list(pesados), ensure_ascii=False, separators=(',', ':'))
-    return f"""// Service Worker Vooalto V10 — gerado em {version} (hash {digest})
+    return f"""// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash {digest})
 const CACHE_PREFIX = 'vooalto-v10-';
 // Caches das versões anteriores na MESMA origem (a porta 4800 nunca mudou): o
 // activate apaga o que a V9/V8 deixou, sem tocar em outros aplicativos.
@@ -207,10 +207,13 @@ def build():
     cache_name = f'vooalto-v10-{digest}'
     precache, pesados = split_pesados(precache_list(files))
 
-    version = datetime.datetime.now().strftime('%Y%m%d-%H%M')
+    # Sem carimbo de data/hora no cabeçalho: o sw.js precisa ser reproduzível.
+    # Com o horário, todo build sujava o arquivo e o CI (que regenera e compara
+    # com o commitado) acusava dessincronização mesmo sem nenhuma mudança.
+    stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M')
     sw_path = os.path.join(SRC, 'sw.js')
     with open(sw_path, 'w', encoding='utf-8', newline='\n') as stream:
-        stream.write(make_service_worker(cache_name, digest, precache, version, pesados))
+        stream.write(make_service_worker(cache_name, digest, precache, stamp, pesados))
 
     normalize_bat_line_endings()
 

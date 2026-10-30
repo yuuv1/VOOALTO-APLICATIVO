@@ -36,8 +36,21 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      # Cada suíte roda isolada e o nome do arquivo vai para uma anotação.
+      # Assim uma falha no Windows diz QUAL suíte caiu — sem isso o log do
+      # runner fica atrás de um blob assinado difícil de abrir.
       - name: Suíte JS (jsdom)
-        run: npm test
+        shell: bash
+        run: |
+          falhas=0
+          for suite in tests/test_*.js; do
+            echo "▸ $suite"
+            if ! node "$suite"; then
+              echo "::error title=Suíte JS falhou::$suite"
+              falhas=$((falhas + 1))
+            fi
+          done
+          test "$falhas" -eq 0
 
       - name: Suíte Python (build + contrato + servidor)
         run: npm run test:python
@@ -47,8 +60,9 @@ jobs:
         run: |
           python build_v10_pwa.py
           if ! git diff --quiet -- ATUALIZACAO_V10/sw.js; then
-            echo "::error::O sw.js commitado está desatualizado. Rode 'npm run build' e commite o resultado."
+            echo "::error title=sw.js dessincronizado::O sw.js commitado não corresponde ao conteúdo do app. Rode 'npm run build' e commite."
             git diff --stat -- ATUALIZACAO_V10/sw.js
+            git diff -- ATUALIZACAO_V10/sw.js | head -40
             exit 1
           fi
           echo "sw.js em sincronia com o conteúdo do app."

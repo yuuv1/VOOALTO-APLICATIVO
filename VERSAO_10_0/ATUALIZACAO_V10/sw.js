@@ -1,4 +1,4 @@
-// Service Worker Vooalto V10 — gerado em 20261030-1456 (hash 16c4ebe12c7f)
+// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash 16c4ebe12c7f)
 const CACHE_PREFIX = 'vooalto-v10-';
 // Caches das versões anteriores na MESMA origem (a porta 4800 nunca mudou): o
 // activate apaga o que a V9/V8 deixou, sem tocar em outros aplicativos.

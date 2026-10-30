@@ -13,11 +13,18 @@ class VooaltoBuildTests(unittest.TestCase):
         self.assertEqual(len(files), len(set(files)))
         before = build_v10_pwa.content_digest(files)
         sw = (VERSION_DIR / "ATUALIZACAO_V10" / "sw.js").read_text(encoding="utf-8")
-        # The generated file contains a timestamp and its own cache name; it must
-        # not feed itself back into the next cache hash.
+        # O sw.js gerado tem o próprio nome de cache; ele não pode realimentar o
+        # hash do próximo build.
         self.assertIn(f"const CACHE = 'vooalto-v10-{before}'", sw)
         after = build_v10_pwa.content_digest(files)
         self.assertEqual(before, after)
+
+        # O arquivo tem de ser reproduzível: o CI regenera o sw.js e compara com
+        # o commitado. Um carimbo de data/hora no cabeçalho fazia a comparação
+        # falhar sem nenhuma mudança real (foi o que aconteceu no CI da V10).
+        self.assertNotRegex(sw.splitlines()[0], r"\d{8}-\d{4}",
+                            "o cabeçalho do sw.js não pode carregar data/hora")
+        self.assertIn("hash " + before, sw.splitlines()[0])
 
     def test_distribution_files_are_present(self):
         files = build_v10_pwa.file_list()

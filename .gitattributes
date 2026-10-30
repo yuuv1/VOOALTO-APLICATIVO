@@ -1,3 +1,33 @@
-# Auto detect text files and perform LF normalization
-* text=auto
-*.bat text eol=crlf
+# Fim de linha único no repositório inteiro.
+#
+# O Vooalto roda em Windows, mas o hash do service worker (build_v10_pwa.py) é
+# calculado sobre o CONTEÚDO dos arquivos. Se o checkout do Windows converter
+# LF em CRLF, o mesmo código gera outro hash e o CI acusa "sw.js dessincronizado"
+# sem ninguém ter mudado nada. Por isso o texto sai sempre em LF, em qualquer
+# sistema, e os binários ficam intocados.
+
+* text=auto eol=lf
+
+# Binários: nada de conversão nem de diff textual.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.zip  binary
+*.gz   binary
+*.wasm binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.traineddata binary
+
+# Scripts do Windows precisam continuar em CRLF para o cmd.exe.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf

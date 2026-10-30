@@ -189,6 +189,14 @@ npm run test:python   # 15 testes (build + contrato + identidade + servidor)
 npm run build         # gera sw.js e o ZIP
 ```
 
+No CI (`.github/workflows/ci.yml`, Ubuntu + Windows) cada suíte roda **isolada**
+e, quando falha, publica uma anotação com o nome do arquivo — o log cru do
+runner fica num blob assinado que nem sempre dá para baixar. O mesmo job
+regenera o `sw.js` e compara com o commitado; para isso o arquivo é
+**reproduzível** (sem carimbo de data/hora no cabeçalho) e o repositório fixa
+LF em todo o texto via `.gitattributes` — com CRLF no checkout do Windows o
+hash mudaria sem nenhuma alteração real.
+
 Cada módulo é carregado em **jsdom** com `runScripts: 'dangerously'` e stubs de
 `matchMedia`, `ResizeObserver`, `canvas` e `print`. Erro de página conta como
 falha — é o que pega "carregou mas quebrou no meio".
