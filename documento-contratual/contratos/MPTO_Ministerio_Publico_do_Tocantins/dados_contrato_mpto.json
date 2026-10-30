@@ -1,0 +1,115 @@
+{
+  "empresa": {
+    "nome_comercial": "VOOALTO UNIFORMES",
+    "cnpj": "51.919.138/0001-20",
+    "telefone": "(62) 98135-6948",
+    "email": "",
+    "endereco": "Av. Jacinto Alves de Abreu, 212 — Res. Vereda dos Buritis, Goiânia – GO, CEP 74370-661",
+    "responsavel": "Esio Andrade",
+    "cargo": "Proprietário"
+  },
+  "cliente": {
+    "nome_razao_social": "Ministério Público do Estado do Tocantins (MPTO / Procuradoria-Geral de Justiça)",
+    "cpf_cnpj": "01.786.078/0001-46",
+    "telefone": "(63) 99994-1987",
+    "email": "",
+    "endereco": "Quadra 202 Norte, Conjunto 01, Lotes 05/06, Avenida LO-04, Plano Diretor Norte",
+    "cidade_uf_cep": "Palmas - TO · CEP 77.006-218"
+  },
+  "producao": {
+    "linhas_em_branco": 5,
+    "itens": [
+      {
+        "numero": "01",
+        "modelo": "Camiseta gola polo manga curta",
+        "tecido": "Piquet PV antipilling",
+        "cor": "Preto",
+        "personalizacao": "Bordado somente frente (peito)",
+        "grade": "Masc (26): 1P · 11M · 9G · 5GG\nBaby look (6): 3P · 1M · 2G",
+        "quantidade": 32,
+        "valor_unitario": "57.90",
+        "subtotal": "1852.80"
+      },
+      {
+        "numero": "02",
+        "modelo": "Camiseta gola polo manga curta",
+        "tecido": "Piquet PV antipilling",
+        "cor": "Branco",
+        "personalizacao": "Bordado somente frente (peito)",
+        "grade": "Masc (10): 3P · 4M · 3G\nBaby look (6): 2P · 3M · 1G",
+        "quantidade": 16,
+        "valor_unitario": "57.90",
+        "subtotal": "926.40"
+      },
+      {
+        "numero": "03",
+        "modelo": "Camiseta gola polo manga curta",
+        "tecido": "Piquet PV antipilling",
+        "cor": "Azul Marinho",
+        "personalizacao": "Bordado somente frente (peito)",
+        "grade": "Masc (17): 3P · 7M · 5G · 2GG\nBaby look (10): 1P · 7M · 2G",
+        "quantidade": 27,
+        "valor_unitario": "57.90",
+        "subtotal": "1563.30"
+      },
+      {
+        "numero": "04",
+        "modelo": "Camiseta gola redonda manga curta",
+        "tecido": "100% algodão penteado",
+        "cor": "Preto",
+        "personalizacao": "Silk digital frente (peito) e costas",
+        "grade": "Masc (7): 1P · 1M · 3G · 2GG\nBaby look (5): 1P · 3M · 1G",
+        "quantidade": 12,
+        "valor_unitario": "49.90",
+        "subtotal": "598.80"
+      },
+      {
+        "numero": "05",
+        "modelo": "Camiseta gola redonda manga curta",
+        "tecido": "100% algodão penteado",
+        "cor": "Azul Marinho",
+        "personalizacao": "Silk digital frente (peito) e costas",
+        "grade": "Masc (4): 4G\nBaby look (8): 1P · 5M · 2G",
+        "quantidade": 12,
+        "valor_unitario": "49.90",
+        "subtotal": "598.80"
+      }
+    ],
+    "quantidade_total": "99 PEÇAS",
+    "valor_total": "5540.10",
+    "prazo_entrega": "30 dias (conforme Ficha Técnica Nº 3374)",
+    "observacoes": "Ficha Técnica Nº 3374 · Vendedor: Gabriel · Podem haver divergências de cor no silk digital.",
+    "imagens_referencia": [
+      {
+        "titulo": "01 · Polo Preta (32 un.)",
+        "arquivo": "contratos/MPTO_Ministerio_Publico_do_Tocantins/referencias/ref_01_polo_preta.jpg"
+      },
+      {
+        "titulo": "02 · Polo Branca (16 un.)",
+        "arquivo": "contratos/MPTO_Ministerio_Publico_do_Tocantins/referencias/ref_02_polo_branca.jpg"
+      },
+      {
+        "titulo": "03 · Polo Marinho (27 un.)",
+        "arquivo": "contratos/MPTO_Ministerio_Publico_do_Tocantins/referencias/ref_03_polo_azul_marinho.jpg"
+      },
+      {
+        "titulo": "04 · Gola Red. Preta (12 un.)",
+        "arquivo": "contratos/MPTO_Ministerio_Publico_do_Tocantins/referencias/ref_04_gola_redonda_preta.jpg"
+      },
+      {
+        "titulo": "05 · Gola Red. Marinho (12 un.)",
+        "arquivo": "contratos/MPTO_Ministerio_Publico_do_Tocantins/referencias/ref_05_gola_redonda_azul_marinho.jpg"
+      }
+    ]
+  },
+  "pagamento": {
+    "entrada_percentual": 50,
+    "saldo_percentual": 50,
+    "entrada_valor": "R$ 2.770,05",
+    "saldo_valor": "R$ 2.770,05",
+    "forma_pagamento": "Pix, depósito/transferência bancária ou cartão"
+  },
+  "execucao": {
+    "local_data": "Goiânia - GO / Palmas - TO, 22 de outubro de 2026"
+  }
+}

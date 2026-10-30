@@ -1,0 +1,10 @@
+.venv/
+.work/
+logs/
+.runtime_url.txt
+node_modules/
+.vite/
+__pycache__/
+*.py[cod]
+~$*.docx
+.DS_Store

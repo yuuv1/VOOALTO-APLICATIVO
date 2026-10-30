@@ -1,0 +1,36 @@
+{
+  "name": "vooalto-contratos-pwa",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/build_all.mjs",
+    "preview": "vite preview --outDir ../docs --host 0.0.0.0 --port 4173 --strictPort",
+    "test": "tsx --import ./scripts/raw_loader.mjs ./scripts/test_standalone_e2e.ts"
+  },
+  "dependencies": {
+    "@tesseract.js-data/por": "^1.0.0",
+    "docx": "^9.5.0",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.475.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.0.13",
+    "@tailwindcss/vite": "^4.0.9",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.9",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-singlefile": "^2.3.4"
+  }
+}

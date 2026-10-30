@@ -1,0 +1,40 @@
+{
+  "fonte_identidade": "PROPOSTA DE VENDA ANA.pdf",
+  "empresa": {
+    "nome_comercial": "VOOALTO UNIFORMES",
+    "razao_social": "",
+    "cnpj": "51.919.138/0001-20",
+    "telefone": "(62) 98135-6948",
+    "email": "",
+    "endereco": "Av. Jacinto Alves de Abreu, 212 — Res. Vereda dos Buritis, Goiânia – GO, CEP 74370-661",
+    "responsavel": "Esio Andrade",
+    "cargo": "Proprietário"
+  },
+  "cliente": {
+    "nome_razao_social": "",
+    "cpf_cnpj": "",
+    "telefone": "",
+    "email": "",
+    "endereco": "",
+    "cidade_uf_cep": ""
+  },
+  "producao": {
+    "linhas_em_branco": 4,
+    "itens": [],
+    "quantidade_total": "",
+    "valor_total": "",
+    "prazo_entrega": "",
+    "observacoes": "",
+    "imagens_referencia": []
+  },
+  "pagamento": {
+    "entrada_percentual": null,
+    "entrada_valor": "",
+    "saldo_percentual": null,
+    "saldo_valor": "",
+    "forma_pagamento": ""
+  },
+  "execucao": {
+    "local_data": ""
+  }
+}

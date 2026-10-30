@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#19232D" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="VOOALTO" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <title>VOOALTO Uniformes — Central Automática de Contratos</title>
+    <script>
+      (function () {
+        try {
+          var key = "vooalto_sw_clean_v3";
+          if (!sessionStorage.getItem(key) && "caches" in window) {
+            sessionStorage.setItem(key, "1");
+            caches.keys().then(function (names) {
+              names.forEach(function (n) {
+                if (n !== "vooalto-contratos-v3") caches.delete(n);
+              });
+            });
+          }
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-[#F2EFE9] text-[#19232D] antialiased selection:bg-[#C5635C]/20 selection:text-[#19232D]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
