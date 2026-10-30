@@ -1,0 +1,30 @@
+CONTRATO DE CONFECÇÃO E FORNECIMENTO DE UNIFORMES — VOOALTO UNIFORMES
+
+1. DADOS DA CONTRATADA (JÁ PREENCHIDOS)
+   - Empresa: VOOALTO UNIFORMES
+   - CNPJ: 51.919.138/0001-20 · Tel./WhatsApp: (62) 98135-6948
+   - Endereço: Av. Jacinto Alves de Abreu, 212 — Res. Vereda dos Buritis, Goiânia – GO, CEP 74370-661
+   - Assinatura da Contratada: Esio Andrade — Proprietário (incluída à esquerda no rodapé).
+
+2. ONDE O CLIENTE (CONTRATANTE) PREENCHE SEUS DADOS (SEÇÃO 1)
+   - Nome completo ou Razão Social
+   - CPF / CNPJ
+   - Telefone / WhatsApp
+   - E-mail
+   - Endereço completo (rua/avenida, número, bairro, complemento)
+   - Cidade / UF e CEP
+
+3. DADOS DA PRODUÇÃO E FICHA TÉCNICA (SEÇÃO 2 — EM BRANCO PARA PREENCHIMENTO)
+   - Linhas numeradas (01 a 04) para Modelo, Tecido, Cor, Personalização, Grade/Tamanhos, Quantidade, Valor Unitário e Subtotal
+   - Barra de totais: Total de Peças e Valor Total do Pedido (R$)
+   - Prazo de produção / previsão de entrega e Observações da produção
+   - Quadro reservado para Croquis / Imagens de Referência das Camisetas (Ficha Técnica)
+
+4. PAGAMENTO, DATA E ASSINATURA DO CONTRATANTE (SEÇÃO 3 E RODAPÉ)
+   - Entrada / Sinal na aprovação (R$) e Saldo na entrega final (R$)
+   - Forma de pagamento (Pix, depósito bancário ou cartão) e Local/Data
+   - Assinatura do(a) Contratante / Representante no quadro à direita, ao lado da assinatura do proprietário.
+
+5. IMPRESSÃO E ASSINATURA DIGITAL
+   - No PDF (Contrato_Vooalto_Uniformes.pdf), todos os quadros são editáveis e o espaço do cliente possui campo de assinatura digital (assinatura_digital_contratante).
+   - No Word (Contrato_Vooalto_Uniformes.docx), todos os quadros seguem exatamente o mesmo layout do PDF em uma única folha A4 (imprimir em A4, escala 100%).

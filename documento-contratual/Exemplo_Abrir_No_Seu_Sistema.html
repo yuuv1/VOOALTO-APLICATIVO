@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Exemplo de integração VOOALTO sem CMD</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; margin: 42px auto; max-width: 850px; padding: 0 18px; color: #172636 }
+    button { background: #172636; color: white; border: 0; border-radius: 8px; padding: 12px 18px; cursor: pointer; font: inherit }
+    button:hover, button:focus-visible { background: #354c61 }
+    .overlay { position: fixed; inset: 0; display: none; flex-direction: column; background: #f3f5f8; z-index: 10000 }
+    .overlay.open { display: flex }
+    .topbar { background: #172636; display: flex; justify-content: space-between; align-items: center; padding: 6px 16px; color: #fff }
+    .topbar button { background: transparent; border: 1px solid #fff }
+    iframe { border: 0; width: 100%; flex: 1; min-height: 0 }
+  </style>
+</head>
+<body>
+  <h1>Meu sistema</h1>
+  <p>Exemplo de abertura do motor VOOALTO dentro da aplicação existente, em segundo plano no navegador, sem abrir prompt de comando, Python, instalador ou servidor local.</p>
+  <button type="button" id="abrir">Abrir motor de contratos</button>
+  <div id="vooalto-dialog" role="dialog" aria-modal="true" aria-label="Motor de contratos VOOALTO" class="overlay">
+    <div class="topbar"><strong>VOOALTO · Contratos</strong><button type="button" id="fechar">Fechar ×</button></div>
+    <!-- Mantenha o HTML autônomo ao lado deste arquivo. Carrega só após o clique. -->
+    <iframe id="vooalto-frame" title="Gerador VOOALTO de contratos" allow="clipboard-read; clipboard-write"></iframe>
+  </div>
+  <script>
+    const dialog = document.getElementById('vooalto-dialog');
+    const frame = document.getElementById('vooalto-frame');
+    const abrir = document.getElementById('abrir');
+    const fechar = document.getElementById('fechar');
+    abrir.addEventListener('click', () => {
+      if (!frame.src) frame.src = './Abrir_Sistema_Vooalto.html';
+      dialog.classList.add('open');
+      fechar.focus();
+    });
+    function closeDialog() { dialog.classList.remove('open'); abrir.focus(); }
+    fechar.addEventListener('click', closeDialog);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && dialog.classList.contains('open')) closeDialog(); });
+  </script>
+</body>
+</html>
