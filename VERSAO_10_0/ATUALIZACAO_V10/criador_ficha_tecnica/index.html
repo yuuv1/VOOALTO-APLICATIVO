@@ -1882,10 +1882,20 @@ fichaSyncFloatCta();
 let paginas=[];
 let totalPaginas=1;
 
+/* O número da página vem da ORDEM (v7Renumerar recalcula), mas o `id` não pode
+   se repetir: remover a página 2 de uma ficha com 3 e adicionar outra gerava
+   dois `folha_p3` — a página nova virava "fantasma", porque todo $('..._p3')
+   encontrava a antiga. O id passa a ser o primeiro livre. */
+function proximoIdPagina(prefixo){
+let num=Math.max(totalPaginas+1,paginas.length+2);
+let pid=prefixo+num;
+while(document.getElementById('folha_'+pid)||paginas.some(p=>p.id===pid)){num++;pid=prefixo+num;}
+totalPaginas=num;
+return {num,pid};
+}
+
 function adicionarPagina(){
-totalPaginas++;
-const num=totalPaginas;
-const pid='p'+num;
+const {num,pid}=proximoIdPagina('p');
 const pageData={
 id:pid,num,
 layers:[],selId:null,zCnt:10,
@@ -1927,6 +1937,11 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }
 
 atualizarNavSidebar();
+/* Recalcula número de página, rodapé e ordem a partir do DOM. Sem isso o
+   rodapé anunciava "de 4" numa ficha de 3 páginas sempre que uma página do
+   meio tinha sido removida antes (o contador ficava à frente da realidade) e a
+   página nova aparecia com o número do id, não com o da posição. */
+try{if(typeof v7Renumerar==='function')v7Renumerar();}catch(e){}
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Autosave==='function')v7Autosave();
 if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
@@ -1936,9 +1951,7 @@ snap();
 
 /* ═══ PÁGINA BRANCA ═══ */
 function adicionarPaginaBranca(){
-totalPaginas++;
-const num=totalPaginas;
-const pid='pb'+num;
+const {num,pid}=proximoIdPagina('pb');
 const pageData={
 id:pid,num,
 layers:[],selId:null,zCnt:10,
@@ -1975,6 +1988,7 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }
 
 atualizarNavSidebar();
+try{if(typeof v7Renumerar==='function')v7Renumerar();}catch(e){}
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Autosave==='function')v7Autosave();
 atualizarRodapes();
@@ -2396,47 +2410,175 @@ document.addEventListener('input',e=>{
   v8MedSync();
 });
 
-/* ═══ COPIAR P1 PARA EXTRA ═══ */
-function copiarP1paraExtra(p){
-const pid=p.id;
-sincTodasPaginas();
-const fn=$('fichaNum'),fn2=$('fichaNum_'+pid);if(fn&&fn2)fn2.value=fn.value;
-const fd=$('fichaData'),fd2=$('fichaData_'+pid);if(fd&&fd2)fd2.value=fd.value;
-const pv=$('previsao'),pv2=$('previsao_'+pid);if(pv&&pv2)pv2.value=pv.value;
-const sep=$('sepTxt'),sep2=$('sepTxt_'+pid);if(sep&&sep2)sep2.value=sep.value;
-const tt=$('tipoTecido'),tt2=$('tipoTecido_'+pid);if(tt&&tt2)tt2.innerHTML=tt.innerHTML;
-document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{
-const i=it.id.replace('ci_','');
-const hex=($('chi_'+i)||{}).value||'#3B82F6';
-const nome=($('cni_'+i)||{}).value||'COR';
-adicionarCorExtra(pid,hex,nome);
-});
-const giM=document.querySelectorAll('.gi[data-g="m"]');
-const giM2=document.querySelectorAll(`.gi[data-g="${pid}m"]`);
-giM.forEach((el,i)=>{if(giM2[i]){giM2[i].value=el.value;giM2[i].classList.toggle('v',(parseInt(el.value)||0)>0);}});
-const giB=document.querySelectorAll('.gi[data-g="b"]');
-const giB2=document.querySelectorAll(`.gi[data-g="${pid}b"]`);
-giB.forEach((el,i)=>{if(giB2[i]){giB2[i].value=el.value;giB2[i].classList.toggle('v',(parseInt(el.value)||0)>0);}});
-const giI=document.querySelectorAll('.gi[data-g="i"]');
-const giI2=document.querySelectorAll(`.gi[data-g="${pid}i"]`);
-giI.forEach((el,i)=>{if(giI2[i]){giI2[i].value=el.value;giI2[i].classList.toggle('v',(parseInt(el.value)||0)>0);}});
-recalcGradeExtra(p);
-document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i)=>{
-const t=document.querySelectorAll('#folha_'+pid+' .med-bloco.fem .med-inp');if(t[i])t[i].value=el.value;
-});
-document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach((el,i)=>{
-const t=document.querySelectorAll('#folha_'+pid+' .med-bloco.masc .med-inp');if(t[i])t[i].value=el.value;
-});
-const tbP=$('prodLinhas_'+pid);if(tbP)tbP.innerHTML='';
-p.linhaId=0;
-document.querySelectorAll('#prodLinhas tr').forEach(tr=>{
-const inps=tr.querySelectorAll('input');
-criarLinhaExtra(p,inps[0]?inps[0].value:'',inps[1]?inps[1].value:'',inps[2]?inps[2].value:'');
-});
-calcTotalExtra(p);
-const ev=$('entradaVal'),ev2=$('entradaVal_'+pid);if(ev&&ev2)ev2.value=ev.value;calcEntradaExtra(pid);
-// Logo is fixed
+/* ═══ ESPELHO DA FOLHA 1 (V10) ═══
+   A folha 1 é a CONFIGURAÇÃO da ficha: número, data, previsão, separador (texto
+   e tamanho), títulos das seções, aviso, tipo de tecido, paleta de cores, grade
+   de produção, medidas, produção e entrada. As páginas 2, 3… são a MESMA ficha
+   com outra arte — a página extra é cópia, nunca origem (mesma regra que o
+   v8MedSync já usava para as medidas).
+
+   Antes, ao criar a página, só parte disso era copiada: o tamanho do separador,
+   o título das cores, o título do tecido e o aviso ficavam com o padrão de
+   fábrica, e depois de criada a página só acompanhava medidas e dados do
+   cliente. Resultado: a ficha impressa saía com dois títulos diferentes, um
+   aviso velho e a paleta de quando a página nasceu.
+
+   Tudo aqui é idempotente: rodar de novo sem mudança não toca no DOM (o que
+   evita recriar a paleta e os campos enquanto o usuário digita na folha 1). */
+
+const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','coresTitulo','tipoTitulo','avisoTxt'];
+
+/* Páginas que têm os campos da ficha (a página branca é canvas livre). */
+function paginasEspelhadas(){return (typeof paginas!=='undefined'?paginas:[]).filter(p=>p&&p.tipo!=='branca');}
+
+/* Campos simples + tipo de tecido (contenteditable) + tamanho do separador.
+   O tamanho do separador vive em DOIS lugares: o campo `sepFS` e o estilo
+   inline aplicado por applySepFontSize — copiar só um dos dois deixa a página
+   nova com o texto certo em 7px. */
+function espelharCamposP1(p){
+  const pid=p.id;
+  P1_CAMPOS_ESPELHADOS.forEach(id=>{
+    const src=$(id),dst=$(id+'_'+pid);
+    if(src&&dst&&dst.value!==src.value)dst.value=src.value;
+  });
+  const tt=$('tipoTecido'),tt2=$('tipoTecido_'+pid);
+  if(tt&&tt2&&tt2.innerHTML!==tt.innerHTML)tt2.innerHTML=tt.innerHTML;
+  const fsSrc=$('sepFontSize'),fsDst=$('sepFS_'+pid);
+  if(fsSrc&&fsDst){
+    if(fsDst.value!==fsSrc.value)fsDst.value=fsSrc.value;
+    applySepFontSize('sepTxt_'+pid,'sepFS_'+pid);
+  }
 }
+
+/* Paleta de cores: mesma lista, mesmos nomes, mesma ordem. Compara antes de
+   reconstruir porque cada reconstrução cria ids novos (p2c1, p2c2…) e jogaria
+   fora o foco de quem estivesse editando a cor na página 2. */
+function espelharCoresP1(p){
+  const lista=$('coresList_'+p.id);if(!lista)return 0;
+  const origem=[...document.querySelectorAll('#coresList [id^="ci_"]')].map(it=>{
+    const i=it.id.replace('ci_','');
+    return {hex:($('chi_'+i)||{}).value||'#3B82F6',nome:($('cni_'+i)||{}).value||'COR'};
+  });
+  const assinatura=lista=>[...lista.querySelectorAll('[id^="ci_"]')].map(it=>{
+    const i=it.id.replace('ci_','');
+    return String(($('chi_'+i)||{}).value||'').toUpperCase()+'|'+(($('cni_'+i)||{}).value||'');
+  }).join('§');
+  const alvo=origem.map(c=>String(c.hex).toUpperCase()+'|'+c.nome).join('§');
+  if(assinatura(lista)===alvo)return 0;
+  lista.innerHTML='';p.corId=0;
+  origem.forEach(c=>_addCorExtra(p,c.hex,c.nome));
+  return origem.length;
+}
+
+/* Grade de produção (masculino / baby look / infantil). */
+function espelharGradeP1(p){
+  let mudou=0;
+  ['m','b','i'].forEach(g=>{
+    const src=[...document.querySelectorAll(`.gi[data-g="${g}"]`)];
+    const dst=[...document.querySelectorAll(`.gi[data-g="${p.id}${g}"]`)];
+    src.forEach((el,i)=>{
+      if(!dst[i])return;
+      if(dst[i].value!==el.value){dst[i].value=el.value;mudou++;}
+      dst[i].classList.toggle('v',(parseInt(el.value)||0)>0);
+    });
+  });
+  if(mudou)recalcGradeExtra(p);
+  return mudou;
+}
+
+/* Tabela de medidas (feminino / masculino). */
+function espelharMedidasP1(p){
+  const folha=$('folha_'+p.id);if(!folha)return 0;
+  let mudou=0;
+  ['fem','masc'].forEach(bloco=>{
+    const src=[...document.querySelectorAll('#folha1 .med-bloco.'+bloco+' .med-inp')].map(el=>el.value);
+    folha.querySelectorAll('.med-bloco.'+bloco+' .med-inp').forEach((el,i)=>{
+      if(src[i]!==undefined&&el.value!==src[i]){el.value=src[i];mudou++;}
+    });
+  });
+  return mudou;
+}
+
+/* Produção e entrada. Só recria as linhas quando a quantidade muda — no caso
+   comum (mesmo número de linhas) atualiza os valores no lugar. */
+function espelharProducaoP1(p){
+  const tb=$('prodLinhas_'+p.id);if(!tb)return 0;
+  const origem=[...document.querySelectorAll('#prodLinhas tr')].map(tr=>{
+    const inps=tr.querySelectorAll('input');
+    return [inps[0]?inps[0].value:'',inps[1]?inps[1].value:'',inps[2]?inps[2].value:''];
+  });
+  const atuais=[...tb.querySelectorAll('tr')];
+  let mudou=0;
+  if(atuais.length!==origem.length){
+    tb.innerHTML='';p.linhaId=0;
+    origem.forEach(r=>criarLinhaExtra(p,r[0],r[1],r[2]));
+    calcTotalExtra(p);
+    mudou=origem.length;
+  }else{
+    atuais.forEach((tr,idx)=>{
+      tr.querySelectorAll('input').forEach((inp,campo)=>{
+        if(origem[idx][campo]!==undefined&&inp.value!==origem[idx][campo]){inp.value=origem[idx][campo];mudou++;}
+      });
+    });
+  }
+  if(mudou)calcTotalExtra(p);
+  const ev=$('entradaVal'),ev2=$('entradaVal_'+p.id);
+  if(ev&&ev2){
+    if(ev2.value!==ev.value){ev2.value=ev.value;calcEntradaExtra(p.id);}
+  }
+  return mudou;
+}
+
+/* O tamanho do separador é um valor + um estilo inline. Restaurar só o valor
+   (autosave, JSON, desfazer) devolvia o campo 14 e o texto em 7px. */
+function aplicarSepFontSizeP1(){applySepFontSize('sepTxt','sepFontSize');}
+
+/* Espelha a folha 1 para UMA página (usado ao criar a página). */
+function copiarP1paraExtra(p){
+  if(!p||p.tipo==='branca')return;
+  sincTodasPaginas();
+  espelharCamposP1(p);
+  espelharCoresP1(p);
+  espelharGradeP1(p);
+  espelharMedidasP1(p);
+  espelharProducaoP1(p);
+}
+
+/* Espelha para TODAS as páginas extras (usado quando a folha 1 muda). */
+function sincronizarPaginasExtra(){
+  const alvos=paginasEspelhadas();
+  alvos.forEach(espelharCamposP1);
+  alvos.forEach(espelharCoresP1);
+  alvos.forEach(espelharGradeP1);
+  alvos.forEach(espelharMedidasP1);
+  alvos.forEach(espelharProducaoP1);
+  return alvos.length;
+}
+
+/* Uma tecla na folha 1 não pode varrer sete páginas: 150 ms de debounce cobre
+   a digitação e mantém o custo de um espelho por pausa. */
+let _espelhoTimer=null;
+function espelharAgendar(){
+  if(_espelhoTimer)clearTimeout(_espelhoTimer);
+  _espelhoTimer=setTimeout(()=>{_espelhoTimer=null;sincronizarPaginasExtra();},150);
+}
+
+/* Origem do espelho: só a folha 1. Cobre input, select, contenteditable e os
+   campos criados depois (delegação no documento). */
+function _eOrigemDoEspelho(t){
+  if(!t||typeof t.closest!=='function')return false;
+  if(!t.closest('#folha1'))return false;
+  if(t.id&&P1_CAMPOS_ESPELHADOS.indexOf(t.id)>=0)return true;
+  if(t.id==='sepFontSize'||t.id==='tipoTecido')return true;
+  if(t.classList&&(t.classList.contains('gi')||t.classList.contains('med-inp')||t.classList.contains('field')))return true;
+  if(t.closest&&t.closest('#prodLinhas'))return true;
+  return false;
+}
+['input','change'].forEach(evt=>{
+  document.addEventListener(evt,e=>{
+    if(_eOrigemDoEspelho(e.target))espelharAgendar();
+  },true);
+});
 
 /* ═══ PRODUÇÃO EXTRA ═══ */
 function iniciarProdExtra(p){criarLinhaExtra(p);criarLinhaExtra(p);criarLinhaExtra(p);calcTotalExtra(p);}
@@ -2518,7 +2660,18 @@ const lista=$('coresList_'+p.id);if(lista)lista.appendChild(div);
 function onCorPickerExtra(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const chi=$(`chi_${id}`);if(chi)chi.value=hex.toUpperCase();}
 function onCorHexExtra(id,hex){const h=hex.trim();if(/^#[0-9A-Fa-f]{6}$/.test(h)){const tc=contraste(h);const cr=$(`cr_${id}`);if(cr)cr.style.background=h;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const cp=$(`cp_${id}`);if(cp)cp.value=h;}}
 function onCorNomeExtra(id,nome){const cn=$(`cn_${id}`);if(cn)cn.textContent=nome.toUpperCase();}
-function excluirCorExtra(id){const el=$(`ci_${id}`);if(el)el.remove();}
+/* A paleta é da ficha, não da página: apagar a cor numa página extra apaga a
+   mesma cor na folha 1 (por posição) — senão o espelho a traria de volta no
+   próximo instante e o botão pareceria não funcionar. */
+function excluirCorExtra(id){
+const el=$(`ci_${id}`);if(!el)return;
+const pid=String(id).split('c')[0];
+const lista=$('coresList_'+pid);
+const idx=lista?[...lista.querySelectorAll('[id^="ci_"]')].indexOf(el):-1;
+const origem=[...document.querySelectorAll('#coresList [id^="ci_"]')];
+if(idx>=0&&origem[idx]&&typeof excluirCor==='function'){excluirCor(origem[idx].id.replace('ci_',''));return;}
+el.remove();
+}
 
 /* ═══ CANVAS EXTRA ENGINE ═══ */
 function cwExtra(pid){return($('canvasInner_'+pid)||{}).clientWidth||400;}
@@ -2914,7 +3067,7 @@ document.addEventListener('mouseup',e=>{setTimeout(()=>{if(!richBar.contains(e.t
 document.addEventListener('keyup',e=>{if(e.shiftKey||['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))setTimeout(rfShow,80);});
 
 /* ═══ UNDO / REDO ═══ */
-const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','coresTitulo','tipoTitulo'];
+const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','sepFontSize','coresTitulo','tipoTitulo'];
 const CAMPOS_CE=['dc_nome','dc_doc','dc_tel','dc_end','dc_cidade','dc_cep','dc_vendedor','tipoTecido'];
 let undoStack=[],redoStack=[],snapTimer=null;
 let undoSeqStack=[],redoSeqStack=[],v7OpSeq=0,v7SuppressSnap=false;
@@ -3013,6 +3166,7 @@ return b;
 }
 function restState(s){
 CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.value=s[id];});
+aplicarSepFontSizeP1();
 CAMPOS_CE.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.innerHTML=s[id];});
 if(s._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(s._grade[i]!==undefined){el.value=s._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
 recalcGrade();$('coresList').innerHTML='';corId=0;(s._cores||[]).forEach(c=>adicionarCor(c.hex,c.nome));
@@ -3036,6 +3190,9 @@ if(Array.isArray(s._paginasDetalhe)){
   });
 }
 salvarNum();calcTotal();
+/* O desfazer devolve os campos da folha 1; as páginas extras precisam voltar
+   junto (antes ficavam com a configuração do estado desfeito). */
+try{if(typeof sincronizarPaginasExtra==='function')sincronizarPaginasExtra();}catch(e){}
 }
 function snap(){
 if(v7SuppressSnap)return;
@@ -6237,7 +6394,10 @@ function onCorPicker(id,hex){updCorVisual(id,hex);const chi=$(`chi_${id}`);if(ch
 function onCorHex(id,hex){const h=hex.trim();if(/^#[0-9A-Fa-f]{6}$/.test(h)){updCorVisual(id,h);const cp=$(`cp_${id}`);if(cp)cp.value=h;}}
 function onCorNome(id,nome){const cn=$(`cn_${id}`);if(cn)cn.textContent=nome.toUpperCase();savCores();}
 function excluirCor(id){const el=$(`ci_${id}`);if(el)el.remove();savCores();snap();}
-function savCores(){const c=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');c.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});try{localStorage.setItem('va3_cores',JSON.stringify(c));}catch(e){}}
+function savCores(){const c=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');c.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});try{localStorage.setItem('va3_cores',JSON.stringify(c));}catch(e){}
+/* A paleta é uma só: acrescentar/renomear/apagar cor na folha 1 atualiza as
+   páginas extras (antes só a cor existente na hora em que a página nasceu). */
+if(typeof espelharAgendar==='function')espelharAgendar();}
 
 /* ═══ PRODUÇÃO P1 ═══ */
 let linhaId=0;
@@ -6272,7 +6432,7 @@ if(rn)rn.textContent=n1?`Ficha Nº ${n1} · Página ${p.num} de ${total}`:`Ficha
 }
 
 /* ═══ SALVAR / CARREGAR ═══ */
-const CAMPOS_INPUT_SAVE=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','coresTitulo','tipoTitulo'];
+const CAMPOS_INPUT_SAVE=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','sepFontSize','coresTitulo','tipoTitulo'];
 const CAMPOS_CE_SAVE=['dc_nome','dc_doc','dc_tel','dc_end','dc_cidade','dc_cep','dc_vendedor','tipoTecido'];
 function salvarDados(){
 // Redireciona para o sistema de arquivos JSON
@@ -6283,6 +6443,7 @@ const raw=localStorage.getItem('va3_dados');if(!raw)return;
 try{
 const d=JSON.parse(raw);
 CAMPOS_INPUT_SAVE.forEach(id=>{const el=$(id);if(el&&d[id]!==undefined)el.value=d[id];});
+aplicarSepFontSizeP1();
 CAMPOS_CE_SAVE.forEach(id=>{const el=$(id);if(el&&d[id]!==undefined)el.innerHTML=d[id];});
 if(d._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(d._grade[i]!==undefined){el.value=d._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
 recalcGrade();calcTotal();
@@ -7106,6 +7267,7 @@ function restaurarDeJSON(d) {
     try{ v7RestaurarPaginaP1(null); }catch(e){}
   }
   CAMPOS_INPUT_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.value = d[id]; });
+  aplicarSepFontSizeP1();
   CAMPOS_CE_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.innerHTML = d[id]; });
   if(d._grade) { document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i) => { if(d._grade[i] !== undefined) { el.value = d._grade[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); } }); }
   recalcGrade();

@@ -1,5 +1,26 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.1.0 — Ficha Técnica: a folha 1 manda nas outras páginas (2026-10-30)
+
+A ficha técnica é **uma** ficha com várias páginas, não várias fichas. A folha 1
+carrega a configuração (número, data, previsão, separador, títulos, aviso,
+paleta, grade, medidas, produção e entrada) e as páginas 2, 3… são a mesma ficha
+com outra arte. O que estava errado era a hora da cópia e o que ficava de fora:
+
+| O que acontecia | O que ficou |
+|---|---|
+| O **tamanho do separador** (`sepFontSize`) não era copiado: a página nova nascia em 7px mesmo com a folha 1 em 12px. Pior: o campo nem entrava no autosave/JSON/desfazer, então o tamanho voltava para 7px ao reabrir a ficha | o tamanho é salvo, restaurado e aplicado (campo **e** estilo inline) em todas as páginas |
+| O **título das cores** e o **título do tecido** (campos editáveis) não eram copiados: a página nova mostrava "CORES DO TECIDO"/"TIPO DE TECIDO" enquanto a folha 1 mostrava o que o usuário escreveu | copiados na criação e espelhados depois |
+| O **texto do aviso** ("⚠ PODEM HAVER DIVERGÊNCIAS…") não era copiado: páginas com avisos diferentes na mesma ficha | copiado e espelhado |
+| Depois de criada, a página extra só acompanhava **medidas** e **dados do cliente**. Trocar o separador, o título, o aviso, a paleta, a grade, a produção ou a entrada deixava as outras páginas com a configuração do momento em que nasceram | espelho único e contínuo da folha 1 (150 ms de debounce), idempotente — roda de novo sem tocar no DOM |
+| Apagar uma cor **na página 2** só sumia da tela: o espelho a trazia de volta no instante seguinte | apagar numa cópia apaga a mesma cor da ficha (folha 1, por posição) |
+| **Id de página repetido**: com 3 páginas, remover a do meio e adicionar outra criava dois `folha_p3`. A página nova era um "fantasma" — todo `$('..._p3')` achava a antiga, e a configuração ia para a página errada | o id é o primeiro livre (`p4`) |
+| O rodapé anunciava **"Página 1 de 4"** numa ficha de 3 páginas (o contador somava a página removida) e a página nova mostrava o número do id, não o da posição | a criação chama a renumeração, que recalcula total, rodapé, plaquinhas e ordem a partir do DOM |
+| O **desfazer** devolvia os campos da folha 1 e deixava as páginas extras no estado desfeito | o desfazer espelha depois de restaurar |
+
+Teste novo: `tests/test_espelho_p1_v10.js` — 50 verificações (cópia na criação,
+espelho contínuo, remover/adicionar página, salvar/restaurar, página branca).
+
 ## V10.0.0 — A terceira ferramenta: 📄 Contrato (2026-10-30)
 
 O Vooalto passa a ter **três** ferramentas. Entrou o **Criador de Documento

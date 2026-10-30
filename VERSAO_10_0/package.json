@@ -1,10 +1,10 @@
 {
   "name": "vooalto-v10",
   "private": true,
-  "version": "10.0.0",
+  "version": "10.1.0",
   "description": "Testes e ferramentas de build do Vooalto V10 PWA",
   "scripts": {
-    "test": "node tests/test_contrato_v10.js && node tests/test_melhorias_v10.js && node tests/test_shell_v10.js && node tests/test_ficha_v10.js && node tests/test_minhas_fichas_v10.js && node tests/test_orc_v10.js && node tests/test_orc_features_v10.js && node tests/test_canva_v10.js && node tests/test_ux_v10.js && node tests/test_temas_v10.js && node tests/test_pwa_infra_v10.js && node tests/test_server_v10.js && node tests/test_perf_v10.js && node tests/test_backup_e_tamanhos_v10.js && node tests/test_mockup_v10.js && node tests/test_peca_v10.js",
+    "test": "node tests/test_contrato_v10.js && node tests/test_melhorias_v10.js && node tests/test_shell_v10.js && node tests/test_ficha_v10.js && node tests/test_espelho_p1_v10.js && node tests/test_minhas_fichas_v10.js && node tests/test_orc_v10.js && node tests/test_orc_features_v10.js && node tests/test_canva_v10.js && node tests/test_ux_v10.js && node tests/test_temas_v10.js && node tests/test_pwa_infra_v10.js && node tests/test_server_v10.js && node tests/test_perf_v10.js && node tests/test_backup_e_tamanhos_v10.js && node tests/test_mockup_v10.js && node tests/test_peca_v10.js",
     "test:python": "python -m unittest discover -s tests -p 'test_*.py'",
     "build": "python build_v10_pwa.py"
   },

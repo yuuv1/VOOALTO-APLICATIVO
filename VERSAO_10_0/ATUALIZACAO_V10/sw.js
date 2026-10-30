@@ -1,9 +1,9 @@
-// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash 16c4ebe12c7f)
+// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash d52e4846cbe0)
 const CACHE_PREFIX = 'vooalto-v10-';
 // Caches das versões anteriores na MESMA origem (a porta 4800 nunca mudou): o
 // activate apaga o que a V9/V8 deixou, sem tocar em outros aplicativos.
 const LEGACY_CACHE_PREFIXES = ['vooalto-v9-', 'vooalto-v8-'];
-const CACHE = 'vooalto-v10-16c4ebe12c7f';
+const CACHE = 'vooalto-v10-d52e4846cbe0';
 const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","manual.html","assets/cropper.min.css","assets/cropper.min.js","assets/fonts.css","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/tema-v10.css","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","criador_contrato/manifest.webmanifest","criador_contrato/icons/apple-touch-icon.png","criador_contrato/icons/icon-192.png","criador_contrato/icons/icon-512.png","criador_contrato/icons/maskable-512.png","criador_ficha_tecnica/index.html","criador_orcamento/index.html","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","mockup/index.html","mockup/peca.js","mockup/peca_editor.css","mockup/peca_editor.js","mockup/peca_render.js"];
 // Arquivos grandes (bundle do Contrato): entram no cache um a um, DEPOIS do
 // precache obrigatório. cache.addAll() é atômico — se um arquivo de ~10 MB

@@ -184,7 +184,8 @@ navegador, com `Cache-Control: no-store`. Não é o servidor do app.
 
 ```
 npm install
-npm test              # 16 suítes jsdom (shell, módulos, mockup, peça, contrato, melhorias)
+npm test              # 17 suítes jsdom (shell, módulos, mockup, peça, contrato,
+                      # espelho da folha 1, melhorias)
 npm run test:python   # 15 testes (build + contrato + identidade + servidor)
 npm run build         # gera sw.js e o ZIP
 ```
@@ -390,4 +391,42 @@ Para atualizar o motor: rode o build no projeto dele, depois
 `python3 tools/atualizar_contrato.py`, `npm run build` (regera `sw.js`/ZIP) e
 `npm test` — o teste `tests/test_contrato_v10.js` confirma que a cópia está
 corrigida.
+
+## 14. Ficha Técnica: a folha 1 é a configuração
+
+A ficha é **uma** ficha com várias páginas. A `#folha1` guarda tudo o que é da
+ficha (número, data, previsão, separador e tamanho, títulos das seções, aviso,
+tipo de tecido, paleta de cores, grade de produção, medidas, produção e
+entrada); as páginas `p2`, `p3`… são a mesma ficha com outra arte.
+
+Regra para quem mexer aqui: **a página extra é cópia, nunca origem.** Quem lê
+um dado compartilhado lê da folha 1; ninguém escreve configuração só na página
+extra.
+
+O espelho mora em um bloco só (`ESPELHO DA FOLHA 1`), com:
+
+- `espelharCamposP1` — campos simples, `tipoTecido` (contenteditable) e o par
+  `sepFontSize`/`sepFS`. O tamanho do separador vive em dois lugares (valor +
+  estilo inline): copiar só um deixa o texto em 7px.
+- `espelharCoresP1` — compara antes de reconstruir; reconstruir sempre criaria
+  ids novos (`p2c1`…) e jogaria fora o foco de quem edita a cor na página 2.
+- `espelharGradeP1`, `espelharMedidasP1`, `espelharProducaoP1` — produção
+  atualiza linhas no lugar quando a quantidade não muda.
+- `copiarP1paraExtra(p)` (na criação) e `sincronizarPaginasExtra()` (depois),
+  ligados por delegação de `input`/`change` na folha 1 com 150 ms de debounce.
+
+Cuidados que já custaram bug:
+
+1. **Id de página não é número de página.** `proximoIdPagina()` pega o primeiro
+   id livre: remover a página do meio e adicionar outra criava dois `folha_p3`,
+   e todo `$('..._p3')` achava a página antiga (a nova virava fantasma).
+2. **Depois de criar/remover, renumere** (`v7Renumerar`): total, rodapé
+   "Página 1 de N", plaquinhas e ordem saem do DOM, não do contador.
+3. **Todo campo novo é salvo, restaurado e espelhado.** O `sepFontSize` ficou de
+   fora de `CAMPOS_INPUT`/`CAMPOS_INPUT_SAVE` e o tamanho do separador voltava
+   para 7px a cada reabertura.
+4. **Desfazer espelha.** `restState()` restaura a folha 1 e chama
+   `sincronizarPaginasExtra()`; sem isso as extras ficavam no estado desfeito.
+5. **A paleta é da ficha.** Apagar cor numa cópia apaga na folha 1 (por
+   posição); senão o espelho a ressuscita e o botão parece quebrado.
 
