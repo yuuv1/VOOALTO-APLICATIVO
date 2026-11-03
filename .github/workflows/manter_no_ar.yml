@@ -1,0 +1,115 @@
+name: Manter o site no ar
+
+# O plano gratuito do Supabase PAUSA um projeto depois de ~1 semana sem uso.
+# `pg_cron` não resolve: ele roda dentro do próprio banco, que é justamente o
+# que pausa. Quem mantém vivo é um pedido EXTERNO. Este workflow faz dois
+# trabalhos de uma vez:
+#
+#   1. bate no app publicado (Edge Function `site`) e na API REST — o projeto
+#      conta como ativo;
+#   2. falha alto se o site sair do ar ou voltar com o content-type errado
+#      (o gateway do Supabase troca `text/html` minúsculo por `text/plain`;
+#      o servidor manda `Text/HTML` de propósito — ver
+#      supabase/functions/site/README.md).
+#
+# Um workflow agendado só roda na branch PADRÃO (`main`): é lá que ele precisa
+# estar. Também dá para disparar à mão em Actions → Run workflow.
+
+on:
+  schedule:
+    # a cada 6 horas — bem abaixo do limite de 1 semana
+    - cron: '17 */6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/site/**'
+      - '.github/workflows/manter_no_ar.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manter-no-ar
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Pingar o projeto
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE: https://eeurdquvrdmoyjgzgpac.supabase.co
+      SITE: https://eeurdquvrdmoyjgzgpac.supabase.co/functions/v1/site
+    steps:
+      - name: O app responde com HTML?
+        shell: bash
+        run: |
+          set -u
+          url="$SITE/"
+          echo "▸ $url"
+          # -L: segue redirecionamento; --retry: rede instável não derruba o job
+          # tr -d '\r' ANTES do awk: as linhas do cabeçalho terminam em CRLF e
+          # o "\r" grudado em "$2"/no fim do content-type já quebrou a checagem
+          headers=$(curl -sSL --retry 3 --retry-delay 5 --max-time 45 -D - -o /tmp/app.html "$url" | tr -d '\r' || true)
+          code=$(printf '%s' "$headers" | awk 'toupper($1) ~ /^HTTP\// {c=$2} END {print c}')
+          tipo=$(printf '%s' "$headers" | awk 'BEGIN{IGNORECASE=1} /^content-type:/ {sub(/^[^:]*:[ ]*/,""); print; exit}')
+          origem=$(printf '%s' "$headers" | awk 'BEGIN{IGNORECASE=1} /^x-vooalto-origem:/ {sub(/^[^:]*:[ ]*/,""); print; exit}')
+          bytes=$(wc -c < /tmp/app.html | tr -d ' ')
+          echo "  HTTP $code · $tipo · origem ${origem:-?} · $bytes bytes"
+
+          if [ "$code" != "200" ]; then
+            echo "::error title=Site fora do ar::GET $url devolveu HTTP $code"
+            exit 1
+          fi
+          # aceita Text/HTML, text/html — o MIME é case-insensitive
+          if ! printf '%s' "$tipo" | grep -qiE '^text/html'; then
+            echo "::error title=Content-Type errado::o app precisa sair como text/html, veio '$tipo'"
+            exit 1
+          fi
+          if [ "${bytes:-0}" -lt 5000 ]; then
+            echo "::error title=App truncado::o HTML veio com $bytes bytes"
+            exit 1
+          fi
+          grep -qi '<!DOCTYPE html' /tmp/app.html || { echo "::error title=Conteúdo não é HTML::"; exit 1; }
+          echo "::notice title=Site ok::HTTP 200 · $tipo · $bytes bytes"
+
+      - name: A raiz do projeto está de pé?
+        shell: bash
+        run: |
+          set -u
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 5 --max-time 30 \
+            -H 'apikey: sb_publishable_ebcfV_dIMgKSe_d1SlX5aw_EBT3P1pS' \
+            "$BASE/rest/v1/" || echo 000)
+          echo "▸ REST / → HTTP $code"
+          # 401/404 ainda provam que o projeto respondeu (não está pausado)
+          case "$code" in
+            2*|401|404) echo "::notice title=Projeto ativo::HTTP $code" ;;
+            *) echo "::error title=Projeto não respondeu::HTTP $code — verifique o painel do Supabase"; exit 1 ;;
+          esac
+
+      - name: A numeração responde?
+        shell: bash
+        run: |
+          set -u
+          chave='sb_publishable_ebcfV_dIMgKSe_d1SlX5aw_EBT3P1pS'
+          # só CONSULTA o próximo livre: não reserva número nenhum
+          corpo=$(curl -sS --retry 3 --retry-delay 5 --max-time 30 \
+            -w '\n%{http_code}' \
+            -H "apikey: $chave" -H "Authorization: Bearer $chave" \
+            -H 'Content-Type: application/json' \
+            -d '{"p_base":3388}' \
+            "$BASE/rest/v1/rpc/vooalto_proximo_livre" || echo '000')
+          code=$(printf '%s' "$corpo" | tail -n1)
+          valor=$(printf '%s' "$corpo" | sed '$d' | tr -d '\r\n ')
+          echo "▸ vooalto_proximo_livre → HTTP $code · $valor"
+          if [ "$code" != "200" ]; then
+            echo "::error title=Numeração não respondeu::HTTP $code"
+            exit 1
+          fi
+          echo "$valor" | grep -qE '^[0-9]+$' || { echo "::error title=Resposta inesperada::'$valor'"; exit 1; }
+          if [ "$valor" -lt 3388 ]; then
+            echo "::error title=Numeração abaixo da base::veio $valor, a base é 3388"
+            exit 1
+          fi
+          echo "::notice title=Numeração ok::próximo livre = $valor"

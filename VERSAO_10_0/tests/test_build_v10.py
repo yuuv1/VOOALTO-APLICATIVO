@@ -58,6 +58,15 @@ class VooaltoBuildTests(unittest.TestCase):
         files = set(build_v10_pwa.file_list())
         precache = set(build_v10_pwa.precache_list(build_v10_pwa.file_list()))
 
+        # Rotas da Edge Function `site` (V10.2): o caminho publicado NÃO tem
+        # extensão porque o gateway do Supabase entrega URL ".html" como
+        # text/plain. São apelidos de arquivos que existem, não arquivos.
+        ROTAS_PUBLICAS = {
+            "home": "entrar.html",
+            "entrar": "entrar.html",
+            "site-supabase": "site-supabase.html",
+        }
+
         htmls = [rel for rel in files if rel.endswith(".html")]
         self.assertIn("index.html", htmls)
         faltando_no_disco, faltando_no_precache = [], []
@@ -71,6 +80,9 @@ class VooaltoBuildTests(unittest.TestCase):
                 # ignora referência montada em JS ("'+var+'") e query string
                 if not re.fullmatch(r"[A-Za-z0-9_.\-/]+", alvo):
                     continue
+                if alvo in ROTAS_PUBLICAS and not (pasta / alvo).is_file():
+                    # rota do site servida pela Edge Function (não é arquivo)
+                    alvo = ROTAS_PUBLICAS[alvo]
                 if alvo.startswith("/"):
                     # referência absoluta: resolve a partir da raiz do app
                     caminho = (src / alvo.lstrip("/")).resolve()

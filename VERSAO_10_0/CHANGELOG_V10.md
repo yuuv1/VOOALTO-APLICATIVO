@@ -1,5 +1,51 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.2.0 — O nº da ficha é único entre máquinas, a página branca herda ele, e o app fica no ar no Supabase (2026-11-03)
+
+A ficha técnica é usada em mais de um computador. O número era um contador
+solto no navegador: duas máquinas podiam imprimir a ficha 3388 para clientes
+diferentes, e o número "sumia" na página em branco. Esta versão resolve as
+duas coisas e põe o app publicado.
+
+| O que acontecia | O que ficou |
+|---|---|
+| O número vinha do `localStorage` de cada aparelho: duas máquinas chegavam ao mesmo número | o número é uma **reserva na nuvem** (Supabase). A numeração parte de **3388** e só anda para cima |
+| Não havia como saber se o número já era de outra máquina | cada reserva consulta `public.vooalto_numeros`; número **em uso ou em backup em outra máquina é recusado** |
+| Recusar o número travava o trabalho | o app **"joga o dígito superior"**: pega o próximo livre, avisa na barra lateral e no "Ajustes" |
+| Sem internet a ficha ficava sem número | reserva **local** na hora e o histórico sobe sozinho quando a rede volta (`vooalto_registrar_lote`) |
+| **A página em branco perdia o número** (bug relatado) | a branca nasce com o **mesmo** nº da folha 1, acompanha as mudanças e o rodapé mostra o número dela |
+| Um número próprio digitado na branca era sobrescrito pelo espelho da folha 1 | o campo ganha `data-num-proprio` e manda: o espelho, a reserva e o `.json` respeitam |
+| O `.json` salvava o nº da branca vazio | `v7CapturarPaginaExtra` guarda `hdr.fbNum` quando o número é próprio; ficha antiga (sem `fbNum`) herda o da folha 1 |
+| O site não estava no ar | Edge Function **`site`** publica o app em `supabase.co/functions/v1/site/` (Storage primeiro, GitHub depois) |
+
+Detalhes que custaram tempo e não podem ser esquecidos:
+
+1. **O gateway troca `text/html` por `text/plain`.** Qualquer resposta com o
+   content-type exatamente `text/html` (minúsculo) sai como texto e o navegador
+   mostra o código-fonte. `Text/HTML`, `text/HTML` e `TEXT/HTML` passam
+   intactos — e MIME é case-insensitive. Por isso o HTML sai como `Text/HTML`.
+   Mascarar como `image/svg+xml` faz o navegador **baixar** o arquivo.
+2. **URL terminada em `.html` é forçada a `text/plain`** pela extensão do
+   caminho, ignorando o cabeçalho. O app inteiro é servido na raiz (`/site/`) e
+   a capa de entrada em caminho **sem** extensão (`/site/home`).
+3. **`service-worker-allowed` fica preso a `/functions/v1/site/`.** Um escopo
+   `/` tomaria o domínio inteiro e quebraria a API REST do projeto.
+4. **O `bash` do ambiente não alcança `*.supabase.co`**: toda verificação
+   remota passa por `pg_net` (`net.http_get` + `net._http_response`).
+5. **Upload para o Storage precisa de chave `service_role`** — a publicável é
+   barrada pela RLS. Por isso o site lê do GitHub (`main`), que já funciona.
+
+Numeração e testes:
+
+- `supabase/migrations/20261103000100_vooalto_nuvem_numeros.sql` — tabelas
+  `vooalto_numeros` e `vooalto_dispositivos` (RLS ligada, sem políticas) e 9
+  funções `SECURITY DEFINER` executáveis por `anon`.
+- `ATUALIZACAO_V10/assets/nuvem.js` — cliente `window.VooaltoNuvem`
+  (`reservar`, `proximoLivre`, `verificar`, `registrarLote`, `estado`…), com
+  fila local e retentativa.
+- `tests/test_nuvem_num_v10.js` — 39 verificações contra um Supabase falso com
+  a mesma semântica do SQL, incluindo o caso offline. Entrou no `npm test`.
+
 ## V10.1.0 — Ficha Técnica: a folha 1 manda nas outras páginas (2026-10-30)
 
 A ficha técnica é **uma** ficha com várias páginas, não várias fichas. A folha 1
