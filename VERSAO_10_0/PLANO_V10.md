@@ -430,3 +430,88 @@ Cuidados que já custaram bug:
 5. **A paleta é da ficha.** Apagar cor numa cópia apaga na folha 1 (por
    posição); senão o espelho a ressuscita e o botão parece quebrado.
 
+
+---
+
+## 15. Número da ficha: reserva na nuvem (V10.2)
+
+O número deixou de ser contador local. É uma **reserva única**, guardada no
+Supabase, que vale para todas as máquinas da produção.
+
+| Peça | Onde |
+|---|---|
+| Tabelas e funções SQL | `supabase/migrations/20261103000100_vooalto_nuvem_numeros.sql` |
+| Cliente do app | `ATUALIZACAO_V10/assets/nuvem.js` → `window.VooaltoNuvem` |
+| Uso na ficha | bloco `numNuvem*` em `criador_ficha_tecnica/index.html` |
+| Teste | `tests/test_nuvem_num_v10.js` (entra no `npm test`) |
+
+### Regras
+
+- a numeração **parte de 3388** (`NUVEM_BASE_NUMERO`) e só **anda para cima**;
+- número **em uso** ou **em backup** de **outra máquina** é **recusado** — o app
+  pede o próximo livre e avisa o usuário (nunca repete, nunca para o trabalho);
+- reservar a mesma ficha de novo devolve o **mesmo** número (idempotente por
+  `ficha_id`), então salvar/reabrir não queima número;
+- sem internet a reserva é **local** e o lote sobe depois
+  (`vooalto_registrar_lote`); o app nunca fica sem número;
+- cada máquina tem um id próprio (`maq-…`) e um nome amigável, usados no aviso
+  "está em uso em *Notebook da produção*".
+
+### Funções (todas `SECURITY DEFINER`, `EXECUTE` para `anon`)
+
+| Função | Para quê |
+|---|---|
+| `vooalto_reservar_numero(p_pedido, p_base, p_ficha, p_dispositivo…)` | reserva (ou sobe para o próximo livre) e devolve `{numero, ajustado, motivo, dono, status}` |
+| `vooalto_proximo_livre(p_base)` | só consulta o próximo livre |
+| `vooalto_verificar_numero(p_numero)` | diz se está ocupado, status e de quem |
+| `vooalto_registrar_lote(p_numeros[], p_status…)` | sincroniza números reservados offline |
+| `vooalto_registrar_dispositivo`, `vooalto_estado_nuvem`, … | identidade da máquina e diagnóstico |
+
+As tabelas têm **RLS ligada e nenhuma política**: ninguém lê nem escreve
+direto; só as funções. A chave que vai no app é a **publicável** — ela só
+executa as funções `vooalto_*`. **Nunca** colocamos a `service_role` no app.
+
+### Página em branco
+
+A branca nasce com o **mesmo** número da folha 1 (`fbNum_<pid>`,
+`data-ficha-num="1"`). O espelho contínuo mantém a cópia. Se a pessoa digitar um
+número diferente ali, o campo ganha `data-num-proprio="1"` e passa a mandar: o
+espelho, `numNuvemAplicarNaPagina` e o espelho da folha 1 não sobrescrevem mais,
+o rodapé usa o número próprio e o `.json` guarda `hdr.fbNum`.
+
+## 16. O app publicado no Supabase (V10.2)
+
+Endereço público (a raiz do app):
+
+```
+https://eeurdquvrdmoyjgzgpac.supabase.co/functions/v1/site/
+```
+
+- `/site/` → `index.html` (o app);
+- `/site/home` → capa de entrada (`entrar.html`), com botão de socorro e as
+  instruções de instalação;
+- `/site/<arquivo>` → qualquer arquivo do app.
+
+A fonte do servidor está em `supabase/functions/site/` (o mesmo conteúdo está
+publicado na Edge Function `site` do projeto `altoprints`). Ela lê o arquivo de
+duas fontes: bucket `app` (Storage, hoje vazio — o upload exige uma chave
+`service_role`) e **GitHub `main`**, que é o caminho em uso: **`git push` na
+`main` publica**.
+
+### As duas armadilhas do gateway (medidas, não supostas)
+
+| Situação | Efeito | Contorno |
+|---|---|---|
+| `content-type: text/html` minúsculo | o gateway troca por `text/plain` | sai como `Text/HTML; charset=utf-8` |
+| URL terminada em `.html` | o gateway força `text/plain` pela extensão do caminho | capa em caminho sem extensão (`/site/home`) |
+
+JS, CSS, JSON e `manifest.webmanifest` passam intactos; o `service-worker-allowed`
+sai preso a `/functions/v1/site/` para o service worker não tomar o domínio.
+
+### Como conferir sem navegador
+
+```sql
+select net.http_get(url := 'https://eeurdquvrdmoyjgzgpac.supabase.co/functions/v1/site/');
+select status_code, headers::jsonb->>'content-type', headers::jsonb->>'x-vooalto-origem'
+  from net._http_response order by id desc limit 1;
+```

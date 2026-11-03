@@ -90,6 +90,29 @@ O bundle do contrato entra no precache em **segunda fase** (`PRECACHE_PESADOS`,
 arquivos acima de 2 MB): `cache.addAll()` é atômico e uma falha em 10 MB
 derrubaria a instalação inteira do service worker.
 
+## No ar (PWA instalável)
+
+O app também fica publicado, sem depender de nenhum computador ligado:
+
+```
+https://eeurdquvrdmoyjgzgpac.supabase.co/functions/v1/site/        ← o app
+https://eeurdquvrdmoyjgzgpac.supabase.co/functions/v1/site/home    ← capa para instalar
+```
+
+A publicação é a Edge Function `site` (fonte em `supabase/functions/site/`), que
+lê os arquivos do GitHub `main` — **`git push` na `main` publica**. O servidor
+local (`127.0.0.1:4800`) continua funcionando igual; é o mesmo app.
+
+Duas armadilhas do Supabase medidas e contornadas (estão em
+`supabase/functions/site/README.md`): `text/html` minúsculo vira `text/plain`
+(sai como `Text/HTML`) e URL terminada em `.html` é forçada a `text/plain` (a
+capa é servida em `/site/home`).
+
+O **número da ficha** é único entre máquinas: a reserva vive no Supabase
+(`vooalto_numeros`), começa em **3388** e nunca repete — se o número estiver em
+uso ou em backup de outro aparelho, o app pega o próximo livre. Sem internet ele
+reserva localmente e sincroniza depois.
+
 ## Documentos
 
 - `VERSAO_10_0/PLANO_V10.md` — como o sistema é por dentro (módulos, dados,
