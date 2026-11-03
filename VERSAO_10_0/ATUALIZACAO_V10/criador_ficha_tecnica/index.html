@@ -24,6 +24,10 @@
 <link rel="stylesheet" href="../assets/cropper.min.css">
 <script src="../assets/cropper.min.js"></script>
   <script src="../assets/html2canvas.min.js"></script>
+  <!-- V10.2 — nuvem de numeração: reserva única do nº da ficha (3388+, crescente,
+       nunca repete entre máquinas). Sem internet, o app segue funcionando e
+       sincroniza depois. -->
+  <script src="../assets/nuvem.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -250,6 +254,19 @@ font-family:inherit;font-size:10.5px;font-weight:700;outline:none;
 }
 .sb-field input:focus{border-color:rgba(212,24,122,.65);box-shadow:0 0 0 2px rgba(212,24,122,.16)}
 .sb-hint{font-size:9px;color:var(--sb-t3);padding:0 14px 8px;line-height:1.45;overflow-wrap:anywhere}
+/* V10.2 — numeração na nuvem (barra lateral) */
+.sb-nuvem-box{display:flex;flex-direction:column;gap:4px;margin:2px 0 4px}
+.sb-nuvem-box .sb-btn{width:calc(100% - 16px);margin:0 8px}
+.sb-nuvem-box .sb-hint{margin:0;padding:2px 14px}
+#sidebar.collapsed .sb-nuvem-box{display:none!important}
+.num-nuvem{font-weight:800}
+.num-nuvem.ok{color:#4ade80}
+.num-nuvem.conflito{color:#f87171}
+.num-nuvem.local{color:#fbbf24}
+.nuvem-ok{color:#4ade80}
+.nuvem-local{color:#fbbf24}
+/* número herdado na página branca: parece campo, não parece aviso */
+input.num-herdado{background:rgba(255,255,255,.10);border-radius:6px;padding:1px 4px}
 
 
 /* ═══ FOOTER ═══ */
@@ -1304,6 +1321,8 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
         <input type="number" id="cfgProxNum" min="1" max="99999" onchange="definirNumeroFicha(this.value)">
       </div>
       <div class="sb-hint">Avança sozinho a cada ficha nova.</div>
+      <!-- V10.2 — numeração única entre máquinas (reserva no Supabase) -->
+      <div class="sb-nuvem-box" id="numNuvemBox"></div>
       <button class="sb-btn" onclick="escolherPastaPadrao()" title="Escolher a pasta padrão para salvar os arquivos">
         <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-folder"/></svg></span>
         <span class="sb-btn-label" id="lblPastaPadrao">Escolher pasta padrão</span>
@@ -1988,12 +2007,30 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }
 
 atualizarNavSidebar();
+/* V10.2 — a página em branco nasce com o MESMO Nº da ficha (antes o campo
+   "Nº da Operação" dela ficava vazio e a pessoa achava que o número havia
+   "sumido"). `data-ficha-num` marca que o valor é cópia da folha 1: o espelho
+   contínuo mantém a cópia em dia, as páginas de layout não têm essa marca. */
+const numP1=(($('fichaNum')||{}).value||'').trim();
+const campoNumBranca=$('fbNum_'+pid);
+if(campoNumBranca){
+  campoNumBranca.value=numP1;
+  campoNumBranca.dataset.fichaNum='1';
+  campoNumBranca.classList.add('num-herdado');
+  campoNumBranca.title='Nº da ficha (o mesmo da página 1) — para um número diferente, digite aqui';
+  campoNumBranca.addEventListener('input',function(){
+    const p1=(($('fichaNum')||{}).value||'').trim();
+    if(this.value.trim()!==p1){this.dataset.numProprio='1';try{delete this.dataset.fichaNum;}catch(e){}}
+    else{try{delete this.dataset.numProprio;this.dataset.fichaNum='1';}catch(e){}}
+    atualizarRodapes();
+  });
+}
 try{if(typeof v7Renumerar==='function')v7Renumerar();}catch(e){}
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Autosave==='function')v7Autosave();
 atualizarRodapes();
 if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
-toast(`✔ Página branca ${num} adicionada!`,'sucesso');
+toast(numP1?`✔ Página branca ${num} adicionada — Nº ${numP1}`:`✔ Página branca ${num} adicionada!`,'sucesso');
 snap();
 }
 
@@ -2441,6 +2478,18 @@ function espelharCamposP1(p){
     const src=$(id),dst=$(id+'_'+pid);
     if(src&&dst&&dst.value!==src.value)dst.value=src.value;
   });
+  /* V10.2 — o "Nº da Operação" da página BRANCA é o mesmo da ficha. Só é
+     copiado enquanto a cópia estiver marcada (`data-ficha-num`): se a pessoa
+     escrever outro número ali, o espelho respeita e não sobrescreve. */
+  const srcNum=$('fichaNum'),dstNum=$('fbNum_'+pid);
+  if(srcNum&&dstNum){
+    const proprio=dstNum.dataset&&dstNum.dataset.numProprio==='1';
+    const copia=dstNum.dataset&&dstNum.dataset.fichaNum==='1';
+    if(!proprio&&(copia||!dstNum.value)&&dstNum.value!==srcNum.value){
+      dstNum.value=srcNum.value;
+      try{dstNum.dataset.fichaNum='1';}catch(e){}
+    }
+  }
   const tt=$('tipoTecido'),tt2=$('tipoTecido_'+pid);
   if(tt&&tt2&&tt2.innerHTML!==tt.innerHTML)tt2.innerHTML=tt.innerHTML;
   const fsSrc=$('sepFontSize'),fsDst=$('sepFS_'+pid);
@@ -2552,6 +2601,9 @@ function sincronizarPaginasExtra(){
   alvos.forEach(espelharGradeP1);
   alvos.forEach(espelharMedidasP1);
   alvos.forEach(espelharProducaoP1);
+  /* V10.2 — as páginas BRANCAS também recebem o nº da ficha (só o número:
+     elas são canvas livre, sem cliente/produção). */
+  (typeof paginas!=='undefined'?paginas:[]).filter(p=>p&&p.tipo==='branca').forEach(espelharCamposP1);
   return alvos.length;
 }
 
@@ -6418,7 +6470,13 @@ function cg(inp){const v=parseInt(inp.value)||0;inp.classList.toggle('v',v>0);re
 function recalcGrade(){let m=0,b=0,i=0;document.querySelectorAll('.gi[data-g="m"]').forEach(x=>m+=parseInt(x.value)||0);document.querySelectorAll('.gi[data-g="b"]').forEach(x=>b+=parseInt(x.value)||0);document.querySelectorAll('.gi[data-g="i"]').forEach(x=>i+=parseInt(x.value)||0);const tM=$('tM'),tB=$('tB'),tI=$('tI'),tp=$('totalPecas');if(tM)tM.textContent=m||'—';if(tB)tB.textContent=b||'—';if(tI)tI.textContent=i||'—';if(tp)tp.textContent=(m+b+i)||'—';}
 
 /* ═══ NÚMERO / RODAPÉ / SEPARADOR ═══ */
-function salvarNum(){atualizarRodapes();try{localStorage.setItem('va3_num',$('fichaNum').value);}catch(e){}}
+function salvarNum(){
+  atualizarRodapes();
+  try{localStorage.setItem('va3_num',$('fichaNum').value);}catch(e){}
+  /* V10.2 — enquanto a pessoa digita não se reserva nada (o número está
+     "incompleto"); a reserva acontece no blur, no Enter e no fechamento. */
+  if(typeof numNuvemSalvarAgendado==='function')numNuvemSalvarAgendado();
+}
 function carregarNum(){const n=localStorage.getItem('va3_num');if(n){$('fichaNum').value=n;salvarNum();}}
 function applySepFontSize(targetId,inputId){const target=$(targetId);const input=$(inputId);if(target&&input)target.style.fontSize=input.value+'px';}
 function atualizarRodapes(){
@@ -6427,7 +6485,17 @@ const total=totalPaginas;
 const r1=$('rodNum');if(r1)r1.textContent=n1?`Ficha Nº ${n1} · Página 1 de ${total}`:`Ficha Nº — · Página 1 de ${total}`;
 paginas.forEach(p=>{
 const rn=$('rodNum_'+p.id);
-if(rn)rn.textContent=n1?`Ficha Nº ${n1} · Página ${p.num} de ${total}`:`Ficha Nº — · Página ${p.num} de ${total}`;
+/* V10.2 — a página branca pode ter um nº próprio (campo editável); o rodapé
+   dela mostra o que está escrito nela, não o número da folha 1. */
+let nPag=n1;
+if(p.tipo==='branca'){
+  const fb=$('fbNum_'+p.id);
+  /* enquanto a cópia estiver marcada como herança, o rodapé usa o número da
+     folha 1 na hora; se a pessoa escreveu um número próprio, usa o dela. */
+  const proprio=fb&&fb.dataset&&fb.dataset.numProprio==='1';
+  if(fb&&proprio&&String(fb.value||'').trim()!=='')nPag=String(fb.value).trim();
+}
+if(rn)rn.textContent=nPag?`Ficha Nº ${nPag} · Página ${p.num} de ${total}`:`Ficha Nº — · Página ${p.num} de ${total}`;
 });
 }
 
@@ -6496,6 +6564,313 @@ const RECENTES_KEY = 'va4_fichas_recentes';
 const FICHA_COUNTER_KEY = 'va4_ficha_counter';
 let _pastaHandle = null; // File System Access API directory handle
 
+/* ═══ NUVEM DE NUMERAÇÃO (V10.2) ═══════════════════════════════════════════
+   O número da ficha não é mais um contador local que cada máquina incrementa
+   sozinha (duas máquinas abertas geravam 3388 nas duas). Ele é reservado no
+   Supabase, num lugar só, com três regras:
+
+     1. só ANDA PARA CIMA, partindo de 3388;
+     2. número em uso OU em backup em OUTRA máquina é RECUSADO — o sistema
+        "joga o dígito superior" até achar o primeiro livre (3390, 3400…);
+     3. a mesma ficha nunca reaproveita um número: reserva é idempotente.
+
+   Sem internet nada trava: a reserva cai para local (padStart), a barra
+   lateral avisa "modo local" e a próxima reserva com rede pula direto para o
+   primeiro livre da nuvem.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const NUVEM_BASE_NUMERO = 3388;
+const NUVEM_CHAVE_ULTIMO = 'vooalto_nuvem_ultimo_numero_v1';
+const NUVEM_CHAVE_MAPA = 'vooalto_nuvem_mapa_v1';
+
+function nuvem(){ return (typeof window!=='undefined' && window.VooaltoNuvem) ? window.VooaltoNuvem : null; }
+
+/* O "último número que esta máquina já emitiu". Nunca desce. */
+function numNuvemUltimoLocal(){
+  let n = parseInt(localStorage.getItem(NUVEM_CHAVE_ULTIMO)||'0',10)||0;
+  const contador = getProximoNumeroFicha();
+  const atual = parseInt(($('fichaNum')||{}).value||'0',10)||0;
+  return Math.max(n, contador, atual);
+}
+function numNuvemMarcarUltimo(n){
+  n = parseInt(n,10)||0;
+  if(n<=0)return;
+  if(n>numNuvemUltimoLocal()){try{localStorage.setItem(NUVEM_CHAVE_ULTIMO,String(n))}catch(e){}}
+  /* o contador antigo (va4_ficha_counter) continua existindo: é o que as
+     fichas salvas e o backup leem. Mantê-lo em dia evita "voltar no tempo"
+     quando a nuvem estiver fora do ar. */
+  if(n>getProximoNumeroFicha())setNumeroFicha(n);
+}
+
+/* Cadastro de números desta máquina: {numero: {cliente, quando, status}}.
+   É o que permite mandar o histórico inteiro para a nuvem como BACKUP (para
+   nenhuma outra máquina receber esses números) sem precisar abrir ficha. */
+function numNuvemMapa(){
+  try{const m=JSON.parse(localStorage.getItem(NUVEM_CHAVE_MAPA)||'{}');return (m&&typeof m==='object')?m:{}}
+  catch(e){return{}}
+}
+function numNuvemAnotar(num,status,cliente){
+  const n=parseInt(num,10);if(!n)return;
+  try{
+    const m=numNuvemMapa();
+    m[n]={cliente:String(cliente||'').slice(0,160),quando:Date.now(),status:status||'em_uso'};
+    const chaves=Object.keys(m).map(Number).sort((a,b)=>a-b);
+    while(chaves.length>800)delete m[chaves.shift()];
+    localStorage.setItem(NUVEM_CHAVE_MAPA,JSON.stringify(m));
+  }catch(e){}
+  numNuvemMarcarUltimo(n);
+  numNuvemPintarStatus();
+}
+
+/* Números que esta máquina conhece: as fichas salvas (IndexedDB via índice),
+   os rascunhos e o mapa local. Serve para o backup na nuvem. */
+function numNuvemHistorico(){
+  const nums=new Set();
+  const add=v=>{const n=parseInt(String(v||'').replace(/\D/g,''),10);if(n>0)nums.add(n)};
+  Object.keys(numNuvemMapa()).forEach(k=>add(k));
+  add(($('fichaNum')||{}).value||'');
+  try{
+    (JSON.parse(localStorage.getItem('vooalto_ficha_rascunhos_v4_meta')||'[]')||[]).forEach(m=>add(m&&m.num));
+  }catch(e){}
+  try{
+    (JSON.parse(localStorage.getItem('vooalto_v8_rascunho_meta')||'null')||{}).num && add(localStorage.getItem('va3_num'));
+  }catch(e){}
+  add(getProximoNumeroFicha());
+  return [...nums].sort((a,b)=>a-b);
+}
+
+/* Marca visualmente na barra lateral se o nº está reservado neste aparelho,
+   em outro, ou em modo local. Não altera nada — é só leitura da nuvem. */
+async function numNuvemVerificarAtual(){
+  const api=nuvem(); if(!api)return null;
+  const n=parseInt(($('fichaNum')||{}).value||'0',10);
+  if(!n)return null;
+  const r=await api.verificar(n);
+  numNuvemPintarStatus(r);
+  return r;
+}
+function numNuvemPintarStatus(r){
+  const el=$('numNuvemStatus'); if(!el)return;
+  const api=nuvem();
+  let texto='Nuvem: verificando…',classe='';
+  if(!api||!api.configurada()){texto='Nuvem não configurada';classe='local'}
+  else if(r&&r.sem_rede){texto='Sem internet — número local';classe='local'}
+  else if(r&&r.ocupado){texto='⚠ Nº em uso em: '+(r.dono||'outra máquina');classe='conflito'}
+  else if(r){texto='✔ Nº reservado para este aparelho';classe='ok'}
+  else texto='—';
+  el.textContent=texto;
+  el.className='sb-hint num-nuvem '+(classe||'');
+  el.title=r&&r.ocupado?('Este número está '+({backup:'em backup',impresso:'impresso',salvo:'salvo'}[r.status]||'em uso')+' em '+(r.dono||'outra máquina')+'. Para não repetir, ele será jogado para o próximo livre.'):'Reserva única de numeração (Supabase)';
+}
+
+/* Reserva o número na nuvem. Devolve {numero, ajustado, dono, motivo...}.
+   `pedido` é o número que a máquina quer (normalmente o próximo do contador
+   local); a nuvem devolve o primeiro livre >= pedido. */
+async function numNuvemReservarAtual(opcoes){
+  opcoes=opcoes||{};
+  const api=nuvem();
+  const campo=$('fichaNum');
+  if(!campo)return null;
+  const pedido=parseInt(opcoes.pedido!=null?opcoes.pedido:campo.value,10)||
+               Math.max(NUVEM_BASE_NUMERO,numNuvemUltimoLocal()+1);
+  if(api&&api.configurada()){
+    /* Sem internet a reserva NÃO pode estourar: cai no número local e fica
+       marcada para sincronizar (reservarComCache já trata isso). */
+    const r=await api.reservarComCache(pedido,{base:NUVEM_BASE_NUMERO,cliente:opcoes.cliente});
+    numNuvemAplicar(campo,r.numero);
+    numNuvemAnotar(r.numero,'em_uso',(($('dc_nome')||{}).textContent||'').trim());
+    numNuvemCompartilharComExtras();
+    api.avisoBase(r.dono);
+    if(r.ajustado&&!opcoes.silencioso){
+      toast('⚠ Nº '+String(r.proposto).padStart(4,'0')+(r.dono?' (em uso em '+r.dono+')':'')+' já existe. Nº reservado: '+String(r.numero).padStart(4,'0'),'erro',5200);
+    }
+    numNuvemPintarStatus({ocupado:false,status:'em_uso'});
+    numNuvemSalvarEstado();
+    return r;
+  }
+  /* sem nuvem: usa o pedido local (e registra para sincronizar depois) */
+  numNuvemAplicar(campo,pedido);
+  numNuvemAnotar(pedido,'em_uso',(($('dc_nome')||{}).textContent||'').trim());
+  numNuvemPintarStatus({sem_rede:true});
+  return {numero:pedido,proposto:pedido,ajustado:false,dono:'',motivo:'sem_rede',status:'local'};
+}
+
+/* Escreve o número na folha 1 E em todas as páginas (inclusive as brancas) e
+   mantém o rodapé, o contador e o "Ajustes" em sincronia. */
+function numNuvemAplicar(campo,numero){
+  const num=String(numero).padStart(4,'0');
+  if(campo&&campo.value!==num)campo.value=num;
+  if(typeof paginas!=='undefined'&&Array.isArray(paginas))paginas.forEach(p=>numNuvemAplicarNaPagina(p.id,num));
+  numNuvemMarcarUltimo(parseInt(num,10));
+  try{salvarNum();}catch(e){try{atualizarRodapes();}catch(e2){}}
+  try{if(typeof atualizarCfgInput==='function')atualizarCfgInput();}catch(e){}
+}
+function numNuvemAplicarNaPagina(pid,num){
+  const el=$('fichaNum_'+pid)||$('fbNum_'+pid);
+  if(!el)return;
+  /* A página BRANCA pode ter um nº próprio digitado à mão: ele manda. */
+  if(el.dataset&&el.dataset.numProprio==='1')return;
+  if(el.value!==num)el.value=num;
+}
+/* Todo número aplicado na folha 1 vai na hora para as páginas extras e para as
+   brancas — sem esperar o espelho de 150 ms (que a página branca nem tem). */
+function numNuvemCompartilharComExtras(){
+  const num=(($('fichaNum')||{}).value||'').trim();
+  if(!num)return;
+  try{
+    if(typeof paginas!=='undefined'&&Array.isArray(paginas)){
+      paginas.forEach(p=>{
+        if(p.tipo==='branca'){
+          const fb=$('fbNum_'+p.id);
+          /* nº próprio (digitado na branca) nunca é sobrescrito pela folha 1 */
+          const proprio=fb&&fb.dataset&&fb.dataset.numProprio==='1';
+          if(fb&&!proprio&&fb.dataset&&fb.dataset.fichaNum!=='0'){
+            if(fb.dataset.fichaNum!=='1')fb.dataset.fichaNum='1';
+            if(fb.value!==num)fb.value=num;
+          }
+        }else numNuvemAplicarNaPagina(p.id,num);
+      });
+    }
+  }catch(e){}
+  try{atualizarRodapes();}catch(e){}
+}
+
+/* Salvar com atraso: 900 ms depois da última tecla, e na hora em que a pessoa
+   sai do campo/aperta Enter. Evita reservar um número por dígito digitado. */
+let _numNuvemTimer=null;
+function numNuvemSalvarAgendado(){
+  if(_numNuvemTimer)clearTimeout(_numNuvemTimer);
+  _numNuvemTimer=setTimeout(()=>{_numNuvemTimer=null;numNuvemCommitCampo();},900);
+}
+let _numNuvemEmVoo=false;
+async function numNuvemCommitCampo(){
+  const campo=$('fichaNum'); if(!campo)return;
+  const valor=parseInt(campo.value,10);
+  if(!valor||valor<NUVEM_BASE_NUMERO){ /* número ainda incompleto (ex.: "33") */ return; }
+  if(numNuvemMapa()[valor]){ numNuvemPintarStatus(null); return; } /* já é desta máquina */
+  if(_numNuvemEmVoo){ numNuvemSalvarAgendado(); return; }
+  _numNuvemEmVoo=true;
+  try{
+    const api=nuvem();
+    if(api&&api.configurada()){
+      const r=await api.reservarComCache(valor,{base:NUVEM_BASE_NUMERO,cliente:(($('dc_nome')||{}).textContent||'').trim()});
+      numNuvemAplicar(campo,r.numero);
+      numNuvemAnotar(r.numero,'em_uso',(($('dc_nome')||{}).textContent||'').trim());
+      numNuvemCompartilharComExtras();
+      if(r.ajustado&&r.numero!==valor){
+        toast('⚠ O Nº '+String(valor).padStart(4,'0')+(r.dono?' está em '+(r.status==='backup'?'backup':'uso')+' em '+r.dono:' já está em uso')+
+              '. Para nunca repetir, usei o Nº '+String(r.numero).padStart(4,'0')+'.','erro',6000);
+        numNuvemPintarStatus({ocupado:true,dono:r.dono,status:r.status});
+      }else{
+        numNuvemPintarStatus({ocupado:false,status:'em_uso'});
+      }
+      numNuvemSalvarEstado();
+    }else{
+      numNuvemAnotar(valor,'em_uso',(($('dc_nome')||{}).textContent||'').trim());
+    }
+  }catch(e){
+    try{console.warn('nuvem num',e)}catch(_){}
+    numNuvemPintarStatus({sem_rede:true});
+  }finally{
+    _numNuvemEmVoo=false;
+    try{sincTodasPaginas();}catch(e){}
+  }
+}
+
+function numNuvemSalvarEstado(){
+  const api=nuvem();
+  const el=$('estadoNuvem');
+  if(!el)return;
+  if(!api||!api.configurada()){el.textContent='☁ Nuvem não configurada — números só neste aparelho';el.className='sb-hint nuvem-local';return;}
+  const st=api.lerEstado();
+  if(st.origem==='nuvem'){
+    el.textContent='☁ Nuvem conectada · último nº na nuvem: '+String(st.ultimo||0).padStart(4,'0');
+    el.className='sb-hint nuvem-ok';
+  }else{
+    el.textContent='☁ Sem conexão — números reservados neste aparelho (sincroniza ao voltar)';
+    el.className='sb-hint nuvem-local';
+  }
+  api.salvarEstado();
+}
+
+/* Manda o histórico local (fichas antigas) para a nuvem como BACKUP, para
+   nenhuma outra máquina receber esses números. Não toma número de ninguém. */
+async function numNuvemSincronizarHistorico(silencioso){
+  const api=nuvem();
+  if(!api||!api.configurada())return null;
+  const lista=numNuvemHistorico();
+  if(!lista.length)return null;
+  const r=await api.registrarLote(lista,{status:'backup'});
+  if(r&&!r.sem){
+    numNuvemPintarStatus(null);
+    numNuvemSalvarEstado();
+    if(!silencioso){
+      const msg='☁ '+r.registrados+' número(s) do histórico enviados para a nuvem'+(r.ignorados?' · '+r.ignorados+' já eram de outra máquina (preservados)':'')+'.';
+      toast(msg,r.ignorados?'erro':'sucesso',5000);
+    }
+  }
+  return r;
+}
+
+/* Ao abrir a ficha: se o número que está na tela é de OUTRA máquina, avisa e
+   joga para o próximo livre. Se não há número, reserva o próximo da nuvem. */
+async function numNuvemIniciar(){
+  const api=nuvem(); if(!api)return;
+  const campo=$('fichaNum'); if(!campo)return;
+  numNuvemPintarStatus(null);
+  numNuvemSalvarEstado();
+  try{ await api.nuvemOk(); }catch(e){ numNuvemPintarStatus({sem_rede:true}); }
+  try{ api.registrarDispositivo(); }catch(e){}
+  numNuvemSalvarEstado();
+  const atual=parseInt(campo.value,10)||0;
+  if(!atual){
+    try{ await numNuvemReservarAtual({pedido:Math.max(NUVEM_BASE_NUMERO,numNuvemUltimoLocal()+1),silencioso:true}); }catch(e){}
+    return;
+  }
+  const mapa=numNuvemMapa();
+  if(!mapa[atual]){
+    const r=await api.verificar(atual).catch(()=>({ocupado:false,sem_rede:true,dono:'',status:''}));
+    if(r&&r.ocupado){
+      const prox=await api.proximoLivre(Math.max(NUVEM_BASE_NUMERO,atual+1)).catch(()=>null);
+      const novo=prox||(atual+1);
+      numNuvemAplicar(campo,novo);
+      numNuvemAnotar(novo,'em_uso',(($('dc_nome')||{}).textContent||'').trim());
+      numNuvemCompartilharComExtras();
+      toast('⚠ O Nº '+String(atual).padStart(4,'0')+' está '+(r.status==='backup'?'em backup':'em uso')+' em '+(r.dono||'outra máquina')+
+            '. Usei o Nº '+String(novo).padStart(4,'0')+'.','erro',6500);
+      numNuvemPintarStatus({ocupado:true,dono:r.dono,status:r.status});
+    }else if(!r||!r.sem_rede){
+      numNuvemPintarStatus({ocupado:false,status:'livre'});
+    }else{
+      numNuvemPintarStatus({sem_rede:true});
+    }
+  }else{
+    numNuvemPintarStatus({ocupado:false,status:'em_uso'});
+  }
+  numNuvemSalvarEstado();
+}
+
+/* Bloco da barra lateral + ganchos de campo. */
+function numNuvemMontarUI(){
+  const alvo=$('numNuvemBox');
+  if(alvo&&!alvo.dataset.pronto){
+    alvo.dataset.pronto='1';
+    alvo.innerHTML=
+      '<div class="sb-field"><span class="sb-field-label">Nº da ficha (nuvem)</span>'+
+      '<span class="sb-hint num-nuvem" id="numNuvemStatus">—</span></div>'+
+      '<button type="button" class="sb-btn" onclick="numNuvemReservarAtual({silencioso:false})" title="Reserva agora o próximo número livre na nuvem">'+
+      '<span class="sb-btn-icon">☁</span><span class="sb-btn-label">Reservar nº na nuvem</span></button>'+
+      '<button type="button" class="sb-btn" onclick="numNuvemSincronizarHistorico()" title="Envia as fichas antigas deste aparelho como backup (nenhuma outra máquina recebe esses números)">'+
+      '<span class="sb-btn-icon">↥</span><span class="sb-btn-label">Sincronizar histórico</span></button>'+
+      '<div class="sb-hint" id="estadoNuvem">☁ conectando…</div>';
+  }
+  const campo=$('fichaNum');
+  if(campo&&!campo.dataset.nuvem){
+    campo.dataset.nuvem='1';
+    campo.addEventListener('blur',()=>{numNuvemCommitCampo()});
+    campo.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();numNuvemCommitCampo();campo.blur();}});
+  }
+}
+
 /* ══ Contador sequencial ══ */
 function getProximoNumeroFicha() {
   try { return parseInt(localStorage.getItem(FICHA_COUNTER_KEY)) || 0; } catch(e) { return 0; }
@@ -6514,16 +6889,34 @@ function aplicarNumeroFicha(n) {
   const el = $('fichaNum');
   if(el) { el.value = num; salvarNum(); }
 }
-function definirNumeroFicha(val) {
-  const n = parseInt(val);
+async function definirNumeroFicha(val) {
+  let n = parseInt(val);
   if(!n || n < 1) { toast('⚠ Número inválido', 'erro'); atualizarCfgInput(); return; }
+  if(n < NUVEM_BASE_NUMERO){
+    toast('⚠ A numeração começa em ' + NUVEM_BASE_NUMERO, 'erro');
+    n = NUVEM_BASE_NUMERO;
+  }
+  /* V10.2 — o número escolhido à mão também passa pela nuvem: se já está em
+     uso/backup em OUTRA máquina, a nuvem devolve o primeiro livre e a pessoa
+     é avisada (nunca repetir é mais importante que o número escolhido). */
+  const api = nuvem();
+  if(api && api.configurada()){
+    try{
+      const livre = await api.proximoLivre(n);
+      if(livre && livre !== n){
+        toast('⚠ O Nº ' + String(n).padStart(4,'0') + ' já está reservado (uso/backup). Próximo livre: ' + String(livre).padStart(4,'0'), 'erro', 5200);
+        n = livre;
+      }
+    }catch(e){}
+  }
   // Salvar como n-1 pois a próxima ficha será n
   setNumeroFicha(n - 1);
+  numNuvemMarcarUltimo(n - 1);
   toast('✔ Próxima ficha será Nº ' + String(n).padStart(4,'0'), 'sucesso', 2500);
 }
 function atualizarCfgInput() {
   const el = $('cfgProxNum');
-  if(el) el.value = getProximoNumeroFicha() + 1;
+  if(el) el.value = Math.max(getProximoNumeroFicha() + 1, numNuvemUltimoLocal() + 1, NUVEM_BASE_NUMERO);
 }
 
 /* ══ Pasta padrão (File System Access API) ══ */
@@ -6640,18 +7033,19 @@ function capturarFichaParaJSON() {
     document.querySelectorAll('.gi[data-g="'+pid+'m"]').forEach(el => gm.push(el.value));
     document.querySelectorAll('.gi[data-g="'+pid+'b"]').forEach(el => gb.push(el.value));
     document.querySelectorAll('.gi[data-g="'+pid+'i"]').forEach(el => gi2.push(el.value));
+    /* V10.2 — a base da página extra/branca vem de `v7CapturarPaginaExtra`:
+       é ele que lê `fbNum_<pid>` (o nº da página branca, quando é próprio).
+       Sem isso o .json salvava o número da branca vazio e ele "sumia". */
+    const snapExtra = v7CapturarPaginaExtra(p) || {};
+    const hdrExtra = Object.assign({}, snapExtra.hdr || {});
+    if (!hdrExtra.fichaNum && !snapExtra.fbNum && p.tipo === 'branca') {
+      hdrExtra.fichaNum = ($('fbNum_'+pid)||{}).value || '';
+    }
     return {
       id: p.id, num: p.num, tipo: p.tipo,
       layers: p.layers.map(serLayer),
       prod, med: { fem: medFem, masc: medMasc }, grade: { m: gm, b: gb, i: gi2 },
-      hdr: {
-        fichaNum: ($('fichaNum_'+pid)||{}).value || '',
-        fichaData: ($('fichaData_'+pid)||{}).value || '',
-        previsao: ($('previsao_'+pid)||{}).value || '',
-        sepTxt: ($('sepTxt_'+pid)||{}).value || '',
-        tipoTecido: ($('tipoTecido_'+pid)||{}).textContent || '',
-        entradaVal: ($('entradaVal_'+pid)||{}).value || ''
-      }
+      hdr: hdrExtra
     };
   });
   d._folha1Removida = !document.getElementById('folha1');
@@ -6831,8 +7225,28 @@ async function v8NovaFicha(){
      anterior". Sem isto o autosave da ficha em branco passaria por cima do
      conteúdo e o botão Restaurar não teria o que devolver. */
   try{if(typeof v8RascunhoSnapshot==='function')v8RascunhoSnapshot()}catch(_){}
-  const prox = incrementarNumeroFicha();
+  /* V10.2 — o número da próxima ficha vem da NUVEM, não do contador local:
+     ele é o primeiro livre a partir do último desta máquina (nunca desce,
+     nunca repete, mesmo com duas máquinas abertas no mesmo dia). */
+  let prox = Math.max(NUVEM_BASE_NUMERO, getProximoNumeroFicha() + 1, numNuvemUltimoLocal() + 1);
+  const api=nuvem();
+  if(api&&api.configurada()){
+    try{
+      const r=await api.reservar(prox,{base:NUVEM_BASE_NUMERO,cliente:''});
+      if(r&&r.numero){
+        if(r.ajustado&&r.numero!==prox){
+          toast('⚠ O Nº '+String(prox).padStart(4,'0')+(r.dono?' já está em '+r.dono:' já está em uso')+'. Ficha nova com Nº '+String(r.numero).padStart(4,'0')+'.','erro',6000);
+        }
+        prox=r.numero;
+      }
+    }catch(e){ /* sem rede: segue a numeração local e sincroniza depois */ }
+  }
+  setNumeroFicha(prox);
   limparParaNovaFicha(prox);
+  numNuvemAnotar(prox,'em_uso',(($('dc_nome')||{}).textContent||'').trim());
+  numNuvemCompartilharComExtras();
+  numNuvemPintarStatus({ocupado:false,status:'em_uso'});
+  numNuvemSalvarEstado();
   try{if(typeof v8RascunhoAtualizarUI==='function')v8RascunhoAtualizarUI()}catch(_){}
   fichaHideSuggestions(); fichaUpdateReadiness();
   toast('✨ Nova ficha Nº '+String(prox).padStart(4,'0'),'sucesso',3000);
@@ -7408,8 +7822,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if(ci) { ci.removeAttribute('onchange'); ci.addEventListener('change', onCanvasFilesPatched); }
   const fichaNum = $('fichaNum');
   if(fichaNum && !fichaNum.value) {
-    const prox = getProximoNumeroFicha() + 1;
+    const prox = Math.max(NUVEM_BASE_NUMERO, getProximoNumeroFicha() + 1, numNuvemUltimoLocal() + 1);
     aplicarNumeroFicha(prox);
+  }
+  /* V10.2 — numeração na nuvem: monta o bloco da barra lateral e confere, ao
+     abrir, se o número em uso já é de outra máquina (se for, sobe para o
+     primeiro livre). Roda depois do carregamento do autosave. */
+  try{numNuvemMontarUI();}catch(e){}
+  setTimeout(function(){
+    try{numNuvemIniciar();}catch(e){console.warn('nuvem num',e);}
+  },1400);
+  /* Quando a internet volta, sincroniza o histórico deste aparelho. */
+  if(typeof window.addEventListener==='function'){
+    window.addEventListener('online',function(){try{numNuvemSincronizarHistorico(true);numNuvemSalvarEstado();}catch(e){}});
   }
 });
 
@@ -8214,6 +8639,21 @@ function v7AplicarPaginaSalva(p,s){
   const pid=p.id;
   const setH=(id,v)=>{const el=$(id);if(el&&v!==undefined&&v!==''){if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.value=v;else el.innerHTML=v;}};
   if(s.hdr){setH('fichaNum_'+pid,s.hdr.fichaNum);setH('fichaData_'+pid,s.hdr.fichaData);setH('previsao_'+pid,s.hdr.previsao);setH('sepTxt_'+pid,s.hdr.sepTxt);setH('tipoTecido_'+pid,s.hdr.tipoTecido);setH('entradaVal_'+pid,s.hdr.entradaVal);}
+  /* V10.2 — o nº da página BRANCA é restaurado do arquivo salvo; se a ficha
+     salva é anterior a esta versão (sem fbNum), herda o nº da folha 1.
+     A marca `data-num-proprio` diz que o número NÃO é cópia: o .json precisa
+     guardá-lo separado, senão o espelho sobrescreve ao reabrir. */
+  if(p&&p.tipo==='branca'){
+    const fb=$('fbNum_'+pid);
+    if(fb){
+      const numSalvo=(s.hdr&&s.hdr.fbNum)||(s.hdr&&s.hdr.fichaNum)||(($('fichaNum')||{}).value||'');
+      const numP1=(($('fichaNum')||{}).value||'').trim();
+      if(numSalvo)fb.value=numSalvo;
+      if(numSalvo&&String(numSalvo).trim()!==numP1)fb.dataset.numProprio='1'; else{try{delete fb.dataset.numProprio;}catch(e){}}
+      fb.dataset.fichaNum='1';
+      fb.title='Nº da ficha (o mesmo da página 1) — para um número diferente, digite aqui';
+    }
+  }
   if(Array.isArray(s.prod)){
     const tb=$('prodLinhas_'+pid);if(tb)tb.innerHTML='';
     p.linhaId=0;
@@ -8338,9 +8778,25 @@ function v7CapturarPaginaExtra(p){
   document.querySelectorAll('.gi[data-g="'+pid+'i"]').forEach(el=>gi2.push(el.value));
   const cores=[];
   document.querySelectorAll('#coresList_'+pid+' [id^="ci_"]').forEach(it=>{const i2=it.id.replace('ci_','');cores.push({hex:($('cp_'+i2)||{}).value||'#3B82F6',nome:($('cni_'+i2)||{}).value||'COR'});});
+  const fbCampo=$('fbNum_'+pid);
+  const hdr={
+    fichaNum:($('fichaNum_'+pid)||{}).value||'',
+    fichaData:($('fichaData_'+pid)||{}).value||'',
+    previsao:($('previsao_'+pid)||{}).value||'',
+    sepTxt:($('sepTxt_'+pid)||{}).value||'',
+    tipoTecido:($('tipoTecido_'+pid)||{}).textContent||'',
+    entradaVal:($('entradaVal_'+pid)||{}).value||''
+  };
+  /* V10.2 — a página BRANCA tem nº próprio em `fbNum_<pid>`. Ele só vai para
+     o .json quando NÃO é a cópia da folha 1 (`data-num-proprio`); senão o
+     espelho devolveria o número da ficha por cima ao reabrir o arquivo. */
+  if(p&&p.tipo==='branca'&&fbCampo){
+    const proprio=fbCampo.dataset&&fbCampo.dataset.numProprio==='1';
+    if(proprio&&fbCampo.value)hdr.fbNum=fbCampo.value;
+  }
   return {
     id:p.id,tipo:p.tipo,num:p.num,corId:p.corId||0,linhaId:p.linhaId||0,zCnt:p.zCnt||10,
-    hdr:{fichaNum:($('fichaNum_'+pid)||{}).value||'',fichaData:($('fichaData_'+pid)||{}).value||'',previsao:($('previsao_'+pid)||{}).value||'',sepTxt:($('sepTxt_'+pid)||{}).value||'',tipoTecido:($('tipoTecido_'+pid)||{}).textContent||'',entradaVal:($('entradaVal_'+pid)||{}).value||''},
+    hdr,
     prod,med:{fem:medFem,masc:medMasc},grade:{m:gm,b:gb,i:gi2},cores,
     layers:(p.layers||[]).map(serLayer)
   };

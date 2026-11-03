@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<!-- Arquivo SEM redirecionamento de propósito: alguns navegadores/servidores
+     tratam a URL de um modo especial. A capa com o redirecionamento é o
+     entrar.html; este é o segundo caminho (se o primeiro não abrir). -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOOALTO — abrir o sistema na nuvem</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--bg:#050505;--card:#0f131a;--line:rgba(255,255,255,.12);--txt:#eef2ff;--sub:#8d99ac}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:radial-gradient(1200px 600px at 50% -10%,#1c1030 0%,var(--bg) 60%);
+       color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+       display:flex;align-items:center;justify-content:center;padding:22px}
+  .card{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:20px;
+        padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.55);text-align:center}
+  h1{font-size:17px;font-weight:900;margin:14px 0 8px}
+  p{font-size:13px;line-height:1.6;color:var(--sub);margin-bottom:16px}
+  .btn{display:block;text-align:center;text-decoration:none;background:linear-gradient(180deg,#E0278A,#C4146F);
+       color:#fff;font-weight:900;font-size:15px;padding:14px 18px;border-radius:12px;margin-bottom:10px}
+  .url{font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;background:#080b10;
+       border:1px solid var(--line);border-radius:10px;padding:9px 11px;color:#c7d2fe;margin-bottom:14px;text-align:left}
+  small{display:block;font-size:11px;color:#6b7280;margin-top:12px;line-height:1.6}
+</style>
+</head>
+<body>
+<main class="card">
+  <img alt="Vooalto" style="height:64px;width:64px;border-radius:16px;background:#151a23"
+       src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHRleHQgeD0iMzIiIHk9IjQyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0iIzNiODJmNiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VkE8L3RleHQ+PC9zdmc+">
+  <h1>VOOALTO na nuvem</h1>
+  <p>Este é o arquivo do site. O sistema abre na raiz do endereço abaixo — use o botão
+     (se o navegador não abrir sozinho).</p>
+  <div class="url" id="alvo">—</div>
+  <a class="btn" id="btn" href="../">Abrir o VOOALTO</a>
+  <a class="btn" style="background:#151a23;border:1px solid var(--line);color:#e9eef7;font-weight:700" href="home">Usar a capa de entrada</a>
+  <small>Nada é enviado para fora: as fichas e os orçamentos ficam no navegador deste aparelho.
+    A nuvem guarda apenas a numeração das fichas, para nunca repetir entre máquinas.</small>
+</main>
+<script>
+(function(){
+  'use strict';
+  var raiz = new URL('../', location.href).href;
+  document.getElementById('alvo').textContent = raiz;
+  document.getElementById('btn').href = raiz;
+  /* tenta abrir sozinho; o botão continua na tela de qualquer forma */
+  setTimeout(function(){ try{ location.replace(raiz); }catch(e){} }, 700);
+})();
+</script>
+</body>
+</html>

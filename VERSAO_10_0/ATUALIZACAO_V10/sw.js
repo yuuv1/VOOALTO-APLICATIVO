@@ -1,10 +1,10 @@
-// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash d52e4846cbe0)
+// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash 42f6e62d4b37)
 const CACHE_PREFIX = 'vooalto-v10-';
 // Caches das versões anteriores na MESMA origem (a porta 4800 nunca mudou): o
 // activate apaga o que a V9/V8 deixou, sem tocar em outros aplicativos.
 const LEGACY_CACHE_PREFIXES = ['vooalto-v9-', 'vooalto-v8-'];
-const CACHE = 'vooalto-v10-d52e4846cbe0';
-const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","index.html","manual.html","assets/cropper.min.css","assets/cropper.min.js","assets/fonts.css","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/tema-v10.css","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","criador_contrato/manifest.webmanifest","criador_contrato/icons/apple-touch-icon.png","criador_contrato/icons/icon-192.png","criador_contrato/icons/icon-512.png","criador_contrato/icons/maskable-512.png","criador_ficha_tecnica/index.html","criador_orcamento/index.html","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","mockup/index.html","mockup/peca.js","mockup/peca_editor.css","mockup/peca_editor.js","mockup/peca_render.js"];
+const CACHE = 'vooalto-v10-42f6e62d4b37';
+const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","entrar.html","index.html","manual.html","site-supabase.html","assets/cropper.min.css","assets/cropper.min.js","assets/fonts.css","assets/html2canvas.min.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/nuvem.js","assets/tema-v10.css","assets/watermark_vooalto.png","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","criador_contrato/manifest.webmanifest","criador_contrato/icons/apple-touch-icon.png","criador_contrato/icons/icon-192.png","criador_contrato/icons/icon-512.png","criador_contrato/icons/maskable-512.png","criador_ficha_tecnica/index.html","criador_orcamento/index.html","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","mockup/index.html","mockup/peca.js","mockup/peca_editor.css","mockup/peca_editor.js","mockup/peca_render.js"];
 // Arquivos grandes (bundle do Contrato): entram no cache um a um, DEPOIS do
 // precache obrigatório. cache.addAll() é atômico — se um arquivo de ~10 MB
 // falhasse, a instalação inteira do service worker cairia e o app ficaria
@@ -14,10 +14,20 @@ const PRECACHE_PESADOS = ["criador_contrato/index.html"];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await cache.addAll(PRECACHE);
+    // Rede ruim não pode derrubar a atualização inteira: se um arquivo do
+    // precache falhar, ele é buscado sob demanda no primeiro uso e o app não
+    // fica preso na versão antiga (antes, addAll atômico abortava o install).
+    await Promise.all(PRECACHE.map(url => cache.add(url).catch(() => {})));
     await Promise.all(PRECACHE_PESADOS.map(url => cache.add(url).catch(() => {})));
     await self.skipWaiting();
   })());
+});
+
+// O shell pede a troca quando o usuário aceita o aviso de "nova versão".
+// Sem isso, o service worker novo só assumiria na próxima vez que TODAS as
+// abas do app fossem fechadas — e quem usa o app o dia inteiro nunca fecha.
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {

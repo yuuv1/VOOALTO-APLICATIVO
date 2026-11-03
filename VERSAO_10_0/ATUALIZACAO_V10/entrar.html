@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOOALTO — abrindo o sistema</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--bg:#050505;--card:#0f131a;--line:rgba(255,255,255,.12);--txt:#eef2ff;--sub:#8d99ac;--ok:#4ade80;--err:#f87171}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{background:radial-gradient(1200px 600px at 50% -10%,#1c1030 0%,var(--bg) 60%);
+       color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+       display:flex;align-items:center;justify-content:center;padding:22px}
+  .card{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:20px;
+        padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+  .logo{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .logo img{height:34px;object-fit:contain}
+  h1{font-size:17px;font-weight:900;letter-spacing:.3px}
+  p{font-size:13px;line-height:1.55;color:var(--sub);margin-bottom:12px}
+  .spin{width:38px;height:38px;border:3px solid rgba(255,255,255,.18);border-top-color:#F0449F;border-radius:50%;
+        animation:sp 1s linear infinite;margin:4px 0 16px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .url{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;word-break:break-all;
+       background:#080b10;border:1px solid var(--line);border-radius:10px;padding:9px 11px;color:#c7d2fe;margin-bottom:14px}
+  .btn{display:block;text-align:center;text-decoration:none;background:linear-gradient(180deg,#E0278A,#C4146F);
+       color:#fff;font-weight:900;font-size:14px;padding:13px 18px;border-radius:12px;border:0;cursor:pointer;width:100%}
+  .btn.sec{background:#151a23;border:1px solid var(--line);color:#e9eef7;font-weight:700;margin-top:10px}
+  .status{font-size:12px;font-weight:800;margin:14px 0 6px;display:flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#fbbf24;flex:0 0 auto}
+  .dot.ok{background:var(--ok)}.dot.err{background:var(--err)}
+  ol{margin:8px 0 0 18px;font-size:12px;color:var(--sub);line-height:1.7}
+  code{background:#080b10;padding:1px 5px;border-radius:5px;font-size:11px;color:#c7d2fe}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<main class="card" role="main">
+  <div class="logo"><img id="logo" src="" alt="Vooalto"><h1>VOOALTO · Sistema de Produção</h1></div>
+
+  <div id="carregando">
+    <div class="spin" aria-hidden="true"></div>
+    <p>Procurando o sistema na nuvem… <span id="tentativa"></span></p>
+    <div class="url" id="origem">—</div>
+  </div>
+
+  <div id="falhou" class="hidden">
+    <div class="status"><span class="dot err"></span><span>O sistema não abriu automaticamente</span></div>
+    <p>Ou o aparelho está sem internet, ou o site está sendo atualizado. Toque no botão abaixo:</p>
+    <a class="btn" id="btnAbrir" href="#">Abrir o VOOALTO</a>
+    <button type="button" class="btn sec" onclick="location.reload()">Tentar de novo</button>
+    <p style="margin-top:16px">Para usar offline no celular: abra o sistema, use o menu do navegador e escolha
+      <b>“Instalar app”</b> (Android/Chrome) ou <b>“Adicionar à Tela de Início”</b> (iPhone/Safari).</p>
+  </div>
+
+  <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+    <p style="margin:0 0 6px"><b style="color:#e9eef7">Como o site fica no ar</b></p>
+    <ol>
+      <li>O app é publicado em <code>supabase.co/functions/v1/site</code>.</li>
+      <li>O código novo chega pelo GitHub (<code>main</code>) — não precisa reenviar nada.</li>
+      <li>Os dados (fichas, orçamentos) ficam no navegador do aparelho.</li>
+    </ol>
+  </div>
+</main>
+
+<script>
+/* Redireciona para a raiz do app assim que ela responder. Se a rede estiver
+   ruim, mostra um botão — nunca deixa a pessoa olhando para uma tela vazia. */
+(function(){
+  'use strict';
+  var APP = '../';                       /* .../functions/v1/site/ */
+  /* esta capa é servida em .../site/home (caminho sem ".html": o gateway do
+     Supabase entrega .html COM extensão na URL como text/plain). O botão de
+     socorro aponta para "home", nunca para "entrar.html". */
+  var alvo = new URL(APP, location.href).href;
+  var tentativas = 0;
+  var tentaEl = document.getElementById('tentativa');
+  var origemEl = document.getElementById('origem');
+  origemEl.textContent = alvo;
+
+  /* logo do app, se o arquivo existir (não trava se não existir) */
+  try{
+    var img = document.getElementById('logo');
+    img.onerror = function(){ img.style.display='none'; };
+    img.src = new URL('../icons/icon-192.png', location.href).href;
+  }catch(e){}
+
+  function falhou(motivo){
+    document.getElementById('carregando').classList.add('hidden');
+    document.getElementById('falhou').classList.remove('hidden');
+    var b = document.getElementById('btnAbrir');
+    b.href = alvo && alvo !== location.href ? alvo : 'home';
+    if(motivo) origemEl.textContent = motivo;
+  }
+
+  function checar(){
+    tentativas++;
+    if(tentativas > 1) tentaEl.textContent = '(tentativa ' + tentativas + ')';
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 4500);
+    fetch(new URL('../version.json?t=' + Date.now(), location.href).href, {cache:'no-store', signal: ctrl ? ctrl.signal : undefined})
+      .then(function(r){
+        clearTimeout(timer);
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json().catch(function(){ return {}; });
+      })
+      .then(function(v){
+        origemEl.textContent = 'Encontrado: ' + (v.app || 'vooalto') + ' ' + (v.version || '');
+        location.replace(alvo);
+      })
+      .catch(function(e){
+        clearTimeout(timer);
+        if(tentativas < 3){ setTimeout(checar, 1200); return; }
+        falhou('Não consegui falar com o servidor (' + (e && e.name === 'AbortError' ? 'sem resposta' : (e && e.message) || 'erro') + ').');
+      });
+  }
+  setTimeout(checar, 150);
+})();
+</script>
+</body>
+</html>

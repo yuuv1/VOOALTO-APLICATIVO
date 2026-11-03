@@ -1324,9 +1324,78 @@ else initVooalto();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v8TourDecidir);
 else v8TourDecidir();
 
+/* ── V10.2 — o site na nuvem e a atualização automática ────────────────────
+   O app agora também roda hospedado (Supabase, path /functions/v1/site/). O
+   service worker é por origem+caminho: quem usa localhost e quem usa o site
+   tem caches separados, e cada um recebe a sua atualização.
+   Aqui o shell: (1) registra o SW, (2) procura versão nova a cada 30 min e
+   quando a aba volta a ficar visível, (3) avisa com um botão "Atualizar" em
+   vez de recarregar debaixo do dedo de quem está digitando uma ficha. */
+const VOOALTO_PONTE_APP = (function(){
+  /* Endereço do site na nuvem — usado no aviso "já está no ar" e na ajuda. */
+  return 'https://eeurdquvrdmoyjgzgpac.supabase.co/functions/v1/site/';
+})();
+
+let vooaltoSWReg=null;
+function vooaltoVersaoInstalada(){
+  try{return localStorage.getItem('vooalto_versao_em_uso')||''}catch(e){return ''}
+}
+function vooaltoMarcarVersao(v){
+  try{if(v)localStorage.setItem('vooalto_versao_em_uso',v)}catch(e){}
+}
+function vooaltoMostrarAtualizacao(versao){
+  if(document.getElementById('vooaltoAtualizar'))return;
+  const bar=document.createElement('div');
+  bar.id='vooaltoAtualizar';
+  bar.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:99999;display:flex;gap:10px;align-items:center;'+
+    'background:#0f131a;color:#e9eef7;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 12px;'+
+    'box-shadow:0 18px 50px rgba(0,0,0,.5);font-size:12px;font-weight:800;font-family:inherit;max-width:min(92vw,520px)';
+  bar.innerHTML='<span>🔄 Nova versão do VOOALTO'+(versao?' ('+versao+')':'')+' pronta</span>'+
+    '<button type="button" style="border:0;border-radius:999px;padding:7px 13px;background:linear-gradient(180deg,#E0278A,#C4146F);color:#fff;font-weight:900;font-family:inherit;cursor:pointer">Atualizar</button>'+
+    '<button type="button" title="Agora não" style="border:0;background:transparent;color:#8d99ac;font-size:15px;cursor:pointer">✕</button>';
+  const [btnAtualizar,,btnFechar]=bar.querySelectorAll('button');
+  btnFechar.onclick=()=>bar.remove();
+  btnAtualizar.onclick=async()=>{
+    btnAtualizar.textContent='Atualizando…';
+    try{
+      if(vooaltoSWReg&&vooaltoSWReg.waiting)vooaltoSWReg.waiting.postMessage({type:'SKIP_WAITING'});
+      const chaves=await caches.keys().catch(()=>[]);
+      await Promise.all(chaves.filter(k=>/^vooalto-v10-/.test(k)).map(k=>caches.delete(k).catch(()=>{})));
+    }catch(e){}
+    location.reload();
+  };
+  document.body.appendChild(bar);
+}
+function vooaltoChecarVersao(){
+  const url='./version.json?t='+Date.now();
+  fetch(url,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{
+    if(!v||!v.version)return;
+    const emUso=vooaltoVersaoInstalada();
+    if(!emUso){vooaltoMarcarVersao(v.version);return;}
+    if(emUso!==v.version)vooaltoMostrarAtualizacao(v.version);
+  }).catch(()=>{});
+}
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').then(reg=>{reg.update().catch(()=>{})}).catch(()=>{});
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      vooaltoSWReg=reg;
+      reg.update().catch(()=>{});
+      /* primeiro acesso: grava a versão que está sendo usada */
+      if(!vooaltoVersaoInstalada())vooaltoChecarVersao();
+      reg.addEventListener('updatefound',()=>{
+        const novo=reg.installing;
+        if(!novo)return;
+        novo.addEventListener('statechange',()=>{
+          if(novo.state==='installed'&&navigator.serviceWorker.controller)vooaltoChecarVersao();
+        });
+      });
+      setInterval(()=>{reg.update().catch(()=>{})},30*60*1000);
+    }).catch(()=>{});
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)vooaltoChecarVersao()});
+    let controlado=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(controlado)return;controlado=true;/* deixa a pessoa decidir no botão */
+    });
   });
 }
 </script>
