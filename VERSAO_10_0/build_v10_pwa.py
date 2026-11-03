@@ -128,10 +128,20 @@ const PRECACHE_PESADOS = {pesados_json};
 self.addEventListener('install', event => {{
   event.waitUntil((async () => {{
     const cache = await caches.open(CACHE);
-    await cache.addAll(PRECACHE);
+    // Rede ruim não pode derrubar a atualização inteira: se um arquivo do
+    // precache falhar, ele é buscado sob demanda no primeiro uso e o app não
+    // fica preso na versão antiga (antes, addAll atômico abortava o install).
+    await Promise.all(PRECACHE.map(url => cache.add(url).catch(() => {{}})));
     await Promise.all(PRECACHE_PESADOS.map(url => cache.add(url).catch(() => {{}})));
     await self.skipWaiting();
   }})());
+}});
+
+// O shell pede a troca quando o usuário aceita o aviso de "nova versão".
+// Sem isso, o service worker novo só assumiria na próxima vez que TODAS as
+// abas do app fossem fechadas — e quem usa o app o dia inteiro nunca fecha.
+self.addEventListener('message', event => {{
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 }});
 
 self.addEventListener('activate', event => {{
