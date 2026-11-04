@@ -265,6 +265,14 @@ font-family:inherit;font-size:10.5px;font-weight:700;outline:none;
 .num-nuvem.local{color:#fbbf24}
 .nuvem-ok{color:#4ade80}
 .nuvem-local{color:#fbbf24}
+/* V10.2 — "quantas fichas já saíram": um número grande, sem jargão.
+   A pessoa abre a ficha e entende em um segundo quanto já vendeu. */
+.nuvem-conta{display:flex;flex-direction:column;gap:2px;margin:6px 8px 2px;padding:9px 11px;
+  background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.28);border-radius:10px}
+.nuvem-conta .rot{font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--sb-t3)}
+.nuvem-conta .val{font-size:22px;font-weight:900;line-height:1.1;color:#fff;font-variant-numeric:tabular-nums}
+.nuvem-conta .sub{font-size:9px;color:var(--sb-t3);line-height:1.4}
+#sidebar.collapsed .nuvem-conta{display:none!important}
 /* número herdado na página branca: parece campo, não parece aviso */
 input.num-herdado{background:rgba(255,255,255,.10);border-radius:6px;padding:1px 4px}
 
@@ -6685,6 +6693,9 @@ async function numNuvemReservarAtual(opcoes){
     }
     numNuvemPintarStatus({ocupado:false,status:'em_uso'});
     numNuvemSalvarEstado();
+    /* a contagem de "fichas já saídas" muda a cada reserva: repinta já, sem
+       esperar a próxima abertura do app */
+    try{ numNuvemPintarContagem(); if(typeof numNuvemAtualizarContagem==='function')numNuvemAtualizarContagem(); }catch(e){}
     return r;
   }
   /* sem nuvem: usa o pedido local (e registra para sincronizar depois) */
@@ -6818,7 +6829,9 @@ async function numNuvemIniciar(){
   const campo=$('fichaNum'); if(!campo)return;
   numNuvemPintarStatus(null);
   numNuvemSalvarEstado();
+  try{ numNuvemPintarContagem(); }catch(e){}
   try{ await api.nuvemOk(); }catch(e){ numNuvemPintarStatus({sem_rede:true}); }
+  try{ numNuvemPintarContagem(); }catch(e){}
   try{ api.registrarDispositivo(); }catch(e){}
   numNuvemSalvarEstado();
   const atual=parseInt(campo.value,10)||0;
@@ -6849,6 +6862,79 @@ async function numNuvemIniciar(){
   numNuvemSalvarEstado();
 }
 
+/* ══ V10.2 — "Quantas fichas já saíram" ═════════════════════════════════════
+   O número da ficha é uma reserva na nuvem: começa em 3388 e só sobe. Então
+   ÚLTIMO Nº - 3387 = quantas fichas já foram abertas, somando todas as
+   máquinas da produção. É a "base de quanto estamos vendendo" que a pessoa
+   pediu — sem planilha, sem relatório, um número na barra lateral.
+
+   Regra de ouro: este painel NUNCA reserva número. Ele só olha. Abrir o app
+   não pode queimar número. */
+function numNuvemContagem(){
+  const st=numNuvemLerEstado();
+  const ultimo=Number(st.ultimo)||0;
+  const total=Number(st.total)||0;
+  const base=NUVEM_BASE_NUMERO;
+  return {
+    base:base,
+    origem:st.origem||'local',
+    ultimo:ultimo,
+    fichas: ultimo>=base ? (ultimo-base+1) : 0,
+    reservados:total
+  };
+}
+
+/* Estado da nuvem, sem estourar quando o nuvem.js não carregou (file://, teste,
+   navegador antigo). `origem === 'nuvem'` significa: a nuvem respondeu agora. */
+function numNuvemLerEstado(){
+  try{
+    const api=nuvem();
+    if(api&&typeof api.lerEstado==='function'){
+      const st=api.lerEstado()||{};
+      return {origem:st.origem||'local',ultimo:Number(st.ultimo)||0,total:Number(st.total)||0};
+    }
+  }catch(e){}
+  return {origem:'local',ultimo:0,total:0};
+}
+
+/* Desenha o painel. `motivo` explica o estado em português, sem termos
+   técnicos: se a nuvem não respondeu, é porque está sem internet. */
+function numNuvemPintarContagem(extra){
+  /* o painel é repintado por timers (depois de reservar, ao voltar a rede):
+     se a página já foi fechada, `document` não existe mais — sai calado. */
+  let alvo=null;
+  try{ if(typeof document==='undefined'||!document)return; alvo=$('nuvemConta'); }catch(e){ return; }
+  if(!alvo)return;
+  const c=numNuvemContagem();
+  const semRede=c.origem!=='nuvem';
+  let valor,sub;
+  if(c.fichas>0){
+    valor=String(c.fichas);
+    sub=c.fichas===1 ? 'ficha aberta desde a nº '+c.base : 'fichas abertas desde a nº '+c.base;
+  }else{
+    valor='0';
+    sub='nenhuma ficha aberta ainda — a primeira será a nº '+c.base;
+  }
+  if(c.ultimo>0) sub += ' · último nº '+c.ultimo;
+  if(extra) sub = extra;
+  alvo.innerHTML=
+    '<span class="rot">Fichas já saídas</span>'+
+    '<span class="val">'+valor+'</span>'+
+    '<span class="sub">'+sub+(semRede?' · sem internet agora':'')+'</span>';
+  alvo.classList.toggle('nuvem-local',!!semRede);
+}
+
+/* Depois de uma reserva, a contagem muda na hora — sem esperar o próximo boot. */
+function numNuvemAtualizarContagem(){
+  try{
+    const api=nuvem();
+    if(!api||!api.configurada())return;
+    api.nuvemOk()
+    .then(()=>{try{numNuvemPintarContagem();}catch(e){}})
+    .catch(()=>{try{numNuvemPintarContagem();}catch(e){}});
+  }catch(e){}
+}
+
 /* Bloco da barra lateral + ganchos de campo. */
 function numNuvemMontarUI(){
   const alvo=$('numNuvemBox');
@@ -6861,7 +6947,8 @@ function numNuvemMontarUI(){
       '<span class="sb-btn-icon">☁</span><span class="sb-btn-label">Reservar nº na nuvem</span></button>'+
       '<button type="button" class="sb-btn" onclick="numNuvemSincronizarHistorico()" title="Envia as fichas antigas deste aparelho como backup (nenhuma outra máquina recebe esses números)">'+
       '<span class="sb-btn-icon">↥</span><span class="sb-btn-label">Sincronizar histórico</span></button>'+
-      '<div class="sb-hint" id="estadoNuvem">☁ conectando…</div>';
+      '<div class="sb-hint" id="estadoNuvem">☁ conectando…</div>'+
+      '<div class="nuvem-conta" id="nuvemConta"></div>';
   }
   const campo=$('fichaNum');
   if(campo&&!campo.dataset.nuvem){

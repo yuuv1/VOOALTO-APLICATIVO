@@ -4,6 +4,13 @@
 // URL pública (é a raiz do app):
 //   https://<ref>.supabase.co/functions/v1/site/
 //
+//   /                     → o app (index.html)
+//   /home                 → capa de entrada (entrar.html)
+//   /ficha/               → criador_ficha_tecnica/
+//   /orcamento/           → criador_orcamento/
+//   /contrato/            → criador_contrato/
+//   /<arquivo>            → qualquer arquivo do app
+//
 // Por que existe: o Supabase NÃO hospeda site estático — o Storage entrega
 // .html como text/plain e o Edge Function não devolve HTML. Esta função lê o
 // arquivo e devolve com o Content-Type certo, então o app roda como site
@@ -14,11 +21,19 @@
 //   2. GitHub (branch main do repositório) — assim o site acompanha o código
 //      sem depender de ninguém rodar o script de envio.
 //
-// Regras: caminho sem "..", index.html implícito, sem listagem; html/js/json/
-// manifest sempre revalidados (a atualização chega), imagens/fontes com cache.
+// ── AS DUAS ARMADILHAS DO GATEWAY (medidas em 2026-11-03, não supostas) ──
 //
-// O caminho chega de dois jeitos conforme o gateway: "/site/index.html" (o
-// slug ainda dentro) ou "/index.html". Os dois são tratados igual.
+// 1. `content-type: text/html` em minúsculas é REESCRITO para `text/plain`.
+//    `Text/HTML`, `text/HTML` e `TEXT/HTML` passam intactos (o MIME é
+//    case-insensitive e o navegador renderiza igual). Por isso o HTML sai
+//    como `Text/HTML`. Mascarar de outro tipo (ex.: svg) faz o navegador
+//    BAIXAR o arquivo — não serve.
+//
+// 2. URL terminada em `.html` é forçada a `text/plain` pela EXTENSÃO DO
+//    CAMINHO, ignorando o cabeçalho. Por isso todo caminho `.html` é
+//    REDIRECIONADO para o equivalente sem extensão (/x/index.html → /x/).
+//    É isso que faz o shell antigo (iframes apontando para
+//    "criador_ficha_tecnica/index.html") funcionar no site publicado.
 // ════════════════════════════════════════════════════════════════════════════
 const BUCKET = 'app'
 const GH_REPO = Deno.env.get('VOOALTO_GH_REPO') || 'yuuv1/VOOALTO-APLICATIVO'
@@ -56,14 +71,18 @@ const MIME: Record<string, string> = {
   map: 'application/json; charset=utf-8',
 }
 
+/* rota limpa → arquivo real (o caminho publicado nunca termina em .html) */
+const ROTAS: Record<string, string> = {
+  'ficha': 'criador_ficha_tecnica/index.html',
+  'orcamento': 'criador_orcamento/index.html',
+  'contrato': 'criador_contrato/index.html',
+  'home': 'entrar.html',
+  'entrar': 'entrar.html',
+  'site-supabase': 'site-supabase.html',
+}
+
 const TEXTUAIS = new Set(['html', 'htm', 'js', 'mjs', 'css', 'json', 'webmanifest', 'txt', 'svg', 'map'])
 
-/* O gateway das Edge Functions reescreve o Content-Type para `text/plain`
-   quando ele é EXATAMENTE `text/html` (minúsculo) — medido em 2026-11-03:
-   `text/html` → `text/plain`; `Text/HTML`, `text/HTML` e `TEXT/HTML` passam
-   intactos e o navegador renderiza como HTML (MIME é case-insensitive).
-   Por isso o HTML sai como `Text/HTML`. Mascarar outro tipo (ex.: svg) faria
-   o navegador baixar o arquivo — não serve. */
 function tipoHtml(): string {
   return 'Text/HTML; charset=utf-8'
 }
@@ -84,27 +103,27 @@ function cabecalhos(ext: string): Record<string, string> {
   return h
 }
 
-/** Normaliza o caminho pedido para algo relativo à raiz do app. */
-function caminhoRelativo(pathname: string): string {
+/** Caminho pedido, relativo ao app (sem o slug, decodificado, sem barra inicial). */
+function pedidoRelativo(pathname: string): string {
   let rel = pathname
   const marca = '/functions/v1/'
   const pos = rel.indexOf(marca)
   if (pos >= 0) rel = rel.slice(pos + marca.length)
   try { rel = decodeURIComponent(rel) } catch (_e) { /* mantém como veio */ }
   rel = rel.replace(/^\/+/, '')
-  // tira o slug quando o gateway o deixa no caminho ("site/assets/app.js")
   if (rel === SLUG) rel = ''
   else if (rel.startsWith(SLUG + '/')) rel = rel.slice(SLUG.length + 1)
-  if (!rel || rel.endsWith('/')) rel += 'index.html'
-  /* A capa de entrada usa caminho SEM extensão de propósito: o gateway entrega
-     qualquer URL terminada em .html como text/plain (o tipo do arquivo é
-     reescrito pela extensão do caminho). "home" é a capa. */
-  if (rel === 'home' || rel === 'entrar') rel = 'entrar.html'
-  if (rel === 'site-supabase') rel = 'site-supabase.html'
   return rel
 }
 
-/** Uma fonte: devolve o ArrayBuffer ou null. */
+/** Rota limpa → arquivo. Devolve o caminho do arquivo no repositório. */
+function arquivoDe(rel: string): string {
+  const rota = rel.replace(/\/+$/, '')
+  if (ROTAS[rota]) return ROTAS[rota]
+  if (!rel || rel.endsWith('/')) return rel + 'index.html'
+  return rel
+}
+
 async function doStorage(rel: string): Promise<ArrayBuffer | null> {
   const base = Deno.env.get('SUPABASE_URL')
   if (!base) return null
@@ -149,7 +168,26 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url)
-  const rel = caminhoRelativo(url.pathname)
+  const pedido = pedidoRelativo(url.pathname)
+
+  /* DEFESA 2 — caminho .html vai para o caminho sem extensão.
+     A barra no fim é o que mantém os endereços relativos do módulo certos
+     ("../assets/x.css" a partir de /site/criador_ficha_tecnica/). */
+  if (/\.html?$/i.test(pedido)) {
+    let destino = pedido.replace(/index\.html?$/i, '').replace(/\.html?$/i, '')
+    if (destino === '') destino = './'
+    else if (!destino.endsWith('/')) destino += '/'
+    if (destino === 'entrar/' || destino === 'site-supabase/') destino = destino.slice(0, -1)
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'location': CAMINHO_BASE + destino.replace(/^\.\//, ''),
+        'cache-control': 'no-store',
+      },
+    })
+  }
+
+  const rel = arquivoDe(pedido)
   if (rel.includes('..') || rel.split('/').some((p) => p.startsWith('.'))) {
     return new Response('Caminho inválido', { status: 400 })
   }

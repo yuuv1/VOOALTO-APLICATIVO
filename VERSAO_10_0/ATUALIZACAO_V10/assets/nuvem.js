@@ -34,6 +34,7 @@
   var estado = {
     origem: 'local',      // 'nuvem' | 'local' | 'cache'
     ultimo: 0,            // maior número que a nuvem já tinha quando a máquina olhou
+    total: 0,             // quantos números a nuvem já guardou (todas as máquinas)
     donoBase: '',         // se a base (3388) já era de outra máquina, o nome dela
     erro: ''              // último motivo de falha (para o aviso da barra lateral)
   };
@@ -198,6 +199,7 @@
         estado.origem = 'nuvem';
         estado.erro = '';
         estado.ultimo = Number(d.ultimo_numero) || 0;
+        estado.total = Number(d.total_numeros) || estado.total;
         return { ok: true, servidor: d.servidor, ultimo: estado.ultimo, total: d.total_numeros };
       })
       .catch(function (e) {
@@ -322,7 +324,8 @@
   /* ── estado salvo (para a barra lateral mostrar "modo local" etc.) ─────── */
   function salvarEstado() {
     lsSet(LS.conf, JSON.stringify({
-      origem: estado.origem, ultimo: estado.ultimo, donoBase: estado.donoBase, erro: estado.erro, quando: Date.now()
+      origem: estado.origem, ultimo: estado.ultimo, total: estado.total,
+      donoBase: estado.donoBase, erro: estado.erro, quando: Date.now()
     }));
   }
   function lerEstado() {
@@ -331,6 +334,7 @@
       if (d && typeof d === 'object') {
         estado.origem = d.origem || estado.origem;
         estado.ultimo = Number(d.ultimo) || estado.ultimo;
+        estado.total = Number(d.total) || estado.total;
         estado.donoBase = d.donoBase || estado.donoBase;
         estado.erro = d.erro || estado.erro;
       }
