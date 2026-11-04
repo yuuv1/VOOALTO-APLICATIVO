@@ -306,6 +306,40 @@ function abrirApp(nuvem) {
     w.close();
   }
 
+  /* ══ 6. "Quantas fichas já saíram": a base de quanto se está vendendo ══ */
+  console.log('\n── 6. A barra lateral mostra quantas fichas já saíram ──');
+  {
+    /* a nuvem já tem 3388..3390: são 3 fichas abertas desde a base */
+    const nuvem = criarNuvem([
+      { numero: 3388, status: 'em_uso', dispositivo: 'maq-a', dono: 'Notebook' },
+      { numero: 3389, status: 'em_uso', dispositivo: 'maq-b', dono: 'Escritório' },
+      { numero: 3390, status: 'backup', dispositivo: 'maq-b', dono: 'Escritório' },
+    ]);
+    const { w, d, erros } = abrirApp(nuvem);
+    await wait(2200);
+    const $ = id => d.getElementById(id);
+    const painel = $('nuvemConta');
+
+    ok('o painel de fichas aparece na barra lateral', !!painel && painel.innerHTML !== '', painel && painel.className);
+
+    /* A conta é sempre "último nº reservado − base + 1". Abrir uma ficha vazia
+       reserva um número (é o certo), então o teste NÃO fixa o total: confere a
+       regra e se o painel mostra exatamente o mesmo número da regra. */
+    const c = w.numNuvemContagem();
+    ok('a conta é último − base + 1', c.fichas === c.ultimo - c.base + 1, c);
+    ok('a contagem cresce a partir de 3388 (nunca abaixo disso)', c.fichas >= 1 && c.base === 3388, c);
+    ok('o painel mostra o número grande, a régua e o último nº',
+      /Fichas já saídas/.test(painel.textContent) &&
+      painel.textContent.includes(String(c.fichas)) &&
+      painel.textContent.includes(String(c.ultimo)), painel.textContent);
+    /* o mais importante: OLHAR a contagem não pode queimar número */
+    const antes = nuvem.tabela.size;
+    await w.numNuvemAtualizarContagem();
+    ok('abrir o app NÃO reserva número nenhum', nuvem.tabela.size === antes, { antes, depois: nuvem.tabela.size });
+    ok('sem erro de página com o painel', erros.length === 0, erros);
+    w.close();
+  }
+
   console.log(`\n═══ NUVEM DE NUMERAÇÃO: ${pass} OK, ${fail} FAIL ═══`);
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

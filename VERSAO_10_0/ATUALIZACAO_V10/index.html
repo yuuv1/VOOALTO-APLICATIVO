@@ -177,7 +177,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
   </header>
   <main class="frame-wrap">
     <div class="loading" id="loading"><div class="spin"></div>Carregando o Vooalto V10...</div>
-    <iframe class="project-frame active" id="frame-ficha" src="criador_ficha_tecnica/index.html" title="Criador de Ficha Técnica"></iframe>
+    <iframe class="project-frame active" id="frame-ficha" title="Criador de Ficha Técnica"></iframe>
     <!-- Orçamento e Contrato só carregam quando o usuário abre a aba pela
          primeira vez. O Contrato é um bundle de ~10 MB: carregá-lo junto com o
          sistema dobraria o tempo de abertura. -->
@@ -966,10 +966,24 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
    A V8 removeu a Catalogação; a ficha técnica voltou a abrir como aba
    normal (na V7 ela abria numa janela sobre o sistema). */
 const PROJECTS={
-  ficha:{name:'Ficha Técnica',button:'btn-ficha',frame:'frame-ficha'},
-  orcamento:{name:'Orçamento',button:'btn-orcamento',frame:'frame-orcamento'},
-  contrato:{name:'Contrato',button:'btn-contrato',frame:'frame-contrato'}
+  ficha:{name:'Ficha Técnica',button:'btn-ficha',frame:'frame-ficha',pasta:'criador_ficha_tecnica',rota:'ficha'},
+  orcamento:{name:'Orçamento',button:'btn-orcamento',frame:'frame-orcamento',pasta:'criador_orcamento',rota:'orcamento'},
+  contrato:{name:'Contrato',button:'btn-contrato',frame:'frame-contrato',pasta:'criador_contrato',rota:'contrato'}
 };
+
+/* V10.2 — endereço de cada módulo DENTRO DO IFRAME.
+   A regra não é estética, é técnica: o gateway do Supabase decide o
+   content-type pela extensão do caminho e devolve `text/plain` para tudo que
+   termina em ".html" (o navegador mostraria o código-fonte do módulo).
+   - servido pelo localhost/server.js  → `criador_x/index.html` (arquivo real)
+   - servido pela Edge Function /site  → `/site/ficha/` (rota limpa)
+   `location.pathname` do shell revela onde estamos. */
+function enderecoModulo(key){
+  const p=PROJECTS[key];
+  if(!p)return '';
+  const publicado=/\/functions\/v1\/site/i.test(location.pathname);
+  return publicado ? (p.rota+'/') : (p.pasta+'/index.html');
+}
 const THEME_KEY='vooalto_tema';
 const THEME_KEY_LEGADO='vooalto_theme_v5';
 const TEMA_CLARO={bg:'#eef0ff',top:'#eef0ff',text:'#17172a'};
@@ -1046,9 +1060,12 @@ function showProject(key,opts){
   const fr=document.getElementById(p.frame);
   const l=document.getElementById('loading');
   // O orçamento é carregado sob demanda (a primeira abertura do sistema é mais rápida).
+  /* Carrega sob demanda: o iframe nasce com `data-src` e só recebe `src` na
+     primeira vez que a aba é aberta. O src vem de `enderecoModulo()` (rota
+     limpa quando publicado, arquivo real no servidor local). */
   const vaiCarregar=!!(fr&&!fr.getAttribute('src')&&fr.dataset.src);
   if(vaiCarregar){
-    fr.setAttribute('src',fr.dataset.src);
+    fr.setAttribute('src',enderecoModulo(key));
     fr.removeAttribute('data-src');
   }
   Object.keys(PROJECTS).forEach(k=>{
@@ -1313,6 +1330,11 @@ function initVooalto(){
   Object.keys(PROJECTS).forEach(k=>{
     const fr=document.getElementById(PROJECTS[k].frame);
     if(!fr)return;
+    /* V10.2 — o iframe nasce sem `src` (o endereço depende de onde o app está
+       servido: arquivo real no localhost, rota limpa na Edge Function). Só o
+       módulo ativo carrega agora; os outros, na primeira vez que forem
+       abertos (o Contrato tem ~10 MB). */
+    if(k===activeProject&&!fr.getAttribute('src'))fr.setAttribute('src',enderecoModulo(k));
     // Empurra o tema sempre que um módulo (re)carrega — cobre reload e lazy-load.
     fr.addEventListener('load',()=>{syncThemeTo(fr);const l=document.getElementById('loading');if(l)l.style.display='none'});
   });
