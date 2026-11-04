@@ -1,5 +1,31 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.2.1 — "Fichas já saídas": a base de quanto está vendendo (2026-11-04)
+
+O pedido: *"só queria que nunca usássemos números repetidos nas fichas, sempre
+em ordem crescente, pra termos uma base de quanto estamos vendendo conforme elas
+sobem."* Os números já eram únicos e crescentes desde a V10.2.0 — o que faltava
+era **ver a conta**.
+
+| O que faltava | O que ficou |
+|---|---|
+| Ninguém sabia quantas fichas já tinham saído, só o "último número" | painel **"Fichas já saídas"** na barra lateral: último nº − 3388 + 1 |
+| A conta somava só este aparelho | a conta é da **nuvem**: soma as fichas de todas as máquinas da produção |
+| O número só se atualizava ao reabrir o app | repinta a cada reserva e no boot |
+| Abrir o app podia gastar um número só para mostrar a contagem | a contagem **só olha**, nunca reserva (teste garante) |
+
+E um bug sério que apareceu no site publicado:
+
+| O que acontecia | Por quê | O que ficou |
+|---|---|---|
+| No site, os três módulos apareciam como **código na tela** | o gateway do Supabase decide o Content-Type pela **extensão do caminho** e força `text/plain` em tudo que termina em `.html`; os iframes apontavam para `criador_ficha_tecnica/index.html` | o servidor **redireciona** `.html` para a rota limpa (`/ficha/`, `/orcamento/`, `/contrato/`) e o shell escolhe o endereço em `enderecoModulo()` |
+
+O servidor local (`127.0.0.1:4800`) continua com o comportamento de sempre: quem
+usa a pasta não muda nada.
+
+Testes novos: `tests/test_site_publicado_v10.js` (12 verificações) e o cenário 6
+de `tests/test_nuvem_num_v10.js` ("abrir o app NÃO reserva número nenhum").
+
 ## V10.2.0 — O nº da ficha é único entre máquinas, a página branca herda ele, e o app fica no ar no Supabase (2026-11-03)
 
 A ficha técnica é usada em mais de um computador. O número era um contador

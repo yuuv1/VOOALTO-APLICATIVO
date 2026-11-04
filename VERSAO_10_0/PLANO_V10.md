@@ -479,6 +479,25 @@ número diferente ali, o campo ganha `data-num-proprio="1"` e passa a mandar: o
 espelho, `numNuvemAplicarNaPagina` e o espelho da folha 1 não sobrescrevem mais,
 o rodapé usa o número próprio e o `.json` guarda `hdr.fbNum`.
 
+## 15.1 "Fichas já saídas": a conta que a pessoa vê (V10.2.1)
+
+O número da ficha é reserva única e crescente desde 3388. Daí sai, de graça, a
+**base de quanto se está vendendo**:
+
+```
+fichas já abertas = último nº reservado na nuvem − 3388 + 1
+```
+
+- aparece na barra lateral da ficha (`#nuvemConta`), com o número grande, a régua
+  ("desde a nº 3388") e o último número;
+- é conta de **nuvem**: soma as fichas de todas as máquinas, não só deste
+  aparelho;
+- `numNuvemPintarContagem()` só **lê** (`vooalto_nuvem_ok`) — nunca reserva.
+  Abrir o app não pode queimar número: isso é testado;
+- sem internet, mostra a última contagem conhecida e avisa;
+- a conta assume que os números são usados em sequência. Número pulado (recusa
+  por conflito) entra na contagem — é o preço de nunca repetir.
+
 ## 16. O app publicado no Supabase (V10.2)
 
 Endereço público (a raiz do app):
