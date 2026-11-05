@@ -11,7 +11,9 @@
    6. salvar o mesmo conteúdo de novo NÃO gera tráfego duplicado de escrita
       desnecessária no ciclo seguinte (hash bate = nada a enviar);
    7. os módulos Ficha Técnica e Orçamento carregam o assets/rascunhos.js e
-      registram as coleções (ficha_*, orcamento*);
+      registram SÓ as coleções de rascunhos salvos (ficha_salva, orcamento)
+      — o trabalho em andamento (ficha_viva/orcamento_vivo) fica LOCAL,
+      porque cada computador edita uma ficha diferente ao mesmo tempo;
    8. a migration dos rascunhos existe com as 4 funções e a tabela fechada.
 
    A nuvem é um fetch falso que fala o mesmo protocolo do Supabase
@@ -149,10 +151,14 @@ function criarAparelho(nuvem, tokenAparelho) {
   const orc = fs.readFileSync(path.join(BASE, 'criador_orcamento', 'index.html'), 'utf8');
   ok('a Ficha Técnica carrega o assets/rascunhos.js', ficha.includes('../assets/rascunhos.js'));
   ok('o Orçamento carrega o assets/rascunhos.js', orc.includes('../assets/rascunhos.js'));
-  for (const tipo of ['ficha_salva', 'ficha_viva', 'ficha_anterior'])
-    ok("a Ficha registra a coleção '" + tipo + "'", ficha.includes("tipo:'" + tipo + "'") || ficha.includes('tipo: \'' + tipo + '\''));
-  for (const tipo of ['orcamento', 'orcamento_vivo'])
-    ok("o Orçamento registra a coleção '" + tipo + "'", orc.includes("tipo: '" + tipo + "'"));
+  ok("a Ficha registra a coleção 'ficha_salva' (Minhas fichas)", ficha.includes("tipo:'ficha_salva'"));
+  ok("o Orçamento registra a coleção 'orcamento' (rascunhos salvos)", orc.includes("tipo: 'orcamento'"));
+  /* Decisão do usuário: cada computador edita uma ficha DIFERENTE ao mesmo
+     tempo, então o trabalho EM ANDAMENTO (slot único) NÃO pode compartilhar —
+     senão um aparelho pisa no outro. Estes tipos nunca podem ser registrados. */
+  for (const proibido of ["tipo:'ficha_viva'", "tipo:'ficha_anterior'"])
+    ok('a Ficha NÃO compartilha ' + proibido + ' (em andamento é local)', !ficha.includes(proibido));
+  ok("o Orçamento NÃO compartilha 'orcamento_vivo' (em edição é local)", !orc.includes("tipo: 'orcamento_vivo'"));
 
   /* 8) migration */
   const mig = fs.readFileSync(path.join(__dirname, '..', '..', 'supabase', 'migrations', '20261105000100_vooalto_rascunhos_online.sql'), 'utf8');

@@ -10,11 +10,13 @@
 -- Aqui cada rascunho vira uma linha central em `vooalto_rascunhos`, chaveada
 -- por (tipo, chave):
 --
---   tipo 'ficha_viva'      chave 'atual'     -> rascunho vivo da Ficha Técnica
---   tipo 'ficha_anterior'  chave 'anterior'  -> rascunho guardado pelo "Nova ficha"
 --   tipo 'ficha_salva'     chave = id local  -> cada ficha de "Minhas fichas"
---   tipo 'orcamento_vivo'  chave 'atual'     -> proposta em edição no Orçamento
 --   tipo 'orcamento'       chave = id local  -> cada rascunho de orçamento
+--
+-- Só os rascunhos SALVOS são compartilhados (decisão do usuário): cada
+-- computador edita uma ficha diferente ao mesmo tempo, então o trabalho em
+-- andamento (autosave, slot único) continua LOCAL — compartilhar esse slot
+-- faria um aparelho pisar no trabalho do outro.
 --
 -- Regras:
 --   * TODOS os aparelhos conectados veem e editam os MESMOS rascunhos

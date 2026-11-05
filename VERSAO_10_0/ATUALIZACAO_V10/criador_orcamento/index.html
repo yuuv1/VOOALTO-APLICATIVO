@@ -2032,9 +2032,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     }
     window.orcExcluirRascunho = orcExcluirRascunho;
     /* ═══ V10.3 — RASCUNHOS DE ORÇAMENTO ONLINE ═══
-       A lista de rascunhos e a proposta em edição deixam de morar só neste
-       navegador: vão para a nuvem (tipos 'orcamento' e 'orcamento_vivo') e
-       aparecem em todos os aparelhos conectados. */
+       Os rascunhos SALVOS (botão "Salvar Rascunho") deixam de morar só
+       neste navegador: vão para a nuvem (tipo 'orcamento') e aparecem em
+       todos os aparelhos conectados. A proposta em edição continua local. */
     if (window.VooaltoRascunhos) {
       window.VooaltoRascunhos.iniciarColecao({
         tipo: 'orcamento',
@@ -2052,25 +2052,11 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         },
         aoMudar: () => { try { renderOrcDraftsList(); } catch(e) {} orcUpdateDraftsBadge(); }
       });
-      window.VooaltoRascunhos.iniciarColecao({
-        tipo: 'orcamento_vivo',
-        listar: async () => {
-          try {
-            const raw = localStorage.getItem(ORC_AUTOSAVE_KEY);
-            const d = raw ? JSON.parse(raw) : null;
-            return (d && typeof d === 'object') ? [{ chave: 'atual', titulo: 'Proposta em edição', payload: d }] : [];
-          } catch(e) { return []; }
-        },
-        aplicar: async (item) => {
-          try { localStorage.setItem(ORC_AUTOSAVE_KEY, JSON.stringify(item.payload)); } catch(e) {}
-          try {
-            if (orcRestoreState(item.payload)) {
-              renderItemsEditor(); updatePreviewFromForm(); orcUpdateRunningTotal();
-            }
-          } catch(e) {}
-        },
-        remover: async () => { try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e) {} }
-      });
+      /* A proposta EM EDIÇÃO (autosave) NÃO é compartilhada de propósito:
+         cada computador monta uma proposta diferente ao mesmo tempo, e um
+         slot único na nuvem faria um aparelho pisar no trabalho do outro.
+         Compartilhados são só os RASCUNHOS SALVOS acima (botão "Salvar
+         Rascunho"), que têm registro próprio. */
     }
 
 

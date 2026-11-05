@@ -1,10 +1,15 @@
 /* ══════════════════════════════════════════════════════════════════════════
    VOOALTO — RASCUNHOS ONLINE (V10.3)
    --------------------------------------------------------------------------
-   Até a V10.2 os rascunhos viviam só no navegador de cada aparelho
-   (localStorage / IndexedDB): a ficha em andamento, o rascunho anterior, as
-   fichas de "Minhas fichas" e os rascunhos de orçamento NÃO existiam nas
-   outras máquinas. Agora eles são compartilhados na nuvem (Supabase):
+   Até a V10.2 os rascunhos SALVOS viviam só no navegador de cada aparelho
+   (IndexedDB / localStorage): as fichas de "Minhas fichas" e os rascunhos de
+   orçamento NÃO existiam nas outras máquinas. Agora eles são compartilhados
+   na nuvem (Supabase).
+
+   O trabalho EM ANDAMENTO (autosave da ficha/proposta aberta) NÃO entra
+   aqui de propósito: cada computador edita uma ficha diferente ao mesmo
+   tempo, e compartilhar esse slot único faria um aparelho pisar no outro.
+   Compartilha-se só o que tem registro próprio (botão Salvar).
 
      * TODOS os aparelhos conectados veem/editam os MESMOS rascunhos;
      * salvar num aparelho aparece nos outros em segundos (polling);

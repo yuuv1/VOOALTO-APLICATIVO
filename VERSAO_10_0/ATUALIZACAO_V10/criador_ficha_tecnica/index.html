@@ -9815,47 +9815,13 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(v8RascunhoAtualizarU
 window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
 </script>
 
-<script id="v10-rascunhos-online-ficha-js">
-/* ══ V10.3 — RASCUNHO VIVO + ANTERIOR ONLINE ═══════════════════════════
-   O rascunho em andamento (vooalto_v7_ficha_ativa) e o guardado pelo
-   "Nova ficha" (vooalto_v8_rascunho_anterior) passam a viver também na
-   nuvem: fechar num aparelho e abrir em outro continua de onde parou. */
-(function(){
-  if(!window.VooaltoRascunhos)return;
-  function ler(chave){try{const r=localStorage.getItem(chave);return r?JSON.parse(r):null}catch(e){return null}}
-  function nomeDaFicha(d){
-    try{
-      const c=(d&&(d.cliente||d._cliente||'')).toString().trim();
-      if(c)return c.slice(0,120);
-    }catch(e){}
-    return 'Ficha em andamento';
-  }
-  window.VooaltoRascunhos.iniciarColecao({
-    tipo:'ficha_viva',
-    listar:async()=>{
-      const d=ler(V8_RASCUNHO_LIVE);
-      return (d&&typeof d==='object'&&d._version)?[{chave:'atual',titulo:nomeDaFicha(d),payload:d}]:[];
-    },
-    aplicar:async(item)=>{
-      try{localStorage.setItem(V8_RASCUNHO_LIVE,JSON.stringify(item.payload))}catch(e){}
-      try{localStorage.setItem(V8_RASCUNHO_META,JSON.stringify({hora:v8RascunhoHora(),vazio:false}))}catch(e){}
-      /* Local estava limpo (engine garante): pode redesenhar a tela. */
-      try{if(typeof restaurarDeJSON==='function')restaurarDeJSON(item.payload)}catch(e){}
-      try{v8RascunhoAtualizarUI()}catch(e){}
-    },
-    remover:async()=>{try{localStorage.removeItem(V8_RASCUNHO_LIVE)}catch(e){} try{v8RascunhoAtualizarUI()}catch(_){}}
-  });
-  window.VooaltoRascunhos.iniciarColecao({
-    tipo:'ficha_anterior',
-    listar:async()=>{
-      const d=ler(V8_RASCUNHO_BACKUP);
-      return (d&&typeof d==='object'&&d._version)?[{chave:'anterior',titulo:nomeDaFicha(d),payload:d}]:[];
-    },
-    aplicar:async(item)=>{try{localStorage.setItem(V8_RASCUNHO_BACKUP,JSON.stringify(item.payload))}catch(e){} try{v8RascunhoAtualizarUI()}catch(_){}},
-    remover:async()=>{try{localStorage.removeItem(V8_RASCUNHO_BACKUP)}catch(e){} try{v8RascunhoAtualizarUI()}catch(_){}}
-  });
-})();
-</script>
+<!-- ══ V10.3 — RASCUNHO VIVO/ANTERIOR: SÓ LOCAL (decisão do usuário) ══
+     Cada computador edita uma ficha DIFERENTE ao mesmo tempo, então a ficha
+     em andamento (autosave) e o rascunho anterior NÃO vão para a nuvem:
+     compartilhar esse slot único faria um aparelho pisar no trabalho do
+     outro. O que é compartilhado são só os RASCUNHOS SALVOS — "Minhas
+     fichas" (tipo 'ficha_salva', bloco v4-draft-fix-indexeddb) — porque
+     cada um tem seu próprio registro e ninguém edita o do outro sem abrir. -->
 
 <script id="v8-backup-js">
 (function(){
