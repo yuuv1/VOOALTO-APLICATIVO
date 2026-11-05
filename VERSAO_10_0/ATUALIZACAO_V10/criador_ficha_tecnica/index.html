@@ -8542,9 +8542,15 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     window.VooaltoRascunhos.iniciarColecao({
       tipo:'ficha_salva',
       listar:async()=>{
+        /* Se o índice estiver ilegível ou o IndexedDB falhar, LANÇA: o
+           motor entende "não sei" e não mexe em nada neste ciclo. Omitir
+           uma ficha aqui poderia ser lido como exclusão dela. */
+        const bruto=localStorage.getItem(META_KEY);
+        if(bruto){const parsed=JSON.parse(bruto); if(!Array.isArray(parsed))throw new Error('indice de fichas ilegivel');}
         const meta=getMeta(); const saida=[];
         for(const m of meta){
-          try{const d=await getData(m.id); if(d)saida.push({chave:m.id,titulo:m.name||d._nome||'Ficha',payload:d});}catch(e){}
+          const d=await getData(m.id);
+          if(d)saida.push({chave:m.id,titulo:m.name||d._nome||'Ficha',payload:d});
         }
         return saida;
       },

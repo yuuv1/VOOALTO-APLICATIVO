@@ -2038,7 +2038,13 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     if (window.VooaltoRascunhos) {
       window.VooaltoRascunhos.iniciarColecao({
         tipo: 'orcamento',
-        listar: async () => orcGetDrafts().filter(d => d && d.id).map(d => ({ chave: d.id, titulo: d.name || 'Orçamento', payload: d })),
+        listar: async () => {
+          /* Ilegível ≠ vazio: se a chave existe mas não dá para ler, lança
+             para o motor pular o ciclo em vez de achar que apagou tudo. */
+          const bruto = localStorage.getItem(ORC_DRAFTS_KEY);
+          if (bruto) { const parsed = JSON.parse(bruto); if (!Array.isArray(parsed)) throw new Error('rascunhos ilegiveis'); }
+          return orcGetDrafts().filter(d => d && d.id).map(d => ({ chave: d.id, titulo: d.name || 'Orçamento', payload: d }));
+        },
         aplicar: async (item) => {
           const drafts = orcGetDrafts();
           const i = drafts.findIndex(d => d.id === item.chave);

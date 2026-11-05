@@ -93,13 +93,17 @@ function criarAparelho(nuvem, tokenAparelho) {
   const api = w.VooaltoRascunhos;
   api.configurar({ intervaloMs: 60000 }); // o teste chama ciclo() na mão
   const dados = new Map();
+  const aparelho = { falharLeitura: false };
   api.iniciarColecao({
     tipo: 'orcamento',
-    listar: async () => [...dados.entries()].map(([chave, payload]) => ({ chave, titulo: payload.name || '', payload })),
+    listar: async () => {
+      if (aparelho.falharLeitura) throw new Error('leitura local falhou (simulado)');
+      return [...dados.entries()].map(([chave, payload]) => ({ chave, titulo: payload.name || '', payload }));
+    },
     aplicar: async (item) => { dados.set(item.chave, item.payload); },
     remover: async (chave) => { dados.delete(chave); },
   });
-  return { w, api, dados };
+  return { w, api, dados, aparelho };
 }
 
 (async () => {
@@ -143,6 +147,45 @@ function criarAparelho(nuvem, tokenAparelho) {
   nuvem.setOffline(false);
   await B.api.ciclo();
   ok('quando a rede volta, o rascunho offline sobe sozinho', nuvem.tabela.has('orcamento|orc_2'));
+
+  /* 9) RASCUNHOS QUE JÁ EXISTIAM: intactos na ida e na volta ──────────────
+     Simula um aparelho da versão antiga: já tem rascunhos salvos (com foto
+     em base64 e estrutura aninhada) ANTES da primeira sincronização. */
+  const nuvem2 = criarNuvem();
+  const antigo = criarAparelho(nuvem2, 'maquina-antiga');
+  const fichaAntiga = {
+    id: 'orc_antigo_1', name: 'Proposta antiga — não pode quebrar',
+    state: { form: { cliente: 'Ana' }, pages: [{ tableItems: [{ modelo: 'Polo', qtd: 45 }] }], signature: 'data:image/png;base64,iVBORw0KGgo=' },
+  };
+  antigo.dados.set('orc_antigo_1', fichaAntiga);
+  const copiaLocalAntes = JSON.stringify(antigo.dados.get('orc_antigo_1'));
+  await antigo.api.ciclo();
+  ok('rascunho antigo sobe para a nuvem na primeira sincronização', nuvem2.tabela.has('orcamento|orc_antigo_1'));
+  ok('o rascunho antigo LOCAL fica intacto (byte a byte)', JSON.stringify(antigo.dados.get('orc_antigo_1')) === copiaLocalAntes);
+  const novo = criarAparelho(nuvem2, 'maquina-nova');
+  await novo.api.ciclo();
+  ok('o rascunho antigo chega intacto ao outro aparelho',
+    JSON.stringify(novo.dados.get('orc_antigo_1')) === copiaLocalAntes, novo.dados.get('orc_antigo_1'));
+
+  /* 10) FALHA DE LEITURA NÃO APAGA NADA (a trava principal) ──────────────
+     Se o armazenamento local falhar por um instante, o motor tem que
+     entender "não sei" — nunca "o usuário apagou tudo". */
+  antigo.aparelho.falharLeitura = true;
+  antigo.dados.delete('orc_antigo_1'); // nem deletando local com leitura quebrada...
+  const excluidasAntes = nuvem2.chamadas.filter(c => c === 'vooalto_rascunho_excluir').length;
+  await antigo.api.ciclo();
+  const excluidasDepois = nuvem2.chamadas.filter(c => c === 'vooalto_rascunho_excluir').length;
+  ok('com a leitura local falhando, NENHUMA exclusão é propagada', excluidasDepois === excluidasAntes, { excluidasAntes, excluidasDepois });
+  ok('e o rascunho continua vivo na nuvem', (() => { const l = nuvem2.tabela.get('orcamento|orc_antigo_1'); return l && !l.excluido; })());
+  antigo.aparelho.falharLeitura = false;
+  await antigo.api.ciclo();
+  ok('quando a leitura volta, a exclusão legítima volta a propagar',
+    (() => { const l = nuvem2.tabela.get('orcamento|orc_antigo_1'); return l && l.excluido; })());
+  antigo.w.close(); novo.w.close();
+
+  /* 11) trava escrita no código do motor */
+  const motor = fs.readFileSync(path.join(BASE, 'assets', 'rascunhos.js'), 'utf8');
+  ok('o motor aborta o tipo quando a leitura local falha', motor.includes('if (!locais) return null'));
 
   A.w.close(); B.w.close();
 

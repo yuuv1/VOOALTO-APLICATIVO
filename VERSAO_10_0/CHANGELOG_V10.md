@@ -36,7 +36,7 @@ Supabase `altoprints`):
 O armazenamento local NÃO mudou de formato: quem já tinha rascunhos salvos
 sobe tudo na primeira abertura desta versão.
 
-Testes: `tests/test_rascunhos_online_v10.js` (dois aparelhos simulados
+Testes: `tests/test_rascunhos_online_v10.js` (30 verificações, dois aparelhos simulados
 contra uma nuvem falsa: enviar, baixar, editar, apagar, offline→online — e a
 trava de que `ficha_viva`/`orcamento_vivo` NUNCA são registrados). As funções
 SQL foram testadas de verdade no projeto (salvar/listar/excluir, com

@@ -201,7 +201,12 @@
           });
           return mapa;
         })
-        .catch(function () { return {}; });
+        /* Falha de leitura NÃO é lista vazia: devolve null e o tipo é
+           pulado neste ciclo (sem aplicar, sem enviar e — o principal —
+           SEM propagar exclusão). É a trava que protege os rascunhos que
+           já existem de um IndexedDB/localStorage momentaneamente
+           inacessível ser confundido com "usuário apagou tudo". */
+        .catch(function () { return null; });
     }
 
     var cadeiaTipos = Promise.resolve();
@@ -216,6 +221,7 @@
             if (r.atualizado_em && r.atualizado_em > maiorCursor) maiorCursor = r.atualizado_em;
           });
           return locaisDe(tipo).then(function (locais) {
+            if (!locais) return null; // leitura local falhou: não mexe em nada (nem no cursor)
             var promessas = Promise.resolve();
 
             /* 1) o que veio da nuvem */
