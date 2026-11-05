@@ -22,6 +22,7 @@
   
   <!-- External Libraries for Export (PNG & PDF) -->
   <script src="../assets/html2canvas.min.js"></script>
+  <script src="../assets/rascunhos.js"></script>
 
   <style>
     /* Force exactly A4 printing page bounds to avoid browser-induced margins or trailing empty sheets */
@@ -2030,6 +2031,40 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       else orcToast('🗑 Rascunho excluído.');
     }
     window.orcExcluirRascunho = orcExcluirRascunho;
+    /* ═══ V10.3 — RASCUNHOS DE ORÇAMENTO ONLINE ═══
+       Os rascunhos SALVOS (botão "Salvar Rascunho") deixam de morar só
+       neste navegador: vão para a nuvem (tipo 'orcamento') e aparecem em
+       todos os aparelhos conectados. A proposta em edição continua local. */
+    if (window.VooaltoRascunhos) {
+      window.VooaltoRascunhos.iniciarColecao({
+        tipo: 'orcamento',
+        listar: async () => {
+          /* Ilegível ≠ vazio: se a chave existe mas não dá para ler, lança
+             para o motor pular o ciclo em vez de achar que apagou tudo. */
+          const bruto = localStorage.getItem(ORC_DRAFTS_KEY);
+          if (bruto) { const parsed = JSON.parse(bruto); if (!Array.isArray(parsed)) throw new Error('rascunhos ilegiveis'); }
+          return orcGetDrafts().filter(d => d && d.id).map(d => ({ chave: d.id, titulo: d.name || 'Orçamento', payload: d }));
+        },
+        aplicar: async (item) => {
+          const drafts = orcGetDrafts();
+          const i = drafts.findIndex(d => d.id === item.chave);
+          if (i >= 0) drafts[i] = item.payload; else drafts.unshift(item.payload);
+          try { localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts)); } catch(e) {}
+          orcUpdateDraftsBadge();
+        },
+        remover: async (chave) => {
+          try { localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(orcGetDrafts().filter(d => d.id !== chave))); } catch(e) {}
+          orcUpdateDraftsBadge();
+        },
+        aoMudar: () => { try { renderOrcDraftsList(); } catch(e) {} orcUpdateDraftsBadge(); }
+      });
+      /* A proposta EM EDIÇÃO (autosave) NÃO é compartilhada de propósito:
+         cada computador monta uma proposta diferente ao mesmo tempo, e um
+         slot único na nuvem faria um aparelho pisar no trabalho do outro.
+         Compartilhados são só os RASCUNHOS SALVOS acima (botão "Salvar
+         Rascunho"), que têm registro próprio. */
+    }
+
 
     function renderOrcDraftsList() {
       const list = document.getElementById('orcDraftsList');

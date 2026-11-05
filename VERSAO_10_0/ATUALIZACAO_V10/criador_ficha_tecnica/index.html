@@ -28,6 +28,7 @@
        nunca repete entre máquinas). Sem internet, o app segue funcionando e
        sincroniza depois. -->
   <script src="../assets/nuvem.js"></script>
+  <script src="../assets/rascunhos.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -8533,6 +8534,43 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   };
   window.v8ListarFichas=listar;
 
+  /* ── V10.3 — MINHAS FICHAS ONLINE ──────────────────────────────────────
+     As fichas salvas deixam de morar só neste navegador: cada uma vira um
+     rascunho na nuvem (tipo 'ficha_salva') e aparece em todos os aparelhos.
+     O IndexedDB continua sendo a leitura local; o rascunhos.js espelha. */
+  if(window.VooaltoRascunhos){
+    window.VooaltoRascunhos.iniciarColecao({
+      tipo:'ficha_salva',
+      listar:async()=>{
+        /* Se o índice estiver ilegível ou o IndexedDB falhar, LANÇA: o
+           motor entende "não sei" e não mexe em nada neste ciclo. Omitir
+           uma ficha aqui poderia ser lido como exclusão dela. */
+        const bruto=localStorage.getItem(META_KEY);
+        if(bruto){const parsed=JSON.parse(bruto); if(!Array.isArray(parsed))throw new Error('indice de fichas ilegivel');}
+        const meta=getMeta(); const saida=[];
+        for(const m of meta){
+          const d=await getData(m.id);
+          if(d)saida.push({chave:m.id,titulo:m.name||d._nome||'Ficha',payload:d});
+        }
+        return saida;
+      },
+      aplicar:async(item)=>{
+        await putData(item.chave,item.payload);
+        const meta=getMeta(); const ex=meta.find(m=>m.id===item.chave);
+        const nome=item.titulo||(item.payload&&item.payload._nome)||'Ficha da nuvem';
+        if(ex){ex.name=nome; ex.date=nowBR();}
+        else meta.unshift({id:item.chave,name:nome,date:nowBR()});
+        setMeta(meta);
+      },
+      remover:async(chave)=>{
+        try{await delData(chave)}catch(e){}
+        setMeta(getMeta().filter(m=>m.id!==chave));
+        if(v8FichaAtualId===chave)v8FichaAtualId=null;
+      },
+      aoMudar:()=>{listar().catch(()=>{})}
+    });
+  }
+
   /* Atalhos com os nomes antigos (V4–V7), para nada quebrar. */
   window.v4SalvarRascunho=function(){return window.v8FichasSalvar()};
   window.v4CarregarRascunho=window.v8AbrirFicha;
@@ -9782,6 +9820,14 @@ function v8RascunhoDescartar(){
 document.addEventListener('DOMContentLoaded',()=>setTimeout(v8RascunhoAtualizarUI,600));
 window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
 </script>
+
+<!-- ══ V10.3 — RASCUNHO VIVO/ANTERIOR: SÓ LOCAL (decisão do usuário) ══
+     Cada computador edita uma ficha DIFERENTE ao mesmo tempo, então a ficha
+     em andamento (autosave) e o rascunho anterior NÃO vão para a nuvem:
+     compartilhar esse slot único faria um aparelho pisar no trabalho do
+     outro. O que é compartilhado são só os RASCUNHOS SALVOS — "Minhas
+     fichas" (tipo 'ficha_salva', bloco v4-draft-fix-indexeddb) — porque
+     cada um tem seu próprio registro e ninguém edita o do outro sem abrir. -->
 
 <script id="v8-backup-js">
 (function(){

@@ -1,5 +1,47 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.3.0 — Rascunhos salvos online: os mesmos em todos os aparelhos (2026-11-05)
+
+O pedido: *"conecte os rascunhos pra ficar online pra todos os usuários que
+estiverem usando o aplicativo, de maneira totalmente online."*
+
+E o ajuste do usuário depois: *"editamos fichas diferentes nos computadores,
+acredito ser melhor só o compartilhamento dos rascunhos."* Ou seja: **só os
+rascunhos salvos** compartilham — o trabalho em andamento continua local.
+
+| Rascunho | O que ficou |
+|---|---|
+| Minhas fichas (botão "Salvar ficha") | **online**: cada ficha vira `ficha_salva` na nuvem e aparece em todos os aparelhos |
+| Rascunhos de orçamento (botão "Salvar Rascunho") | **online**: cada um vira `orcamento`, com nome/valor/itens |
+| Ficha em andamento (autosave) | **continua só neste aparelho** — cada computador edita uma ficha diferente, e compartilhar esse slot único faria um pisar no outro |
+| Rascunho anterior ("Nova ficha") e proposta em edição | **só neste aparelho**, pelo mesmo motivo |
+
+Regras da sincronização (`assets/rascunhos.js` + migration
+`20261105000100_vooalto_rascunhos_online.sql`, já aplicada no projeto
+Supabase `altoprints`):
+
+- **todo mundo vê os mesmos rascunhos salvos** — não há login; a chave
+  publicável só executa as funções `vooalto_rascunho*` (a tabela tem RLS e
+  nenhuma policy, como a de numeração);
+- **apagar apaga em todo lugar**: a exclusão grava uma "tumba" que viaja
+  para os outros aparelhos no próximo ciclo (a cada ~12 s, ao voltar para
+  a aba e ao reconectar);
+- **conflito = a edição mais recente vence**, e o aparelho que perde
+  guarda a cópia dele em `vooalto_rasc_conflito_*` (nada some em silêncio);
+- **sem internet nada trava**: o trabalho continua local e sobe sozinho
+  quando a rede volta (envio idempotente, com teto de ~9 MB por rascunho);
+- cada módulo tem seu **próprio cursor** de sincronização (abrir a Ficha
+  não "pula" rascunhos de orçamento ainda não baixados).
+
+O armazenamento local NÃO mudou de formato: quem já tinha rascunhos salvos
+sobe tudo na primeira abertura desta versão.
+
+Testes: `tests/test_rascunhos_online_v10.js` (30 verificações, dois aparelhos simulados
+contra uma nuvem falsa: enviar, baixar, editar, apagar, offline→online — e a
+trava de que `ficha_viva`/`orcamento_vivo` NUNCA são registrados). As funções
+SQL foram testadas de verdade no projeto (salvar/listar/excluir, com
+limpeza dos dados de teste).
+
 ## V10.2.1 — "Fichas já saídas": a base de quanto está vendendo (2026-11-04)
 
 O pedido: *"só queria que nunca usássemos números repetidos nas fichas, sempre
