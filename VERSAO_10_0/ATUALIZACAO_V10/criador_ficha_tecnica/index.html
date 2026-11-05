@@ -29,6 +29,7 @@
        sincroniza depois. -->
   <script src="../assets/nuvem.js"></script>
   <script src="../assets/rascunhos.js"></script>
+  <script src="../assets/zoom-folha.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -6541,7 +6542,17 @@ fecharLogo();deselecionarTudo();
 layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,true);});
 paginas.forEach(p=>{p.layers.forEach(l=>{const el=document.getElementById('ly_'+p.id+'_'+l.id);if(el)posElExtra(p,l,el,true);});});
 }
-function exportarPDF(){document.title='Ficha técnica de produção';try{if(window.parent&&window.parent.document)window.parent.document.title='Ficha técnica de produção';}catch(e){}prepPrint();setTimeout(()=>window.print(),200);}
+/* V10.4 — Nome do arquivo ao salvar em PDF: o navegador sugere o nome do
+   PDF a partir do título da página, então o título vira
+   "Ficha técnica <Cliente> <DD-MM-AAAA>" (a data em que está salvando). */
+function v7DataArquivo(d){d=d||new Date();const p=n=>String(n).padStart(2,'0');return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear();}
+function v7TituloPDF(){
+  const cliente=($('dc_nome')?($('dc_nome').textContent||'').replace(/\s+/g,' ').trim():'');
+  const limpo=cliente.replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim().slice(0,80);
+  return ('Ficha técnica'+(limpo?' '+limpo:'')+' '+v7DataArquivo());
+}
+function v7AplicarTituloPDF(){const t=v7TituloPDF();document.title=t;try{if(window.parent&&window.parent.document)window.parent.document.title=t;}catch(e){}return t;}
+function exportarPDF(){v7AplicarTituloPDF();prepPrint();setTimeout(()=>window.print(),200);}
 window.addEventListener('afterprint',()=>{document.documentElement.classList.remove('v7-exporting');});
 window.addEventListener('beforeprint',()=>{
 layers.forEach(l=>{const el=document.getElementById('ly_'+l.id);if(el)posEl(l,el,true);});
@@ -8398,6 +8409,19 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
 
   /* ── Índice (metadados) ── */
   function getMeta(){try{const a=JSON.parse(localStorage.getItem(META_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+  /* V10.4 — "mesmo nome" comparado sem caixa/acentos/espaços sobrando. */
+  function normNomeFicha(n){return String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+  /* Some com duplicados de mesmo nome que já existam: fica a versão mais
+     recente (a primeira da lista) e as outras são apagadas de verdade. */
+  async function dedupicarFichas(){
+    const meta=getMeta(); const vistos=new Map(); const manter=[]; const apagar=[];
+    for(const m of meta){const k=normNomeFicha(m.name); if(!k){manter.push(m);continue;} if(vistos.has(k))apagar.push(m); else {vistos.set(k,m);manter.push(m);}}
+    if(!apagar.length)return 0;
+    for(const m of apagar){try{await delData(m.id)}catch(e){}}
+    setMeta(manter);
+    return apagar.length;
+  }
+  window.v8DedupicarFichas=dedupicarFichas;
   function setMeta(v){
     const lista=Array.isArray(v)?v:[];
     if(lista.length>MAX){
@@ -8464,7 +8488,20 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
       nome=(nome||'').trim();
       if(!nome){toastSafe('⚠ Dê um nome para a ficha.','erro');return false}
     }
-    const id=v8FichaAtualId||('d_'+Date.now()+'_'+Math.random().toString(36).slice(2,7));
+    let id=v8FichaAtualId||('d_'+Date.now()+'_'+Math.random().toString(36).slice(2,7));
+    /* V10.4 — rascunho com o MESMO nome é substituído pela nova versão:
+       reaproveita o registro do mesmo nome e apaga os demais duplicados,
+       em vez de criar mais uma cópia na lista. */
+    {
+      const alvo=normNomeFicha(nome);
+      const iguais=getMeta().filter(m=>m.id!==id&&normNomeFicha(m.name)===alvo);
+      if(iguais.length){
+        const manterId=iguais[0].id;
+        for(const m of iguais){if(m.id!==manterId){try{await delData(m.id)}catch(e){}}}
+        if(id!==manterId){try{await delData(id)}catch(e){}}
+        id=manterId;
+      }
+    }
     let data;
     try{data=capturarFichaParaJSON()}catch(e){console.error(e);toastSafe('⚠ Não consegui ler a ficha para salvar.','erro');return false}
     data._nome=nome;
@@ -8476,7 +8513,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
       toastSafe('⚠ Não deu para salvar no navegador (memória cheia?). Exporte a ficha como backup (.json).','erro',5000);
       return false;
     }
-    const meta=getMeta().filter(m=>m.id!==id);
+    const meta=getMeta().filter(m=>m.id!==id&&normNomeFicha(m.name)!==normNomeFicha(nome));
     meta.unshift({id,name:nome,date:nowBR(),num:data._numFicha});
     v8FichaAtualId=id;
     if(!setMeta(meta)){
@@ -8516,6 +8553,11 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     if(nome===null)return;
     const limpo=(nome||'').trim();
     if(!limpo){toastSafe('⚠ O nome não pode ficar vazio.','erro');return}
+    /* V10.4 — renomear para um nome que já existe substitui o antigo. */
+    for(const outro of meta.filter(m=>m.id!==id&&normNomeFicha(m.name)===normNomeFicha(limpo))){
+      try{await delData(outro.id)}catch(e){}
+      meta.splice(meta.indexOf(outro),1);
+    }
     item.name=limpo;
     item.date=nowBR();
     setMeta(meta);
@@ -8555,9 +8597,21 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
         return saida;
       },
       aplicar:async(item)=>{
+        const nome=item.titulo||(item.payload&&item.payload._nome)||'Ficha da nuvem';
+        /* V10.4 — chegou da nuvem uma ficha com o mesmo nome de outra que
+           já existe aqui (id diferente): substitui a local em vez de
+           duplicar na lista. */
+        const metaAntes=getMeta();
+        const mesmoNome=metaAntes.find(m=>m.id!==item.chave&&normNomeFicha(m.name)===normNomeFicha(nome));
+        if(mesmoNome){
+          await putData(mesmoNome.id,item.payload);
+          mesmoNome.name=nome; mesmoNome.date=nowBR();
+          setMeta(metaAntes.filter(m=>m.id===mesmoNome.id||normNomeFicha(m.name)!==normNomeFicha(nome)));
+          try{await delData(item.chave)}catch(e){}
+          return;
+        }
         await putData(item.chave,item.payload);
         const meta=getMeta(); const ex=meta.find(m=>m.id===item.chave);
-        const nome=item.titulo||(item.payload&&item.payload._nome)||'Ficha da nuvem';
         if(ex){ex.name=nome; ex.date=nowBR();}
         else meta.unshift({id:item.chave,name:nome,date:nowBR()});
         setMeta(meta);
@@ -8576,7 +8630,7 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   window.v4CarregarRascunho=window.v8AbrirFicha;
   window.v4ExcluirRascunho=window.v8ExcluirFicha;
 
-  const iniciar=()=>{listar().catch(e=>console.warn('minhas fichas',e))};
+  const iniciar=async()=>{try{await dedupicarFichas()}catch(e){} listar().catch(e=>console.warn('minhas fichas',e))};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(iniciar,400));
   else setTimeout(iniciar,400);
 })();
@@ -9351,6 +9405,7 @@ function v7NomeArquivo(){
   let n='Ficha_Tecnica';
   if(nc)n+='_'+nc.replace(/[^a-zA-Z0-9À-ÿ]/g,'_');
   if(nf)n+='_N'+nf;
+  n+='_'+v7DataArquivo();
   return n;
 }
 function v7BaixarPNG(folhaIds){
@@ -9359,6 +9414,7 @@ function v7BaixarPNG(folhaIds){
   v7EsconderToolbar();
   toast('📸 Gerando PNG das páginas selecionadas...');
   const doIt=async()=>{
+    const restaurarZoom=(window.ZoomFolha&&ZoomFolha.suspenderTudo)?ZoomFolha.suspenderTudo():null;
     for(const id of folhaIds){
       v7EsconderToolbar();
       const el=document.getElementById(id); if(!el)continue;
@@ -9370,6 +9426,7 @@ function v7BaixarPNG(folhaIds){
         a.href=canvas.toDataURL('image/png');a.click();
       }catch(err){console.error('html2canvas error:',err);toast('❌ Erro ao exportar página '+id,'erro');}
     }
+    if(restaurarZoom)restaurarZoom();
     if(typeof restAllPx==='function')restAllPx();
     if(v7PaginaAtiva&&typeof v7MostrarToolbar==='function'){try{v7MostrarToolbar(v7PaginaAtiva);}catch(e){}}
     toast('✅ PNG exportado!');
@@ -9391,8 +9448,7 @@ function v7BaixarPDF(folhaIds){
   try{mkeSairEstudio();mkeFecharPainel();}catch(e){}
   const sel=new Set(folhaIds);
   document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.toggle('print-skip',!sel.has(f.id)));
-  document.title='Ficha técnica de produção';
-  try{if(window.parent&&window.parent.document)window.parent.document.title='Ficha técnica de produção';}catch(e){}
+  v7AplicarTituloPDF();
   window.print();
   setTimeout(()=>document.querySelectorAll('.folha,.folha-branca').forEach(f=>f.classList.remove('print-skip')),2500);
 }
@@ -9819,6 +9875,10 @@ function v8RascunhoDescartar(){
    é atualizado depois dela para já mostrar o estado certo. */
 document.addEventListener('DOMContentLoaded',()=>setTimeout(v8RascunhoAtualizarUI,600));
 window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
+</script>
+<script id="v10-zoom-ficha-js">
+/* V10.4 — zoom só da folha (botões/Ctrl+rolagem), sem dar zoom no app. */
+if(window.ZoomFolha)ZoomFolha.instalar({seletor:'#pw',chave:'vooalto_zoom_ficha_v1'});
 </script>
 
 <!-- ══ V10.3 — RASCUNHO VIVO/ANTERIOR: SÓ LOCAL (decisão do usuário) ══

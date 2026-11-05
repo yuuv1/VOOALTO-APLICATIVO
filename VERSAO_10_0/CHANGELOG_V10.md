@@ -1,5 +1,19 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.4.0 — Nome do PDF, fim dos rascunhos duplicados e zoom só da folha (2026-11-05)
+
+Três pedidos do usuário:
+
+| Pedido | O que ficou |
+|---|---|
+| *"ao salvar uma ficha técnica como PDF, o nome é 'Ficha técnica' + nome do cliente + a data que a ficha está sendo salva"* | o título (que é o nome sugerido do PDF) vira **`Ficha técnica <Cliente> <DD-MM-AAAA>`** nos dois caminhos de PDF (`exportarPDF` e o modal de download); o PNG também ganhou a data no nome |
+| *"às vezes duplica os rascunhos; os de mesmo nome devem ser sempre substituídos pela nova versão"* | salvar ficha/rascunho com nome que já existe **substitui o registro** (mesmo nome ignorando caixa/acentos), renomear para nome existente também substitui, o que chega da nuvem com mesmo nome substitui em vez de duplicar, e **duplicados que já existiam são limpos na abertura** (fica a versão mais recente) |
+| *"tem que ser possível dar zoom na ficha técnica ou no orçamento sem dar zoom no aplicativo inteiro"* | novo `assets/zoom-folha.js`: botões flutuantes −/%/+/⤢ e **Ctrl+rolagem sobre a folha** dão zoom **só nas folhas** (`#pw` na ficha, `#preview-pages-container` no orçamento); barra lateral e formulários não mudam; o nível fica lembrado por módulo; **imprimir/PDF/PNG saem sempre em 100%** |
+
+Testes novos: `tests/test_zoom_pdf_dedupe_v10.js` (24 verificações nos dois
+módulos reais: título do PDF, limpeza de duplicados pré-existentes,
+substituição ao salvar, zoom aplicado só na folha e suspensão na exportação).
+
 ## V10.3.0 — Rascunhos salvos online: os mesmos em todos os aparelhos (2026-11-05)
 
 O pedido: *"conecte os rascunhos pra ficar online pra todos os usuários que

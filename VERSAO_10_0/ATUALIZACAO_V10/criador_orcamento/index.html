@@ -23,6 +23,7 @@
   <!-- External Libraries for Export (PNG & PDF) -->
   <script src="../assets/html2canvas.min.js"></script>
   <script src="../assets/rascunhos.js"></script>
+  <script src="../assets/zoom-folha.js"></script>
 
   <style>
     /* Force exactly A4 printing page bounds to avoid browser-induced margins or trailing empty sheets */
@@ -1915,6 +1916,22 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     /* ═══ V7 RASCUNHOS DE ORÇAMENTO ═══ */
     const ORC_DRAFTS_KEY = 'vooalto_orcamento_rascunhos_v7';
 
+    /* V10.4 — "mesmo nome" sem caixa/acentos/espaços sobrando. */
+    function orcNomeChave(n){return String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+    /* Some com rascunhos duplicados de mesmo nome que já existam: fica a
+       versão mais recente (a primeira da lista) e apaga as outras. */
+    function orcDedupicarRascunhos(){
+      let drafts;
+      try{drafts=orcGetDrafts();}catch(e){return 0;}
+      if(!Array.isArray(drafts)||drafts.length<2)return 0;
+      const vistos=new Set(); const manter=[];
+      for(const d of drafts){const k=orcNomeChave(d&&d.name); if(k&&vistos.has(k))continue; if(k)vistos.add(k); manter.push(d);}
+      if(manter.length===drafts.length)return 0;
+      try{localStorage.setItem(ORC_DRAFTS_KEY,JSON.stringify(manter));}catch(e){return 0;}
+      return drafts.length-manter.length;
+    }
+    window.orcDedupicarRascunhos=orcDedupicarRascunhos;
+
     function orcGetDrafts() {
       try {
         const raw = localStorage.getItem(ORC_DRAFTS_KEY);
@@ -1953,8 +1970,20 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         state: state
       };
 
+      /* V10.4 — rascunho com o MESMO nome é substituído pela nova versão
+         (reaproveita o registro e apaga duplicados), nunca duplica. */
       const drafts = orcGetDrafts();
-      drafts.unshift(draft);
+      const alvoOrc = orcNomeChave(draft.name);
+      const idxMesmo = drafts.findIndex(d => orcNomeChave(d.name) === alvoOrc);
+      if (idxMesmo >= 0) {
+        draft.id = drafts[idxMesmo].id; /* mesma versão nova, mesmo registro */
+        drafts[idxMesmo] = draft;
+        for (let i = drafts.length - 1; i >= 0; i--) {
+          if (i !== idxMesmo && orcNomeChave(drafts[i].name) === alvoOrc) drafts.splice(i, 1);
+        }
+      } else {
+        drafts.unshift(draft);
+      }
       if (drafts.length > 30) drafts.pop();
       let gravou = true, semAssinatura = false, antigos = null;
       try {
@@ -1968,7 +1997,10 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         try {
           const leve = JSON.parse(JSON.stringify(draft));
           leve.state = Object.assign({}, leve.state, { signature: '' });
-          drafts[0] = leve;
+          /* V10.4 — com a substituição por nome, o rascunho novo nem sempre
+             é o primeiro da lista: troca no índice certo, pelo id. */
+          const idxLeve = drafts.findIndex(d => d.id === draft.id);
+          if (idxLeve >= 0) drafts[idxLeve] = leve; else drafts.unshift(leve);
           localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts));
           gravou = true; semAssinatura = true;
         } catch(e2) {
@@ -2035,6 +2067,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
        Os rascunhos SALVOS (botão "Salvar Rascunho") deixam de morar só
        neste navegador: vão para a nuvem (tipo 'orcamento') e aparecem em
        todos os aparelhos conectados. A proposta em edição continua local. */
+    try { orcDedupicarRascunhos(); } catch(e) {}
     if (window.VooaltoRascunhos) {
       window.VooaltoRascunhos.iniciarColecao({
         tipo: 'orcamento',
@@ -2048,7 +2081,14 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         aplicar: async (item) => {
           const drafts = orcGetDrafts();
           const i = drafts.findIndex(d => d.id === item.chave);
-          if (i >= 0) drafts[i] = item.payload; else drafts.unshift(item.payload);
+          if (i >= 0) { drafts[i] = item.payload; }
+          else {
+            /* V10.4 — mesmo nome com outro id: substitui o que já existe
+               em vez de duplicar na lista. */
+            const j = drafts.findIndex(d => orcNomeChave(d.name) === orcNomeChave(item.payload && item.payload.name));
+            if (j >= 0) drafts[j] = Object.assign({}, item.payload, { id: drafts[j].id });
+            else drafts.unshift(item.payload);
+          }
           try { localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts)); } catch(e) {}
           orcUpdateDraftsBadge();
         },
@@ -2719,6 +2759,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         });
       });
 
+      const restaurarZoom = (window.ZoomFolha && ZoomFolha.suspenderTudo) ? ZoomFolha.suspenderTudo() : null;
       /* Capture every page, collecting promises so we restore UI only AFTER
          all renders complete */
       const promises = documentPages.map(pState => {
@@ -2746,6 +2787,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       /* Restore editor UI only after ALL captures finish — e também se algo
          estourar antes, para a interface nunca ficar escondida. */
       const devolverUI = () => {
+        if (restaurarZoom) restaurarZoom();
         saved.forEach(({el, prevDisplay, prevVisibility}) => {
           el.style.display = prevDisplay || '';
           el.style.visibility = prevVisibility || '';
@@ -3941,6 +3983,8 @@ function v8OrcRecarregarPosBackup(){
   }catch(e){console.warn('Falha ao atualizar orçamento após backup',e)}
 }
 window.addEventListener('vooalto-backup-restaurado',()=>v8OrcRecarregarPosBackup());
+/* V10.4 — zoom só da folha do orçamento (sem dar zoom no app inteiro). */
+if (window.ZoomFolha) ZoomFolha.instalar({ seletor: '#preview-pages-container', chave: 'vooalto_zoom_orcamento_v1' });
 window.addEventListener('message',ev=>{
   /* V9.1.2 — só a própria origem pode mandar recarregar o estado. */
   if(ev&&ev.origin&&ev.origin!==location.origin)return;
