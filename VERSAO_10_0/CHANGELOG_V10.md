@@ -1,5 +1,37 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.5.0 — Imagem que entra já entra leve (fim do "memória cheia") (2026-11-05)
+
+O pedido: *"deu memória cheia das imagens; não existe a possibilidade de
+toda a imagem que a gente manda reduzir o tamanho dela pra caber na memória,
+sem perder muita qualidade?"*
+
+Já havia uma redução parcial desde a V7.1.1 (1600px, só em alguns caminhos e
+mantendo PNG gigante). Agora existe um otimizador único
+(`assets/imagem.js`), ligado em **todas** as entradas:
+
+| Regra | Por quê |
+|---|---|
+| lado maior ≤ **1600px** | a folha A4 tem 794px — 1600px é impressão a ~200dpi, sem diferença visível |
+| foto vira **JPEG q85**, com degraus suaves até ~**700KB** | foto de celular de 5–15MB cai para 200–600KB |
+| desenho com transparência vira **WebP com alfa** (ou PNG menor) | não perde o recorte/transparência |
+| imagem já leve (≤300KB), SVG e GIF passam **intocados** | logo/ícone não perde qualidade nenhuma |
+| qualquer falha devolve a imagem **original** | otimizar nunca impede de colocar a imagem |
+
+Onde foi ligado: upload/arrastar/colar/trocar imagem/recorte/revincular na
+Ficha (todos já passavam pelo `v7DownscaleDataURL`, que agora delega),
+assinatura e salvar rascunho no Orçamento, e artes no estúdio da peça
+(`mockup/peca_editor.js`).
+
+E o passado também se resolve: **ao salvar ou abrir uma ficha antiga**, as
+imagens grandes que já estavam nela são otimizadas (e a ficha é regravada
+leve) — é isso que destrava a memória de quem já tinha ficha pesada salva,
+sem ninguém precisar refazer nada.
+
+Testes novos: `tests/test_imagem_otimizada_v10.js` (canvas/imagem falsos e
+determinísticos: teto de dimensão, queda de peso >80%, alfa preservado,
+leve intacta, falha devolve original, `otimizarEmObjeto` numa ficha).
+
 ## V10.4.0 — Nome do PDF, fim dos rascunhos duplicados e zoom só da folha (2026-11-05)
 
 Três pedidos do usuário:

@@ -29,6 +29,7 @@
        sincroniza depois. -->
   <script src="../assets/nuvem.js"></script>
   <script src="../assets/rascunhos.js"></script>
+  <script src="../assets/imagem.js"></script>
   <script src="../assets/zoom-folha.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -3594,7 +3595,17 @@ function makeDrag(e,onMove,onUp){document.addEventListener('mousemove',onMove);d
    passam intactas, preservando transparência. Falha = usa o original. */
 const V7_IMG_MAX_DIM=1600;
 const V7_IMG_JPEG_Q=0.85;
+/* V10.5 — quem reduz a imagem agora é o otimizador único
+   (assets/imagem.js): teto de 1600px, JPEG/WebP adaptativo até ~700KB,
+   transparência preservada e imagem leve intocada. Esta função continua
+   existindo porque TODOS os caminhos de entrada da ficha passam por ela. */
 function v7DownscaleDataURL(dataURL,maxDim,qualidade){
+  if(window.VooaltoImagem&&typeof dataURL==='string'){
+    return VooaltoImagem.otimizar(dataURL,{maxDim:maxDim||V7_IMG_MAX_DIM,qualidade:qualidade||V7_IMG_JPEG_Q}).catch(()=>dataURL);
+  }
+  return v7DownscaleLegado(dataURL,maxDim,qualidade);
+}
+function v7DownscaleLegado(dataURL,maxDim,qualidade){
   return new Promise((resolve)=>{
     try{
       maxDim=maxDim||V7_IMG_MAX_DIM;
@@ -6425,10 +6436,13 @@ setTimeout(()=>{
 function fecharCrop(){$('cropModal').classList.remove('open');if(cropInst){cropInst.destroy();cropInst=null;}}
 function setAR(btn,val){document.querySelectorAll('.ar-btn').forEach(b=>b.classList.remove('ar-on'));btn.classList.add('ar-on');if(cropInst)cropInst.setAspectRatio(val==='livre'?NaN:val);}
 function aplicarCrop(){
-if(!cropInst)return;const canvas=cropInst.getCroppedCanvas({maxWidth:2048,maxHeight:2048,fillColor:'transparent'});const src=canvas.toDataURL('image/png');
+if(!cropInst)return;const canvas=cropInst.getCroppedCanvas({maxWidth:2048,maxHeight:2048,fillColor:'transparent'});const srcBruto=canvas.toDataURL('image/png');
+/* V10.5 — o PNG do recorte ia cru para a camada (MBs); agora otimiza antes. */
+v7DownscaleDataURL(srcBruto).then(src=>{
 if(cropTgt==='logo'){/* Logo is fixed */}
 else{const l=layers.find(x=>x.id===selId&&x.type==='img');if(l){l.src=src;const tmp=new Image();tmp.onload=()=>{l.ratio=tmp.naturalWidth/tmp.naturalHeight;const el=document.getElementById('ly_'+l.id);if(el){const i=el.querySelector('img');if(i)i.src=src;}updList();savLayers();};tmp.src=src;}}
 fecharCrop();
+});
 }
 
 /* ═══ CORES P1 ═══ */
@@ -7866,12 +7880,14 @@ function selecionarImgRelink(layerId) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = e => { const f = e.target.files[0]; if(!f) return;
     const reader = new FileReader(); reader.onload = ev => {
-      _relinkImgs[layerId] = ev.target.result;
+      v7DownscaleDataURL(ev.target.result).then(srcOtimizado => {
+      _relinkImgs[layerId] = srcOtimizado;
       const item = $('relink_'+layerId); if(item) { item.classList.remove('pending'); item.classList.add('ok'); }
-      const thumb = $('rthumb_'+layerId); if(thumb) thumb.innerHTML = '<img src="'+ev.target.result+'" alt="">';
+      const thumb = $('rthumb_'+layerId); if(thumb) thumb.innerHTML = '<img src="'+srcOtimizado+'" alt="">';
       const detail = $('rdetail_'+layerId); if(detail) { detail.textContent = '✔ '+f.name; detail.style.color = '#059669'; }
       const btn = $('rbtn_'+layerId); if(btn) { btn.textContent = '✔ OK'; btn.classList.add('done'); }
       atualizarRelinkStatus();
+      });
     }; reader.readAsDataURL(f);
   }; inp.click();
 }
@@ -8506,6 +8522,10 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     try{data=capturarFichaParaJSON()}catch(e){console.error(e);toastSafe('⚠ Não consegui ler a ficha para salvar.','erro');return false}
     data._nome=nome;
     data._numFicha=($('fichaNum')?$('fichaNum').value:'')||'';
+    /* V10.5 — salvar também encolhe as imagens grandes que já estavam na
+       ficha (de antes do otimizador existir): é o que destrava a memória
+       de quem já tinha ficha pesada salva. */
+    if(window.VooaltoImagem){try{await VooaltoImagem.otimizarEmObjeto(data);}catch(e){}}
     try{
       await putData(id,data);
     }catch(e){
@@ -8534,6 +8554,9 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
     let data=null;
     try{data=await getData(id)}catch(e){console.error(e)}
     if(!data){toastSafe('⚠ Esta ficha está sem dados salvos.','erro');return}
+    /* V10.5 — abrir uma ficha antiga já devolve as imagens otimizadas para
+       a tela (e regrava leve), para o autosave não carregar o peso velho. */
+    if(window.VooaltoImagem){try{const trocas=await VooaltoImagem.otimizarEmObjeto(data);if(trocas){try{await putData(id,data);}catch(e){}}}catch(e){}}
     if(v8FichaTemConteudo()){
       const ok=await window.v8FichasSalvar({nome:v8SugestaoNomeFicha(),semPerguntar:true,silencioso:true});
       if(!ok)return;
