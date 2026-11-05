@@ -113,6 +113,23 @@
      pode carregar foto de celular em resolução cheia */
   var MAX_PX = 1400;
   function normalizarImagem(dataURL) {
+    /* V10.5 — se o otimizador único estiver na página, é ele quem reduz
+       (mesma regra do resto do app); a medição abaixo só roda sem ele. */
+    var VooaltoImagemRef = (typeof window !== 'undefined' && window.VooaltoImagem) || (typeof VooaltoImagem !== 'undefined' ? VooaltoImagem : null);
+    if (VooaltoImagemRef && typeof dataURL === 'string') {
+      return VooaltoImagemRef.otimizar(dataURL, { maxDim: MAX_PX }).then(function (src) {
+        return new Promise(function (resolve) {
+          var im = new Image();
+          var relogio = setTimeout(function () { resolve({ src: src, w: 1, h: 1 }); }, 2500);
+          im.onload = function () { clearTimeout(relogio); resolve({ src: src, w: im.naturalWidth || 1, h: im.naturalHeight || 1 }); };
+          im.onerror = function () { clearTimeout(relogio); resolve({ src: src, w: 1, h: 1 }); };
+          im.src = src;
+        });
+      }).catch(function () { return normalizarImagemLegado(dataURL); });
+    }
+    return normalizarImagemLegado(dataURL);
+  }
+  function normalizarImagemLegado(dataURL) {
     return new Promise(function (resolve) {
       /* se o navegador não conseguir medir a imagem (formato estranho), a arte
          ainda entra: depois de 2,5 s segue com o próprio dataURL */

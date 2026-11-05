@@ -23,6 +23,7 @@
   <!-- External Libraries for Export (PNG & PDF) -->
   <script src="../assets/html2canvas.min.js"></script>
   <script src="../assets/rascunhos.js"></script>
+  <script src="../assets/imagem.js"></script>
   <script src="../assets/zoom-folha.js"></script>
 
   <style>
@@ -1947,8 +1948,11 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       if (el) el.textContent = drafts.length;
     }
 
-    function salvarRascunhoOrcamento() {
+    async function salvarRascunhoOrcamento() {
       const state = orcCollectState();
+      /* V10.5 — encolhe imagens grandes já embutidas no estado (assinatura
+         escaneada etc.) antes de guardar o rascunho. */
+      if (window.VooaltoImagem) { try { await VooaltoImagem.otimizarEmObjeto(state); } catch(e) {} }
       const tit = (document.getElementById('edit-proposal-title')?.value || 'Orçamento').trim();
       const firstItem = (documentPages[0] && documentPages[0].tableItems[0] && documentPages[0].tableItems[0].modelo) ? documentPages[0].tableItems[0].modelo.trim() : '';
       const sugestao = tit + (firstItem ? ` - ${firstItem}` : '');
@@ -2717,11 +2721,18 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
           }
           tempCtx.putImageData(imgData, 0, 0);
           
-          currentSignatureBase64 = tempCanvas.toDataURL('image/png');
-          documentPages.forEach(p => {
-            const sigDom = document.getElementById(`preview-signature-${p.id}`);
-            if (sigDom) sigDom.src = currentSignatureBase64;
-          });
+          /* V10.5 — a assinatura processada também passa pelo otimizador
+             (PNG de assinatura escaneada passava fácil de 1 MB). */
+          const brutoAssinatura = tempCanvas.toDataURL('image/png');
+          const aplicarAssinatura = (srcFinal) => {
+            currentSignatureBase64 = srcFinal;
+            documentPages.forEach(p => {
+              const sigDom = document.getElementById(`preview-signature-${p.id}`);
+              if (sigDom) sigDom.src = currentSignatureBase64;
+            });
+          };
+          if (window.VooaltoImagem) VooaltoImagem.otimizar(brutoAssinatura).then(aplicarAssinatura).catch(() => aplicarAssinatura(brutoAssinatura));
+          else aplicarAssinatura(brutoAssinatura);
         };
         img.src = evt.target.result;
       };
