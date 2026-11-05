@@ -22,6 +22,7 @@
   
   <!-- External Libraries for Export (PNG & PDF) -->
   <script src="../assets/html2canvas.min.js"></script>
+  <script src="../assets/rascunhos.js"></script>
 
   <style>
     /* Force exactly A4 printing page bounds to avoid browser-induced margins or trailing empty sheets */
@@ -2030,6 +2031,48 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       else orcToast('🗑 Rascunho excluído.');
     }
     window.orcExcluirRascunho = orcExcluirRascunho;
+    /* ═══ V10.3 — RASCUNHOS DE ORÇAMENTO ONLINE ═══
+       A lista de rascunhos e a proposta em edição deixam de morar só neste
+       navegador: vão para a nuvem (tipos 'orcamento' e 'orcamento_vivo') e
+       aparecem em todos os aparelhos conectados. */
+    if (window.VooaltoRascunhos) {
+      window.VooaltoRascunhos.iniciarColecao({
+        tipo: 'orcamento',
+        listar: async () => orcGetDrafts().filter(d => d && d.id).map(d => ({ chave: d.id, titulo: d.name || 'Orçamento', payload: d })),
+        aplicar: async (item) => {
+          const drafts = orcGetDrafts();
+          const i = drafts.findIndex(d => d.id === item.chave);
+          if (i >= 0) drafts[i] = item.payload; else drafts.unshift(item.payload);
+          try { localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(drafts)); } catch(e) {}
+          orcUpdateDraftsBadge();
+        },
+        remover: async (chave) => {
+          try { localStorage.setItem(ORC_DRAFTS_KEY, JSON.stringify(orcGetDrafts().filter(d => d.id !== chave))); } catch(e) {}
+          orcUpdateDraftsBadge();
+        },
+        aoMudar: () => { try { renderOrcDraftsList(); } catch(e) {} orcUpdateDraftsBadge(); }
+      });
+      window.VooaltoRascunhos.iniciarColecao({
+        tipo: 'orcamento_vivo',
+        listar: async () => {
+          try {
+            const raw = localStorage.getItem(ORC_AUTOSAVE_KEY);
+            const d = raw ? JSON.parse(raw) : null;
+            return (d && typeof d === 'object') ? [{ chave: 'atual', titulo: 'Proposta em edição', payload: d }] : [];
+          } catch(e) { return []; }
+        },
+        aplicar: async (item) => {
+          try { localStorage.setItem(ORC_AUTOSAVE_KEY, JSON.stringify(item.payload)); } catch(e) {}
+          try {
+            if (orcRestoreState(item.payload)) {
+              renderItemsEditor(); updatePreviewFromForm(); orcUpdateRunningTotal();
+            }
+          } catch(e) {}
+        },
+        remover: async () => { try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e) {} }
+      });
+    }
+
 
     function renderOrcDraftsList() {
       const list = document.getElementById('orcDraftsList');

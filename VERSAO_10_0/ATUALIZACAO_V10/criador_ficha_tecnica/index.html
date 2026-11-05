@@ -28,6 +28,7 @@
        nunca repete entre máquinas). Sem internet, o app segue funcionando e
        sincroniza depois. -->
   <script src="../assets/nuvem.js"></script>
+  <script src="../assets/rascunhos.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -8533,6 +8534,37 @@ body.sb-collapsed .text-tb{left:60px!important;max-width:calc(100vw - 78px)!impo
   };
   window.v8ListarFichas=listar;
 
+  /* ── V10.3 — MINHAS FICHAS ONLINE ──────────────────────────────────────
+     As fichas salvas deixam de morar só neste navegador: cada uma vira um
+     rascunho na nuvem (tipo 'ficha_salva') e aparece em todos os aparelhos.
+     O IndexedDB continua sendo a leitura local; o rascunhos.js espelha. */
+  if(window.VooaltoRascunhos){
+    window.VooaltoRascunhos.iniciarColecao({
+      tipo:'ficha_salva',
+      listar:async()=>{
+        const meta=getMeta(); const saida=[];
+        for(const m of meta){
+          try{const d=await getData(m.id); if(d)saida.push({chave:m.id,titulo:m.name||d._nome||'Ficha',payload:d});}catch(e){}
+        }
+        return saida;
+      },
+      aplicar:async(item)=>{
+        await putData(item.chave,item.payload);
+        const meta=getMeta(); const ex=meta.find(m=>m.id===item.chave);
+        const nome=item.titulo||(item.payload&&item.payload._nome)||'Ficha da nuvem';
+        if(ex){ex.name=nome; ex.date=nowBR();}
+        else meta.unshift({id:item.chave,name:nome,date:nowBR()});
+        setMeta(meta);
+      },
+      remover:async(chave)=>{
+        try{await delData(chave)}catch(e){}
+        setMeta(getMeta().filter(m=>m.id!==chave));
+        if(v8FichaAtualId===chave)v8FichaAtualId=null;
+      },
+      aoMudar:()=>{listar().catch(()=>{})}
+    });
+  }
+
   /* Atalhos com os nomes antigos (V4–V7), para nada quebrar. */
   window.v4SalvarRascunho=function(){return window.v8FichasSalvar()};
   window.v4CarregarRascunho=window.v8AbrirFicha;
@@ -9781,6 +9813,48 @@ function v8RascunhoDescartar(){
    é atualizado depois dela para já mostrar o estado certo. */
 document.addEventListener('DOMContentLoaded',()=>setTimeout(v8RascunhoAtualizarUI,600));
 window.addEventListener('load',()=>setTimeout(v8RascunhoAtualizarUI,1200));
+</script>
+
+<script id="v10-rascunhos-online-ficha-js">
+/* ══ V10.3 — RASCUNHO VIVO + ANTERIOR ONLINE ═══════════════════════════
+   O rascunho em andamento (vooalto_v7_ficha_ativa) e o guardado pelo
+   "Nova ficha" (vooalto_v8_rascunho_anterior) passam a viver também na
+   nuvem: fechar num aparelho e abrir em outro continua de onde parou. */
+(function(){
+  if(!window.VooaltoRascunhos)return;
+  function ler(chave){try{const r=localStorage.getItem(chave);return r?JSON.parse(r):null}catch(e){return null}}
+  function nomeDaFicha(d){
+    try{
+      const c=(d&&(d.cliente||d._cliente||'')).toString().trim();
+      if(c)return c.slice(0,120);
+    }catch(e){}
+    return 'Ficha em andamento';
+  }
+  window.VooaltoRascunhos.iniciarColecao({
+    tipo:'ficha_viva',
+    listar:async()=>{
+      const d=ler(V8_RASCUNHO_LIVE);
+      return (d&&typeof d==='object'&&d._version)?[{chave:'atual',titulo:nomeDaFicha(d),payload:d}]:[];
+    },
+    aplicar:async(item)=>{
+      try{localStorage.setItem(V8_RASCUNHO_LIVE,JSON.stringify(item.payload))}catch(e){}
+      try{localStorage.setItem(V8_RASCUNHO_META,JSON.stringify({hora:v8RascunhoHora(),vazio:false}))}catch(e){}
+      /* Local estava limpo (engine garante): pode redesenhar a tela. */
+      try{if(typeof restaurarDeJSON==='function')restaurarDeJSON(item.payload)}catch(e){}
+      try{v8RascunhoAtualizarUI()}catch(e){}
+    },
+    remover:async()=>{try{localStorage.removeItem(V8_RASCUNHO_LIVE)}catch(e){} try{v8RascunhoAtualizarUI()}catch(_){}}
+  });
+  window.VooaltoRascunhos.iniciarColecao({
+    tipo:'ficha_anterior',
+    listar:async()=>{
+      const d=ler(V8_RASCUNHO_BACKUP);
+      return (d&&typeof d==='object'&&d._version)?[{chave:'anterior',titulo:nomeDaFicha(d),payload:d}]:[];
+    },
+    aplicar:async(item)=>{try{localStorage.setItem(V8_RASCUNHO_BACKUP,JSON.stringify(item.payload))}catch(e){} try{v8RascunhoAtualizarUI()}catch(_){}},
+    remover:async()=>{try{localStorage.removeItem(V8_RASCUNHO_BACKUP)}catch(e){} try{v8RascunhoAtualizarUI()}catch(_){}}
+  });
+})();
 </script>
 
 <script id="v8-backup-js">
