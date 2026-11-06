@@ -1,5 +1,54 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.0 — Recibo automático a partir da ficha (versão de teste) (2026-11-06)
+
+O pedido: *"precisamos fazer uma versão de teste adicionando mais uma função no
+sistema, o de criador de recibo automático baseado na ficha técnica pronta. Aí
+com as opções de pagamento parcial ou total da produção (podendo ser alterada
+de maneira manual)."*
+
+Entrou a quarta aba, **🧾 Recibo** (marcada como **TESTE**), com um módulo novo
+`criador_recibo/`. Ele **não altera** a ficha, o orçamento nem o contrato: lê a
+ficha pronta e monta um recibo A4.
+
+| Pedido | O que ficou |
+|---|---|
+| recibo automático **baseado na ficha pronta** | cliente (nome, CPF/CNPJ, telefone, endereço, cidade), nº da ficha, itens (modelo, qtd, unitário) e o total saem da ficha escolhida em **Minhas fichas**, da **ficha em edição** ou do botão **🧾 Gerar recibo** dentro da própria Ficha (postMessage). Também importa ficha/backup `.json` |
+| **pagamento total ou parcial** | botão segmentado **Total** (quita; valor = total − desconto − já recebido) e **Parcial** (valor recebido + saldo devedor). A folha mostra total da produção, desconto, valor deste recibo, já recebido antes, saldo devedor e carimbo **QUITADO** quando fecha |
+| **alterável de maneira manual** | total da produção (com aviso “ajustado à mão” e **recalcular pelos itens**), desconto, valor deste recibo, já recebido, cliente, itens, forma de pagamento, data, nº, referente, observações, responsável e cabeçalho da empresa. Digitar um valor menor no modo Total **passa sozinho para Parcial** |
+
+Outros pontos que fizeram o recibo funcionar como documento:
+
+- **Numeração própria** (`vooalto_recibo_numero_v1`) que avança ao salvar;
+  salvar de novo **atualiza** o recibo aberto em vez de duplicar, e nº repetido
+  pede confirmação.
+- **Histórico por ficha**: “já recebido antes” soma os recibos salvos com o
+  mesmo nº de ficha (`vooalto_recibos_v1`); ao reabrir a ficha, o valor
+  sugerido é o **saldo restante** e o total recebido fica visível.
+- **➕ Outro (parcelas)**: salva o recibo atual e já prepara o próximo da mesma
+  ficha — cliente, itens e valores continuam, o número avança e o valor
+  recebido já vem com o saldo que sobrou.
+- A folha imprime os **dados do cliente** da ficha (CPF/CNPJ, telefone,
+  endereço e cidade) numa linha discreta abaixo do texto, quando existirem.
+- **Valor por extenso** em português (`R$ 1.234,56` → “mil duzentos e trinta e
+  quatro reais e cinquenta e seis centavos”), com centavos, milhões e bilhões.
+- Saída **A4 vetorial** (imprimir/PDF), **PNG** (html2canvas) e **copiar texto**
+  para WhatsApp; zoom só da folha reaproveita o `assets/zoom-folha.js`.
+- Rascunho do recibo em edição salvo sozinho (`vooalto_recibo_autosave_v1`) e
+  cabeçalho da empresa em `vooalto_recibo_empresa_v1`. Tudo com prefixo
+  `vooalto_`, então entra no **Backup Completo**; a mesclagem de backup une os
+  recibos por id e mantém o maior número (feito nos três módulos que sabem
+  restaurar backup: shell, Ficha e Orçamento).
+- No site publicado, a rota limpa é `/recibo/` (adicionada ao `ROTAS` da Edge
+  Function `site`).
+
+Testes novos: `tests/test_recibo_v10.js` (112 verificações: extenso, leitura de
+valores, ficha → recibo, total x parcial, alteração manual, itens, numeração,
+já recebido, recibos salvos, parcelas, rascunho, importação, mesclagem de
+backup, impressão e tema).
+`test_shell_v10.js`, `test_contrato_v10.js` e `test_site_publicado_v10.js`
+foram atualizados para as quatro abas.
+
 ## V10.5.0 — Imagem que entra já entra leve (fim do "memória cheia") (2026-11-05)
 
 O pedido: *"deu memória cheia das imagens; não existe a possibilidade de

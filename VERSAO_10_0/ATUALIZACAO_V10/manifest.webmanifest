@@ -1,7 +1,7 @@
 {
   "name": "Vooalto V10 — Uniformes",
   "short_name": "Vooalto V10",
-  "description": "Sistema Vooalto V10: ficha técnica de produção, orçamento e contrato. Funciona offline; o número da ficha é único entre máquinas.",
+  "description": "Sistema Vooalto V10: ficha técnica de produção, orçamento, recibo de pagamento e contrato. Funciona offline; o número da ficha é único entre máquinas.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

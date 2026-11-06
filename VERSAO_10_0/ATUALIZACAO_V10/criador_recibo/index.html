@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RECIBO DE PAGAMENTO</title>
+  <!-- Mesma base de tema do shell, da ficha e do orçamento -->
+  <link rel="stylesheet" href="../assets/tema-v10.css">
+  <script>
+  /* Anti-piscada: aplica o tema antes do primeiro paint. */
+  (function(){try{
+    var antigos={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+    var salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro';
+    var escuro=(salvo==='escuro')||!!antigos[salvo];
+    document.documentElement.setAttribute('data-theme',escuro?'escuro':'claro');
+    document.documentElement.style.colorScheme=escuro?'dark':'light';
+  }catch(e){}})();
+  </script>
+  <link rel="stylesheet" href="../assets/fonts.css">
+  <script src="../assets/html2canvas.min.js"></script>
+  <script src="../assets/zoom-folha.js"></script>
+
+  <style>
+    @page{size:A4;margin:0}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      background:var(--v10-bg-2);color:var(--v10-t1);
+      font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+      display:flex;overflow:hidden;
+    }
+    .app{display:flex;width:100vw;height:100vh}
+
+    /* ══ PAINEL ══ */
+    .sidebar{
+      width:436px;height:100vh;background:var(--v10-surface);
+      border-right:1px solid var(--v10-line-2);display:flex;flex-direction:column;
+      flex-shrink:0;z-index:100;box-shadow:5px 0 25px rgba(0,0,0,.18);
+    }
+    .sb-head{padding:12px 15px 11px;background:var(--v10-bg-2);border-bottom:1px solid var(--v10-line-2)}
+    .sb-head h1{font-size:15.5px;font-weight:800;display:flex;align-items:center;gap:7px;line-height:1.2}
+    .sb-head p{font-size:10.5px;color:var(--v10-t2);margin-top:4px;line-height:1.45}
+    .beta-chip{
+      font-size:8px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
+      background:var(--v10-pink-soft);color:var(--v10-pink);border:1px solid var(--v10-pink);
+      border-radius:999px;padding:2px 7px;white-space:nowrap;
+    }
+    .sb-toprow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+    .save-chip{font-size:9.5px;font-weight:800;color:var(--v10-t2);background:var(--v10-surface-2);border:1px solid var(--v10-line);border-radius:999px;padding:3px 9px;white-space:nowrap}
+    .save-chip.salvo{color:var(--v10-ok);border-color:rgba(21,128,61,.35);background:var(--v10-ok-bg)}
+    .save-chip.erro{color:var(--v10-err);border-color:rgba(185,28,28,.35);background:var(--v10-err-bg)}
+    .help-btn{margin-left:auto;border:1px solid var(--v10-t2);background:var(--v10-t1);color:var(--v10-bg-2);border-radius:999px;padding:4px 11px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit}
+    .help-btn:hover{opacity:.86}
+
+    .sb-scroll{flex:1;overflow-y:auto;padding:11px 13px 16px;display:flex;flex-direction:column;gap:10px}
+    .card{background:var(--v10-surface-2);border:1px solid var(--v10-line);border-radius:12px;padding:11px 12px}
+    .card-title{font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--v10-pink);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+    .card-title .n{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--v10-pink);color:#fff;font-size:9px}
+    label.fl{display:block;font-size:9.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:var(--v10-t3);margin:8px 0 3px}
+    label.fl:first-child{margin-top:0}
+    .inp,select.inp,textarea.inp{
+      width:100%;border:1px solid var(--v10-line-2);border-radius:7px;background:var(--v10-bg-2);
+      color:var(--v10-t1);font-family:inherit;font-size:12px;padding:7px 9px;line-height:1.35;
+    }
+    textarea.inp{resize:vertical;min-height:46px}
+    .inp:focus{outline:none;border-color:var(--v10-pink);box-shadow:0 0 0 2px var(--v10-sel)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .grid2 > div{min-width:0}
+    .hint{font-size:9.5px;line-height:1.5;color:var(--v10-t3);margin-top:6px}
+    .hint b{color:var(--v10-t2)}
+    .hint.warn{color:var(--v10-warn)}
+    .row{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
+    .row > .btn{flex:1}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;
+      border:none;border-radius:8px;padding:9px 11px;font-family:inherit;font-size:11.5px;
+      font-weight:800;cursor:pointer;transition:filter .15s,background .15s;
+    }
+    .btn:hover{filter:brightness(1.05)}
+    .btn-primary{background:var(--v10-pink);color:#fff}
+    .btn-dark{background:var(--v10-t1);color:var(--v10-bg-2)}
+    .btn-secondary{background:var(--v10-surface-3);color:var(--v10-t1);border:1px solid var(--v10-line-2)}
+    .btn-secondary:hover{background:var(--v10-line-2)}
+    .btn-success{background:#059669;color:#fff}
+    .btn-success:hover{background:#047857}
+    .btn-ghost{background:transparent;border:1px solid var(--v10-line-2);color:var(--v10-t2)}
+    .btn-danger{background:transparent;border:1px solid var(--v10-err);color:var(--v10-err)}
+    .btn-danger:hover{background:var(--v10-err);color:#fff}
+    .btn-mini{width:auto;padding:5px 9px;font-size:10px;border-radius:6px}
+
+    /* segmentado total/parcial */
+    .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--v10-surface-3);border:1px solid var(--v10-line);border-radius:9px;padding:3px}
+    .seg-btn{border:none;background:transparent;color:var(--v10-t2);font-family:inherit;font-size:11.5px;font-weight:800;padding:8px 6px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+    .seg-btn.active{background:var(--v10-pink);color:#fff;box-shadow:0 3px 10px rgba(212,24,122,.3)}
+    .seg-btn small{display:block;font-size:8px;font-weight:700;opacity:.8;letter-spacing:.3px}
+
+    .resumo{margin-top:9px;border:1px solid var(--v10-line);border-radius:9px;background:var(--v10-surface);overflow:hidden}
+    .resumo-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;font-size:10.5px;border-bottom:1px solid var(--v10-line)}
+    .resumo-row:last-child{border-bottom:none}
+    .resumo-row span{color:var(--v10-t2);font-weight:600}
+    .resumo-row b{font-size:12px;font-weight:800;color:var(--v10-t1)}
+    .resumo-row.pago{background:var(--v10-sel)}
+    .resumo-row.pago b{color:var(--v10-pink)}
+    .resumo-row.saldo b{color:var(--v10-warn)}
+    .resumo-row.quitado b{color:var(--v10-ok)}
+
+    .item-row{display:grid;grid-template-columns:1fr 52px 72px 24px;gap:5px;align-items:center;margin-bottom:5px}
+    .item-row .inp{padding:6px 7px;font-size:11px}
+    .item-row .ir-del{border:none;background:transparent;color:var(--v10-t3);font-size:13px;font-weight:900;cursor:pointer;border-radius:5px;line-height:1;padding:5px 0}
+    .item-row .ir-del:hover{background:var(--v10-err-bg);color:var(--v10-err)}
+    .empty{font-size:10.5px;color:var(--v10-t3);padding:6px 0;line-height:1.5}
+    .check{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;color:var(--v10-t2);margin-top:8px;cursor:pointer}
+    .check input{width:14px;height:14px;accent-color:var(--v10-pink);cursor:pointer}
+    details.card > summary{cursor:pointer;list-style:none;font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--v10-t2)}
+    details.card > summary::-webkit-details-marker{display:none}
+    details.card[open] > summary{color:var(--v10-pink);margin-bottom:6px}
+
+    .sb-actions{padding:10px 13px 12px;border-top:1px solid var(--v10-line-2);background:var(--v10-bg-2);display:flex;flex-direction:column;gap:6px}
+    .sb-actions .row{margin-top:0}
+
+    /* ══ PRÉVIA ══ */
+    .preview{flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden;background:var(--v10-bg-2)}
+    .preview-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--v10-line);background:var(--v10-surface);flex-shrink:0;flex-wrap:wrap}
+    .preview-bar .lbl{font-size:10.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--v10-t3)}
+    .preview-bar .spacer{flex:1}
+    .preview-bar .btn{width:auto;padding:6px 11px;font-size:10.5px;border-radius:7px}
+    .palco{flex:1;overflow:auto;padding:26px;display:flex;align-items:flex-start;justify-content:center}
+    .palco-inner{width:794px;flex-shrink:0}
+
+    /* ══ A4 — RECIBO ══ */
+    .page{
+      width:794px;height:1120px;background:#ffffff;color:#17172a;color-scheme:light;
+      position:relative;overflow:hidden;padding:38px 46px;display:flex;flex-direction:column;
+      font-size:13px;box-shadow:0 18px 45px rgba(0,0,0,.32);flex-shrink:0;
+    }
+    .wm{position:absolute;right:-20px;bottom:-70px;width:330px;height:470px;background:url("../assets/watermark_vooalto.png") right bottom/contain no-repeat;opacity:.07;pointer-events:none;z-index:0}
+    .page > *{position:relative;z-index:1}
+    .p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}
+    .p-logo{width:270px;max-height:88px;object-fit:contain;object-position:left top}
+    .p-company{text-align:right;font-size:11px;line-height:1.5;color:#111;max-width:360px}
+    .p-company .ph{font-size:13px;font-weight:600}
+    .p-company .cn{font-size:12.5px;font-weight:600}
+    .p-company .ad{font-size:10px;color:#333;margin-top:2px}
+    .p-band{display:flex;height:66px;margin-bottom:16px}
+    .p-band-red{flex:58;background:#D46460;color:#fff;display:flex;align-items:center;padding-left:22px;font-size:21px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;clip-path:polygon(0 0,100% 0,calc(100% - 26px) 100%,0 100%)}
+    .p-band-black{flex:42;background:#000;color:#fff;display:flex;align-items:center;justify-content:flex-end;padding-right:24px;font-size:19px;font-weight:800;letter-spacing:.5px;clip-path:polygon(26px 0,100% 0,100% 100%,0 100%);margin-left:-18px}
+    .p-band-black small{font-size:10px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;opacity:.75;margin-right:8px}
+
+    .p-value{border:2px solid #17172a;border-left:9px solid #D46460;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+    .p-value-lbl{font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#555;margin-bottom:2px}
+    .p-value-num{font-size:32px;font-weight:800;letter-spacing:-.5px;line-height:1.05}
+    .p-value-ext{font-size:10.5px;line-height:1.45;font-style:italic;color:#333;max-width:330px;text-align:right}
+
+    .p-text{font-size:13.5px;line-height:1.7;text-align:justify;margin-bottom:13px}
+    .p-text b{font-weight:700}
+    .p-client{font-size:9.5px;line-height:1.5;color:#444;border-left:3px solid #d8d8d8;padding-left:8px;margin:-4px 0 12px}
+.p-client b{font-weight:700;color:#222}
+.p-ref{border-top:1px solid #d8d8d8;border-bottom:1px solid #d8d8d8;padding:8px 0;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start}
+    .p-ref-lbl{font-size:8.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#666;flex:0 0 78px;padding-top:2px}
+    .p-ref-txt{font-size:12px;line-height:1.5;font-weight:600;flex:1}
+    .p-ficha-tag{display:inline-block;background:#17172a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.6px;border-radius:4px;padding:3px 8px;margin-left:6px;white-space:nowrap}
+
+    .p-items{width:100%;border-collapse:collapse;margin-bottom:12px}
+    .p-items th{background:#17172a;color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:7px 8px;text-align:left}
+    .p-items th.c,.p-items td.c{text-align:center}
+    .p-items th.r,.p-items td.r{text-align:right}
+    .p-items td{border-bottom:1px solid #e2e2e2;padding:6px 8px;font-size:11.5px;line-height:1.35;overflow-wrap:anywhere}
+    .p-items tr:last-child td{border-bottom:1px solid #17172a}
+    .p-items .mais{font-size:10px;color:#555;font-style:italic;padding-top:5px}
+
+    .p-sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+    .p-sum-box{border:1px solid #d5d5d5;border-radius:6px;padding:8px 10px;background:#fafafa}
+    .p-sum-box.dest{border-color:#17172a;background:#fff}
+    .p-sum-box.saldo{border-color:#D46460}
+    .p-sum-lbl{font-size:8.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:#666}
+    .p-sum-val{font-size:14.5px;font-weight:800;margin-top:1px}
+    .p-sum-box.dest .p-sum-val{color:#17172a}
+    .p-sum-box.saldo .p-sum-val{color:#b34743}
+
+    .p-pay{display:flex;gap:18px;margin-bottom:12px;font-size:11.5px}
+    .p-pay > div{flex:1;border-left:3px solid #D46460;padding-left:9px}
+    .p-pay .lbl{display:block;font-size:8.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#666;margin-bottom:2px}
+    .p-pay b{font-size:12.5px;font-weight:700}
+
+    .p-obs{font-size:10.5px;line-height:1.5;color:#333;border:1px dashed #bbb;border-radius:5px;padding:7px 10px;margin-bottom:10px}
+    .p-obs b{font-weight:800}
+
+    .p-foot-spacer{flex:1;min-height:6px}
+    .p-sign{text-align:center;width:330px;margin:0 auto 4px}
+    .p-sign-line{border-top:1.5px solid #17172a;margin-bottom:5px}
+    .p-sign-name{font-size:12px;font-weight:800;display:block}
+    .p-sign-role{font-size:9.5px;color:#555;letter-spacing:.4px;text-transform:uppercase}
+    .p-place{text-align:center;font-size:10.5px;color:#333;margin-top:12px}
+    .p-legal{border-top:1px solid #ddd;margin-top:10px;padding-top:6px;font-size:8px;line-height:1.45;color:#777;text-align:center}
+    .p-legal b{color:#555}
+
+    .p-quitado{position:absolute;right:60px;bottom:150px;transform:rotate(-9deg);border:3px solid rgba(21,128,61,.55);color:rgba(21,128,61,.62);font-size:20px;font-weight:900;letter-spacing:3px;padding:5px 14px;border-radius:8px;text-transform:uppercase;pointer-events:none;z-index:2;display:none}
+    .p-quitado.on{display:block}
+
+    /* ══ MODAL ══ */
+    .modal{position:fixed;inset:0;background:rgba(5,8,15,.6);display:none;align-items:center;justify-content:center;z-index:4000;padding:18px}
+    .modal.open{display:flex}
+    .modal-card{background:var(--v10-surface);color:var(--v10-t1);border:1px solid var(--v10-line-2);border-radius:16px;width:100%;max-width:680px;max-height:86vh;display:flex;flex-direction:column;padding:18px 20px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+    .modal-head{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--v10-line);margin-bottom:10px}
+    .modal-head h3{font-size:16px;font-weight:800;flex:1}
+    .modal-x{border:none;background:var(--v10-surface-3);color:var(--v10-t1);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;font-weight:900}
+    .modal-body{overflow:auto;display:flex;flex-direction:column;gap:7px;padding-right:3px}
+    .salvo-row{border:1px solid var(--v10-line);background:var(--v10-surface-2);border-radius:9px;padding:8px 10px;display:flex;align-items:center;gap:9px}
+    .salvo-row .info{flex:1;min-width:0}
+    .salvo-row .info b{display:block;font-size:11.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .salvo-row .info small{display:block;font-size:9.5px;color:var(--v10-t3);margin-top:1px}
+    .salvo-row .money{font-size:12.5px;font-weight:800;color:var(--v10-pink);white-space:nowrap}
+    .salvo-row .acts{display:flex;gap:4px}
+    .salvo-row .acts button{border:1px solid var(--v10-line-2);background:transparent;color:var(--v10-t2);border-radius:6px;padding:4px 7px;font-size:9.5px;font-weight:800;cursor:pointer;font-family:inherit}
+    .salvo-row .acts button:hover{background:var(--v10-hover);color:var(--v10-t1)}
+    .salvo-row .acts button.del:hover{background:var(--v10-err-bg);color:var(--v10-err);border-color:var(--v10-err)}
+    .modal-empty{font-size:11px;color:var(--v10-t3);text-align:center;padding:18px 0;line-height:1.6}
+
+    /* ══ AJUDA ══ */
+    .ajuda-bg{position:fixed;inset:0;background:rgba(5,8,15,.55);display:none;align-items:center;justify-content:center;z-index:4100;padding:16px}
+    .ajuda-bg.open{display:flex}
+    .ajuda-card{background:var(--v10-surface);color:var(--v10-t1);border:1px solid var(--v10-line);border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;box-shadow:var(--v10-shadow)}
+    .ajuda-card h3{margin:0 0 4px;font-size:19px}
+    .ajuda-card .sub{color:var(--v10-t2);font-size:12.5px;font-weight:700;margin-bottom:6px}
+    .ajuda-card h4{margin:15px 0 4px;font-size:11.5px;color:var(--v10-pink);letter-spacing:.6px;text-transform:uppercase}
+    .ajuda-card p,.ajuda-card li{font-size:12.5px;line-height:1.65}
+    .ajuda-card ul{margin:4px 0 0 18px;padding:0}
+    .ajuda-card kbd{background:var(--v10-surface-3);border:1px solid var(--v10-line-2);border-radius:6px;padding:1px 6px;font-weight:900;font-size:11.5px;color:var(--v10-t1)}
+    .ajuda-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:flex-end}
+
+    .toast{position:fixed;right:16px;bottom:16px;background:rgba(17,24,39,.94);color:#fff;padding:10px 15px;border-radius:999px;font-size:11.5px;font-weight:700;max-width:min(80vw,420px);opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:5000;line-height:1.4}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast.erro{background:rgba(185,28,28,.96)}
+    .toast.sucesso{background:rgba(21,128,61,.96)}
+
+    /* ══ IMPRESSÃO — só a folha ══ */
+    @media print{
+      html,body{height:auto!important;overflow:visible!important;background:#fff!important;color-scheme:light!important;margin:0!important;padding:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .sidebar,.preview-bar,.toast,.modal,.ajuda-bg,.zoom-folha-ctrl{display:none!important}
+      .app,.preview,.palco{display:block!important;width:auto!important;height:auto!important;overflow:visible!important;padding:0!important;margin:0!important;background:#fff!important}
+      .palco-inner{width:auto!important}
+      .page{box-shadow:none!important;width:210mm!important;height:296mm!important;page-break-inside:avoid!important;page-break-after:avoid!important;margin:0!important}
+    }
+    @media (max-width:980px){
+      .sidebar{width:100%;max-width:100%;height:auto;flex:0 0 auto;border-right:none;border-bottom:1px solid var(--v10-line-2)}
+      .app{flex-direction:column;overflow:auto;height:auto}
+      .preview{height:auto;flex:1 1 auto}
+      body{overflow:auto}
+      .sb-scroll{max-height:52vh}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- ══════════ PAINEL ══════════ -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <h1>🧾 Recibo automático <span class="beta-chip">teste</span></h1>
+      <p>Carregue a ficha técnica pronta: cliente, itens e valores vêm preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo pode ser ajustado à mão.</p>
+      <div class="sb-toprow">
+        <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
+        <button class="help-btn" type="button" onclick="Recibo.abrirAjuda()" title="Ajuda do Recibo">? Ajuda</button>
+      </div>
+    </div>
+
+    <div class="sb-scroll">
+      <!-- 1. FICHA DE ORIGEM -->
+      <div class="card">
+        <div class="card-title"><span class="n">1</span> Ficha técnica de origem</div>
+        <label class="fl" for="fichaSelect">Ficha pronta</label>
+        <select class="inp" id="fichaSelect" title="Fichas salvas em Minhas fichas e a ficha em edição">
+          <option value="">Carregando fichas…</option>
+        </select>
+        <div class="row">
+          <button class="btn btn-primary" type="button" onclick="Recibo.carregarFichaSelecionada()" title="Preencher o recibo com a ficha escolhida">⬇ Carregar ficha</button>
+          <button class="btn btn-secondary" type="button" onclick="document.getElementById('fichaFileInput').click()" title="Importar uma ficha ou backup .json">📥 .json</button>
+        </div>
+        <input type="file" id="fichaFileInput" accept=".json,application/json" style="display:none" onchange="Recibo.importarArquivo(event)">
+        <div class="hint" id="fichaHint">Nenhuma ficha carregada ainda. Abra a <b>Ficha Técnica</b>, salve a ficha e volte aqui — ou use o botão <b>🧾 Recibo</b> dentro da própria ficha.</div>
+        <div class="resumo" id="fichaResumo" style="display:none"></div>
+      </div>
+
+      <!-- 2. CLIENTE -->
+      <div class="card">
+        <div class="card-title"><span class="n">2</span> Cliente</div>
+        <label class="fl" for="f-nome">Nome / razão social</label>
+        <input class="inp" id="f-nome" type="text" placeholder="Quem está pagando" oninput="Recibo.campo('nome',this.value)">
+        <div class="grid2">
+          <div>
+            <label class="fl" for="f-doc">CPF / CNPJ</label>
+            <input class="inp" id="f-doc" type="text" placeholder="000.000.000-00" oninput="Recibo.campo('doc',this.value)">
+          </div>
+          <div>
+            <label class="fl" for="f-tel">Telefone</label>
+            <input class="inp" id="f-tel" type="text" placeholder="(00) 00000-0000" oninput="Recibo.campo('tel',this.value)">
+          </div>
+        </div>
+        <label class="fl" for="f-end">Endereço</label>
+        <input class="inp" id="f-end" type="text" placeholder="Rua, número, bairro" oninput="Recibo.campo('end',this.value)">
+        <label class="fl" for="f-cidade">Cidade — UF</label>
+        <input class="inp" id="f-cidade" type="text" placeholder="Cidade — UF" oninput="Recibo.campo('cidade',this.value)">
+      </div>
+
+      <!-- 3. PAGAMENTO -->
+      <div class="card">
+        <div class="card-title"><span class="n">3</span> Pagamento da produção</div>
+        <div class="seg" role="group" aria-label="Tipo de pagamento">
+          <button type="button" class="seg-btn" id="btnModoTotal" onclick="Recibo.definirModo('total')">Total<small>quita a produção</small></button>
+          <button type="button" class="seg-btn" id="btnModoParcial" onclick="Recibo.definirModo('parcial')">Parcial<small>fica saldo</small></button>
+        </div>
+        <div class="hint" id="modoHint"></div>
+
+        <label class="fl" for="f-total">Total da produção (R$)</label>
+        <input class="inp" id="f-total" type="text" inputmode="decimal" placeholder="0,00" oninput="Recibo.campo('total',this.value)" onblur="Recibo.normalizar('f-total')">
+        <div class="hint" id="totalHint" style="display:none">✍️ Total ajustado à mão. <button class="btn-mini btn-ghost" type="button" onclick="Recibo.recalcularTotal()" style="vertical-align:middle">recalcular pelos itens</button></div>
+
+        <label class="fl" for="f-desconto">Desconto / abatimento (R$)</label>
+        <input class="inp" id="f-desconto" type="text" inputmode="decimal" placeholder="0,00" oninput="Recibo.campo('desconto',this.value)" onblur="Recibo.normalizar('f-desconto')">
+
+        <label class="fl" for="f-jarecebido">Já recebido antes nesta ficha (R$)</label>
+        <input class="inp" id="f-jarecebido" type="text" inputmode="decimal" placeholder="0,00" oninput="Recibo.campo('jaRecebido',this.value)" onblur="Recibo.normalizar('f-jarecebido')">
+        <div class="hint">Soma automática dos recibos já salvos com o mesmo nº de ficha. <button class="btn-mini btn-ghost" type="button" onclick="Recibo.recalcularJaRecebido()" title="Somar de novo os recibos salvos desta ficha">↻ recalcular</button></div>
+
+        <label class="fl" for="f-pago">Valor deste recibo (R$) <span style="text-transform:none;font-weight:600;color:var(--v10-t3)" id="pagoAjuda"></span></label>
+        <input class="inp" id="f-pago" type="text" inputmode="decimal" placeholder="0,00" oninput="Recibo.campo('pago',this.value)" onblur="Recibo.normalizar('f-pago')">
+
+        <div class="resumo">
+          <div class="resumo-row"><span>Base (total − desconto)</span><b id="rBase">R$ 0,00</b></div>
+          <div class="resumo-row pago"><span>Recebido neste recibo</span><b id="rPago">R$ 0,00</b></div>
+          <div class="resumo-row saldo" id="rSaldoRow"><span>Saldo após este recibo</span><b id="rSaldo">R$ 0,00</b></div>
+          <div class="resumo-row" id="rFichaRow"><span>Total pago na ficha (com anteriores)</span><b id="rFicha">R$ 0,00</b></div>
+        </div>
+
+        <label class="fl" for="f-forma">Forma de pagamento</label>
+        <select class="inp" id="f-forma" onchange="Recibo.campo('forma',this.value)">
+          <option>PIX</option>
+          <option>Dinheiro</option>
+          <option>Transferência bancária</option>
+          <option>Cartão de crédito</option>
+          <option>Cartão de débito</option>
+          <option>Cheque</option>
+          <option>Boleto</option>
+          <option>Outro</option>
+        </select>
+
+        <label class="fl" for="f-previsao">Previsão para o saldo (opcional)</label>
+        <input class="inp" id="f-previsao" type="text" placeholder="Ex: 2ª parcela em 30 dias" oninput="Recibo.campo('previsao',this.value)">
+      </div>
+
+      <!-- 4. ITENS -->
+      <div class="card">
+        <div class="card-title"><span class="n">4</span> Itens da produção</div>
+        <div id="itensEditor"></div>
+        <div class="row">
+          <button class="btn btn-ghost btn-mini" type="button" onclick="Recibo.adicionarItem()" title="Adicionar uma linha manualmente">＋ Item</button>
+          <span class="hint" style="margin:0" id="itensTotalHint"></span>
+        </div>
+        <label class="check"><input type="checkbox" id="f-mostrar-itens" checked onchange="Recibo.check('mostrarItens',this.checked)"> Mostrar a tabela de itens no recibo</label>
+      </div>
+
+      <!-- 5. RECIBO -->
+      <div class="card">
+        <div class="card-title"><span class="n">5</span> Dados do recibo</div>
+        <div class="grid2">
+          <div>
+            <label class="fl" for="f-numero">Número</label>
+            <input class="inp" id="f-numero" type="text" inputmode="numeric" oninput="Recibo.campo('numero',this.value)">
+          </div>
+          <div>
+            <label class="fl" for="f-data">Data</label>
+            <input class="inp" id="f-data" type="date" onchange="Recibo.campo('data',this.value)">
+          </div>
+        </div>
+        <label class="fl" for="f-referente">Referente a</label>
+        <textarea class="inp" id="f-referente" rows="2" placeholder="Ex: pagamento parcial da produção" oninput="Recibo.campo('referente',this.value)"></textarea>
+        <div class="hint">Deixe como está para o texto automático (ficha, tipo de pagamento e peças).</div>
+        <label class="fl" for="f-obs">Observações</label>
+        <textarea class="inp" id="f-obs" rows="2" placeholder="Opcional" oninput="Recibo.campo('obs',this.value)"></textarea>
+        <label class="fl" for="f-responsavel">Responsável (assinatura)</label>
+        <input class="inp" id="f-responsavel" type="text" placeholder="VOOALTO UNIFORMES" oninput="Recibo.campo('responsavel',this.value)">
+        <label class="fl" for="f-cidadeassinatura">Cidade da assinatura</label>
+        <input class="inp" id="f-cidadeassinatura" type="text" placeholder="Goiânia - GO" oninput="Recibo.campo('cidadeAssinatura',this.value)">
+        <label class="check"><input type="checkbox" id="f-mostrar-saldo" checked onchange="Recibo.check('mostrarSaldo',this.checked)"> Mostrar o saldo devedor no recibo</label>
+        <label class="check"><input type="checkbox" id="f-carimbo" checked onchange="Recibo.check('carimbo',this.checked)"> Carimbo “QUITADO” quando não houver saldo</label>
+      </div>
+
+      <!-- CABEÇALHO DA EMPRESA -->
+      <details class="card">
+        <summary>Cabeçalho do recibo</summary>
+        <label class="fl" for="e-tel">Telefone</label>
+        <input class="inp" id="e-tel" type="text" oninput="Recibo.empresaCampo('telefone',this.value)">
+        <label class="fl" for="e-cnpj">CNPJ</label>
+        <input class="inp" id="e-cnpj" type="text" oninput="Recibo.empresaCampo('cnpj',this.value)">
+        <label class="fl" for="e-end">Endereço</label>
+        <textarea class="inp" id="e-end" rows="2" oninput="Recibo.empresaCampo('endereco',this.value)"></textarea>
+        <div class="hint">Fica salvo neste navegador e vale para os próximos recibos.</div>
+      </details>
+    </div>
+
+    <div class="sb-actions">
+      <button class="btn btn-success" type="button" onclick="Recibo.imprimir()" title="Imprimir ou salvar em PDF (sai só a folha A4)">🖨️ Imprimir / Salvar PDF</button>
+      <div class="row">
+        <button class="btn btn-dark" type="button" onclick="Recibo.salvar()" title="Guardar este recibo na lista de recibos salvos">💾 Salvar recibo</button>
+        <button class="btn btn-secondary" type="button" onclick="Recibo.salvarENovo()" title="Salvar este e abrir outro recibo da mesma ficha (para a próxima parcela)">➕ Outro</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-secondary" type="button" onclick="Recibo.abrirSalvos()" title="Abrir a lista de recibos salvos">📂 Recibos</button>
+        <button class="btn btn-secondary" type="button" onclick="Recibo.exportarPNG()" title="Baixar a folha como imagem PNG">🖼️ PNG</button>
+        <button class="btn btn-secondary" type="button" onclick="Recibo.exportarJSON()" title="Baixar só este recibo em .json">📤 .json</button>
+      </div>
+      <button class="btn btn-danger" type="button" onclick="Recibo.novo()" title="Começar um recibo novo">🗋 Novo recibo</button>
+    </div>
+  </aside>
+
+  <!-- ══════════ PRÉVIA ══════════ -->
+  <main class="preview">
+    <div class="preview-bar">
+      <span class="lbl">Prévia A4 · recibo</span>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" type="button" onclick="Recibo.copiarTexto()" title="Copiar o texto do recibo para colar no WhatsApp">📋 Copiar texto</button>
+      <button class="btn btn-ghost" type="button" onclick="Recibo.imprimir()" title="Imprimir ou salvar em PDF">🖨️ PDF</button>
+    </div>
+    <div class="palco" id="reciboPalco">
+      <div class="palco-inner">
+        <div class="page" id="reciboFolha">
+          <div class="wm"></div>
+          <div class="p-quitado" id="pvCarimbo">Quitado</div>
+
+          <div class="p-head">
+            <img class="p-logo" src="../assets/logo_orcamento.png" alt="Vooalto Uniformes">
+            <div class="p-company">
+              <div class="ph" id="pvTel"></div>
+              <div class="cn" id="pvCnpj"></div>
+              <div class="ad" id="pvEnd"></div>
+            </div>
+          </div>
+
+          <div class="p-band">
+            <div class="p-band-red">Recibo de pagamento</div>
+            <div class="p-band-black"><small>Nº</small><span id="pvNumero">0001</span></div>
+          </div>
+
+          <div class="p-value">
+            <div>
+              <div class="p-value-lbl">Valor recebido</div>
+              <div class="p-value-num" id="pvValor">R$ 0,00</div>
+            </div>
+            <div class="p-value-ext" id="pvExtenso">zero reais</div>
+          </div>
+
+          <div class="p-text" id="pvTexto"></div>
+
+          <div class="p-client" id="pvClienteLinha"></div>
+
+          <div class="p-ref">
+            <div class="p-ref-lbl">Referente a</div>
+            <div class="p-ref-txt">
+              <span id="pvReferente"></span><span class="p-ficha-tag" id="pvFichaTag" style="display:none"></span>
+            </div>
+          </div>
+
+          <table class="p-items" id="pvItensTabela">
+            <thead>
+              <tr>
+                <th>Item / modelo</th>
+                <th class="c" style="width:56px">Qtd</th>
+                <th class="r" style="width:92px">Unit.</th>
+                <th class="r" style="width:100px">Total</th>
+              </tr>
+            </thead>
+            <tbody id="pvItens"></tbody>
+          </table>
+
+          <div class="p-sum" id="pvResumo">
+            <div class="p-sum-box" id="pvTotalBox">
+              <div class="p-sum-lbl">Total da produção</div>
+              <div class="p-sum-val" id="pvTotalProd">R$ 0,00</div>
+            </div>
+            <div class="p-sum-box dest" id="pvPagoBox">
+              <div class="p-sum-lbl" id="pvPagoLbl">Valor deste recibo</div>
+              <div class="p-sum-val" id="pvPago">R$ 0,00</div>
+            </div>
+            <div class="p-sum-box" id="pvDescontoBox" style="display:none">
+              <div class="p-sum-lbl">Desconto</div>
+              <div class="p-sum-val" id="pvDesconto">R$ 0,00</div>
+            </div>
+            <div class="p-sum-box" id="pvJaBox" style="display:none">
+              <div class="p-sum-lbl">Já recebido antes</div>
+              <div class="p-sum-val" id="pvJa">R$ 0,00</div>
+            </div>
+            <div class="p-sum-box saldo" id="pvSaldoBox">
+              <div class="p-sum-lbl">Saldo devedor</div>
+              <div class="p-sum-val" id="pvSaldo">R$ 0,00</div>
+            </div>
+          </div>
+
+          <div class="p-pay">
+            <div>
+              <span class="lbl">Forma de pagamento</span>
+              <b id="pvForma">PIX</b>
+            </div>
+            <div>
+              <span class="lbl">Data do pagamento</span>
+              <b id="pvData">—</b>
+            </div>
+          </div>
+
+          <div class="p-obs" id="pvObsWrap" style="display:none"><b>Obs.:</b> <span id="pvObs"></span></div>
+
+          <div class="p-foot-spacer"></div>
+
+          <div class="p-sign">
+            <div class="p-sign-line"></div>
+            <span class="p-sign-name" id="pvResp">VOOALTO UNIFORMES</span>
+            <span class="p-sign-role" id="pvRespCargo">Responsável pelo recebimento</span>
+          </div>
+          <div class="p-place" id="pvLocal"></div>
+          <div class="p-legal" id="pvLegal"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══ RECIBOS SALVOS ══ -->
+<div class="modal" id="modalRecibos" onclick="if(event.target===this)Recibo.fecharSalvos()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>📂 Recibos salvos</h3>
+      <button class="modal-x" type="button" onclick="Recibo.fecharSalvos()" title="Fechar">✕</button>
+    </div>
+    <div class="modal-body" id="listaRecibos"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-secondary" type="button" onclick="Recibo.fecharSalvos()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AJUDA ══ -->
+<div class="ajuda-bg" id="ajudaRecibo" onclick="if(event.target===this)Recibo.fecharAjuda()">
+  <div class="ajuda-card">
+    <h3>🧾 Ajuda — Recibo automático <span class="beta-chip">teste</span></h3>
+    <div class="sub">O recibo nasce da ficha técnica pronta e pode ser ajustado campo por campo. Nada sai deste navegador.</div>
+
+    <h4>1 · Puxar a ficha</h4>
+    <ul>
+      <li>Escolha uma ficha em <b>Ficha técnica de origem</b> e clique em <b>⬇ Carregar ficha</b>. Vêm o cliente (nome, CPF/CNPJ, telefone, endereço), o nº da ficha, os itens, as quantidades e os valores.</li>
+      <li>Também funciona pelo botão <b>🧾 Gerar recibo</b> dentro da Ficha Técnica — ele abre esta aba já preenchida com a ficha que está na tela.</li>
+      <li>Se a ficha estiver em um arquivo, use <b>📥 .json</b> (aceita ficha avulsa ou backup completo).</li>
+    </ul>
+
+    <h4>2 · Total ou parcial</h4>
+    <ul>
+      <li><b>Total</b>: o valor do recibo acompanha o total da produção (menos o desconto) e o saldo fica zerado.</li>
+      <li><b>Parcial</b>: informe o valor recebido. O recibo mostra o saldo devedor e a previsão, se você preencher.</li>
+      <li>Se você alterar o <b>valor deste recibo</b> no modo Total, o sistema passa sozinho para Parcial — é a sua alteração manual que manda.</li>
+      <li><b>Já recebido antes</b> soma os recibos salvos com o mesmo nº de ficha. Você pode corrigir esse número à mão e usar <b>↻ recalcular</b> para voltar à soma.</li>
+      <li>O <b>total da produção</b> pode ser digitado por cima do valor dos itens; o aviso “ajustado à mão” aparece e você pode voltar com <b>recalcular pelos itens</b>.</li>
+    </ul>
+
+    <h4>3 · Salvar e imprimir</h4>
+    <ul>
+      <li><b>Salvar recibo</b> guarda na lista <b>Recibos salvos</b> (com numeração que avança sozinha) e é o que alimenta o “já recebido” das próximas fichas.</li>
+      <li><b>Imprimir / Salvar PDF</b> usa a impressão do navegador — o PDF sai vetorial, só com a folha A4.</li>
+      <li><b>PNG</b> baixa a folha como imagem; <b>Copiar texto</b> serve para mandar o recibo por WhatsApp.</li>
+      <li>O rascunho do recibo em edição é salvo automaticamente neste navegador.</li>
+    </ul>
+
+    <h4>4 · O que é manual</h4>
+    <ul>
+      <li>Cliente, itens, valores, desconto, forma de pagamento, data, nº, observações, responsável e o cabeçalho da empresa são todos editáveis.</li>
+      <li>A tabela de itens pode ser escondida no recibo (bom para recibos simples) e o carimbo <b>QUITADO</b> aparece quando não há saldo.</li>
+    </ul>
+
+    <div class="ajuda-foot">
+      <button class="btn btn-secondary" type="button" onclick="Recibo.fecharAjuda()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="reciboToast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════════════
+   VOOALTO V10.6 — RECIBO AUTOMÁTICO (versão de teste)
+   --------------------------------------------------------------------------
+   Módulo novo, mesmo desenho dos outros: HTML autossuficiente, sem servidor
+   e sem rede. A fonte é a ficha técnica pronta:
+
+     • ficha em edição  → localStorage vooalto_v7_ficha_ativa
+     • Minhas fichas    → IndexedDB vooalto_ficha_rascunhos_db_v4 (por id)
+     • ficha/backup     → .json importado na hora
+
+   Da ficha vêm cliente, número, itens (modelo/qtd/valor) e a entrada.
+   O pagamento é TOTAL (quita) ou PARCIAL (fica saldo) e TODO valor é
+   editável à mão — o modo se ajusta quando o valor muda.
+
+   Chaves novas (todas com prefixo vooalto_ para entrarem no backup):
+     vooalto_recibos_v1          lista de recibos salvos
+     vooalto_recibo_numero_v1    último número usado
+     vooalto_recibo_autosave_v1  rascunho do recibo em edição
+     vooalto_recibo_empresa_v1   cabeçalho (telefone, CNPJ, endereço)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const LS={
+  RECIBOS:'vooalto_recibos_v1',
+  NUMERO:'vooalto_recibo_numero_v1',
+  AUTOSAVE:'vooalto_recibo_autosave_v1',
+  EMPRESA:'vooalto_recibo_empresa_v1'
+};
+const FICHA_LIVE_KEY='vooalto_v7_ficha_ativa';
+const FICHA_META_KEY='vooalto_v8_rascunho_meta';
+const FICHA_LISTA_KEY='vooalto_ficha_rascunhos_v4_meta';
+const IDB_NAME='vooalto_ficha_rascunhos_db_v4';
+const IDB_STORE='drafts';
+
+const EMPRESA_PADRAO={
+  telefone:'(62) 98135-6948',
+  cnpj:'51.919.138/0001-20',
+  endereco:'Av. Jacinto Alves de Abreu, 212 - Res. Vereda dos Buritis, Goiânia - GO, 74370-661'
+};
+const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+/* ── utilidades ─────────────────────────────────────────────────────────── */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function escAttr(s){return esc(s)}
+function stripTags(s){return String(s==null?'':s).replace(/<br\s*\/?>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()}
+function num(v){
+  if(typeof v==='number')return isFinite(v)?v:0;
+  const n=parseFloat(v);
+  return isFinite(n)?n:0;
+}
+function arred(n){ return Math.round((num(n)+Number.EPSILON)*100)/100; }
+
+/* Mesma interpretação de valor da ficha técnica: aceita "1.234,56",
+   "1234.56", "1234" e "R$ 1.234,56". */
+function parseBRL(s){
+  if(typeof s==='number')return isFinite(s)?s:0;
+  if(s==null)return 0;
+  let t=String(s).replace(/[R$\s\u00a0]/g,'');
+  if(!t)return 0;
+  const temVirgula=t.indexOf(',')>=0, temPonto=t.indexOf('.')>=0;
+  if(temVirgula&&temPonto){
+    t=(t.lastIndexOf(',')>t.lastIndexOf('.'))
+      ? t.replace(/\./g,'').replace(',','.')
+      : t.replace(/,/g,'');
+  }else if(temVirgula){
+    const partes=t.split(',');
+    t=partes.length===2?(partes[0]+'.'+partes[1]):partes.join('');
+  }else if(temPonto){
+    const partes=t.split('.');
+    if(partes.length>2)t=partes.join('');
+    else if(partes[0]!==''&&partes[1].length===3&&partes[0].length<=3)t=partes.join('');
+  }
+  const n=parseFloat(t);
+  return isFinite(n)?n:0;
+}
+function fmtBRL(v){return 'R$ '+arred(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtNumInput(v){
+  const n=arred(v);
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtQtd(v){
+  const n=num(v);
+  return (Math.abs(n-Math.round(n))<1e-9)?String(Math.round(n)):n.toLocaleString('pt-BR',{maximumFractionDigits:2});
+}
+
+/* ── valor por extenso (recibo de verdade escreve o valor em letras) ────── */
+const EXT_UNI=['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+const EXT_DEZ=['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+const EXT_CEM=['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+
+function extensoAte999(n){
+  n=Math.floor(n);
+  if(n<=0)return '';
+  if(n===100)return 'cem';
+  if(n<20)return EXT_UNI[n];
+  if(n<100){
+    const d=Math.floor(n/10),u=n%10;
+    return EXT_DEZ[d]+(u?' e '+EXT_UNI[u]:'');
+  }
+  const c=Math.floor(n/100),r=n%100;
+  return EXT_CEM[c]+(r?' e '+extensoAte999(r):'');
+}
+function extensoInteiro(n){
+  n=Math.floor(n);
+  if(n===0)return 'zero';
+  const bilhoes=Math.floor(n/1000000000);
+  const restoBilhao=n%1000000000;
+  if(bilhoes>0){
+    let txt=(bilhoes===1?'um bilhão':extensoAte999(bilhoes)+' bilhões');
+    if(restoBilhao>0){
+      const conector=(restoBilhao<1000||restoBilhao%100===0)?' e ':' ';
+      txt+=conector+extensoInteiro(restoBilhao);
+    }
+    return txt;
+  }
+  const milhoes=Math.floor(n/1000000);
+  const restoMilhao=n%1000000;
+  if(milhoes>0){
+    let txt=(milhoes===1?'um milhão':extensoAte999(milhoes)+' milhões');
+    if(restoMilhao>0){
+      const conector=(restoMilhao<1000||restoMilhao%100===0)?' e ':' ';
+      txt+=conector+extensoInteiro(restoMilhao);
+    }
+    return txt;
+  }
+  const milhares=Math.floor(n/1000);
+  const resto=n%1000;
+  if(milhares>0){
+    let txt=(milhares===1?'mil':extensoAte999(milhares)+' mil');
+    if(resto>0){
+      const conector=(resto<100||resto%100===0)?' e ':' ';
+      txt+=conector+extensoAte999(resto);
+    }
+    return txt;
+  }
+  return extensoAte999(n);
+}
+function extensoReais(valor){
+  const v=Math.abs(arred(valor));
+  const inteiro=Math.floor(v+1e-9);
+  const centavos=Math.round((v-inteiro)*100);
+  if(inteiro===0&&centavos>0)return extensoInteiro(centavos)+(centavos===1?' centavo':' centavos');
+  const partes=extensoInteiro(inteiro);
+  /* "um milhão DE reais", "dois milhões DE reais"; mas "um milhão e duzentos
+     mil reais" (sem "de"). A regra depende de o texto terminar no milhão. */
+  const precisaDe=/milh(ão|ões)$/.test(partes)||/bilh(ão|ões)$/.test(partes);
+  let txt=partes+(precisaDe?' de':'')+(inteiro===1?' real':' reais');
+  if(centavos>0)txt+=' e '+extensoInteiro(centavos)+(centavos===1?' centavo':' centavos');
+  return txt;
+}
+
+/* ── datas ──────────────────────────────────────────────────────────────── */
+function hojeISO(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function isoParaBR(iso){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||''));
+  if(!m)return String(iso||'');
+  return m[3]+'/'+m[2]+'/'+m[1];
+}
+function dataLonga(iso){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||''));
+  if(!m)return '';
+  const mes=MESES[parseInt(m[2],10)-1]||'';
+  return parseInt(m[3],10)+' de '+mes+' de '+m[1];
+}
+function agoraBR(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function carimboArquivo(){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'h'+p(d.getMinutes());
+}
+function numeroExibido(n){
+  const s=String(n==null?'':n).trim();
+  if(/^\d+$/.test(s))return s.padStart(4,'0');
+  return s||'—';
+}
+function chaveFicha(numFicha){return String(numFicha==null?'':numFicha).trim()}
+function temNumeroFicha(n){return chaveFicha(n)!==''}
+/* "1", "01" e "0001" são o mesmo número de recibo. */
+function normNumero(n){
+  const s=String(n==null?'':n).trim();
+  return /^\d+$/.test(s)?String(parseInt(s,10)):s;
+}
+
+/* ── armazenamento tolerante ────────────────────────────────────────────── */
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function lsJSON(k,fb){
+  const raw=lsGet(k);
+  if(raw==null||raw==='')return fb;
+  try{const v=JSON.parse(raw);return v==null?fb:v}catch(e){return fb}
+}
+function carregarRecibos(){
+  const a=lsJSON(LS.RECIBOS,[]);
+  return (Array.isArray(a)?a:[]).filter(r=>r&&typeof r==='object'&&r.id);
+}
+function gravarRecibos(lista){
+  const limpa=(Array.isArray(lista)?lista:[]).filter(r=>r&&typeof r==='object'&&r.id).slice(0,500);
+  return lsSet(LS.RECIBOS,JSON.stringify(limpa));
+}
+function carregarEmpresa(){
+  const e=lsJSON(LS.EMPRESA,null);
+  if(!e||typeof e!=='object')return Object.assign({},EMPRESA_PADRAO);
+  return {
+    telefone:String(e.telefone||EMPRESA_PADRAO.telefone),
+    cnpj:String(e.cnpj||EMPRESA_PADRAO.cnpj),
+    endereco:String(e.endereco||EMPRESA_PADRAO.endereco)
+  };
+}
+
+/* ── estado ─────────────────────────────────────────────────────────────── */
+function estadoVazio(){
+  return {
+    id:'', numero:'', data:hojeISO(),
+    cliente:{nome:'',doc:'',tel:'',end:'',cidade:''},
+    fichaId:'', fichaNum:'', fichaNome:'',
+    itens:[],
+    totalProducao:0, totalManual:false,
+    desconto:0,
+    jaRecebido:0, jaRecebidoManual:false,
+    entradaFicha:0,
+    modo:'total', valorPago:0, valorPagoManual:false,
+    forma:'PIX', referente:'', referenteManual:false, previsao:'',
+    obs:'', responsavel:'', cidadeAssinatura:'Goiânia - GO',
+    mostrarItens:true, mostrarSaldo:true, carimbo:true,
+    criadoEm:'', salvoEm:''
+  };
+}
+function normalizarEstado(base){
+  const limpo=estadoVazio();
+  if(!base||typeof base!=='object')return limpo;
+  const e=Object.assign(limpo,base);
+  e.cliente=Object.assign({nome:'',doc:'',tel:'',end:'',cidade:''},(base.cliente&&typeof base.cliente==='object')?base.cliente:{});
+  e.itens=Array.isArray(base.itens)?base.itens.map(it=>({
+    modelo:String((it&&it.modelo)||''),
+    qtd:num(it&&it.qtd),
+    unit:num(it&&it.unit)
+  })):[];
+  e.totalProducao=num(base.totalProducao);
+  e.desconto=num(base.desconto);
+  e.jaRecebido=num(base.jaRecebido);
+  e.valorPago=num(base.valorPago);
+  e.modo=(base.modo==='parcial')?'parcial':'total';
+  e.mostrarItens=base.mostrarItens!==false;
+  e.mostrarSaldo=base.mostrarSaldo!==false;
+  e.carimbo=base.carimbo!==false;
+  if(!e.data)e.data=hojeISO();
+  return e;
+}
+
+let estado=estadoVazio();
+let empresa=carregarEmpresa();
+let fichasDisponiveis=[];
+const fichasImportadas=Object.create(null);
+let timerAutosave=null;
+let timerToast=null;
+
+/* ── cálculos ───────────────────────────────────────────────────────────── */
+function calcular(est){
+  const e=est||estado;
+  const total=arred(Math.max(0,num(e.totalProducao)));
+  const desconto=arred(Math.max(0,num(e.desconto)));
+  const base=arred(Math.max(0,total-desconto));
+  const jaRecebido=arred(Math.max(0,num(e.jaRecebido)));
+  const pago=arred(Math.max(0,num(e.valorPago)));
+  /* O saldo devedor do recibo é o que sobra DEPOIS dele, descontando o que
+     já foi recebido antes na mesma ficha. Antes de existir o histórico, os
+     dois jeitos davam o mesmo número; com histórico, é este que fecha. */
+  const saldo=arred(base-jaRecebido-pago);
+  const totalPagoFicha=arred(jaRecebido+pago);
+  return {total,desconto,base,jaRecebido,pago,saldo,saldoFicha:saldo,totalPagoFicha,quitado:saldo<=0.005};
+}
+/* Quanto falta para quitar a ficha — é o valor que o modo TOTAL cobra. */
+function valorQuitacao(c){const x=c||calcular();return arred(Math.max(0,x.base-x.jaRecebido));}
+function somaItens(est){
+  const e=est||estado;
+  return arred(e.itens.reduce((s,it)=>s+num(it.qtd)*num(it.unit),0));
+}
+function totalPecas(est){
+  const e=est||estado;
+  return e.itens.reduce((s,it)=>s+num(it.qtd),0);
+}
+
+function proximoNumero(){
+  const ultimo=parseInt(lsGet(LS.NUMERO)||'0',10)||0;
+  const lista=carregarRecibos().reduce((m,r)=>Math.max(m,parseInt(r.numero,10)||0),0);
+  return String(Math.max(ultimo,lista)+1);
+}
+function jaRecebidoDaFicha(numFicha,ignorarId){
+  const alvo=chaveFicha(numFicha);
+  if(!alvo)return 0;
+  return arred(carregarRecibos().reduce((s,r)=>{
+    if(String(r.id)===String(ignorarId||'__nenhum__'))return s;
+    if(chaveFicha(r.fichaNum)!==alvo)return s;
+    return s+num(r.valorPago);
+  },0));
+}
+
+function descricaoAutomatica(est){
+  const e=est||estado;
+  const tipo=(e.modo==='total')?'Pagamento total':'Pagamento parcial';
+  let txt=tipo+' da produção';
+  if(String(e.fichaNum||'').trim())txt+=', Ficha Técnica nº '+String(e.fichaNum).trim();
+  const pecas=arred(totalPecas(e));
+  if(pecas>0)txt+=' · '+fmtQtd(pecas)+' peça'+(Math.abs(pecas-1)<1e-9?'':'s');
+  if(e.modo==='parcial'&&String(e.previsao||'').trim())txt+=' · saldo para '+String(e.previsao).trim();
+  return txt;
+}
+
+function textoDoRecibo(est){
+  const e=est||estado;
+  const c=calcular(e);
+  const nome=String(e.cliente.nome||'').trim();
+  const doc=String(e.cliente.doc||'').trim();
+  let t='Recebemos de '+(nome||'—');
+  if(doc)t+=', inscrito(a) no CPF/CNPJ '+doc;
+  t+=', a importância de '+fmtBRL(c.pago)+' ('+extensoReais(c.pago)+')';
+  const ref=String(e.referente||'').trim()||descricaoAutomatica(e);
+  t+=', referente a '+ref.charAt(0).toLowerCase()+ref.slice(1)+'.';
+  return t;
+}
+
+/* ── tema ───────────────────────────────────────────────────────────────── */
+function aplicarTema(t){
+  const escuro=(t==='escuro');
+  document.documentElement.setAttribute('data-theme',escuro?'escuro':'claro');
+  document.documentElement.style.colorScheme=escuro?'dark':'light';
+}
+function temaSalvo(){
+  try{
+    const salvo=localStorage.getItem('vooalto_tema')||localStorage.getItem('vooalto_theme_v5')||'escuro';
+    const antigos={dark:1,oxford:1,asphalt:1,asphaltsolid:1,burgundy:1,crimson:1,sunset:1,ocean:1,neon:1,stratos:1,kiwi:1,tech:1,coral:1,lime:1,violet:1};
+    return (salvo==='escuro'||antigos[salvo])?'escuro':'claro';
+  }catch(e){return 'escuro'}
+}
+
+/* ── toasts e selo ──────────────────────────────────────────────────────── */
+function toast(msg,tipo){
+  const el=$('reciboToast');
+  if(el){
+    el.textContent=msg;
+    el.className='toast show'+(tipo?' '+tipo:'');
+    clearTimeout(timerToast);
+    timerToast=setTimeout(()=>{el.className='toast'+(tipo?' '+tipo:'')},2600);
+  }
+}
+function marcarSalvo(ok,hora){
+  const el=$('reciboSaveChip');
+  if(!el)return;
+  if(ok===false){
+    el.className='save-chip erro';
+    el.textContent='⚠ não salvou';
+    el.title='O navegador recusou a gravação (memória cheia?). Exporte o .json para não perder.';
+    return;
+  }
+  el.className='save-chip salvo';
+  el.textContent='💾 Salvo'+(hora?' '+hora:'');
+  el.title='Rascunho do recibo salvo automaticamente neste navegador';
+}
+
+/* ── ficha: leitura ─────────────────────────────────────────────────────── */
+function temFicha(d){
+  if(!d||typeof d!=='object')return false;
+  if(stripTags(d.dc_nome))return true;
+  if(Array.isArray(d._prod)&&d._prod.some(p=>p&&(String(p.modelo||'').trim()||num(p.valor)>0||num(p.qtd)>0)))return true;
+  if(Array.isArray(d._paginas)&&d._paginas.some(pg=>Array.isArray(pg&&pg.prod)&&pg.prod.some(p=>p&&(String(p.modelo||'').trim()||num(p.valor)>0||num(p.qtd)>0))))return true;
+  return false;
+}
+function numDaFicha(d){
+  if(!d||typeof d!=='object')return '';
+  return String(d._numFicha||d.fichaNum||'').trim();
+}
+function nomeDaFicha(d){
+  const cli=stripTags(d&&d.dc_nome);
+  const n=numDaFicha(d);
+  if(cli&&n)return 'Nº '+n+' — '+cli;
+  if(cli)return cli;
+  if(n)return 'Ficha nº '+n;
+  return String((d&&d._nome)||'Ficha sem nome');
+}
+function itensDaFicha(d){
+  const out=[];
+  const push=arr=>{
+    (Array.isArray(arr)?arr:[]).forEach(p=>{
+      if(!p||typeof p!=='object')return;
+      const modelo=stripTags(p.modelo);
+      const qtd=num(p.qtd);
+      const unit=parseBRL(p.valor);
+      if(!modelo&&!qtd&&!unit)return;
+      out.push({modelo,qtd,unit});
+    });
+  };
+  push(d&&d._prod);
+  (Array.isArray(d&&d._paginas)?d._paginas:[]).forEach(pg=>push(pg&&pg.prod));
+  return out;
+}
+function dadosDoCliente(d){
+  d=d||{};
+  return {
+    nome:stripTags(d.dc_nome)||String(d.cliente||'').trim(),
+    doc:stripTags(d.dc_doc),
+    tel:stripTags(d.dc_tel),
+    end:stripTags(d.dc_end),
+    cidade:stripTags(d.dc_cidade)
+  };
+}
+
+function abrirIDB(){
+  return new Promise(resolve=>{
+    if(typeof indexedDB==='undefined'||!indexedDB){resolve(null);return}
+    let settled=false;
+    const done=v=>{if(!settled){settled=true;resolve(v)}};
+    const timer=setTimeout(()=>done(null),3500);
+    try{
+      const req=indexedDB.open(IDB_NAME,1);
+      req.onupgradeneeded=ev=>{
+        const db=ev.target.result;
+        if(!db.objectStoreNames.contains(IDB_STORE))db.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess=()=>{clearTimeout(timer);done(req.result)};
+      req.onerror=()=>{clearTimeout(timer);done(null)};
+      req.onblocked=()=>{clearTimeout(timer);done(null)};
+    }catch(e){clearTimeout(timer);done(null)}
+  });
+}
+function reqProm(req){
+  return new Promise((resolve,reject)=>{
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error||new Error('Falha no IndexedDB'));
+  });
+}
+async function lerFichaIDB(id){
+  const db=await abrirIDB();
+  if(!db)return null;
+  try{
+    const tx=db.transaction(IDB_STORE,'readonly');
+    const dados=await reqProm(tx.objectStore(IDB_STORE).get(String(id)));
+    db.close();
+    return (dados&&typeof dados==='object')?dados:null;
+  }catch(e){
+    try{db.close()}catch(_){}
+    return null;
+  }
+}
+
+/* Lista sem carregar os dados (fichas com foto pesam): só metadados + a
+   ficha em edição, que já está no localStorage. */
+function listarFichas(){
+  const lista=[];
+  const vistos=new Set();
+  const live=lsJSON(FICHA_LIVE_KEY,null);
+  const metaLive=lsJSON(FICHA_META_KEY,null);
+  if(temFicha(live)&&!(metaLive&&metaLive.vazio)){
+    lista.push({id:'__live__',rotulo:'✏️ Em edição — '+nomeDaFicha(live),num:numDaFicha(live)});
+    vistos.add('__live__');
+  }
+  const meta=lsJSON(FICHA_LISTA_KEY,[]);
+  (Array.isArray(meta)?meta:[]).forEach(m=>{
+    if(!m||!m.id||vistos.has(String(m.id)))return;
+    vistos.add(String(m.id));
+    const nome=String(m.name||'Ficha sem nome');
+    const n=String(m.num||'').trim();
+    lista.push({
+      id:String(m.id),
+      rotulo:(n?'Nº '+n+' — ':'')+nome+(m.date?' · '+m.date:''),
+      num:n
+    });
+  });
+  Object.keys(fichasImportadas).forEach(id=>{
+    if(vistos.has(id))return;
+    const imp=fichasImportadas[id];
+    lista.push({id,rotulo:'📥 Importada — '+nomeDaFicha(imp.dados),num:numDaFicha(imp.dados)});
+  });
+  return lista;
+}
+function renderFichas(){
+  const sel=$('fichaSelect');
+  if(!sel)return;
+  const lista=listarFichas();
+  fichasDisponiveis=lista;
+  if(!lista.length){
+    sel.innerHTML='<option value="">Nenhuma ficha encontrada</option>';
+    return;
+  }
+  sel.innerHTML='<option value="">Selecione uma ficha…</option>'+lista.map(f=>
+    '<option value="'+escAttr(f.id)+'">'+esc(f.rotulo)+'</option>'
+  ).join('');
+  if(estado.fichaId){
+    const achou=lista.some(f=>String(f.id)===String(estado.fichaId));
+    if(achou)sel.value=estado.fichaId;
+  }
+}
+
+async function carregarFichaSelecionada(){
+  const sel=$('fichaSelect');
+  const id=sel?sel.value:'';
+  if(!id){toast('Escolha uma ficha na lista primeiro.','erro');return false}
+  let dados=null;
+  let meta=null;
+  if(id==='__live__'){
+    dados=lsJSON(FICHA_LIVE_KEY,null);
+    meta={id:'__live__',name:nomeDaFicha(dados)};
+  }else if(fichasImportadas[id]){
+    dados=fichasImportadas[id].dados;
+    meta=fichasImportadas[id];
+  }else{
+    const item=(fichasDisponiveis||[]).find(f=>String(f.id)===String(id));
+    dados=await lerFichaIDB(id);
+    meta={id:id,name:item?item.rotulo:'Ficha',num:item?item.num:''};
+  }
+  if(!dados){toast('⚠ Não consegui abrir esta ficha (ela pode estar sem dados salvos).','erro');return false}
+  aplicarFicha(dados,meta);
+  return true;
+}
+
+/* Aplica uma ficha ao estado do recibo. */
+function aplicarFicha(dados,meta,opts){
+  opts=opts||{};
+  if(!dados||typeof dados!=='object'){toast('Arquivo de ficha inválido.','erro');return false}
+  if(Array.isArray(dados.fichas)){ /* backup completo entregue por engano */ dados=dados.fichas[0]&&dados.fichas[0].data||{}; }
+  /* Trocar de ficha em cima de um recibo já preenchido apagava o que estava
+     na tela. Mesma ficha pode recarregar à vontade; ficha diferente pede
+     confirmação (o recibo salvo continua na lista de qualquer jeito). */
+  const numNovo=numDaFicha(dados)||String((meta&&meta.num)||'').trim();
+  const trocando=temNumeroFicha(numNovo)&&temNumeroFicha(estado.fichaNum)&&chaveFicha(numNovo)!==chaveFicha(estado.fichaNum);
+  const temConteudo=String(estado.cliente.nome||'').trim()!==''||num(estado.valorPago)>0;
+  if(!opts.forcar&&trocando&&temConteudo&&typeof confirm==='function'){
+    if(!confirm('Já existe um recibo em edição (nº '+numeroExibido(estado.numero)+').\n\nSubstituir pelos dados da ficha '+(numNovo||'')+'?'))return false;
+  }
+  const itens=itensDaFicha(dados);
+  const total=arred(itens.reduce((s,it)=>s+num(it.qtd)*num(it.unit),0));
+  const cliente=dadosDoCliente(dados);
+  estado.cliente=cliente;
+  estado.fichaId=String((meta&&meta.id)||'');
+  estado.fichaNum=numDaFicha(dados)||String((meta&&meta.num)||'').trim();
+  estado.fichaNome=nomeDaFicha(dados);
+  estado.itens=itens;
+  estado.totalProducao=total;
+  estado.totalManual=false;
+  estado.desconto=0;
+  estado.entradaFicha=parseBRL(dados.entradaVal);
+  estado.jaRecebido=jaRecebidoDaFicha(estado.fichaNum,estado.id);
+  estado.jaRecebidoManual=false;
+  estado.referenteManual=false;
+  /* Sugestão de valor, sempre editável:
+     - ficha já recebeu algo → sugere o saldo restante (quitação);
+     - ficha com entrada e sem recibos → sugere a entrada (parcial);
+     - senão → total. */
+  const restante=arred(Math.max(0,total-estado.jaRecebido));
+  if(estado.jaRecebido>0&&restante>0.005){
+    estado.modo='parcial';
+    estado.valorPago=restante;
+  }else if(estado.jaRecebido>0&&restante<=0.005&&total>0){
+    estado.modo='parcial';
+    estado.valorPago=0;
+  }else if(estado.entradaFicha>0&&estado.entradaFicha<total-0.005){
+    estado.modo='parcial';
+    estado.valorPago=arred(estado.entradaFicha);
+  }else{
+    estado.modo='total';
+    estado.valorPago=total;
+  }
+  estado.valorPagoManual=false;
+  renderFichas();
+  if(!String(estado.cidadeAssinatura||'').trim()&&cliente.cidade)estado.cidadeAssinatura=cliente.cidade;
+  renderTudo({sidebar:true,itens:true});
+  if(!opts.silencioso){
+    toast((estado.jaRecebido>0.005&&restante<=0.005)
+      ? '✅ Ficha carregada — já quitada ('+fmtBRL(estado.jaRecebido)+' recebidos).'
+      : '✅ Ficha carregada: '+estado.fichaNome);
+  }
+  return true;
+}
+
+/* ── campos ─────────────────────────────────────────────────────────────── */
+function campo(chave,valor){
+  switch(chave){
+    case 'numero': estado.numero=String(valor==null?'':valor).trim(); break;
+    case 'data': estado.data=String(valor||''); break;
+    case 'nome': estado.cliente.nome=String(valor||''); break;
+    case 'doc': estado.cliente.doc=String(valor||''); break;
+    case 'tel': estado.cliente.tel=String(valor||''); break;
+    case 'end': estado.cliente.end=String(valor||''); break;
+    case 'cidade': estado.cliente.cidade=String(valor||''); break;
+    case 'total':
+      estado.totalProducao=parseBRL(valor);
+      estado.totalManual=true;
+      if(estado.modo==='total')estado.valorPago=valorQuitacao();
+      break;
+    case 'desconto':
+      estado.desconto=parseBRL(valor);
+      if(estado.modo==='total')estado.valorPago=valorQuitacao();
+      break;
+    case 'jaRecebido':
+      estado.jaRecebido=parseBRL(valor);
+      estado.jaRecebidoManual=true;
+      if(estado.modo==='total')estado.valorPago=valorQuitacao();
+      break;
+    case 'pago':{
+      estado.valorPago=parseBRL(valor);
+      estado.valorPagoManual=true;
+      const c=calcular();
+      if(estado.modo==='total'&&c.pago<valorQuitacao(c)-0.005){
+        estado.modo='parcial';
+      }
+      break;
+    }
+    case 'forma': estado.forma=String(valor||'PIX'); break;
+    case 'referente':
+      estado.referente=String(valor||'');
+      estado.referenteManual=String(valor||'').trim()!=='';
+      break;
+    case 'previsao': estado.previsao=String(valor||''); break;
+    case 'obs': estado.obs=String(valor||''); break;
+    case 'responsavel': estado.responsavel=String(valor||''); break;
+    case 'cidadeAssinatura': estado.cidadeAssinatura=String(valor||''); break;
+    default: return;
+  }
+  if(!estado.referenteManual)estado.referente=descricaoAutomatica(estado);
+  renderTudo();
+  agendarAutosave();
+}
+function check(chave,valor){
+  if(chave==='mostrarItens')estado.mostrarItens=!!valor;
+  else if(chave==='mostrarSaldo')estado.mostrarSaldo=!!valor;
+  else if(chave==='carimbo')estado.carimbo=!!valor;
+  renderTudo();
+  agendarAutosave();
+}
+function empresaCampo(chave,valor){
+  empresa[chave]=String(valor||'');
+  lsSet(LS.EMPRESA,JSON.stringify(empresa));
+  renderEmpresa();
+}
+function normalizar(id){
+  const el=$(id);
+  if(!el)return;
+  const v=parseBRL(el.value);
+  el.value=fmtNumInput(v);
+  renderTudo();
+  agendarAutosave();
+}
+function recalcularTotal(){
+  estado.totalProducao=somaItens();
+  estado.totalManual=false;
+  if(estado.modo==='total')estado.valorPago=valorQuitacao();
+  renderTudo({sidebar:true,itens:true});
+  agendarAutosave();
+  toast('Total recalculado pelos itens: '+fmtBRL(estado.totalProducao));
+}
+function recalcularJaRecebido(){
+  estado.jaRecebido=jaRecebidoDaFicha(estado.fichaNum,estado.id);
+  estado.jaRecebidoManual=false;
+  renderTudo();
+  agendarAutosave();
+  toast('Já recebido nesta ficha: '+fmtBRL(estado.jaRecebido));
+}
+
+function definirModo(modo){
+  modo=(modo==='parcial')?'parcial':'total';
+  estado.modo=modo;
+  estado.valorPagoManual=false;
+  const c=calcular();
+  if(modo==='total'){
+    estado.valorPago=valorQuitacao(c);
+  }else if(!(c.pago>0&&c.pago<c.base-0.005)){
+    const entrada=num(estado.entradaFicha);
+    estado.valorPago=(entrada>0&&entrada<c.base-0.005)?arred(entrada):arred(c.base/2);
+  }
+  if(!estado.referenteManual)estado.referente=descricaoAutomatica(estado);
+  renderTudo({sidebar:true,itens:true});
+  agendarAutosave();
+  toast(modo==='total'?'Pagamento total da produção.':'Pagamento parcial — informe quanto foi recebido.');
+}
+
+/* ── itens ──────────────────────────────────────────────────────────────── */
+function adicionarItem(){
+  estado.itens.push({modelo:'',qtd:1,unit:0});
+  if(!estado.totalManual)estado.totalProducao=somaItens();
+  if(estado.modo==='total')estado.valorPago=valorQuitacao();
+  renderTudo({sidebar:true,itens:true});
+  agendarAutosave();
+  const rows=document.querySelectorAll('#itensEditor .item-row');
+  const ultimo=rows[rows.length-1];
+  if(ultimo){const inp=ultimo.querySelector('input');if(inp)try{inp.focus()}catch(e){}}
+}
+function itemCampo(idx,campoNome,valor){
+  const it=estado.itens[idx];
+  if(!it)return;
+  if(campoNome==='modelo')it.modelo=String(valor||'');
+  else if(campoNome==='qtd')it.qtd=parseBRL(valor);
+  else if(campoNome==='unit')it.unit=parseBRL(valor);
+  if(!estado.totalManual)estado.totalProducao=somaItens();
+  if(estado.modo==='total')estado.valorPago=valorQuitacao();
+  renderPreview();
+  renderResumos();
+  agendarAutosave();
+}
+function removerItem(idx){
+  if(idx<0||idx>=estado.itens.length)return;
+  estado.itens.splice(idx,1);
+  if(!estado.totalManual)estado.totalProducao=somaItens();
+  if(estado.modo==='total')estado.valorPago=valorQuitacao();
+  renderTudo({sidebar:true,itens:true});
+  agendarAutosave();
+}
+
+/* ── autosave ───────────────────────────────────────────────────────────── */
+function agendarAutosave(){
+  clearTimeout(timerAutosave);
+  timerAutosave=setTimeout(salvarRascunho,450);
+}
+function salvarRascunho(){
+  const payload={_version:'vooalto_recibo_autosave_v1',salvoEm:Date.now(),estado:estado};
+  const ok=lsSet(LS.AUTOSAVE,JSON.stringify(payload));
+  marcarSalvo(ok,agoraBR().slice(-5));
+  return ok;
+}
+function rascunhoSalvo(){
+  const d=lsJSON(LS.AUTOSAVE,null);
+  if(!d||typeof d!=='object'||!d.estado||typeof d.estado!=='object')return null;
+  return d;
+}
+
+/* ── render ─────────────────────────────────────────────────────────────── */
+function preencher(id,texto){const el=$(id);if(el)el.textContent=texto==null?'':String(texto)}
+
+function renderEmpresa(){
+  preencher('pvTel',empresa.telefone);
+  preencher('pvCnpj',empresa.cnpj?'CNPJ '+empresa.cnpj:'');
+  preencher('pvEnd',empresa.endereco);
+  const tel=$('e-tel'),cnpj=$('e-cnpj'),end=$('e-end');
+  if(tel&&document.activeElement!==tel)tel.value=empresa.telefone;
+  if(cnpj&&document.activeElement!==cnpj)cnpj.value=empresa.cnpj;
+  if(end&&document.activeElement!==end)end.value=empresa.endereco;
+}
+
+function renderResumos(){
+  const c=calcular();
+  preencher('rBase',fmtBRL(c.base));
+  preencher('rPago',fmtBRL(c.pago));
+  preencher('rSaldo',fmtBRL(Math.max(0,c.saldo)));
+  preencher('rFicha',fmtBRL(c.totalPagoFicha));
+  const rowSaldo=$('rSaldoRow');
+  if(rowSaldo)rowSaldo.className='resumo-row '+(c.quitado?'quitado':'saldo');
+  const rowFicha=$('rFichaRow');
+  if(rowFicha)rowFicha.className='resumo-row '+(c.saldo<=0.005?'quitado':'');
+  const btnT=$('btnModoTotal'),btnP=$('btnModoParcial');
+  if(btnT)btnT.className='seg-btn'+(estado.modo==='total'?' active':'');
+  if(btnP)btnP.className='seg-btn'+(estado.modo==='parcial'?' active':'');
+  preencher('modoHint',estado.modo==='total'
+    ? 'O recibo quita a produção: o valor recebido acompanha o total (menos o desconto). Se você digitar um valor menor, ele passa para Parcial.'
+    : 'Pagamento parcial: informe abaixo o valor recebido. O saldo que sobrar aparece no recibo.');
+  const th=$('totalHint');
+  if(th)th.style.display=estado.totalManual?'block':'none';
+  const pagoAjuda=$('pagoAjuda');
+  if(pagoAjuda){
+    pagoAjuda.textContent=(estado.modo==='total')
+      ? '(automático no total)'
+      : ((c.pago>valorQuitacao(c)+0.005)?'⚠ acima do saldo devedor ('+fmtBRL(valorQuitacao(c))+')':'');
+  }
+  const hint=$('itensTotalHint');
+  if(hint)hint.textContent=(estado.itens.length?estado.itens.length+' item(ns) · '+fmtBRL(somaItens()):'');
+  const fichaHint=$('fichaHint');
+  if(fichaHint&&estado.fichaNome){
+    fichaHint.innerHTML=estado.jaRecebido>0.005
+      ? 'Ficha carregada. <b>Já recebido</b> nesta ficha: '+esc(fmtBRL(estado.jaRecebido))+' — o valor sugerido é o saldo. Tudo pode ser alterado à mão.'
+      : (estado.entradaFicha>0.005
+        ? 'Ficha carregada. A <b>entrada</b> da ficha ('+esc(fmtBRL(estado.entradaFicha))+') foi sugerida como pagamento parcial — se ela já foi paga antes, lance o valor em <b>Já recebido</b>.'
+        : 'Ficha carregada: confira os valores e escolha <b>Total</b> ou <b>Parcial</b>. Tudo pode ser alterado à mão.');
+  }
+  const fichaResumo=$('fichaResumo');
+  if(fichaResumo){
+    if(estado.fichaNum||estado.fichaNome){
+      fichaResumo.style.display='block';
+      fichaResumo.innerHTML=''
+        +'<div class="resumo-row"><span>Ficha</span><b>'+esc(estado.fichaNum?('Nº '+estado.fichaNum):'—')+'</b></div>'
+        +'<div class="resumo-row"><span>Itens / peças</span><b>'+esc(String(estado.itens.length))+' / '+esc(fmtQtd(arred(totalPecas())))+'</b></div>'
+        +'<div class="resumo-row"><span>Já recebido (salvos)</span><b>'+esc(fmtBRL(estado.jaRecebido))+'</b></div>';
+    }else{
+      fichaResumo.style.display='none';
+    }
+  }
+}
+
+function renderItensEditor(){
+  const box=$('itensEditor');
+  if(!box)return;
+  if(!estado.itens.length){
+    box.innerHTML='<div class="empty">Nenhum item ainda. Carregue uma ficha ou use <b>＋ Item</b> para digitar à mão.</div>';
+    return;
+  }
+  box.innerHTML=estado.itens.map((it,i)=>(
+    '<div class="item-row" data-i="'+i+'">'
+      +'<input class="inp" type="text" value="'+escAttr(it.modelo)+'" placeholder="Modelo / descrição" title="Modelo ou descrição do item" oninput="Recibo.itemCampo('+i+',\'modelo\',this.value)">'
+      +'<input class="inp" type="text" inputmode="decimal" value="'+escAttr(fmtQtd(it.qtd))+'" placeholder="0" title="Quantidade" oninput="Recibo.itemCampo('+i+',\'qtd\',this.value)" onblur="Recibo.formatarItem('+i+',\'qtd\')">'
+      +'<input class="inp" type="text" inputmode="decimal" value="'+escAttr(it.unit?fmtNumInput(it.unit):'')+'" placeholder="0,00" title="Valor unitário" oninput="Recibo.itemCampo('+i+',\'unit\',this.value)" onblur="Recibo.formatarItem('+i+',\'unit\')">'
+      +'<button class="ir-del" type="button" title="Remover este item" onclick="Recibo.removerItem('+i+')">✕</button>'
+    +'</div>'
+  )).join('');
+}
+function formatarItem(idx,campoNome){
+  const it=estado.itens[idx];
+  if(!it)return;
+  const rows=document.querySelectorAll('#itensEditor .item-row');
+  const row=rows[idx];
+  if(!row)return;
+  const inputs=row.querySelectorAll('input');
+  if(campoNome==='qtd'&&inputs[1])inputs[1].value=fmtQtd(it.qtd);
+  if(campoNome==='unit'&&inputs[2])inputs[2].value=it.unit?fmtNumInput(it.unit):'';
+}
+
+function renderSidebar(){
+  const set=(id,val)=>{const el=$(id);if(el&&document.activeElement!==el)el.value=val};
+  set('f-numero',estado.numero);
+  set('f-data',estado.data);
+  set('f-nome',estado.cliente.nome);
+  set('f-doc',estado.cliente.doc);
+  set('f-tel',estado.cliente.tel);
+  set('f-end',estado.cliente.end);
+  set('f-cidade',estado.cliente.cidade);
+  set('f-total',estado.totalProducao?fmtNumInput(estado.totalProducao):'');
+  set('f-desconto',estado.desconto?fmtNumInput(estado.desconto):'');
+  set('f-jarecebido',estado.jaRecebido?fmtNumInput(estado.jaRecebido):'');
+  set('f-pago',estado.valorPago?fmtNumInput(estado.valorPago):'');
+  set('f-forma',estado.forma);
+  set('f-referente',estado.referente);
+  set('f-previsao',estado.previsao);
+  set('f-obs',estado.obs);
+  set('f-responsavel',estado.responsavel);
+  set('f-cidadeassinatura',estado.cidadeAssinatura);
+  const c1=$('f-mostrar-itens');if(c1)c1.checked=estado.mostrarItens;
+  const c2=$('f-mostrar-saldo');if(c2)c2.checked=estado.mostrarSaldo;
+  const c3=$('f-carimbo');if(c3)c3.checked=estado.carimbo;
+  /* Não redesenha a lista de fichas a cada tecla: isso apagaria a escolha que
+     a pessoa acabou de fazer no <select>. A lista é montada na carga, ao
+     importar um .json e depois de salvar/abrir ficha. */
+  renderEmpresa();
+}
+
+function renderPreview(){
+  const c=calcular();
+  const e=estado;
+  preencher('pvNumero',numeroExibido(e.numero));
+  preencher('pvValor',fmtBRL(c.pago));
+  preencher('pvExtenso',extensoReais(c.pago));
+  preencher('pvTexto',textoDoRecibo(e));
+  preencher('pvReferente',String(e.referente||'').trim()||descricaoAutomatica(e));
+  const linhaCliente=$('pvClienteLinha');
+  if(linhaCliente){
+    const extras=[];
+    if(String(e.cliente.doc||'').trim())extras.push('CPF/CNPJ <b>'+esc(e.cliente.doc)+'</b>');
+    if(String(e.cliente.tel||'').trim())extras.push('Telefone <b>'+esc(e.cliente.tel)+'</b>');
+    const endereco=[String(e.cliente.end||'').trim(),String(e.cliente.cidade||'').trim()].filter(Boolean).join(' — ');
+    if(endereco)extras.push('<b>'+esc(endereco)+'</b>');
+    linhaCliente.innerHTML=extras.length?('Dados do cliente: '+extras.join(' · ')):'';
+    linhaCliente.style.display=extras.length?'block':'none';
+  }
+  const tag=$('pvFichaTag');
+  if(tag){
+    const n=String(e.fichaNum||'').trim();
+    tag.style.display=n?'inlineBlock':'none';
+    tag.textContent=n?'Ficha nº '+n:'';
+  }
+  preencher('pvForma',e.forma||'—');
+  preencher('pvData',e.data?isoParaBR(e.data):'—');
+  preencher('pvTotalProd',fmtBRL(c.total));
+  preencher('pvPago',fmtBRL(c.pago));
+  preencher('pvPagoLbl',e.modo==='total'?'Valor recebido (total)':'Valor recebido (parcial)');
+  preencher('pvDesconto',fmtBRL(c.desconto));
+  preencher('pvJa',fmtBRL(c.jaRecebido));
+  preencher('pvSaldo',fmtBRL(Math.max(0,c.saldo)));
+  const descontoBox=$('pvDescontoBox'); if(descontoBox)descontoBox.style.display=c.desconto>0?'block':'none';
+  const jaBox=$('pvJaBox'); if(jaBox)jaBox.style.display=c.jaRecebido>0?'block':'none';
+  const saldoVisivel=!!(e.mostrarSaldo&&c.saldo>0.005);
+  const saldoBox=$('pvSaldoBox'); if(saldoBox)saldoBox.style.display=saldoVisivel?'block':'none';
+  /* Número ímpar de quadros deixava um buraco na grade de 2 colunas: o
+     último visível ocupa a linha inteira. */
+  const caixasResumo=[
+    ['pvTotalBox',true],
+    ['pvPagoBox',true],
+    ['pvDescontoBox',c.desconto>0],
+    ['pvJaBox',c.jaRecebido>0],
+    ['pvSaldoBox',saldoVisivel]
+  ];
+  caixasResumo.forEach(([id])=>{const el=$(id);if(el)el.style.gridColumn='auto'});
+  const visiveisResumo=caixasResumo.filter(([,v])=>v);
+  if(visiveisResumo.length%2===1){
+    const ultimo=$(visiveisResumo[visiveisResumo.length-1][0]);
+    if(ultimo)ultimo.style.gridColumn='span 2';
+  }
+  const obsWrap=$('pvObsWrap');
+  if(obsWrap){
+    const temObs=String(e.obs||'').trim()!=='';
+    obsWrap.style.display=temObs?'block':'none';
+    preencher('pvObs',e.obs);
+  }
+  const carimbo=$('pvCarimbo');
+  if(carimbo)carimbo.className='p-quitado'+((e.carimbo&&c.quitado&&c.pago>0)?' on':'');
+
+  /* tabela de itens (no máximo 7 linhas; o resto vira uma nota) */
+  const tabela=$('pvItensTabela');
+  const corpo=$('pvItens');
+  if(corpo){
+    if(!e.mostrarItens||!e.itens.length){
+      if(tabela)tabela.style.display='none';
+    }else{
+      if(tabela)tabela.style.display='table';
+      /* Cabeçalho + resumo já ocupam boa parte da folha: com desconto e
+         "já recebido" visíveis, cabem menos linhas sem invadir a assinatura. */
+      /* Nome de modelo comprido quebra em duas linhas e empurra a
+         assinatura para fora da folha: com folga de 6 linhas (5 ou 4 quando
+         desconto/já recebido aparecem), o rodapé nunca é cortado. */
+      const extras=(c.desconto>0?1:0)+(c.jaRecebido>0?1:0);
+      const maxLinhas=extras>=2?4:(extras===1?5:6);
+      const visiveis=e.itens.slice(0,maxLinhas);
+      let html=visiveis.map(it=>{
+        const t=num(it.qtd)*num(it.unit);
+        return '<tr>'
+          +'<td>'+esc(it.modelo||'—')+'</td>'
+          +'<td class="c">'+esc(fmtQtd(it.qtd))+'</td>'
+          +'<td class="r">'+esc(fmtBRL(it.unit))+'</td>'
+          +'<td class="r">'+esc(fmtBRL(t))+'</td>'
+        +'</tr>';
+      }).join('');
+      if(e.itens.length>visiveis.length){
+        html+='<tr><td colspan="4" class="mais">+ '+(e.itens.length-visiveis.length)+' item(ns) não listados neste recibo</td></tr>';
+      }
+      corpo.innerHTML=html;
+    }
+  }
+
+  /* assinatura / local / rodapé */
+  preencher('pvResp',String(e.responsavel||'').trim()||'VOOALTO UNIFORMES');
+  preencher('pvRespCargo','Responsável pelo recebimento');
+  const local=[String(e.cidadeAssinatura||'').trim(),dataLonga(e.data)].filter(Boolean).join(', ');
+  preencher('pvLocal',local);
+  const numTxt=numeroExibido(e.numero);
+  preencher('pvLegal','Recibo nº '+numTxt+' · '+empresa.cnpj+' · emitido em '+agoraBR()+' · VOOALTO UNIFORMES');
+}
+
+function renderTudo(opts){
+  opts=opts||{};
+  if(!estado.referenteManual)estado.referente=descricaoAutomatica(estado);
+  if(opts.sidebar!==false)renderSidebar();
+  if(opts.itens)renderItensEditor();
+  renderResumos();
+  renderPreview();
+}
+
+/* ── salvar / abrir recibos ─────────────────────────────────────────────── */
+function montarRegistro(){
+  const c=calcular();
+  const agora=new Date().toISOString();
+  return {
+    id:estado.id||('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)),
+    numero:String(estado.numero||''),
+    data:estado.data,
+    criadoEm:estado.criadoEm||agora,
+    atualizadoEm:agora,
+    fichaId:estado.fichaId,
+    fichaNum:estado.fichaNum,
+    fichaNome:estado.fichaNome,
+    cliente:Object.assign({},estado.cliente),
+    itens:estado.itens.map(it=>({modelo:it.modelo,qtd:num(it.qtd),unit:num(it.unit)})),
+    totalProducao:c.total,
+    desconto:c.desconto,
+    base:c.base,
+    jaRecebido:c.jaRecebido,
+    modo:estado.modo,
+    valorPago:c.pago,
+    saldo:c.saldo,
+    saldoFicha:c.saldoFicha,
+    forma:estado.forma,
+    referente:estado.referente,
+    previsao:estado.previsao,
+    obs:estado.obs,
+    responsavel:estado.responsavel,
+    cidadeAssinatura:estado.cidadeAssinatura,
+    mostrarItens:estado.mostrarItens,
+    mostrarSaldo:estado.mostrarSaldo
+  };
+}
+
+function salvar(){
+  const c=calcular();
+  if(!(c.pago>0)){
+    toast('⚠ Informe o valor recebido antes de salvar o recibo.','erro');
+    return null;
+  }
+  if(!String(estado.numero||'').trim())estado.numero=proximoNumero();
+  const lista=carregarRecibos();
+  /* Número repetido é erro de documento: pergunta antes em vez de gravar
+     dois recibos com o mesmo número em silêncio. */
+  const repetido=lista.find(r=>normNumero(r.numero)===normNumero(estado.numero)&&String(r.id)!==String(estado.id||'__novo__'));
+  if(repetido&&typeof confirm==='function'&&!confirm('Já existe um recibo com o nº '+numeroExibido(estado.numero)+'.\n\nSalvar mesmo assim?'))return null;
+  const registro=montarRegistro();
+  const i=lista.findIndex(r=>String(r.id)===String(registro.id));
+  if(i>=0)lista[i]=registro; else lista.unshift(registro);
+  const ok=gravarRecibos(lista);
+  if(!ok){toast('⚠ O navegador recusou a gravação (memória cheia?). Exporte o .json.','erro');return null}
+  const ultimo=Math.max(parseInt(lsGet(LS.NUMERO)||'0',10)||0,parseInt(registro.numero,10)||0);
+  if(ultimo>0)lsSet(LS.NUMERO,String(ultimo));
+  estado.id=registro.id;
+  estado.criadoEm=registro.criadoEm;
+  estado.salvoEm=registro.atualizadoEm;
+  salvarRascunho();
+  renderTudo({sidebar:true,itens:true});
+  toast('💾 Recibo nº '+numeroExibido(registro.numero)+' salvo.','sucesso');
+  return registro;
+}
+
+/* Salva o recibo atual e já prepara o PRÓXIMO da mesma ficha: mantém
+   cliente/itens/forma, zera observações, põe o número seguinte e sugere o
+   saldo restante. É o fluxo de parcelas (entrada hoje, resto depois). */
+function salvarENovo(){
+  const registro=salvar();
+  if(!registro)return null;
+  const cliente=Object.assign({},estado.cliente);
+  const itens=estado.itens.map(it=>({modelo:it.modelo,qtd:it.qtd,unit:it.unit}));
+  const ficha={id:estado.fichaId,num:estado.fichaNum,nome:estado.fichaNome};
+  const total=estado.totalProducao;
+  const desconto=estado.desconto;
+  const forma=estado.forma;
+  const responsavel=estado.responsavel;
+  const cidade=estado.cidadeAssinatura;
+  const entrada=estado.entradaFicha;
+  estado=estadoVazio();
+  estado.cliente=cliente;
+  estado.itens=itens;
+  estado.totalProducao=total;
+  estado.desconto=desconto;
+  estado.fichaId=ficha.id;
+  estado.fichaNum=ficha.num;
+  estado.fichaNome=ficha.nome;
+  estado.forma=forma;
+  estado.responsavel=responsavel;
+  estado.cidadeAssinatura=cidade;
+  estado.entradaFicha=entrada;
+  estado.totalManual=true;
+  estado.numero=proximoNumero();
+  estado.jaRecebido=jaRecebidoDaFicha(estado.fichaNum,'');
+  const restante=arred(Math.max(0,calcular().base-calcular().jaRecebido));
+  estado.modo=restante>0.005?'parcial':'total';
+  estado.valorPago=restante>0.005?restante:arred(Math.max(0,calcular().base-calcular().jaRecebido));
+  estado.referente=descricaoAutomatica(estado);
+  renderTudo({sidebar:true,itens:true});
+  salvarRascunho();
+  toast('Recibo salvo. Próximo: nº '+numeroExibido(estado.numero)+(restante>0.005?' · saldo '+fmtBRL(restante):''));
+  return registro;
+}
+
+function abrirRecibo(id){
+  const lista=carregarRecibos();
+  const r=lista.find(x=>String(x.id)===String(id));
+  if(!r){toast('Recibo não encontrado.','erro');return false}
+  estado=normalizarEstado(JSON.parse(JSON.stringify(r)));
+  estado.id=r.id;
+  estado.criadoEm=r.criadoEm||'';
+  estado.salvoEm=r.atualizadoEm||'';
+  estado.totalManual=true;
+  estado.valorPagoManual=true;
+  estado.referenteManual=true;
+  estado.jaRecebidoManual=true;
+  if(!String(estado.cidadeAssinatura||'').trim())estado.cidadeAssinatura='Goiânia - GO';
+  fecharSalvos();
+  renderTudo({sidebar:true,itens:true});
+  salvarRascunho();
+  toast('Recibo nº '+numeroExibido(estado.numero)+' aberto');
+  return true;
+}
+
+function excluirRecibo(id){
+  const lista=carregarRecibos();
+  const r=lista.find(x=>String(x.id)===String(id));
+  const rotulo=r?('nº '+numeroExibido(r.numero)):'este recibo';
+  if(typeof confirm==='function'&&!confirm('Excluir '+rotulo+'?\n\nEssa ação não pode ser desfeita.'))return false;
+  const nova=lista.filter(x=>String(x.id)!==String(id));
+  gravarRecibos(nova);
+  if(String(estado.id)===String(id)){
+    estado.id='';
+    estado.salvoEm='';
+    renderResumos();
+  }
+  renderSalvos();
+  toast('Recibo excluído.');
+  return true;
+}
+
+function renderSalvos(){
+  const box=$('listaRecibos');
+  if(!box)return;
+  const lista=carregarRecibos().slice().sort((a,b)=>String(b.criadoEm||'').localeCompare(String(a.criadoEm||'')));
+  if(!lista.length){
+    box.innerHTML='<div class="modal-empty">Nenhum recibo salvo ainda.<br>Preencha e use <b>💾 Salvar recibo</b>.</div>';
+    return;
+  }
+  box.innerHTML=lista.map(r=>{
+    const c=num(r.valorPago);
+    const cli=String((r.cliente&&r.cliente.nome)||'Sem cliente');
+    const ficha=String(r.fichaNum||'');
+    const partes=[];
+    if(ficha)partes.push('Ficha nº '+ficha);
+    if(r.modo==='parcial')partes.push('parcial');
+    if(num(r.saldo)>0.005)partes.push('saldo '+fmtBRL(r.saldo));
+    else partes.push('quitado');
+    partes.push(isoParaBR(r.data));
+    return '<div class="salvo-row">'
+      +'<div class="info"><b>Nº '+esc(numeroExibido(r.numero))+' · '+esc(cli)+'</b>'
+      +'<small>'+esc(partes.join(' · '))+'</small></div>'
+      +'<div class="money">'+esc(fmtBRL(c))+'</div>'
+      +'<div class="acts">'
+        +'<button type="button" onclick="Recibo.abrirSalvo(\''+escAttr(r.id)+'\')" title="Abrir este recibo">Abrir</button>'
+        +'<button type="button" class="del" onclick="Recibo.excluirSalvo(\''+escAttr(r.id)+'\')" title="Excluir este recibo">✕</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+function abrirSalvos(){
+  renderSalvos();
+  const m=$('modalRecibos');
+  if(m)m.classList.add('open');
+}
+function fecharSalvos(){
+  const m=$('modalRecibos');
+  if(m)m.classList.remove('open');
+}
+
+function novo(){
+  const temConteudo=!!(String(estado.cliente.nome||'').trim()||estado.itens.length||calcular().pago>0);
+  if(temConteudo&&typeof confirm==='function'&&!confirm('Começar um recibo novo?\n\nO recibo em edição fica guardado como rascunho.')){
+    return false;
+  }
+  const responsavel=estado.responsavel;
+  const cidade=estado.cidadeAssinatura;
+  estado=estadoVazio();
+  estado.numero=proximoNumero();
+  estado.responsavel=responsavel;
+  estado.cidadeAssinatura=cidade||'Goiânia - GO';
+  estado.referente=descricaoAutomatica(estado);
+  lsDel(LS.AUTOSAVE);
+  /* Grava já o rascunho vazio: se a aba fechar, ninguém reabre o recibo
+     anterior por engano (era o que o lsDel sozinho deixava acontecer). */
+  salvarRascunho();
+  renderTudo({sidebar:true,itens:true});
+  const sel=$('fichaSelect');if(sel)sel.value='';
+  toast('🗋 Recibo novo — nº '+numeroExibido(estado.numero));
+  return true;
+}
+
+/* ── importar / exportar ────────────────────────────────────────────────── */
+function lerArquivoTexto(file){
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader();
+    fr.onload=()=>resolve(String(fr.result||''));
+    fr.onerror=()=>reject(fr.error||new Error('Falha ao ler o arquivo'));
+    fr.readAsText(file);
+  });
+}
+async function importarArquivo(ev){
+  const inp=ev&&ev.target;
+  const file=inp&&inp.files&&inp.files[0];
+  if(!file)return false;
+  try{
+    const texto=await lerArquivoTexto(file);
+    const dados=JSON.parse(texto);
+    return importarObjeto(dados);
+  }catch(e){
+    toast('⚠ Arquivo inválido: '+(e&&e.message?e.message:'não é um JSON de ficha.'),'erro');
+    return false;
+  }finally{
+    if(inp)inp.value='';
+  }
+}
+function importarObjeto(dados){
+  if(!dados||typeof dados!=='object'){toast('Arquivo sem dados.','erro');return false}
+  let fichas=[];
+  if(Array.isArray(dados.fichas)&&dados.fichas.length){
+    fichas=dados.fichas.filter(x=>x&&x.data&&typeof x.data==='object');
+  }else if(dados._version&&String(dados._version).indexOf('vooalto_ficha')===0){
+    fichas=[{id:'imp_'+Date.now(),name:nomeDaFicha(dados),num:numDaFicha(dados),data:dados}];
+  }else if(temFicha(dados)){
+    fichas=[{id:'imp_'+Date.now(),name:nomeDaFicha(dados),num:numDaFicha(dados),data:dados}];
+  }
+  if(!fichas.length){toast('Este arquivo não tem ficha técnica.','erro');return false}
+  fichas.forEach((f,i)=>{
+    const id='imp_'+Date.now()+'_'+i;
+    fichasImportadas[id]={id:id,nome:f.name||nomeDaFicha(f.data),num:f.num||numDaFicha(f.data),dados:f.data};
+  });
+  renderFichas();
+  const primeiroId=Object.keys(fichasImportadas).pop();
+  const sel=$('fichaSelect');
+  if(sel&&primeiroId)sel.value=primeiroId;
+  aplicarFicha(fichasImportadas[primeiroId].dados,{id:primeiroId,name:fichasImportadas[primeiroId].nome});
+  toast('📥 '+(fichas.length===1?'Ficha importada':fichas.length+' fichas importadas')+'.');
+  return true;
+}
+
+function baixarBlob(blob,nome){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},10000);
+}
+function nomeArquivoRecibo(){
+  const num=String(estado.numero||'').trim()||'sem-numero';
+  const cli=String(estado.cliente.nome||'').trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').substring(0,40);
+  return 'recibo_'+(num?('n'+num):'')+(cli?'_'+cli:'')+'_'+carimboArquivo();
+}
+function exportarJSON(){
+  try{
+    const registro=montarRegistro();
+    const conteudo=JSON.stringify({_version:'vooalto_recibo_v1',recibo:registro},null,2);
+    baixarBlob(new Blob([conteudo],{type:'application/json'}),nomeArquivoRecibo()+'.json');
+    toast('📤 Recibo exportado em .json');
+    return true;
+  }catch(e){
+    toast('⚠ Não foi possível exportar: '+e.message,'erro');
+    return false;
+  }
+}
+async function exportarPNG(){
+  if(typeof html2canvas!=='function'){
+    toast('A biblioteca de imagem não carregou. Use Imprimir / Salvar PDF.','erro');
+    return false;
+  }
+  const folha=$('reciboFolha');
+  if(!folha)return false;
+  let voltar=()=>{};
+  try{
+    if(window.ZoomFolha&&ZoomFolha.suspenderTudo)voltar=ZoomFolha.suspenderTudo();
+    await new Promise(r=>setTimeout(r,60));
+    const canvas=await html2canvas(folha,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+    if(!blob)throw new Error('imagem vazia');
+    baixarBlob(blob,nomeArquivoRecibo()+'.png');
+    toast('🖼️ PNG gerado.');
+    return true;
+  }catch(e){
+    toast('⚠ Falha ao gerar o PNG. Use Imprimir / Salvar PDF.','erro');
+    return false;
+  }finally{
+    try{voltar()}catch(e){}
+  }
+}
+
+function imprimir(){
+  if(!String(estado.numero||'').trim())estado.numero=proximoNumero();
+  renderPreview();
+  try{window.print()}catch(e){}
+}
+
+function textoParaCopiar(){
+  const c=calcular();
+  return 'RECIBO Nº '+numeroExibido(estado.numero)+' — VOOALTO UNIFORMES\n'
+    +textoDoRecibo(estado)+'\n'
+    +'Forma de pagamento: '+(estado.forma||'—')+' · Data: '+isoParaBR(estado.data)+'\n'
+    +'Recebido: '+fmtBRL(c.pago)
+    +(c.saldo>0.005?(' · Saldo devedor: '+fmtBRL(c.saldo)):' · Quitado');
+}
+async function copiarTexto(){
+  const texto=textoParaCopiar();
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(texto);
+      toast('📋 Texto do recibo copiado.');
+      return true;
+    }
+    throw new Error('clipboard indisponível');
+  }catch(e){
+    const ta=document.createElement('textarea');
+    ta.value=texto;
+    ta.style.position='fixed';
+    ta.style.opacity='0';
+    document.body.appendChild(ta);
+    try{ta.select();document.execCommand('copy');toast('📋 Texto do recibo copiado.')}
+    catch(err){toast('Não consegui copiar — selecione o texto na folha.','erro')}
+    ta.remove();
+    return false;
+  }
+}
+
+/* ── ajuda / zoom / mensagens ───────────────────────────────────────────── */
+function abrirAjuda(){const m=$('ajudaRecibo');if(m)m.classList.add('open')}
+function fecharAjuda(){const m=$('ajudaRecibo');if(m)m.classList.remove('open')}
+function instalarZoom(){
+  try{
+    if(window.ZoomFolha)ZoomFolha.instalar({seletor:'#reciboPalco',chave:'vooalto_zoom_recibo_v1'});
+  }catch(e){}
+}
+function avisarPronto(){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:'vooalto-recibo-pronto'},location.origin);
+    }
+  }catch(e){}
+}
+
+window.addEventListener('message',ev=>{
+  if(ev&&ev.origin&&ev.origin!==location.origin)return;
+  const d=ev&&ev.data;
+  if(!d||!d.type)return;
+  if(d.type==='vooalto-theme'){aplicarTema(d.theme);return}
+  if(d.type==='vooalto-carregar-ficha'&&d.ficha){
+    aplicarFicha(d.ficha,d.meta||null);
+    return;
+  }
+  if(d.type==='vooalto-backup-restaurado'){
+    estado.jaRecebido=estado.jaRecebidoManual?estado.jaRecebido:jaRecebidoDaFicha(estado.fichaNum,estado.id);
+    renderTudo();
+    return;
+  }
+});
+
+/* ── inicialização ──────────────────────────────────────────────────────── */
+function iniciar(){
+  aplicarTema(temaSalvo());
+  empresa=carregarEmpresa();
+  const draft=rascunhoSalvo();
+  if(draft){
+    estado=normalizarEstado(draft.estado);
+    const hora=new Date(draft.salvoEm||Date.now());
+    marcarSalvo(true,String(hora.getHours()).padStart(2,'0')+':'+String(hora.getMinutes()).padStart(2,'0'));
+  }else{
+    estado=estadoVazio();
+    estado.numero=proximoNumero();
+    estado.referente=descricaoAutomatica(estado);
+    marcarSalvo(true,agoraBR().slice(-5));
+  }
+  if(!String(estado.cidadeAssinatura||'').trim())estado.cidadeAssinatura='Goiânia - GO';
+  renderTudo({sidebar:true,itens:true});
+  renderFichas();
+  instalarZoom();
+  avisarPronto();
+}
+
+document.addEventListener('DOMContentLoaded',iniciar);
+
+/* ── API exposta (botões inline e testes) ───────────────────────────────── */
+window.Recibo={
+  campo,check,empresaCampo,normalizar,
+  definirModo,recalcularTotal,recalcularJaRecebido,
+  adicionarItem,itemCampo,formatarItem,removerItem,
+  carregarFichaSelecionada,importarArquivo,
+  salvar,salvarENovo,novo,abrirSalvos,fecharSalvos,abrirRecibo,excluirRecibo,
+  abrirSalvo:id=>abrirRecibo(id),
+  excluirSalvo:id=>excluirRecibo(id),
+  imprimir,exportarPNG,exportarJSON,copiarTexto,
+  abrirAjuda,fecharAjuda
+};
+
+/* Ganchos para a suíte de testes (nada de UI usa isto). */
+window.ReciboInterno={
+  extenso:extensoReais,
+  extensoInteiro,
+  parseBRL,
+  fmtBRL,
+  fmtNumInput,
+  calcular,
+  somaItens,
+  totalPecas,
+  descricaoAutomatica,
+  textoDoRecibo,
+  textoParaCopiar,
+  aplicarFicha,
+  importarObjeto,
+  montarRegistro,
+  salvar,
+  salvarENovo,
+  abrirRecibo,
+  excluirRecibo,
+  estadoAtual:()=>estado,
+  empresaAtual:()=>empresa,
+  definirEstado:novoEstado=>{
+    estado=normalizarEstado(novoEstado);
+    renderTudo({sidebar:true,itens:true});
+  },
+  recarregarFichas:()=>{renderFichas();return fichasDisponiveis;},
+  recibos:carregarRecibos,
+  jaRecebidoDaFicha,
+  proximoNumero,
+  render:()=>renderTudo({sidebar:true,itens:true}),
+  numeroExibido,
+  isoParaBR,
+  dataLonga
+};
+})();
+</script>
+</body>
+</html>

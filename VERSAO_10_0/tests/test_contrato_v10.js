@@ -57,7 +57,7 @@ const contratoHtml = fs.readFileSync(path.join(contratoDir, 'index.html'), 'utf-
   {
     const erros = [];
     const frames = {};
-    ['ficha', 'orcamento', 'contrato'].forEach(k => {
+    ['ficha', 'orcamento', 'recibo', 'contrato'].forEach(k => {
       frames[k] = { got: [], postMessage: m => frames[k].got.push(m), location: { reload() { frames[k].reloaded = true; } } };
     });
     const dom = new JSDOM(shellHtml, {
@@ -69,7 +69,7 @@ const contratoHtml = fs.readFileSync(path.join(contratoDir, 'index.html'), 'utf-
       }
     });
     const w = dom.window, d = w.document;
-    ['ficha', 'orcamento', 'contrato'].forEach(k => {
+    ['ficha', 'orcamento', 'recibo', 'contrato'].forEach(k => {
       const real = d.getElementById('frame-' + k);
       Object.defineProperty(real, 'contentWindow', { value: frames[k], configurable: true });
     });
@@ -81,7 +81,7 @@ const contratoHtml = fs.readFileSync(path.join(contratoDir, 'index.html'), 'utf-
     ok('o iframe do contrato existe', !!fr);
     ok('o contrato NÃO carrega junto com o sistema (~10 MB)', !fr.getAttribute('src') && !!fr.dataset.src);
     ok('o src aponta para o motor embarcado', fr.dataset.src === 'criador_contrato/index.html');
-    ok('as três abas estão na barra', d.querySelectorAll('.switch-btn').length === 3);
+    ok('as quatro abas estão na barra', d.querySelectorAll('.switch-btn').length === 4);
 
     w.eval("showProject('contrato')");
     await wait(120);

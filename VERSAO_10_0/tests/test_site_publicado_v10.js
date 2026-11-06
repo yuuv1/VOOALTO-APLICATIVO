@@ -94,8 +94,10 @@ function abrirShell(url) {
     ok('o servidor redireciona caminho .html (302)', /status:\s*302/.test(src));
     ok('o HTML sai como Text/HTML (text/html minúsculo é reescrito)', /Text\/HTML; charset=utf-8/.test(src));
     ok('o service worker fica preso em /functions/v1/site/', /CAMINHO_BASE/.test(src) && /service-worker-allowed/.test(src));
-    ok('existe rota limpa para os três módulos', /'ficha':\s*'criador_ficha_tecnica\/index\.html'/.test(src) &&
-      /'orcamento':\s*'criador_orcamento\/index\.html'/.test(src) && /'contrato':\s*'criador_contrato\/index\.html'/.test(src));
+    ok('existe rota limpa para os quatro módulos', /'ficha':\s*'criador_ficha_tecnica\/index\.html'/.test(src) &&
+      /'orcamento':\s*'criador_orcamento\/index\.html'/.test(src) &&
+      /'recibo':\s*'criador_recibo\/index\.html'/.test(src) &&
+      /'contrato':\s*'criador_contrato\/index\.html'/.test(src));
   }
 
   console.log(`\n═══ SITE PUBLICADO: ${pass} OK, ${fail} FAIL ═══`);

@@ -76,7 +76,7 @@ async function listVooaltoDatabases(){
 async function zerar(etapa){
   if(resetRunning)return;
   if(etapa===1){
-    if(!confirm('ETAPA 1 de 2 — Preparar apagamento\n\nIsso apaga as fichas salvas, rascunhos, orçamentos e o estado do contrato gravados pelo Vooalto neste perfil do navegador.\n\nExporte um backup antes, se precisar. Deseja continuar?'))return;
+    if(!confirm('ETAPA 1 de 2 — Preparar apagamento\n\nIsso apaga as fichas salvas, rascunhos, orçamentos, recibos e o estado do contrato gravados pelo Vooalto neste perfil do navegador.\n\nExporte um backup antes, se precisar. Deseja continuar?'))return;
     document.getElementById('btnZerar').disabled=true;
     const second=document.getElementById('btnZerar2');second.style.display='inline-block';second.disabled=false;
     log('Pronto para a etapa 2. Feche outras janelas do Vooalto e confirme somente se tiver certeza.');

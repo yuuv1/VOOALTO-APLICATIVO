@@ -3,7 +3,7 @@
 
 Usage: python3 build_v10_pwa.py
 
-V10: três módulos (Ficha Técnica, Orçamento e Contrato). A V10 é a única versão
+V10: quatro módulos (Ficha Técnica, Orçamento, Recibo [teste] e Contrato). A V10 é a única versão
 do projeto (as pastas V5..V9 foram removidas) e mantém o MESMO endereço local
 (http://localhost:4800/) e as mesmas chaves de dados da V8/V9, para que a
 atualização não perca fichas, rascunhos, orçamentos nem o estado do contrato.
