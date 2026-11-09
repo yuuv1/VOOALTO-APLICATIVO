@@ -1,6 +1,6 @@
 # VOOALTO V10 — Registro de alterações
 
-## V10.6.0 — Recibo automático a partir da ficha (versão de teste) (2026-11-06)
+## V10.6.1 — Recibo automático a partir da ficha, agora lendo o PDF (versão de teste) (2026-11-06)
 
 O pedido: *"precisamos fazer uma versão de teste adicionando mais uma função no
 sistema, o de criador de recibo automático baseado na ficha técnica pronta. Aí
@@ -43,13 +43,19 @@ Outros pontos que fizeram o recibo funcionar como documento:
   quatro reais e cinquenta e seis centavos”), com centavos, milhões e bilhões.
 - Saída **A4 vetorial** (imprimir/PDF), **PNG** (html2canvas) e **copiar texto**
   para WhatsApp; zoom só da folha reaproveita o `assets/zoom-folha.js`.
-- **Fim da faixa branca no topo do PDF**: a marca d'água (`.wm`) nascia
-  `position:absolute`, mas a regra `.page > *{position:relative}` — mesma
-  especificidade e escrita depois — a jogava para dentro do fluxo, e o bloco
-  de 470px dela empurrava o recibo para baixo (~1/3 de página em branco antes
-  do logo). Agora `.page > .wm` é fundo absoluto de novo e o recibo começa no
-  topo, com a assinatura no pé da folha; `test_recibo_v10.js` confere
-  `getComputedStyle('.wm').position === 'absolute'`.
+- **Fim da faixa branca no topo do PDF**: a marca d'água era um `<div class="wm">`
+  com 470px de altura dentro da folha; a regra `.page > *{position:relative}`
+  (mesma especificidade, escrita depois) anulava o `position:absolute` dela e o
+  bloco entrava no fluxo do flex, empurrando o recibo ~290px para baixo no
+  PDF/PNG. Agora a marca d'água é um **pseudo-elemento** `.page::after`, que
+  nunca participa do layout: o recibo começa no topo (10mm) e a assinatura fica
+  no pé da folha. `test_recibo_v10.js` confere que não existe mais elemento
+  `.wm` e que `.page::after` é `position:absolute`.
+- **Atualização chega na hora**: o service worker entregava o HTML do cache
+  mesmo ao recarregar, então correção publicada parecia não ter entrado. Agora
+  **navegação é rede-primeiro** (4 s de espera) e só cai no cache sem internet;
+  CSS, JS e imagens continuam cache-first. `version.json` foi para **10.6.1**,
+  o que faz o shell mostrar o aviso de nova versão.
 - Rascunho do recibo em edição salvo sozinho (`vooalto_recibo_autosave_v1`) e
   cabeçalho da empresa em `vooalto_recibo_empresa_v1`. Tudo com prefixo
   `vooalto_`, então entra no **Backup Completo**; a mesclagem de backup une os

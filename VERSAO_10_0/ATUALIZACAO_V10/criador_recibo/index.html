@@ -145,13 +145,11 @@
       position:relative;overflow:hidden;padding:38px 46px;display:flex;flex-direction:column;
       font-size:13px;box-shadow:0 18px 45px rgba(0,0,0,.32);flex-shrink:0;
     }
-    .wm{position:absolute;right:-20px;bottom:-70px;width:330px;height:470px;background:url("../assets/watermark_vooalto.png") right bottom/contain no-repeat;opacity:.07;pointer-events:none;z-index:0}
+    /* Marca d'água como PSEUDO-ELEMENTO: nunca entra no fluxo do flex, então
+       não há regra de conteúdo que a transforme em bloco e empurre o recibo
+       para baixo (era o que deixava a faixa branca no topo do PDF). */
+    .page::after{content:"";position:absolute;right:-20px;bottom:-70px;width:330px;height:470px;background:url("../assets/watermark_vooalto.png") right bottom/contain no-repeat;opacity:.07;pointer-events:none;z-index:0}
     .page > *{position:relative;z-index:1}
-    /* A marca d'água é decoração de fundo: tem de ficar FORA do fluxo. Sem
-       esta regra o `.page > *` acima a tornava `relative` (mesma
-       especificidade, regra mais abaixo) e os 470px dela empurravam o recibo
-       para baixo, deixando uma faixa branca no topo do PDF. */
-    .page > .wm{position:absolute;z-index:0}
     .p-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}
     .p-logo{width:270px;max-height:88px;object-fit:contain;object-position:left top}
     .p-company{text-align:right;font-size:11px;line-height:1.5;color:#111;max-width:360px}
@@ -272,7 +270,7 @@
   <!-- ══════════ PAINEL ══════════ -->
   <aside class="sidebar">
     <div class="sb-head">
-      <h1>🧾 Recibo automático <span class="beta-chip">teste</span></h1>
+      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.1 — lê o PDF da ficha">teste</span></h1>
       <p><b>Jogue a ficha técnica aqui</b> (arraste o .json ou escolha na lista) e o recibo já sai pronto: cliente, itens e valores preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo ajustável à mão.</p>
       <div class="sb-toprow">
         <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
@@ -443,7 +441,6 @@
     <div class="palco" id="reciboPalco">
       <div class="palco-inner">
         <div class="page" id="reciboFolha">
-          <div class="wm"></div>
           <div class="p-quitado" id="pvCarimbo">Quitado</div>
 
           <div class="p-head">
@@ -595,6 +592,7 @@
     </ul>
 
     <div class="ajuda-foot">
+      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.1</span>
       <button class="btn btn-secondary" type="button" onclick="Recibo.fecharAjuda()">Fechar</button>
     </div>
   </div>

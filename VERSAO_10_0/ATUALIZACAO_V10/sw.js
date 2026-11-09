@@ -1,9 +1,9 @@
-// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash 268232256671)
+// Service Worker Vooalto V10 — arquivo gerado por build_v10_pwa.py (hash 22c2b95da40c)
 const CACHE_PREFIX = 'vooalto-v10-';
 // Caches das versões anteriores na MESMA origem (a porta 4800 nunca mudou): o
 // activate apaga o que a V9/V8 deixou, sem tocar em outros aplicativos.
 const LEGACY_CACHE_PREFIXES = ['vooalto-v9-', 'vooalto-v8-'];
-const CACHE = 'vooalto-v10-268232256671';
+const CACHE = 'vooalto-v10-22c2b95da40c';
 const PRECACHE = ["/","manifest.webmanifest","limpar_cache.html","zerar_dados.html","entrar.html","index.html","manual.html","site-supabase.html","assets/cropper.min.css","assets/cropper.min.js","assets/fonts.css","assets/html2canvas.min.js","assets/imagem.js","assets/logo_empresa.png","assets/logo_orcamento.png","assets/nuvem.js","assets/rascunhos.js","assets/tema-v10.css","assets/watermark_vooalto.png","assets/zoom-folha.js","assets/fonts/poppins-latin-300-normal.woff2","assets/fonts/poppins-latin-400-normal.woff2","assets/fonts/poppins-latin-500-normal.woff2","assets/fonts/poppins-latin-600-normal.woff2","assets/fonts/poppins-latin-700-normal.woff2","assets/pdf/LICENSE.txt","assets/pdf/pdf.min.js","assets/pdf/pdf.worker.min.js","criador_contrato/manifest.webmanifest","criador_contrato/icons/apple-touch-icon.png","criador_contrato/icons/icon-192.png","criador_contrato/icons/icon-512.png","criador_contrato/icons/maskable-512.png","criador_ficha_tecnica/index.html","criador_orcamento/index.html","criador_recibo/index.html","icons/icon-192.png","icons/icon-512-maskable.png","icons/icon-512.png","icons/icone.png","mockup/index.html","mockup/peca.js","mockup/peca_editor.css","mockup/peca_editor.js","mockup/peca_render.js"];
 // Arquivos grandes (bundle do Contrato): entram no cache um a um, DEPOIS do
 // precache obrigatório. cache.addAll() é atômico — se um arquivo de ~10 MB
@@ -43,19 +43,48 @@ self.addEventListener('activate', event => {
   })());
 });
 
-// Cache-first para recursos do próprio app; os dados do usuário ficam em
-// localStorage/IndexedDB e nunca passam pelo service worker.
+// HTML sempre tenta a REDE primeiro; o resto é cache-first (rápido e offline).
+//
+// Antes era cache-first para tudo, inclusive navegação: quem já tinha aberto o
+// app continuava vendo a página antiga mesmo depois de recarregar (o service
+// worker entregava o HTML do cache) e as correções pareciam não ter chegado.
+// Com rede-first na navegação, recarregar já mostra a versão nova; sem
+// internet, cai no cache e o app continua funcionando offline.
+const REDE_ESPERA_MS = 4000;
+
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname === '/__vooalto_health') return;
 
+  const doCache = async (cache) => (await cache.match(request))
+    || (await cache.match(url.pathname, { ignoreSearch: true }));
+
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    const hit = await cache.match(request) || (request.mode === 'navigate'
-      ? await cache.match(url.pathname, { ignoreSearch: true })
-      : null);
+
+    if (request.mode === 'navigate') {
+      try {
+        const resposta = await Promise.race([
+          fetch(request),
+          new Promise(resolve => setTimeout(() => resolve(null), REDE_ESPERA_MS))
+        ]);
+        if (resposta) {
+          if (resposta.ok && url.pathname.startsWith('/')) {
+            cache.put(request, resposta.clone()).catch(() => {});
+          }
+          return resposta;
+        }
+      } catch (error) {
+        /* sem internet: usa o que está guardado */
+      }
+      const guardado = await doCache(cache);
+      if (guardado) return guardado;
+      throw new Error('offline e sem cópia em cache');
+    }
+
+    const hit = await doCache(cache);
     if (hit) return hit;
 
     try {
