@@ -53,8 +53,11 @@ NOVO NA V10.6 — 🧾 RECIBO (VERSÃO DE TESTE)
 -------------------------------------------
 A quarta aba gera o recibo de pagamento a partir da ficha técnica pronta.
 
-• Abra a ficha que quer receber e clique em "🧾 Gerar recibo" (no pé do menu da
-  Ficha) — ou vá na aba "🧾 Recibo", escolha a ficha e clique em "Carregar".
+• O jeito mais direto: ARRASTE o arquivo .json da ficha para a tela do Recibo
+  (na Ficha Técnica: "Exportar só esta ficha"). O recibo é criado na hora.
+• Também vale abrir a ficha que quer receber e clicar em "🧾 Gerar recibo" (no
+  pé do menu da Ficha) — ou, na aba "🧾 Recibo", escolher a ficha na lista:
+  só de selecionar o recibo já é montado.
 • Cliente, nº da ficha, itens, quantidades e valores vêm preenchidos. Tudo pode
   ser alterado à mão: total da produção, desconto, valor recebido, forma de
   pagamento, data, observações e responsável.
@@ -69,6 +72,9 @@ A quarta aba gera o recibo de pagamento a partir da ficha técnica pronta.
 • A folha imprime também os dados do cliente da ficha (CPF/CNPJ, telefone,
   endereço e cidade), quando existirem.
 • Os recibos entram no Backup completo (.json) junto com o resto do sistema.
+
+PDF, foto ou print da ficha não são lidos automaticamente: o Recibo avisa e
+mantém o que já estava na tela. Use o .json (ou o botão dentro da Ficha).
 
 Esta função está em teste: confira os valores na folha antes de salvar ou
 imprimir. Recibo simples de controle interno — não substitui nota fiscal.

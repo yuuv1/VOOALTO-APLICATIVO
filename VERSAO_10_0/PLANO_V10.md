@@ -417,6 +417,15 @@ ainda não tinha `src`). A cópia enviada é **enxuta**: só cliente, `entradaVa
 itens de `_prod`/`_paginas[].prod` e número — as camadas e imagens em base64 de
 `capturarFichaParaJSON()` ficam de fora (seriam vários MB por postMessage).
 
+**Arrastar a ficha.** A aba inteira escuta `dragenter/dragover/dragleave/drop`
+(com contador para o overlay não piscar) e aceita o `.json` da ficha ou o
+backup completo; extensões diferentes de `.json` são recusadas com aviso e
+**não** mexem no recibo em edição. Não há leitura de PDF/OCR no recibo: o
+contrato já embarca pdf.js + tesseract, mas duplicar esse motor num módulo de
+1 folha A4 não se paga. Ao abrir com o recibo em branco, a ficha em edição
+(`vooalto_v7_ficha_ativa`) é aplicada sozinha (`autoFicha`, que também evita o
+diálogo de confirmação quando a ficha chega pela ponte logo depois).
+
 **Parcelas.** `salvarENovo()` salva o recibo e já monta o próximo da mesma
 ficha: mantém cliente/itens/total/desconto/forma, zera observação, avança o
 número e sugere `base − jáRecebido` como valor. `novo()` grava na hora um

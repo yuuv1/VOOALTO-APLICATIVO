@@ -19,6 +19,11 @@ ficha pronta e monta um recibo A4.
 
 Outros pontos que fizeram o recibo funcionar como documento:
 
+- **Jogar a ficha e o recibo nascer pronto**: arraste o `.json` da ficha (ou o
+  backup completo) para qualquer lugar da aba e o recibo é montado na hora;
+  selecionar na lista também carrega sem clique extra; e, com o recibo em
+  branco, a ficha aberta na Ficha Técnica entra sozinha. PDF/foto é recusado
+  com aviso (não há leitura de PDF/OCR no recibo) sem perder o que está na tela.
 - **Numeração própria** (`vooalto_recibo_numero_v1`) que avança ao salvar;
   salvar de novo **atualiza** o recibo aberto em vez de duplicar, e nº repetido
   pede confirmação.
@@ -42,10 +47,10 @@ Outros pontos que fizeram o recibo funcionar como documento:
 - No site publicado, a rota limpa é `/recibo/` (adicionada ao `ROTAS` da Edge
   Function `site`).
 
-Testes novos: `tests/test_recibo_v10.js` (112 verificações: extenso, leitura de
+Testes novos: `tests/test_recibo_v10.js` (118 verificações: extenso, leitura de
 valores, ficha → recibo, total x parcial, alteração manual, itens, numeração,
-já recebido, recibos salvos, parcelas, rascunho, importação, mesclagem de
-backup, impressão e tema).
+já recebido, recibos salvos, parcelas, rascunho, importação, arrastar e soltar,
+mesclagem de backup, impressão e tema).
 `test_shell_v10.js`, `test_contrato_v10.js` e `test_site_publicado_v10.js`
 foram atualizados para as quatro abas.
 

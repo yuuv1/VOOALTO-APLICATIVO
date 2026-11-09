@@ -368,6 +368,69 @@ const FICHA = {
     ok('a mesclagem existe também na Ficha e no Orçamento', /V10\.6 — recibos/.test(ficha) && /V10\.6 — recibos/.test(orc));
   }
 
+  console.log('\n── 12. Jogar a ficha e o recibo nascer pronto ──');
+  {
+    const fichaAtiva = {
+      _version: 'vooalto_ficha_v7', _numFicha: '7777',
+      dc_nome: 'Cliente Já Aberto', dc_doc: '999.888.777-66', dc_cidade: 'Goiânia - GO',
+      entradaVal: '0,00',
+      _prod: [{ modelo: 'Bata', valor: '100,00', qtd: '3' }]
+    };
+    const dom3 = new JSDOM(HTML, {
+      url: 'http://localhost:4800/criador_recibo/index.html',
+      runScripts: 'dangerously', pretendToBeVisual: true,
+      beforeParse(win) {
+        win.confirm = () => true;
+        win.alert = () => {};
+        win.print = () => {};
+        win.matchMedia = q => ({ matches: false, media: q, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
+        win.localStorage.setItem('vooalto_v7_ficha_ativa', JSON.stringify(fichaAtiva));
+        win.localStorage.setItem('vooalto_v8_rascunho_meta', JSON.stringify({ vazio: false }));
+      }
+    });
+    await espera(450);
+    const w3 = dom3.window, d3 = w3.document, R3 = w3.ReciboInterno;
+
+    ok('a ficha que está aberta vira recibo sozinha ao abrir a aba',
+      R3.estadoAtual().cliente.nome === 'Cliente Já Aberto' && R3.estadoAtual().totalProducao === 300 && R3.estadoAtual().fichaNum === '7777',
+      { cli: R3.estadoAtual().cliente.nome, total: R3.estadoAtual().totalProducao });
+
+    ok('escolher na lista já carrega (sem apertar botão)',
+      /onchange="Recibo\.carregarFichaSelecionada\(\)"/.test(HTML));
+
+    const evDrag = new w3.Event('dragenter', { bubbles: true, cancelable: true });
+    Object.defineProperty(evDrag, 'dataTransfer', { value: { types: ['Files'], files: [] } });
+    w3.document.dispatchEvent(evDrag);
+    ok('arrastar arquivo mostra o aviso de “solte aqui”', d3.getElementById('reciboDropOverlay').classList.contains('on'));
+
+    const outra = {
+      _version: 'vooalto_ficha_v7', _numFicha: '8888',
+      dc_nome: 'Cliente do Arquivo', dc_doc: '111.222.333-44', dc_cidade: 'Goiânia - GO',
+      entradaVal: '0,00',
+      _prod: [{ modelo: 'Camisa', valor: '60,00', qtd: '2' }]
+    };
+    const arquivo = new w3.File([JSON.stringify(outra)], 'ficha_8888.json', { type: 'application/json' });
+    const evDrop = new w3.Event('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(evDrop, 'dataTransfer', { value: { types: ['Files'], files: [arquivo], dropEffect: 'copy' } });
+    w3.document.dispatchEvent(evDrop);
+    await espera(450);
+    const depoisDrop = R3.estadoAtual();
+    ok('soltar o .json da ficha cria o recibo na hora',
+      depoisDrop.cliente.nome === 'Cliente do Arquivo' && depoisDrop.totalProducao === 120 && depoisDrop.fichaNum === '8888',
+      { cli: depoisDrop.cliente.nome, total: depoisDrop.totalProducao, num: depoisDrop.fichaNum });
+    ok('o aviso de arrastar sai depois de soltar', !d3.getElementById('reciboDropOverlay').classList.contains('on'));
+
+    const pdf = new w3.File(['%PDF-1.4 nada legível'], 'ficha_impressa.pdf', { type: 'application/pdf' });
+    const evPdf = new w3.Event('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(evPdf, 'dataTransfer', { value: { types: ['Files'], files: [pdf], dropEffect: 'copy' } });
+    w3.document.dispatchEvent(evPdf);
+    await espera(200);
+    ok('PDF/foto não é lido e o recibo atual não é perdido',
+      R3.estadoAtual().cliente.nome === 'Cliente do Arquivo' && /Só arquivo \.json/.test(d3.getElementById('reciboToast').textContent),
+      d3.getElementById('reciboToast').textContent.slice(0, 90));
+    dom3.window.close();
+  }
+
   console.log(fail ? `\n═══ RECIBO V10.6: ${fail} FALHA(S) ═══` : '\n═══ RECIBO V10.6: tudo OK ═══');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('FATAL', e); process.exit(1); });

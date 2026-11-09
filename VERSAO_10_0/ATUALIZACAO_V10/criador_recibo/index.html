@@ -115,6 +115,17 @@
     details.card > summary::-webkit-details-marker{display:none}
     details.card[open] > summary{color:var(--v10-pink);margin-bottom:6px}
 
+    /* Arrastar a ficha .json para qualquer lugar da página */
+    .dropzone{margin-top:9px;border:2px dashed var(--v10-line-2);border-radius:10px;padding:10px 12px;text-align:center;cursor:pointer;background:var(--v10-surface-3);font-size:10px;color:var(--v10-t2);line-height:1.45;transition:.15s}
+    .dropzone b{display:block;font-size:11.5px;color:var(--v10-t1);font-weight:800}
+    .dropzone:hover,.dropzone:focus{border-color:var(--v10-pink);color:var(--v10-t1);outline:none}
+    .dropzone.over{border-color:var(--v10-pink);background:var(--v10-sel)}
+    .drop-overlay{position:fixed;inset:0;z-index:6000;background:rgba(17,24,39,.58);display:none;align-items:center;justify-content:center;padding:20px;pointer-events:none}
+    .drop-overlay.on{display:flex}
+    .drop-overlay .caixa{background:var(--v10-surface);border:3px dashed var(--v10-pink);border-radius:18px;padding:24px 30px;text-align:center;max-width:430px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+    .drop-overlay .ico{font-size:34px;line-height:1;margin-bottom:8px}
+    .drop-overlay b{display:block;font-size:16px;font-weight:800;color:var(--v10-t1);margin-bottom:4px}
+    .drop-overlay span{font-size:11.5px;color:var(--v10-t2);line-height:1.5}
     .sb-actions{padding:10px 13px 12px;border-top:1px solid var(--v10-line-2);background:var(--v10-bg-2);display:flex;flex-direction:column;gap:6px}
     .sb-actions .row{margin-top:0}
 
@@ -256,7 +267,7 @@
   <aside class="sidebar">
     <div class="sb-head">
       <h1>🧾 Recibo automático <span class="beta-chip">teste</span></h1>
-      <p>Carregue a ficha técnica pronta: cliente, itens e valores vêm preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo pode ser ajustado à mão.</p>
+      <p><b>Jogue a ficha técnica aqui</b> (arraste o .json ou escolha na lista) e o recibo já sai pronto: cliente, itens e valores preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo ajustável à mão.</p>
       <div class="sb-toprow">
         <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
         <button class="help-btn" type="button" onclick="Recibo.abrirAjuda()" title="Ajuda do Recibo">? Ajuda</button>
@@ -268,15 +279,18 @@
       <div class="card">
         <div class="card-title"><span class="n">1</span> Ficha técnica de origem</div>
         <label class="fl" for="fichaSelect">Ficha pronta</label>
-        <select class="inp" id="fichaSelect" title="Fichas salvas em Minhas fichas e a ficha em edição">
+        <select class="inp" id="fichaSelect" onchange="Recibo.carregarFichaSelecionada()" title="Escolha a ficha: o recibo é criado na hora">
           <option value="">Carregando fichas…</option>
         </select>
         <div class="row">
           <button class="btn btn-primary" type="button" onclick="Recibo.carregarFichaSelecionada()" title="Preencher o recibo com a ficha escolhida">⬇ Carregar ficha</button>
-          <button class="btn btn-secondary" type="button" onclick="document.getElementById('fichaFileInput').click()" title="Importar uma ficha ou backup .json">📥 .json</button>
         </div>
         <input type="file" id="fichaFileInput" accept=".json,application/json" style="display:none" onchange="Recibo.importarArquivo(event)">
-        <div class="hint" id="fichaHint">Nenhuma ficha carregada ainda. Abra a <b>Ficha Técnica</b>, salve a ficha e volte aqui — ou use o botão <b>🧾 Recibo</b> dentro da própria ficha.</div>
+        <div class="dropzone" id="fichaDrop" role="button" tabindex="0" onclick="document.getElementById('fichaFileInput').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fichaFileInput').click()}" title="Também pode arrastar o arquivo para qualquer lugar desta página">
+          <b>📂 Arraste a ficha técnica aqui</b>
+          <span>.json exportado pela Ficha Técnica (“Exportar só esta ficha”)</span>
+        </div>
+        <div class="hint" id="fichaHint">Escolha a ficha na lista ou arraste o <b>.json</b> — o recibo é criado na hora. Também funciona pelo botão <b>🧾 Recibo</b> dentro da própria ficha.</div>
         <div class="resumo" id="fichaResumo" style="display:none"></div>
       </div>
 
@@ -544,9 +558,10 @@
 
     <h4>1 · Puxar a ficha</h4>
     <ul>
-      <li>Escolha uma ficha em <b>Ficha técnica de origem</b> e clique em <b>⬇ Carregar ficha</b>. Vêm o cliente (nome, CPF/CNPJ, telefone, endereço), o nº da ficha, os itens, as quantidades e os valores.</li>
+      <li><b>Arraste o arquivo .json da ficha para qualquer lugar desta tela</b> (“Exportar só esta ficha”, na Ficha Técnica) e o recibo é criado na hora. Backup completo também serve.</li>
+      <li>Ou escolha a ficha em <b>Ficha técnica de origem</b>: ao selecionar, o recibo já é montado. Se o recibo estiver em branco e você tiver uma ficha aberta na Ficha Técnica, ela entra sozinha.</li>
       <li>Também funciona pelo botão <b>🧾 Gerar recibo</b> dentro da Ficha Técnica — ele abre esta aba já preenchida com a ficha que está na tela.</li>
-      <li>Se a ficha estiver em um arquivo, use <b>📥 .json</b> (aceita ficha avulsa ou backup completo).</li>
+      <li>PDF, foto ou print da ficha <b>não</b> são lidos automaticamente (o navegador não extrai os dados) — use o .json ou o botão dentro da ficha.</li>
     </ul>
 
     <h4>2 · Total ou parcial</h4>
@@ -578,6 +593,13 @@
   </div>
 </div>
 
+<div class="drop-overlay" id="reciboDropOverlay">
+  <div class="caixa">
+    <div class="ico">🧾</div>
+    <b>Solte a ficha técnica aqui</b>
+    <span>Arquivo <b>.json</b> da ficha ou backup completo. O recibo é montado na hora, com cliente, itens e valores.</span>
+  </div>
+</div>
 <div class="toast" id="reciboToast" role="status" aria-live="polite"></div>
 
 <script>
@@ -814,6 +836,7 @@ function estadoVazio(){
     forma:'PIX', referente:'', referenteManual:false, previsao:'',
     obs:'', responsavel:'', cidadeAssinatura:'Goiânia - GO',
     mostrarItens:true, mostrarSaldo:true, carimbo:true,
+    autoFicha:false,
     criadoEm:'', salvoEm:''
   };
 }
@@ -835,6 +858,7 @@ function normalizarEstado(base){
   e.mostrarItens=base.mostrarItens!==false;
   e.mostrarSaldo=base.mostrarSaldo!==false;
   e.carimbo=base.carimbo!==false;
+  e.autoFicha=!!base.autoFicha;
   if(!e.data)e.data=hojeISO();
   return e;
 }
@@ -1115,7 +1139,7 @@ function aplicarFicha(dados,meta,opts){
   const numNovo=numDaFicha(dados)||String((meta&&meta.num)||'').trim();
   const trocando=temNumeroFicha(numNovo)&&temNumeroFicha(estado.fichaNum)&&chaveFicha(numNovo)!==chaveFicha(estado.fichaNum);
   const temConteudo=String(estado.cliente.nome||'').trim()!==''||num(estado.valorPago)>0;
-  if(!opts.forcar&&trocando&&temConteudo&&typeof confirm==='function'){
+  if(!opts.forcar&&!opts.auto&&!estado.autoFicha&&trocando&&temConteudo&&typeof confirm==='function'){
     if(!confirm('Já existe um recibo em edição (nº '+numeroExibido(estado.numero)+').\n\nSubstituir pelos dados da ficha '+(numNovo||'')+'?'))return false;
   }
   const itens=itensDaFicha(dados);
@@ -1152,6 +1176,7 @@ function aplicarFicha(dados,meta,opts){
     estado.valorPago=total;
   }
   estado.valorPagoManual=false;
+  estado.autoFicha=!!opts.auto;
   renderFichas();
   if(!String(estado.cidadeAssinatura||'').trim()&&cliente.cidade)estado.cidadeAssinatura=cliente.cidade;
   renderTudo({sidebar:true,itens:true});
@@ -1165,6 +1190,7 @@ function aplicarFicha(dados,meta,opts){
 
 /* ── campos ─────────────────────────────────────────────────────────────── */
 function campo(chave,valor){
+  estado.autoFicha=false;
   switch(chave){
     case 'numero': estado.numero=String(valor==null?'':valor).trim(); break;
     case 'data': estado.data=String(valor||''); break;
@@ -1212,6 +1238,7 @@ function campo(chave,valor){
   agendarAutosave();
 }
 function check(chave,valor){
+  estado.autoFicha=false;
   if(chave==='mostrarItens')estado.mostrarItens=!!valor;
   else if(chave==='mostrarSaldo')estado.mostrarSaldo=!!valor;
   else if(chave==='carimbo')estado.carimbo=!!valor;
@@ -1248,6 +1275,7 @@ function recalcularJaRecebido(){
 }
 
 function definirModo(modo){
+  estado.autoFicha=false;
   modo=(modo==='parcial')?'parcial':'total';
   estado.modo=modo;
   estado.valorPagoManual=false;
@@ -1266,6 +1294,7 @@ function definirModo(modo){
 
 /* ── itens ──────────────────────────────────────────────────────────────── */
 function adicionarItem(){
+  estado.autoFicha=false;
   estado.itens.push({modelo:'',qtd:1,unit:0});
   if(!estado.totalManual)estado.totalProducao=somaItens();
   if(estado.modo==='total')estado.valorPago=valorQuitacao();
@@ -1276,6 +1305,7 @@ function adicionarItem(){
   if(ultimo){const inp=ultimo.querySelector('input');if(inp)try{inp.focus()}catch(e){}}
 }
 function itemCampo(idx,campoNome,valor){
+  estado.autoFicha=false;
   const it=estado.itens[idx];
   if(!it)return;
   if(campoNome==='modelo')it.modelo=String(valor||'');
@@ -1288,6 +1318,7 @@ function itemCampo(idx,campoNome,valor){
   agendarAutosave();
 }
 function removerItem(idx){
+  estado.autoFicha=false;
   if(idx<0||idx>=estado.itens.length)return;
   estado.itens.splice(idx,1);
   if(!estado.totalManual)estado.totalProducao=somaItens();
@@ -1753,15 +1784,85 @@ async function importarArquivo(ev){
   const file=inp&&inp.files&&inp.files[0];
   if(!file)return false;
   try{
+    return await receberArquivo(file);
+  }finally{
+    if(inp)inp.value='';
+  }
+}
+
+/* ── arrastar e soltar a ficha ──────────────────────────────────────────── */
+function mostrarOverlay(ligado){
+  const ov=$('reciboDropOverlay');
+  if(ov)ov.classList.toggle('on',!!ligado);
+}
+function temArquivos(e){
+  const dt=e&&e.dataTransfer;
+  if(!dt)return false;
+  const tipos=dt.types;
+  if(!tipos||!tipos.length)return !!(dt.files&&dt.files.length);
+  for(let i=0;i<tipos.length;i++){
+    if(String(tipos[i]).toLowerCase()==='files')return true;
+  }
+  return false;
+}
+/* Aceita o .json da ficha (avulsa) ou o backup completo. PDF, foto e print
+   não têm dado legível por máquina — avisa em vez de fingir que importou. */
+async function receberArquivo(file){
+  if(!file)return false;
+  const nome=String(file.name||'').toLowerCase();
+  if(nome&&!/\.json$/.test(nome)){
+    toast('⚠ Só arquivo .json. Na Ficha Técnica use “Exportar só esta ficha”; PDF ou foto não são lidos automaticamente.','erro',6500);
+    return false;
+  }
+  try{
     const texto=await lerArquivoTexto(file);
     const dados=JSON.parse(texto);
     return importarObjeto(dados);
   }catch(e){
-    toast('⚠ Arquivo inválido: '+(e&&e.message?e.message:'não é um JSON de ficha.'),'erro');
+    toast('⚠ Não consegui ler este arquivo: '+(e&&e.message?e.message:'não é um JSON de ficha.'),'erro',6000);
     return false;
-  }finally{
-    if(inp)inp.value='';
   }
+}
+function instalarArrastarESoltar(){
+  let dentro=0;
+  const encerrar=()=>{
+    dentro=0;
+    mostrarOverlay(false);
+    const dz=$('fichaDrop');
+    if(dz)dz.classList.remove('over');
+  };
+  document.addEventListener('dragenter',e=>{
+    if(!temArquivos(e))return;
+    e.preventDefault();
+    dentro++;
+    mostrarOverlay(true);
+    const dz=$('fichaDrop');
+    if(dz)dz.classList.add('over');
+  });
+  document.addEventListener('dragover',e=>{
+    if(!temArquivos(e))return;
+    e.preventDefault();
+    try{e.dataTransfer.dropEffect='copy'}catch(_){}
+  });
+  document.addEventListener('dragleave',e=>{
+    if(!temArquivos(e))return;
+    dentro=Math.max(0,dentro-1);
+    if(!dentro){
+      mostrarOverlay(false);
+      const dz=$('fichaDrop');
+      if(dz)dz.classList.remove('over');
+    }
+  });
+  document.addEventListener('drop',async e=>{
+    if(!temArquivos(e))return;
+    e.preventDefault();
+    encerrar();
+    const file=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(file)await receberArquivo(file);
+  });
+  /* Se o usuário arrastar para fora da janela, o overlay não pode ficar preso. */
+  window.addEventListener('dragend',encerrar);
+  window.addEventListener('blur',encerrar);
 }
 function importarObjeto(dados){
   if(!dados||typeof dados!=='object'){toast('Arquivo sem dados.','erro');return false}
@@ -1783,7 +1884,7 @@ function importarObjeto(dados){
   const sel=$('fichaSelect');
   if(sel&&primeiroId)sel.value=primeiroId;
   aplicarFicha(fichasImportadas[primeiroId].dados,{id:primeiroId,name:fichasImportadas[primeiroId].nome});
-  toast('📥 '+(fichas.length===1?'Ficha importada':fichas.length+' fichas importadas')+'.');
+  toast('📥 '+(fichas.length===1?'Ficha importada — recibo pronto.':fichas.length+' fichas importadas — usando a última.'));
   return true;
 }
 
@@ -1927,7 +2028,23 @@ function iniciar(){
   if(!String(estado.cidadeAssinatura||'').trim())estado.cidadeAssinatura='Goiânia - GO';
   renderTudo({sidebar:true,itens:true});
   renderFichas();
+  instalarArrastarESoltar();
   instalarZoom();
+  /* Recibo em branco (primeira vez ou depois de "Novo recibo"): se já existe
+     uma ficha aberta na Ficha Técnica, o recibo já nasce com ela — é o
+     "jogo a ficha e ele cria". Um recibo já preenchido nunca é substituído. */
+  const reciboVazio=!String(estado.cliente.nome||'').trim()
+    &&!(num(estado.valorPago)>0)
+    &&!String(estado.fichaNum||'').trim()
+    &&!estado.itens.length;
+  if(reciboVazio){
+    const live=lsJSON(FICHA_LIVE_KEY,null);
+    const metaLive=lsJSON(FICHA_META_KEY,null);
+    if(temFicha(live)&&!(metaLive&&metaLive.vazio)){
+      const ok=aplicarFicha(live,{id:'__live__',name:nomeDaFicha(live),num:numDaFicha(live)},{auto:true,silencioso:true});
+      if(ok)toast('🧾 Ficha em edição carregada — o recibo já está pronto.');
+    }
+  }
   avisarPronto();
 }
 
@@ -1938,7 +2055,7 @@ window.Recibo={
   campo,check,empresaCampo,normalizar,
   definirModo,recalcularTotal,recalcularJaRecebido,
   adicionarItem,itemCampo,formatarItem,removerItem,
-  carregarFichaSelecionada,importarArquivo,
+  carregarFichaSelecionada,importarArquivo,receberArquivo,
   salvar,salvarENovo,novo,abrirSalvos,fecharSalvos,abrirRecibo,excluirRecibo,
   abrirSalvo:id=>abrirRecibo(id),
   excluirSalvo:id=>excluirRecibo(id),
