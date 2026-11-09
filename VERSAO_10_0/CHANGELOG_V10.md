@@ -19,11 +19,15 @@ ficha pronta e monta um recibo A4.
 
 Outros pontos que fizeram o recibo funcionar como documento:
 
-- **Jogar a ficha e o recibo nascer pronto**: arraste o `.json` da ficha (ou o
-  backup completo) para qualquer lugar da aba e o recibo é montado na hora;
-  selecionar na lista também carrega sem clique extra; e, com o recibo em
-  branco, a ficha aberta na Ficha Técnica entra sozinha. PDF/foto é recusado
-  com aviso (não há leitura de PDF/OCR no recibo) sem perder o que está na tela.
+- **Jogar a ficha e o recibo nascer pronto**: arraste o **PDF da ficha** (ou o
+  `.json`/backup) para qualquer lugar da aba e o recibo é montado na hora. O
+  PDF é lido pelo **pdf.js 3.11 vendorizado** em `assets/pdf/` (377 KB + worker
+  de 1,1 MB, carregados só quando alguém solta um PDF); o texto passa por um
+  interpretador do layout da ficha (rótulos espaçados, tabela “modelo × qtd =
+  total”, total e entrada) e alimenta o mesmo `aplicarFicha` do .json. Selecionar
+  na lista também carrega sem clique extra; com o recibo em branco, a ficha
+  aberta na Ficha Técnica entra sozinha. PDF digitalizado (sem texto) e foto
+  são recusados com aviso, sem perder o recibo em edição.
 - **Numeração própria** (`vooalto_recibo_numero_v1`) que avança ao salvar;
   salvar de novo **atualiza** o recibo aberto em vez de duplicar, e nº repetido
   pede confirmação.
@@ -50,9 +54,11 @@ Outros pontos que fizeram o recibo funcionar como documento:
 Testes novos: `tests/test_recibo_v10.js` (118 verificações: extenso, leitura de
 valores, ficha → recibo, total x parcial, alteração manual, itens, numeração,
 já recebido, recibos salvos, parcelas, rascunho, importação, arrastar e soltar,
-mesclagem de backup, impressão e tema).
-`test_shell_v10.js`, `test_contrato_v10.js` e `test_site_publicado_v10.js`
-foram atualizados para as quatro abas.
+mesclagem de backup, impressão e tema). `tests/test_recibo_pdf_v10.js` prova a
+leitura num PDF real do repositório (`Ficha_Tecnica_ALTERNATIVE_3371.pdf`):
+número, cliente, CPF/CNPJ, telefone, endereço, cidade, 2 itens, total e
+entrada. `test_shell_v10.js`, `test_contrato_v10.js` e
+`test_site_publicado_v10.js` foram atualizados para as quatro abas.
 
 ## V10.5.0 — Imagem que entra já entra leve (fim do "memória cheia") (2026-11-05)
 

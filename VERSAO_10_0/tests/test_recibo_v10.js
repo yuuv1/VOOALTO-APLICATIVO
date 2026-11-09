@@ -420,14 +420,14 @@ const FICHA = {
       { cli: depoisDrop.cliente.nome, total: depoisDrop.totalProducao, num: depoisDrop.fichaNum });
     ok('o aviso de arrastar sai depois de soltar', !d3.getElementById('reciboDropOverlay').classList.contains('on'));
 
-    const pdf = new w3.File(['%PDF-1.4 nada legível'], 'ficha_impressa.pdf', { type: 'application/pdf' });
-    const evPdf = new w3.Event('drop', { bubbles: true, cancelable: true });
-    Object.defineProperty(evPdf, 'dataTransfer', { value: { types: ['Files'], files: [pdf], dropEffect: 'copy' } });
-    w3.document.dispatchEvent(evPdf);
+    const foto = new w3.File(['PNG fingido'], 'ficha_foto.png', { type: 'image/png' });
+    const evFoto = new w3.Event('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(evFoto, 'dataTransfer', { value: { types: ['Files'], files: [foto], dropEffect: 'copy' } });
+    w3.document.dispatchEvent(evFoto);
     await espera(200);
-    ok('PDF/foto não é lido e o recibo atual não é perdido',
-      R3.estadoAtual().cliente.nome === 'Cliente do Arquivo' && /Só arquivo \.json/.test(d3.getElementById('reciboToast').textContent),
-      d3.getElementById('reciboToast').textContent.slice(0, 90));
+    ok('foto/print não é lida e o recibo atual não é perdido',
+      R3.estadoAtual().cliente.nome === 'Cliente do Arquivo' && /Aceito o PDF da ficha ou o \.json/.test(d3.getElementById('reciboToast').textContent),
+      d3.getElementById('reciboToast').textContent.slice(0, 100));
     dom3.window.close();
   }
 

@@ -120,6 +120,7 @@
     .dropzone b{display:block;font-size:11.5px;color:var(--v10-t1);font-weight:800}
     .dropzone:hover,.dropzone:focus{border-color:var(--v10-pink);color:var(--v10-t1);outline:none}
     .dropzone.over{border-color:var(--v10-pink);background:var(--v10-sel)}
+    .dropzone.lendo{opacity:.7;cursor:progress}
     .drop-overlay{position:fixed;inset:0;z-index:6000;background:rgba(17,24,39,.58);display:none;align-items:center;justify-content:center;padding:20px;pointer-events:none}
     .drop-overlay.on{display:flex}
     .drop-overlay .caixa{background:var(--v10-surface);border:3px dashed var(--v10-pink);border-radius:18px;padding:24px 30px;text-align:center;max-width:430px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
@@ -285,12 +286,12 @@
         <div class="row">
           <button class="btn btn-primary" type="button" onclick="Recibo.carregarFichaSelecionada()" title="Preencher o recibo com a ficha escolhida">⬇ Carregar ficha</button>
         </div>
-        <input type="file" id="fichaFileInput" accept=".json,application/json" style="display:none" onchange="Recibo.importarArquivo(event)">
+        <input type="file" id="fichaFileInput" accept=".json,.pdf,application/json,application/pdf" style="display:none" onchange="Recibo.importarArquivo(event)">
         <div class="dropzone" id="fichaDrop" role="button" tabindex="0" onclick="document.getElementById('fichaFileInput').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fichaFileInput').click()}" title="Também pode arrastar o arquivo para qualquer lugar desta página">
           <b>📂 Arraste a ficha técnica aqui</b>
-          <span>.json exportado pela Ficha Técnica (“Exportar só esta ficha”)</span>
+          <span><b>PDF</b> da ficha ou o <b>.json</b> (“Exportar só esta ficha”)</span>
         </div>
-        <div class="hint" id="fichaHint">Escolha a ficha na lista ou arraste o <b>.json</b> — o recibo é criado na hora. Também funciona pelo botão <b>🧾 Recibo</b> dentro da própria ficha.</div>
+        <div class="hint" id="fichaHint">Escolha a ficha na lista ou arraste o <b>PDF</b> (ou o .json) — o recibo é criado na hora. Também funciona pelo botão <b>🧾 Recibo</b> dentro da própria ficha.</div>
         <div class="resumo" id="fichaResumo" style="display:none"></div>
       </div>
 
@@ -558,10 +559,11 @@
 
     <h4>1 · Puxar a ficha</h4>
     <ul>
-      <li><b>Arraste o arquivo .json da ficha para qualquer lugar desta tela</b> (“Exportar só esta ficha”, na Ficha Técnica) e o recibo é criado na hora. Backup completo também serve.</li>
+      <li><b>Arraste o PDF da ficha para qualquer lugar desta tela</b> (o mesmo arquivo que você imprime) e o recibo é criado na hora, com cliente, nº, itens, total e entrada. O <b>.json</b> (“Exportar só esta ficha”) e o backup completo também servem.</li>
       <li>Ou escolha a ficha em <b>Ficha técnica de origem</b>: ao selecionar, o recibo já é montado. Se o recibo estiver em branco e você tiver uma ficha aberta na Ficha Técnica, ela entra sozinha.</li>
       <li>Também funciona pelo botão <b>🧾 Gerar recibo</b> dentro da Ficha Técnica — ele abre esta aba já preenchida com a ficha que está na tela.</li>
-      <li>PDF, foto ou print da ficha <b>não</b> são lidos automaticamente (o navegador não extrai os dados) — use o .json ou o botão dentro da ficha.</li>
+      <li><b>PDF da ficha</b> também funciona: arraste o PDF exportado pela Ficha Técnica (texto selecionável) e o recibo é montado na hora. O sistema avisa para você conferir os valores lidos.</li>
+      <li>PDF <b>digitalizado/foto</b> (sem texto) não é lido — nesse caso use o .json ou o botão dentro da ficha.</li>
     </ul>
 
     <h4>2 · Total ou parcial</h4>
@@ -597,7 +599,7 @@
   <div class="caixa">
     <div class="ico">🧾</div>
     <b>Solte a ficha técnica aqui</b>
-    <span>Arquivo <b>.json</b> da ficha ou backup completo. O recibo é montado na hora, com cliente, itens e valores.</span>
+    <span><b>PDF</b> da ficha, <b>.json</b> da ficha ou backup completo. O recibo é montado na hora, com cliente, itens e valores.</span>
   </div>
 </div>
 <div class="toast" id="reciboToast" role="status" aria-live="polite"></div>
@@ -836,7 +838,7 @@ function estadoVazio(){
     forma:'PIX', referente:'', referenteManual:false, previsao:'',
     obs:'', responsavel:'', cidadeAssinatura:'Goiânia - GO',
     mostrarItens:true, mostrarSaldo:true, carimbo:true,
-    autoFicha:false,
+    autoFicha:false, pdf:null,
     criadoEm:'', salvoEm:''
   };
 }
@@ -859,6 +861,7 @@ function normalizarEstado(base){
   e.mostrarSaldo=base.mostrarSaldo!==false;
   e.carimbo=base.carimbo!==false;
   e.autoFicha=!!base.autoFicha;
+  e.pdf=(base.pdf&&typeof base.pdf==='object')?base.pdf:null;
   if(!e.data)e.data=hojeISO();
   return e;
 }
@@ -1143,6 +1146,7 @@ function aplicarFicha(dados,meta,opts){
     if(!confirm('Já existe um recibo em edição (nº '+numeroExibido(estado.numero)+').\n\nSubstituir pelos dados da ficha '+(numNovo||'')+'?'))return false;
   }
   const itens=itensDaFicha(dados);
+  estado.pdf=null;
   const total=arred(itens.reduce((s,it)=>s+num(it.qtd)*num(it.unit),0));
   const cliente=dadosDoCliente(dados);
   estado.cliente=cliente;
@@ -1384,7 +1388,12 @@ function renderResumos(){
   const hint=$('itensTotalHint');
   if(hint)hint.textContent=(estado.itens.length?estado.itens.length+' item(ns) · '+fmtBRL(somaItens()):'');
   const fichaHint=$('fichaHint');
-  if(fichaHint&&estado.fichaNome){
+  if(fichaHint&&estado.pdf){
+    const av=Array.isArray(estado.pdf.avisos)&&estado.pdf.avisos.length
+      ? ' <b>Confira:</b> '+esc(estado.pdf.avisos.join(' · '))+'.'
+      : '';
+    fichaHint.innerHTML='<b>📄 Lido do PDF</b>'+(estado.pdf.arquivo?' ('+esc(estado.pdf.arquivo)+')':'')+' — confira cliente, itens e valores antes de salvar.'+av;
+  }else if(fichaHint&&estado.fichaNome){
     fichaHint.innerHTML=estado.jaRecebido>0.005
       ? 'Ficha carregada. <b>Já recebido</b> nesta ficha: '+esc(fmtBRL(estado.jaRecebido))+' — o valor sugerido é o saldo. Tudo pode ser alterado à mão.'
       : (estado.entradaFicha>0.005
@@ -1810,8 +1819,10 @@ function temArquivos(e){
 async function receberArquivo(file){
   if(!file)return false;
   const nome=String(file.name||'').toLowerCase();
+  const ehPDF=/\.pdf$/.test(nome)||String(file.type||'')==='application/pdf';
+  if(ehPDF)return receberPDF(file);
   if(nome&&!/\.json$/.test(nome)){
-    toast('⚠ Só arquivo .json. Na Ficha Técnica use “Exportar só esta ficha”; PDF ou foto não são lidos automaticamente.','erro',6500);
+    toast('⚠ Aceito o PDF da ficha ou o .json. Foto/print (PNG, JPG) não é lido automaticamente.','erro',6500);
     return false;
   }
   try{
@@ -1823,6 +1834,288 @@ async function receberArquivo(file){
     return false;
   }
 }
+/* ── ficha em PDF (texto do próprio PDF, sem OCR) ──────────────────────── */
+let pdfjsCarregando=null;
+let lendoPDF=false;
+
+function carregarPdfJs(){
+  if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  if(pdfjsCarregando)return pdfjsCarregando;
+  pdfjsCarregando=new Promise((resolve,reject)=>{
+    const sc=document.createElement('script');
+    sc.src='../assets/pdf/pdf.min.js';
+    sc.async=true;
+    sc.onload=()=>{
+      const lib=window.pdfjsLib;
+      if(!lib){reject(new Error('o leitor de PDF não carregou'));return;}
+      try{lib.GlobalWorkerOptions.workerSrc=new URL('../assets/pdf/pdf.worker.min.js',location.href).href;}catch(e){}
+      resolve(lib);
+    };
+    sc.onerror=()=>reject(new Error('não achei o leitor de PDF em assets/pdf (instalação incompleta?)'));
+    document.head.appendChild(sc);
+  }).catch(e=>{pdfjsCarregando=null;throw e});
+  return pdfjsCarregando;
+}
+
+/* Só o TEXTO do PDF: ficha digitalizada (foto/scan) não tem texto e cai no
+   aviso. Não há OCR aqui de propósito — ler número errado é pior que pedir o
+   .json. */
+function lerBinario(file){
+  return new Promise((resolve,reject)=>{
+    if(file&&typeof file.arrayBuffer==='function'){
+      file.arrayBuffer().then(b=>resolve(new Uint8Array(b)),reject);
+      return;
+    }
+    /* FileReader cobre navegadores/webviews antigos sem File.arrayBuffer. */
+    try{
+      const fr=new FileReader();
+      fr.onload=()=>resolve(new Uint8Array(fr.result));
+      fr.onerror=()=>reject(fr.error||new Error('falha ao ler o arquivo'));
+      fr.readAsArrayBuffer(file);
+    }catch(e){reject(e);}
+  });
+}
+async function textoDoPDF(file){
+  const pdfjs=await carregarPdfJs();
+  const buf=await lerBinario(file);
+  const doc=await pdfjs.getDocument({data:buf,isEvalSupported:false,useSystemFonts:false,disableFontFace:true}).promise;
+  let texto='';
+  try{
+    const total=Math.min(doc.numPages||1,8);
+    for(let p=1;p<=total;p++){
+      const pagina=await doc.getPage(p);
+      const conteudo=await pagina.getTextContent();
+      let linha='';
+      (conteudo.items||[]).forEach(it=>{
+        if(!it||typeof it.str!=='string')return;
+        linha+=it.str;
+        if(it.hasEOL){texto+=linha.replace(/[ \t]+$/,'')+'\n';linha='';}
+        else linha+=' ';
+      });
+      if(linha.trim())texto+=linha.replace(/[ \t]+$/,'')+'\n';
+    }
+  }finally{
+    try{doc.destroy()}catch(e){}
+  }
+  return texto.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+function pdfSemAcento(v){
+  return String(v==null?'':v).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function pdfRotulo(v){
+  return pdfSemAcento(v).toUpperCase().replace(/\s+/g,'');
+}
+function pdfNorm(v){
+  return String(v==null?'':v).replace(/\s+/g,' ').trim();
+}
+/* Índice "sem espaços" do texto, com o mapa de volta para o texto original.
+   A ficha imprime os rótulos com espaçamento entre letras
+   ("N O M E / R A Z Ã O S O C I A L"), então procurar o rótulo no texto cru
+   nunca funcionaria. */
+function pdfMapa(texto){
+  const bruto=String(texto||'');
+  let txt=''; const mapa=[];
+  for(let i=0;i<bruto.length;i++){
+    const ch=bruto[i];
+    if(/\s/.test(ch))continue;
+    const c=pdfSemAcento(ch).toUpperCase();
+    for(let k=0;k<c.length;k++){txt+=c[k];mapa.push(i);}
+  }
+  return {txt:txt,mapa:mapa};
+}
+function pdfMoeda(v){
+  const m=String(v==null?'':v).match(/-?\d{1,3}(?:\.\d{3})*,\d{2}|-?\d+,\d{2}|-?\d+/);
+  if(!m)return 0;
+  const n=Number(m[0].replace(/\./g,'').replace(',','.'));
+  return isFinite(n)?n:0;
+}
+function pdfMoedaTexto(v){
+  const m=String(v==null?'':v).match(/R\$\s*([\d.]+,\d{2})/);
+  return m?pdfMoeda(m[1]):0;
+}
+
+/* Interpreta o texto de uma ficha exportada em PDF (layout da Ficha Técnica
+   do Vooalto). Devolve os campos já no formato que `aplicarFicha` entende. */
+function interpretarFichaTexto(texto){
+  const bruto=String(texto||'').replace(/\r/g,'');
+  if(!bruto.trim())return {ok:false,motivo:'semtexto'};
+  const map=pdfMapa(bruto);
+  if(map.txt.length<20)return {ok:false,motivo:'semtexto'};
+
+  const R={
+    nome:pdfRotulo('NOME / RAZÃO SOCIAL'),
+    razao:pdfRotulo('RAZÃO SOCIAL'),
+    doc:pdfRotulo('CPF / CNPJ'),
+    cnpj:pdfRotulo('CNPJ'),
+    tel:pdfRotulo('TELEFONE'),
+    end:pdfRotulo('ENDEREÇO'),
+    cidade:pdfRotulo('CIDADE'),
+    cep:pdfRotulo('CEP'),
+    vendedor:pdfRotulo('VENDEDOR'),
+    prod:pdfRotulo('MODELO / DESCRIÇÃO'),
+    total:pdfRotulo('TOTAL DA PRODUÇÃO'),
+    entrada:pdfRotulo('ENTRADA'),
+    restante:pdfRotulo('RESTANTE'),
+    infos:pdfRotulo('INFORMAÇÕES DA PRODUÇÃO')
+  };
+  const busca=(rot,de)=>map.txt.indexOf(rot,de||0);
+  const achar=(rotulos,de)=>{
+    let i=-1,rot='';
+    (rotulos||[]).forEach(r=>{
+      const j=busca(r,de);
+      if(j>=0&&(i<0||j<i)){i=j;rot=r;}
+    });
+    return {i:i,rot:rot};
+  };
+  const valorDepois=(alvo,seguintes)=>{
+    if(!alvo||alvo.i<0)return '';
+    const ini=map.mapa[alvo.i+alvo.rot.length-1]+1;
+    let fim=bruto.length;
+    (seguintes||[]).forEach(r=>{
+      const j=busca(r,alvo.i+alvo.rot.length);
+      if(j>=0)fim=Math.min(fim,map.mapa[j]);
+    });
+    return pdfNorm(bruto.slice(ini,fim));
+  };
+
+  if(!/FICHA|PRODU[CÇ][AÃ]O|CPF|CNPJ|R\$/i.test(bruto))return {ok:false,motivo:'naoficha'};
+
+  let num='';
+  const mNum=bruto.match(/N\s*[º°o]\s*(\d{1,8})/i)||bruto.match(/FICHA\s*(?:N[º°o]?)?\s*(\d{1,8})/i);
+  if(mNum)num=mNum[1];
+
+  const aNome=achar([R.nome,R.razao],0);
+  const nome=valorDepois(aNome,[R.doc,R.cnpj,R.tel,R.vendedor]);
+  const aDoc=achar([R.doc,R.cnpj],aNome.i>=0?aNome.i:0);
+  const doc=valorDepois(aDoc,[R.vendedor,R.tel,R.end]);
+  const aTel=achar([R.tel],aDoc.i>=0?aDoc.i:0);
+  const tel=valorDepois(aTel,[R.end]);
+  const aEnd=achar([R.end],aTel.i>=0?aTel.i:0);
+  const end=valorDepois(aEnd,[R.cidade]);
+  const aCid=achar([R.cidade],aEnd.i>=0?aEnd.i:0);
+  const cidade=valorDepois(aCid,[R.cep,R.infos,R.prod]);
+
+  let itens=[];
+  const avisos=[];
+  const aProd=achar([R.prod],0);
+  const aTot=achar([R.total],aProd.i>=0?aProd.i:0);
+  if(aProd.i>=0&&aTot.i>aProd.i){
+    const ini=map.mapa[aProd.i+aProd.rot.length-1]+1;
+    const fim=map.mapa[aTot.i];
+    const trecho=bruto.slice(ini,fim);
+    String(trecho||'').split(/\n/).forEach(linha=>{
+      const l=pdfNorm(linha);
+      const m=l.match(/^(\d{1,3})\s+(.+?)\s+R\$\s*([\d.]+,\d{2})\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*=\s*(?:R\$\s*([\d.]+,\d{2})|—|-)$/);
+      if(!m)return;
+      const qtd=Number(String(m[4]).replace(',','.'));
+      if(!(qtd>0))return;
+      const modelo=pdfNorm(m[2]);
+      if(!modelo)return;
+      itens.push({modelo:modelo,qtd:qtd,unit:pdfMoeda(m[3]),total:m[5]?pdfMoeda(m[5]):0});
+    });
+    /* Outra tabela de produção de verdade = outro cabeçalho SEGUIDO de um
+       total. A página de detalhes também repete o cabeçalho, sem total. */
+    const outroProd=busca(R.prod,aProd.i+R.prod.length);
+    if(outroProd>=0&&busca(R.total,outroProd)>=0)avisos.push('só os itens da 1ª tabela');
+  }
+  if(!itens.length)avisos.push('itens');
+
+  let total=pdfMoedaTexto(valorDepois(aTot,[R.entrada,R.restante]));
+  const aEnt=achar([R.entrada],aTot.i>=0?aTot.i:0);
+  const entrada=pdfMoedaTexto(valorDepois(aEnt,[R.restante]));
+  const somaItens=itens.reduce((s,it)=>s+(it.total||it.unit*it.qtd),0);
+  if(!(total>0))total=somaItens;
+  else if(itens.length&&Math.abs(total-somaItens)>0.02)avisos.push('total do PDF difere da soma dos itens');
+  if(!(total>0))avisos.push('total');
+  if(!nome)avisos.push('cliente');
+  if(!doc)avisos.push('CPF/CNPJ');
+  if(!tel)avisos.push('telefone');
+  if(!end)avisos.push('endereço');
+  if(!cidade)avisos.push('cidade');
+
+  if(!nome&&!itens.length&&!(total>0))return {ok:false,motivo:'naoficha'};
+
+  return {
+    ok:true,
+    num:num,
+    nome:nome,
+    doc:doc,
+    tel:tel,
+    end:end,
+    cidade:cidade,
+    entrada:entrada,
+    total:total,
+    itens:itens,
+    avisos:avisos.slice(0,6)
+  };
+}
+
+function aplicarFichaPDF(r,arquivo){
+  if(!r||!r.ok)return false;
+  const dados={
+    _version:'vooalto_ficha_pdf_v1',
+    _numFicha:r.num||'',
+    dc_nome:r.nome||'',
+    dc_doc:r.doc||'',
+    dc_tel:r.tel||'',
+    dc_end:r.end||'',
+    dc_cidade:r.cidade||'',
+    entradaVal:r.entrada>0?fmtNumInput(r.entrada):'',
+    _prod:(r.itens||[]).map(it=>({
+      modelo:it.modelo,
+      valor:fmtNumInput(it.unit),
+      qtd:fmtNumInput(it.qtd)
+    }))
+  };
+  const meta={id:'pdf_'+Date.now(),name:r.nome||arquivo||'Ficha em PDF',num:r.num||''};
+  if(!aplicarFicha(dados,meta,{silencioso:true}))return false;
+  estado.pdf={arquivo:String(arquivo||''),avisos:(r.avisos||[]).slice(0,6)};
+  if(r.total>0&&Math.abs(r.total-estado.totalProducao)>0.005){
+    estado.totalProducao=r.total;
+    estado.totalManual=true;
+  }
+  if(estado.modo==='total')estado.valorPago=valorQuitacao();
+  estado.referenteManual=false;
+  estado.referente=descricaoAutomatica(estado);
+  renderTudo({sidebar:true,itens:true});
+  agendarAutosave();
+  toast('📄 Recibo criado do PDF — confira cliente, itens e valores.','sucesso',5200);
+  return true;
+}
+
+async function receberPDF(file){
+  if(lendoPDF)return false;
+  lendoPDF=true;
+  const dz=$('fichaDrop');
+  const rotulo=dz?dz.querySelector('b'):null;
+  const antes=rotulo?rotulo.textContent:'';
+  if(dz)dz.classList.add('lendo');
+  if(rotulo)rotulo.textContent='📄 Lendo o PDF…';
+  toast('📄 Lendo a ficha do PDF…');
+  try{
+    const texto=await textoDoPDF(file);
+    const semEspaco=String(texto||'').replace(/\s/g,'');
+    if(semEspaco.length<24){
+      toast('⚠ Este PDF não tem texto (parece digitalizado ou foto). Exporte a ficha em .json ou preencha à mão.','erro',7500);
+      return false;
+    }
+    const r=interpretarFichaTexto(texto);
+    if(!r.ok){
+      toast('⚠ Não reconheci uma ficha técnica neste PDF. Use o .json ou o botão 🧾 dentro da ficha.','erro',7500);
+      return false;
+    }
+    return aplicarFichaPDF(r,file.name||'ficha.pdf');
+  }catch(e){
+    toast('⚠ Não consegui ler o PDF: '+(e&&e.message?e.message:'formato não suportado')+'.','erro',7500);
+    return false;
+  }finally{
+    lendoPDF=false;
+    if(dz)dz.classList.remove('lendo');
+    if(rotulo)rotulo.textContent=antes||'📂 Arraste a ficha técnica aqui';
+  }
+}
+
 function instalarArrastarESoltar(){
   let dentro=0;
   const encerrar=()=>{
@@ -2055,7 +2348,7 @@ window.Recibo={
   campo,check,empresaCampo,normalizar,
   definirModo,recalcularTotal,recalcularJaRecebido,
   adicionarItem,itemCampo,formatarItem,removerItem,
-  carregarFichaSelecionada,importarArquivo,receberArquivo,
+  carregarFichaSelecionada,importarArquivo,receberArquivo,receberPDF,
   salvar,salvarENovo,novo,abrirSalvos,fecharSalvos,abrirRecibo,excluirRecibo,
   abrirSalvo:id=>abrirRecibo(id),
   excluirSalvo:id=>excluirRecibo(id),
@@ -2077,6 +2370,9 @@ window.ReciboInterno={
   textoDoRecibo,
   textoParaCopiar,
   aplicarFicha,
+  aplicarFichaPDF,
+  interpretarFichaTexto,
+  textoDoPDF,
   importarObjeto,
   montarRegistro,
   salvar,

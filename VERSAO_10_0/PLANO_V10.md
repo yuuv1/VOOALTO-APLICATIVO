@@ -193,7 +193,7 @@ navegador, com `Cache-Control: no-store`. Não é o servidor do app.
 
 ```
 npm install
-npm test              # 23 suítes jsdom (shell, módulos, recibo, mockup, peça,
+npm test              # 24 suítes jsdom (shell, módulos, recibo, mockup, peça,
                       # contrato, espelho da folha 1, melhorias)
 npm run test:python   # 15 testes (build + contrato + identidade + servidor)
 npm run build         # gera sw.js e o ZIP
@@ -418,13 +418,26 @@ itens de `_prod`/`_paginas[].prod` e número — as camadas e imagens em base64 
 `capturarFichaParaJSON()` ficam de fora (seriam vários MB por postMessage).
 
 **Arrastar a ficha.** A aba inteira escuta `dragenter/dragover/dragleave/drop`
-(com contador para o overlay não piscar) e aceita o `.json` da ficha ou o
-backup completo; extensões diferentes de `.json` são recusadas com aviso e
-**não** mexem no recibo em edição. Não há leitura de PDF/OCR no recibo: o
-contrato já embarca pdf.js + tesseract, mas duplicar esse motor num módulo de
-1 folha A4 não se paga. Ao abrir com o recibo em branco, a ficha em edição
+(com contador para o overlay não piscar) e aceita **PDF**, `.json` da ficha e
+backup completo. Outras extensões são recusadas com aviso e **não** mexem no
+recibo em edição. Ao abrir com o recibo em branco, a ficha em edição
 (`vooalto_v7_ficha_ativa`) é aplicada sozinha (`autoFicha`, que também evita o
 diálogo de confirmação quando a ficha chega pela ponte logo depois).
+
+**PDF da ficha.** `assets/pdf/` traz pdf.js **3.11.174** (build legacy: 377 KB
++ worker 1,1 MB, Apache-2.0, `LICENSE.txt` junto). O `<script>` e o worker só
+são carregados no primeiro PDF solto — o módulo continua leve para quem usa só
+o .json. `textoDoPDF()` monta o texto com `hasEOL`; `interpretarFichaTexto()`
+procura os rótulos num índice **sem espaços** (a ficha imprime “N O M E / R A Z
+Ã O S O C I A L” por causa do letter-spacing), com mapa de volta para o texto
+original, e corta o valor até o rótulo seguinte. Itens saem da tabela entre
+“MODELO / DESCRIÇÃO” e “TOTAL DA PRODUÇÃO” (linha `n modelo R$ unit × qtd =
+R$ total`); total e entrada vêm dos rótulos e o total do PDF sobrepõe a soma
+dos itens (`totalManual`), porque o dinheiro do documento manda. O resultado
+alimenta o mesmo `aplicarFicha()` do .json e o painel mostra “Lido do PDF —
+confira …” com os campos que faltaram. PDF sem texto (scan/foto) é recusado
+sem tocar no recibo; **não há OCR aqui de propósito** (o contrato já tem
+tesseract, mas ler valor errado é pior que pedir o arquivo certo).
 
 **Parcelas.** `salvarENovo()` salva o recibo e já monta o próximo da mesma
 ficha: mantém cliente/itens/total/desconto/forma, zera observação, avança o
