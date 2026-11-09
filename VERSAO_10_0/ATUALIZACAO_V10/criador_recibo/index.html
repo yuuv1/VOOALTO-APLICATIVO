@@ -1935,6 +1935,23 @@ function pdfMoedaTexto(v){
   return m?pdfMoeda(m[1]):0;
 }
 
+/* Linhas da tabela entre “MODELO / DESCRIÇÃO” e o total: `n modelo R$ unit ×
+   qtd = R$ total`. Linhas com qtd 0 são o placeholder do formulário. */
+function pdfItensDoTrecho(trecho){
+  const itens=[];
+  String(trecho||'').split(/\n/).forEach(linha=>{
+    const l=pdfNorm(linha);
+    const m=l.match(/^(\d{1,3})\s+(.+?)\s+R\$\s*([\d.]+,\d{2})\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*=\s*(?:R\$\s*([\d.]+,\d{2})|—|-)$/);
+    if(!m)return;
+    const qtd=Number(String(m[4]).replace(',','.'));
+    if(!(qtd>0))return;
+    const modelo=pdfNorm(m[2]);
+    if(!modelo)return;
+    itens.push({modelo:modelo,qtd:qtd,unit:pdfMoeda(m[3]),total:m[5]?pdfMoeda(m[5]):0});
+  });
+  return itens;
+}
+
 /* Interpreta o texto de uma ficha exportada em PDF (layout da Ficha Técnica
    do Vooalto). Devolve os campos já no formato que `aplicarFicha` entende. */
 function interpretarFichaTexto(texto){
@@ -2003,17 +2020,7 @@ function interpretarFichaTexto(texto){
   if(aProd.i>=0&&aTot.i>aProd.i){
     const ini=map.mapa[aProd.i+aProd.rot.length-1]+1;
     const fim=map.mapa[aTot.i];
-    const trecho=bruto.slice(ini,fim);
-    String(trecho||'').split(/\n/).forEach(linha=>{
-      const l=pdfNorm(linha);
-      const m=l.match(/^(\d{1,3})\s+(.+?)\s+R\$\s*([\d.]+,\d{2})\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*=\s*(?:R\$\s*([\d.]+,\d{2})|—|-)$/);
-      if(!m)return;
-      const qtd=Number(String(m[4]).replace(',','.'));
-      if(!(qtd>0))return;
-      const modelo=pdfNorm(m[2]);
-      if(!modelo)return;
-      itens.push({modelo:modelo,qtd:qtd,unit:pdfMoeda(m[3]),total:m[5]?pdfMoeda(m[5]):0});
-    });
+    itens=pdfItensDoTrecho(bruto.slice(ini,fim));
     /* O cabeçalho “Modelo / Descrição” reaparece na página de detalhes (sem
        total) e quando a tabela continua na página seguinte (aí o total é o
        mesmo). Só é outra tabela — e só a 1ª é lida — quando o cabeçalho
@@ -2021,7 +2028,13 @@ function interpretarFichaTexto(texto){
     const outroProd=busca(R.prod,aProd.i+R.prod.length);
     if(outroProd>=0){
       const totalDoOutro=busca(R.total,outroProd);
-      if(totalDoOutro>=0&&totalDoOutro!==aTot.i)avisos.push('só os itens da 1ª tabela');
+      if(totalDoOutro>=0&&totalDoOutro!==aTot.i){
+        /* Página 2 da ficha repete a MESMA tabela; aí não há nada de errado.
+           Tabela diferente (produção extra) não entra no recibo: avisa. */
+        const chave=arr=>arr.map(it=>it.modelo+'|'+it.qtd+'|'+it.unit).join(';');
+        const itens2=pdfItensDoTrecho(bruto.slice(map.mapa[outroProd+R.prod.length-1]+1,map.mapa[totalDoOutro]));
+        if(chave(itens2)!==chave(itens))avisos.push('só os itens da 1ª tabela');
+      }
     }
   }
   if(!itens.length)avisos.push('itens');

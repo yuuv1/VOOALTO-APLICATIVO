@@ -80,6 +80,7 @@ function ok(nome, cond, detalhe) {
   ok('lê o total da produção', r.total === 1098, r.total);
   ok('lê a entrada', r.entrada === 1098, r.entrada);
   ok('lê os itens (2 itens de 10 peças)', r.itens.length === 2 && r.itens[0].qtd === 10 && r.itens[0].unit === 59.9, r.itens);
+  ok('a ficha completa não gera aviso nenhum', Array.isArray(r.avisos) && r.avisos.length === 0, r.avisos);
 
   console.log('\n── 3. O recibo nasce do PDF ──');
   ok('aplica o PDF no recibo', R.aplicarFichaPDF(r, 'FICHA_3371.pdf') === true);
@@ -114,6 +115,21 @@ function ok(nome, cond, detalhe) {
   const r2 = R.interpretarFichaTexto(outro);
   ok('entende ficha sem o campo Vendedor', r2.ok && r2.num === '512' && r2.nome === 'MARIA DE SOUZA', { num: r2.num, nome: r2.nome });
   ok('calcula o total pela soma quando o rótulo não vem', r2.total === 200 && r2.itens.length === 1, { total: r2.total, itens: r2.itens.length });
+
+  const duasTabelas = [
+    'FICHA TECNICA', 'Nº 900', 'Nome / Razão Social', 'FULANO DE TAL',
+    'CPF / CNPJ 000.000.000-00', 'Informações da Produção',
+    'Nº MODELO / DESCRIÇÃO VALOR UNIT. × QTD = TOTAL',
+    '1 CAMISA AZUL R$ 100,00 × 1 = R$ 100,00',
+    'TOTAL DA PRODUÇÃO', 'R$ 100,00', 'Entrada R$ 0,00', 'Restante R$ 100,00',
+    'Informações da Produção — Página 2',
+    'Nº MODELO / DESCRIÇÃO VALOR UNIT. × QTD = TOTAL',
+    '1 CAMISA AZUL R$ 300,00 × 1 = R$ 300,00',
+    'TOTAL DA PRODUÇÃO', 'R$ 300,00', 'Entrada R$ 0,00', 'Restante R$ 300,00'
+  ].join('\n');
+  const r3 = R.interpretarFichaTexto(duasTabelas);
+  ok('segunda tabela diferente gera aviso (e o total é o da 1ª)',
+    r3.ok && r3.total === 100 && r3.avisos.indexOf('só os itens da 1ª tabela') >= 0, { total: r3.total, avisos: r3.avisos });
 
   ok('PDF sem texto não é aceito', R.interpretarFichaTexto('').ok === false);
   ok('texto que não é ficha não é aceito', R.interpretarFichaTexto('contrato de aluguel entre as partes').ok === false);
