@@ -2014,10 +2014,15 @@ function interpretarFichaTexto(texto){
       if(!modelo)return;
       itens.push({modelo:modelo,qtd:qtd,unit:pdfMoeda(m[3]),total:m[5]?pdfMoeda(m[5]):0});
     });
-    /* Outra tabela de produção de verdade = outro cabeçalho SEGUIDO de um
-       total. A página de detalhes também repete o cabeçalho, sem total. */
+    /* O cabeçalho “Modelo / Descrição” reaparece na página de detalhes (sem
+       total) e quando a tabela continua na página seguinte (aí o total é o
+       mesmo). Só é outra tabela — e só a 1ª é lida — quando o cabeçalho
+       seguinte tem um total PRÓPRIO, antes do total que já usamos. */
     const outroProd=busca(R.prod,aProd.i+R.prod.length);
-    if(outroProd>=0&&busca(R.total,outroProd)>=0)avisos.push('só os itens da 1ª tabela');
+    if(outroProd>=0){
+      const totalDoOutro=busca(R.total,outroProd);
+      if(totalDoOutro>=0&&totalDoOutro!==aTot.i)avisos.push('só os itens da 1ª tabela');
+    }
   }
   if(!itens.length)avisos.push('itens');
 
