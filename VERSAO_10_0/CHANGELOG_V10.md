@@ -51,6 +51,15 @@ Outros pontos que fizeram o recibo funcionar como documento:
   nunca participa do layout: o recibo começa no topo (10mm) e a assinatura fica
   no pé da folha. `test_recibo_v10.js` confere que não existe mais elemento
   `.wm` e que `.page::after` é `position:absolute`.
+- **Recibo no site publicado**: a Edge Function `site` que estava no ar
+  (versão 9) não tinha a rota `/recibo/` — o shell abria `/site/recibo/`,
+  a função respondia 404 e o iframe caía no próprio app. Função
+  republicada (versão 10, mesma lógica de `supabase/functions/site/index.ts`):
+  `/site/recibo/` agora devolve o módulo (200, `Text/HTML`). Conferido do
+  banco com `pg_net`: `/`, `/home`, `/ficha/`, `/orcamento/`, `/contrato/`,
+  `/recibo/`, `assets/pdf/pdf.min.js` e `version.json` (10.6.1) respondendo,
+  caminho inexistente em 404. O `README.md` da função ganhou checklist de
+  publicação (rota nova só vale depois de publicar a função).
 - **Atualização chega na hora**: o service worker entregava o HTML do cache
   mesmo ao recarregar, então correção publicada parecia não ter entrado. Agora
   **navegação é rede-primeiro** (4 s de espera) e só cai no cache sem internet;

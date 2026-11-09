@@ -43,6 +43,19 @@ O código-fonte é este arquivo. Publique com a ferramenta do Supabase
 supabase functions deploy site --project-ref eeurdquvrdmoyjgzgpac --no-verify-jwt
 ```
 
+## Checklist ao publicar (já mordeu uma vez)
+
+1. `ROTAS` precisa ter **`ficha`, `orcamento`, `recibo` e `contrato`** — o
+   shell abre `/site/<rota>/`. Se a rota não existir na função publicada, o
+   iframe recebe 404 e mostra o próprio app (foi o que aconteceu com
+   `/recibo/` na versão 9: a rota estava no repositório, mas não no ar).
+2. Depois de publicar, confira o módulo novo com o `pg_net` (abaixo):
+   `/site/recibo/` tem de voltar **200** com `Text/HTML; charset=utf-8`.
+3. O corpo publicado pode estar condensado em relação ao arquivo do
+   repositório (mesma lógica, sem os comentários longos). Se mexer na lógica,
+   **publique de novo** — mudar o arquivo no GitHub não muda a função, que é
+   código e não arquivo servido.
+
 ## Como conferir sem navegador
 
 Do próprio banco (o `bash` do ambiente não alcança `*.supabase.co`):
