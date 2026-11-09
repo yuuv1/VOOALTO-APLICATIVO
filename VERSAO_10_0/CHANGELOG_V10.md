@@ -1,5 +1,78 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.1 — Recibo automático a partir da ficha, agora lendo o PDF (versão de teste) (2026-11-06)
+
+O pedido: *"precisamos fazer uma versão de teste adicionando mais uma função no
+sistema, o de criador de recibo automático baseado na ficha técnica pronta. Aí
+com as opções de pagamento parcial ou total da produção (podendo ser alterada
+de maneira manual)."*
+
+Entrou a quarta aba, **🧾 Recibo** (marcada como **TESTE**), com um módulo novo
+`criador_recibo/`. Ele **não altera** a ficha, o orçamento nem o contrato: lê a
+ficha pronta e monta um recibo A4.
+
+| Pedido | O que ficou |
+|---|---|
+| recibo automático **baseado na ficha pronta** | cliente (nome, CPF/CNPJ, telefone, endereço, cidade), nº da ficha, itens (modelo, qtd, unitário) e o total saem da ficha escolhida em **Minhas fichas**, da **ficha em edição** ou do botão **🧾 Gerar recibo** dentro da própria Ficha (postMessage). Também importa ficha/backup `.json` |
+| **pagamento total ou parcial** | botão segmentado **Total** (quita; valor = total − desconto − já recebido) e **Parcial** (valor recebido + saldo devedor). A folha mostra total da produção, desconto, valor deste recibo, já recebido antes, saldo devedor e carimbo **QUITADO** quando fecha |
+| **alterável de maneira manual** | total da produção (com aviso “ajustado à mão” e **recalcular pelos itens**), desconto, valor deste recibo, já recebido, cliente, itens, forma de pagamento, data, nº, referente, observações, responsável e cabeçalho da empresa. Digitar um valor menor no modo Total **passa sozinho para Parcial** |
+
+Outros pontos que fizeram o recibo funcionar como documento:
+
+- **Jogar a ficha e o recibo nascer pronto**: arraste o **PDF da ficha** (ou o
+  `.json`/backup) para qualquer lugar da aba e o recibo é montado na hora. O
+  PDF é lido pelo **pdf.js 3.11 vendorizado** em `assets/pdf/` (377 KB + worker
+  de 1,1 MB, carregados só quando alguém solta um PDF); o texto passa por um
+  interpretador do layout da ficha (rótulos espaçados, tabela “modelo × qtd =
+  total”, total e entrada) e alimenta o mesmo `aplicarFicha` do .json. Selecionar
+  na lista também carrega sem clique extra; com o recibo em branco, a ficha
+  aberta na Ficha Técnica entra sozinha. PDF digitalizado (sem texto) e foto
+  são recusados com aviso, sem perder o recibo em edição.
+- **Numeração própria** (`vooalto_recibo_numero_v1`) que avança ao salvar;
+  salvar de novo **atualiza** o recibo aberto em vez de duplicar, e nº repetido
+  pede confirmação.
+- **Histórico por ficha**: “já recebido antes” soma os recibos salvos com o
+  mesmo nº de ficha (`vooalto_recibos_v1`); ao reabrir a ficha, o valor
+  sugerido é o **saldo restante** e o total recebido fica visível.
+- **➕ Outro (parcelas)**: salva o recibo atual e já prepara o próximo da mesma
+  ficha — cliente, itens e valores continuam, o número avança e o valor
+  recebido já vem com o saldo que sobrou.
+- A folha imprime os **dados do cliente** da ficha (CPF/CNPJ, telefone,
+  endereço e cidade) numa linha discreta abaixo do texto, quando existirem.
+- **Valor por extenso** em português (`R$ 1.234,56` → “mil duzentos e trinta e
+  quatro reais e cinquenta e seis centavos”), com centavos, milhões e bilhões.
+- Saída **A4 vetorial** (imprimir/PDF), **PNG** (html2canvas) e **copiar texto**
+  para WhatsApp; zoom só da folha reaproveita o `assets/zoom-folha.js`.
+- **Fim da faixa branca no topo do PDF**: a marca d'água era um `<div class="wm">`
+  com 470px de altura dentro da folha; a regra `.page > *{position:relative}`
+  (mesma especificidade, escrita depois) anulava o `position:absolute` dela e o
+  bloco entrava no fluxo do flex, empurrando o recibo ~290px para baixo no
+  PDF/PNG. Agora a marca d'água é um **pseudo-elemento** `.page::after`, que
+  nunca participa do layout: o recibo começa no topo (10mm) e a assinatura fica
+  no pé da folha. `test_recibo_v10.js` confere que não existe mais elemento
+  `.wm` e que `.page::after` é `position:absolute`.
+- **Atualização chega na hora**: o service worker entregava o HTML do cache
+  mesmo ao recarregar, então correção publicada parecia não ter entrado. Agora
+  **navegação é rede-primeiro** (4 s de espera) e só cai no cache sem internet;
+  CSS, JS e imagens continuam cache-first. `version.json` foi para **10.6.1**,
+  o que faz o shell mostrar o aviso de nova versão.
+- Rascunho do recibo em edição salvo sozinho (`vooalto_recibo_autosave_v1`) e
+  cabeçalho da empresa em `vooalto_recibo_empresa_v1`. Tudo com prefixo
+  `vooalto_`, então entra no **Backup Completo**; a mesclagem de backup une os
+  recibos por id e mantém o maior número (feito nos três módulos que sabem
+  restaurar backup: shell, Ficha e Orçamento).
+- No site publicado, a rota limpa é `/recibo/` (adicionada ao `ROTAS` da Edge
+  Function `site`).
+
+Testes novos: `tests/test_recibo_v10.js` (118 verificações: extenso, leitura de
+valores, ficha → recibo, total x parcial, alteração manual, itens, numeração,
+já recebido, recibos salvos, parcelas, rascunho, importação, arrastar e soltar,
+mesclagem de backup, impressão e tema). `tests/test_recibo_pdf_v10.js` prova a
+leitura num PDF real do repositório (`Ficha_Tecnica_ALTERNATIVE_3371.pdf`):
+número, cliente, CPF/CNPJ, telefone, endereço, cidade, 2 itens, total e
+entrada. `test_shell_v10.js`, `test_contrato_v10.js` e
+`test_site_publicado_v10.js` foram atualizados para as quatro abas.
+
 ## V10.5.0 — Imagem que entra já entra leve (fim do "memória cheia") (2026-11-05)
 
 O pedido: *"deu memória cheia das imagens; não existe a possibilidade de

@@ -354,6 +354,10 @@ transition:background .13s,border-color .13s;
 .sb-footer-btn svg{width:14px;height:14px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .sb-footer-btn:hover{background:var(--sb-active);border-color:var(--sb-line2)}
 .sb-export-row{display:flex;gap:5px}
+/* V10.6 — atalho para o Recibo (versão de teste). Fica no pé porque é uma
+   ação de saída, como PDF/PNG. */
+.sb-recibo{margin-top:5px;border-color:rgba(212,24,122,.45);background:rgba(212,24,122,.10);color:#E0278A;font-weight:800}
+.sb-recibo:hover{background:rgba(212,24,122,.18);border-color:rgba(212,24,122,.7)}
 .sb-export-half{flex:1;width:auto;height:28px;font-size:10px;font-weight:600;background:transparent;border-color:var(--sb-line);color:var(--sb-t2)}
 .sb-export-half:hover{background:var(--sb-hover);color:var(--sb-t1);border-color:var(--sb-line2)}
 .sb-version{font-size:7.5px;color:var(--sb-t3);text-align:center;letter-spacing:1.2px;padding-top:1px;opacity:.65}
@@ -1374,6 +1378,11 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
         <span>PNG</span>
       </button>
     </div>
+
+    <button class="sb-footer-btn sb-recibo" onclick="abrirReciboDaFicha()" title="Gerar o recibo de pagamento (total ou parcial) com os dados desta ficha">
+      <span style="font-size:13px;line-height:1">🧾</span>
+      <span>Gerar recibo</span>
+    </button>
 
     <div class="sb-version">VOOALTO UNIFORMES · V9</div>
   </div>
@@ -9415,6 +9424,51 @@ function abrirV7Download(){
   m.classList.add('open');
 }
 function fecharV7Download(){const m=$('v7DownloadModal');if(m)m.classList.remove('open');}
+/* ══ V10.6 — Ficha → Recibo (versão de teste) ═══════════════════════════
+   Manda a ficha que está na tela para o módulo Recibo, que abre na aba dele
+   já preenchido. A ficha NÃO é salva nem alterada por isso; é só uma cópia
+   dos dados no postMessage. */
+function abrirReciboDaFicha(){
+  let completo=null;
+  try{ completo=capturarFichaParaJSON(); }catch(e){}
+  if(!completo||typeof completo!=='object'){ toast('⚠ Não consegui ler a ficha para o recibo.','erro'); return; }
+  /* Vai só o que o recibo usa. `capturarFichaParaJSON` leva camadas, imagens
+     em base64 e páginas inteiras — mandar isso por postMessage copiaria
+     vários MB à toa e travaria a troca de aba. */
+  const dados={
+    _version:completo._version||'vooalto_ficha_v7',
+    _numFicha:completo._numFicha||'',
+    fichaNum:completo.fichaNum||'',
+    dc_nome:completo.dc_nome||'',
+    dc_doc:completo.dc_doc||'',
+    dc_tel:completo.dc_tel||'',
+    dc_end:completo.dc_end||'',
+    dc_cidade:completo.dc_cidade||'',
+    entradaVal:completo.entradaVal||'',
+    _prod:Array.isArray(completo._prod)?completo._prod:[]
+  };
+  if(Array.isArray(completo._paginas)){
+    dados._paginas=completo._paginas.map(pg=>({
+      id:pg&&pg.id, prod:(pg&&Array.isArray(pg.prod))?pg.prod:[]
+    }));
+  }
+  const num=($('fichaNum')?String($('fichaNum').value||'').trim():'');
+  const cliente=($('dc_nome')?String($('dc_nome').textContent||'').replace(/\s+/g,' ').trim():'');
+  const nome=(num?'Nº '+num:'')+(num&&cliente?' — ':'')+(cliente||(num?'':'Ficha sem cliente'));
+  let meta={ id:'', num:num, name:nome };
+  try{ if(typeof v8FichaAtualId!=='undefined'&&v8FichaAtualId)meta.id=v8FichaAtualId; }catch(e){}
+  if(window.parent===window){
+    toast('Abra o Vooalto e use a aba 🧾 Recibo para gerar o recibo.','erro',4000);
+    return;
+  }
+  try{
+    window.parent.postMessage({type:'vooalto-abrir-recibo',ficha:dados,meta:meta},location.origin);
+    toast('🧾 Recibo aberto com esta ficha.','sucesso',2600);
+  }catch(e){
+    toast('⚠ Não consegui abrir o Recibo. Use a aba 🧾 Recibo.','erro',4000);
+  }
+}
+
 function v7Baixar(){
   const chk=[...document.querySelectorAll('.v7-dl-chk:checked')].map(c=>c.dataset.folha);
   if(!chk.length){toast('Selecione ao menos uma página.','erro');return;}
@@ -10467,6 +10521,26 @@ if(window.ZoomFolha)ZoomFolha.instalar({seletor:'#pw',chave:'vooalto_zoom_ficha_
         const vAtual=parseInt(lsGet(ck)||'0',10);
         if(vNovo>vAtual)lsSet(ck,String(vNovo));
       });
+      /* V10.6 — recibos (versão de teste). A mesclagem não pode perder a
+         lista que veio no backup: une por id (os dois lados ficam) e mantém
+         o maior número já emitido. */
+      try{
+        const recNovosRaw=norm.storage&&norm.storage['vooalto_recibos_v1'];
+        if(recNovosRaw){
+          let recNovos=null;
+          try{recNovos=JSON.parse(recNovosRaw)}catch(e){recNovos=null}
+          const mapaRec=new Map();
+          const atuaisRec=lsJSON('vooalto_recibos_v1',[]);
+          (Array.isArray(atuaisRec)?atuaisRec:[]).forEach(r=>{if(r&&r.id)mapaRec.set(String(r.id),r)});
+          (Array.isArray(recNovos)?recNovos:[]).forEach(r=>{if(r&&r.id&&!mapaRec.has(String(r.id)))mapaRec.set(String(r.id),r)});
+          if(mapaRec.size)lsSet('vooalto_recibos_v1',JSON.stringify(Array.from(mapaRec.values())));
+        }
+        const nRecAtual=parseInt(lsGet('vooalto_recibo_numero_v1')||'0',10)||0;
+        const nRecNovo=parseInt((norm.storage&&norm.storage['vooalto_recibo_numero_v1'])||'0',10)||0;
+        if(nRecNovo>nRecAtual)lsSet('vooalto_recibo_numero_v1',String(nRecNovo));
+        const empRec=norm.storage&&norm.storage['vooalto_recibo_empresa_v1'];
+        if(empRec&&!lsGet('vooalto_recibo_empresa_v1'))lsSet('vooalto_recibo_empresa_v1',String(empRec));
+      }catch(e){}
       ['vooalto_ficha_quick_v7','va3_cores','va3_logo_st','vooalto_tema'].forEach(pk=>{
         if(norm.storage&&norm.storage[pk]!=null&&!lsGet(pk))lsSet(pk,String(norm.storage[pk]));
       });

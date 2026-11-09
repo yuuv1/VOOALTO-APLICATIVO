@@ -1,8 +1,8 @@
 VOOALTO V10 — GUIA RÁPIDO (Windows)
 ==================================
-Sistema local para Ficha Técnica, Orçamentos e Contratos. Três ferramentas,
-sem etapas intermediárias. A V10 é a única versão em desenvolvimento: as pastas
-V5, V6, V7, V8 e V9 saíram do projeto.
+Sistema local para Ficha Técnica, Orçamentos, Recibos e Contratos. Quatro
+ferramentas, sem etapas intermediárias. A V10 é a única versão em
+desenvolvimento: as pastas V5, V6, V7, V8 e V9 saíram do projeto.
 
 INICIAR
 -------
@@ -47,6 +47,39 @@ processos aleatórios do Windows; feche a janela do servidor Vooalto.
 
 Com o cache já instalado, o sistema continua abrindo offline com o servidor
 fechado. O servidor é necessário para instalar ou atualizar.
+
+
+NOVO NA V10.6 — 🧾 RECIBO (VERSÃO DE TESTE)
+-------------------------------------------
+A quarta aba gera o recibo de pagamento a partir da ficha técnica pronta.
+
+• O jeito mais direto: ARRASTE o PDF da ficha (o mesmo que você imprime) para
+  a tela do Recibo. O recibo é criado na hora, com cliente, itens, total e
+  entrada lidos do próprio texto do PDF. Também aceita o .json da ficha.
+• Também vale abrir a ficha que quer receber e clicar em "🧾 Gerar recibo" (no
+  pé do menu da Ficha) — ou, na aba "🧾 Recibo", escolher a ficha na lista:
+  só de selecionar o recibo já é montado.
+• Cliente, nº da ficha, itens, quantidades e valores vêm preenchidos. Tudo pode
+  ser alterado à mão: total da produção, desconto, valor recebido, forma de
+  pagamento, data, observações e responsável.
+• Escolha "Total" (quita a produção) ou "Parcial" (fica saldo). Se digitar um
+  valor menor no modo Total, ele passa sozinho para Parcial.
+• O valor sai em números e por extenso. "Imprimir / Salvar PDF" imprime só a
+  folha A4; "PNG" baixa a imagem e "Copiar texto" serve para o WhatsApp.
+• "Salvar recibo" guarda na lista "Recibos salvos" e avança a numeração. O
+  sistema soma o que já foi recebido na mesma ficha e sugere o saldo restante.
+• "+ Outro" salva e já abre o próximo recibo da mesma ficha (parcelas): cliente
+  e itens continuam, o número avança e o valor sugerido é o saldo que sobrou.
+• A folha imprime também os dados do cliente da ficha (CPF/CNPJ, telefone,
+  endereço e cidade), quando existirem.
+• Os recibos entram no Backup completo (.json) junto com o resto do sistema.
+
+PDF digitalizado (foto/scan, sem texto) não é lido: o Recibo avisa e mantém o
+que já estava na tela. Use o PDF exportado pelo sistema, o .json ou o botão
+dentro da Ficha.
+
+Esta função está em teste: confira os valores na folha antes de salvar ou
+imprimir. Recibo simples de controle interno — não substitui nota fiscal.
 
 NOVO NA V10 — 📄 CONTRATO
 -------------------------

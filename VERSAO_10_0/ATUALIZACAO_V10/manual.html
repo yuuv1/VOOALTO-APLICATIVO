@@ -85,7 +85,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   <div class="top-in">
     <div>
       <h1>📖 Manual — Vooalto V10</h1>
-      <div class="sub">Ficha Técnica · Orçamento — funciona offline</div>
+      <div class="sub">Ficha Técnica · Orçamento · Recibo · Contrato — funciona offline</div>
     </div>
     <div class="sp"></div>
     <button class="tb" id="btnTema" onclick="alternarTema()" title="Trocar entre tema claro e escuro">🎨 Tema</button>
@@ -98,7 +98,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
 
   <div class="hero">
     <h2>Bem-vindo ao Vooalto V10</h2>
-    <p>O V10 é enxuto: são <b>três ferramentas</b>, cada uma em tela cheia, sem etapas intermediárias. Você monta a ficha técnica, faz o orçamento e gera o contrato — tudo no próprio navegador, sem internet.</p>
+    <p>O V10 é enxuto: são <b>quatro ferramentas</b>, cada uma em tela cheia, sem etapas intermediárias. Você monta a ficha técnica, faz o orçamento, gera o recibo de pagamento e o contrato — tudo no próprio navegador, sem internet.</p>
     <div class="flow">
       <div>
         <b>1 · 📋 Ficha Técnica</b>
@@ -109,10 +109,15 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
         <span>Proposta de venda com itens, totais, destaques e assinatura. Também salva sozinha.</span>
       </div>
       <div>
-        <b>3 · 📄 Contrato</b>
+        <b>3 · 🧾 Recibo <span style="font-size:9px;font-weight:900;color:#D4187A">TESTE</span></b>
+        <span>Puxe a ficha pronta e gere o recibo de pagamento — total ou parcial, com todos os valores editáveis.</span>
+      </div>
+      <div>
+        <b>4 · 📄 Contrato</b>
         <span>Arraste a ficha ou a proposta em PDF e baixe o contrato em Word (.docx) e PDF, já preenchido.</span>
       </div>
     </div>
+    <div class="tip"><b>O que mudou na V10.6:</b> entrou a aba <b>🧾 Recibo</b> (versão de teste), que gera o recibo de pagamento a partir da ficha técnica pronta, com pagamento <b>total</b> ou <b>parcial</b> e valores editáveis à mão. O recibo tem numeração própria e soma o que já foi recebido na mesma ficha.</div>
     <div class="tip"><b>O que mudou na V10:</b> entrou a terceira ferramenta, o <b>📄 Contrato</b>. Ela roda dentro do próprio Vooalto (mesma janela, mesma porta) e não precisa de instalação à parte. Fichas, rascunhos, orçamentos e o estado do contrato continuam no mesmo navegador e no mesmo endereço; os backups <b>.json</b> da V9 e da V8 abrem normalmente.</div>
     <div class="tip"><b>O que mudou na V9:</b> a V9 é a única versão do sistema — as pastas das versões anteriores (V5, V6, V7 e V8) saíram do projeto. Nada do seu trabalho se perde: fichas, rascunhos e orçamentos continuam no mesmo navegador e endereço, e os backups <b>.json</b> da V8 abrem normalmente.</div>
     <div class="tip"><b>O que mudou na V8:</b> a <b>Catalogação</b> foi removida (junto com o leitor de PDF e o dashboard). A Ficha Técnica voltou a abrir como <b>aba em tela cheia</b> — na V7 ela abria numa janela por cima do sistema. E a lista de fichas agora é uma só: <b>Minhas fichas</b>.</div>
@@ -122,12 +127,13 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
     <b>Neste manual</b><br>
     <a href="#ficha">1 · Ficha Técnica</a>
     <a href="#orcamento">2 · Orçamento</a>
-    <a href="#contrato">3 · Contrato</a>
-    <a href="#salvar">4 · Salvamento e backup</a>
-    <a href="#tema">5 · Tema, impressão e PDF</a>
-    <a href="#atalhos">6 · Atalhos do teclado</a>
-    <a href="#rascunho">6.1 · Rascunho da ficha</a>
-    <a href="#duvidas">7 · Dúvidas frequentes</a>
+    <a href="#recibo">3 · Recibo (teste)</a>
+    <a href="#contrato">4 · Contrato</a>
+    <a href="#salvar">5 · Salvamento e backup</a>
+    <a href="#tema">6 · Tema, impressão e PDF</a>
+    <a href="#atalhos">7 · Atalhos do teclado</a>
+    <a href="#rascunho">7.1 · Rascunho da ficha</a>
+    <a href="#duvidas">8 · Dúvidas frequentes</a>
   </nav>
 
   <section class="card" id="ficha">
@@ -221,8 +227,40 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
     <div class="tip">O chip <b>💾 Salvo HH:MM</b> no topo do editor mostra que o salvamento automático aconteceu. O conteúdo fica <b>no navegador</b>: para guardar de verdade, use <b>Salvar .json</b>.</div>
   </section>
 
+
+  <section class="card" id="recibo">
+    <h2>🧾 3 · Recibo <span class="beta" style="font-size:10px;font-weight:900;letter-spacing:.8px;color:#D4187A;border:1px solid #D4187A;border-radius:999px;padding:2px 8px;vertical-align:middle">VERSÃO DE TESTE</span></h2>
+    <p>Abre pela aba <b>🧾 Recibo</b> no topo (ou pelo botão <b>🧾 Gerar recibo</b> no pé da Ficha Técnica). O recibo nasce da <b>ficha técnica pronta</b>: cliente, nº da ficha, itens, quantidades e valores vêm preenchidos — e tudo pode ser alterado à mão antes de imprimir.</p>
+    <h3>Jogar a ficha e o recibo nascer pronto</h3>
+    <ul>
+      <li><b>Arraste o PDF da ficha para qualquer lugar da tela</b> (é o próprio “Exportar PDF” da Ficha Técnica). O recibo é montado na hora, com cliente, nº da ficha, itens, quantidades, total e entrada. A tela avisa para você conferir os valores lidos.</li>
+      <li>Também aceita o <b>.json</b> da ficha (na Ficha Técnica: <b>Exportar só esta ficha</b>) e o backup completo.</li>
+      <li>Ou escolha a ficha em <b>Ficha técnica de origem</b> — <b>só de selecionar</b> o recibo já é criado (o botão <b>⬇ Carregar ficha</b> serve para recarregar).</li>
+      <li>Se o recibo estiver em branco e você tiver uma ficha aberta na Ficha Técnica, ela entra sozinha ao abrir a aba.</li>
+      <li>Pelo botão <b>🧾 Gerar recibo</b> dentro da Ficha, o recibo abre já com a ficha que está na tela.</li>
+      <li><b>PDF digitalizado ou foto da ficha</b> (sem texto) não é lido: o recibo avisa e mantém o que estava na tela. Use o PDF exportado pelo sistema, o .json ou o botão dentro da ficha.</li>
+    </ul>
+    <h3>Pagamento total ou parcial</h3>
+    <ul>
+      <li><b>Total</b> — quita a produção: o valor do recibo acompanha o total (menos o desconto) e o saldo fica zerado. O carimbo <b>QUITADO</b> aparece na folha.</li>
+      <li><b>Parcial</b> — informe quanto foi recebido. O recibo mostra o <b>saldo devedor</b> (total menos o que já foi recebido em recibos anteriores desta ficha e menos este pagamento) e, se quiser, a previsão para o restante.</li>
+      <li>Todo valor é editável: total da produção, desconto, valor deste recibo e o “já recebido antes”. Se você digitar um valor menor no modo Total, o sistema passa sozinho para <b>Parcial</b>.</li>
+      <li><b>Já recebido antes</b> é a soma dos recibos salvos com o mesmo nº de ficha. Use <b>↻ recalcular</b> para voltar à soma automática.</li>
+    </ul>
+    <h3>Salvar, numerar e imprimir</h3>
+    <ul>
+      <li><b>💾 Salvar recibo</b> guarda na lista <b>📂 Recibos salvos</b> e avança a numeração. O rascunho em edição também é salvo sozinho neste navegador.</li>
+      <li><b>➕ Outro</b> salva e já abre o <b>próximo recibo da mesma ficha</b> (parcelas): mantém cliente, itens e valores, põe o número seguinte e sugere o saldo restante. O número repetido é bloqueado.</li>
+      <li><b>🖨️ Imprimir / Salvar PDF</b> imprime só a folha A4; <b>🖼️ PNG</b> baixa a imagem; <b>📋 Copiar texto</b> serve para enviar o recibo por WhatsApp.</li>
+      <li>A folha também imprime os <b>dados do cliente</b> da ficha (CPF/CNPJ, telefone, endereço e cidade), quando existirem.</li>
+      <li>O valor sai <b>em números e por extenso</b> (ex.: “R$ 1.234,56 — mil duzentos e trinta e quatro reais e cinquenta e seis centavos”).</li>
+      <li>Os recibos entram no <b>Backup Completo (.json)</b> junto com o resto do sistema.</li>
+    </ul>
+    <div class="tip">Esta é uma <b>versão de teste</b>: o recibo é um documento simples de controle interno, não substitui nota fiscal. Confira sempre os valores na folha antes de salvar ou imprimir.</div>
+  </section>
+
   <section class="card" id="contrato">
-    <h2>📄 3 · Contrato</h2>
+    <h2>📄 4 · Contrato</h2>
     <p>Abre pela aba <b>📄 Contrato</b> no topo. É o motor de contratos da Vooalto rodando <b>dentro do sistema</b>: nada de abrir outro programa, terminal ou instalador.</p>
     <ul>
       <li><b>Entrada</b> — arraste a <b>ficha técnica</b> ou a <b>proposta de venda</b> em PDF (uma ou várias páginas).</li>
@@ -236,7 +274,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   </section>
 
   <section class="card" id="salvar">
-    <h2>💾 4 · Salvamento e backup</h2>
+    <h2>💾 5 · Salvamento e backup</h2>
     <p>Existem três camadas, e vale entender a diferença:</p>
     <table>
       <tr><th>O quê</th><th>Onde fica</th><th>Para que serve</th></tr>
@@ -249,7 +287,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   </section>
 
   <section class="card" id="tema">
-    <h2>🎨 5 · Tema, impressão e PDF</h2>
+    <h2>🎨 6 · Tema, impressão e PDF</h2>
     <ul>
       <li><b>Dois temas, e só dois:</b> <b>Escuro</b> (padrão) e <b>Claro</b>. O seletor no topo vale para o sistema inteiro e a escolha fica salva.</li>
       <li>Quem vinha de uma versão antiga com outro tema (Neon, Tech, Butter…) cai no mais próximo (as paletas escuras viram Escuro) e passa a usar claro/escuro.</li>
@@ -259,7 +297,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   </section>
 
   <section class="card" id="atalhos">
-    <h2>⌨️ 6 · Atalhos do teclado</h2>
+    <h2>⌨️ 7 · Atalhos do teclado</h2>
     <table>
       <tr><th>Tecla</th><th>O que faz</th></tr>
       <tr><td><kbd>Esc</kbd></td><td>Fecha janelas, painéis, o leitor de seleção e a ajuda</td></tr>
@@ -277,7 +315,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   </section>
 
   <section class="card" id="rascunho">
-    <h2>↩ 6.1 · Rascunho da ficha</h2>
+    <h2>↩ 7.1 · Rascunho da ficha</h2>
     <p>A Ficha Técnica é guardada sozinha enquanto você trabalha. A seção <b>Rascunho</b>, na barra lateral, mostra a hora da última gravação e dois botões:</p>
     <ul>
       <li><b>Restaurar</b> — volta a ficha ao rascunho guardado (pede confirmação se a ficha aberta tem conteúdo).</li>
@@ -287,7 +325,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
   </section>
 
   <section class="card" id="duvidas">
-    <h2>❓ 7 · Dúvidas frequentes</h2>
+    <h2>❓ 8 · Dúvidas frequentes</h2>
 
     <details>
       <summary>Cadê a Catalogação? Ainda consigo ver as fichas antigas?</summary>

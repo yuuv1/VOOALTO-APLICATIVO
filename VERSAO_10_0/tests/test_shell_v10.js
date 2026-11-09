@@ -1,6 +1,7 @@
 'use strict';
-/* V10 — Shell: três módulos em tela cheia (Ficha Técnica, Orçamento e Contrato), sem
-   popup e sem Catalogação. Verifica navegação, lazy-load do orçamento,
+/* V10 — Shell: quatro módulos em tela cheia (Ficha Técnica, Orçamento, Recibo
+   — versão de teste — e Contrato), sem popup e sem Catalogação. Verifica
+   navegação, lazy-load do orçamento e do recibo, ponte Ficha → Recibo,
    sincronização de tema nos dois sentidos e o tour/ajuda. */
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
@@ -10,7 +11,7 @@ const { BASE } = require('./_base');
   const oc = fs.readFileSync(BASE + '/index.html', 'utf-8');
   const errs = [];
   const frames = {};
-  ['ficha','orcamento'].forEach(k => {
+  ['ficha','orcamento','recibo'].forEach(k => {
     frames[k] = { got: [], postMessage: m => frames[k].got.push(m), location: { reload(){ frames[k].reloaded = true; } } };
   });
   const d = new JSDOM(oc, { url: 'http://localhost:4800/', runScripts: 'dangerously', pretendToBeVisual: true,
@@ -20,7 +21,7 @@ const { BASE } = require('./_base');
     }
   });
   const w = d.window, doc = w.document;
-  ['ficha','orcamento'].forEach(k => {
+  ['ficha','orcamento','recibo'].forEach(k => {
     const real = doc.getElementById('frame-' + k);
     Object.defineProperty(real, 'contentWindow', { value: frames[k], configurable: true });
   });
@@ -43,8 +44,10 @@ const { BASE } = require('./_base');
 
   /* ── estrutura ── */
   ok('tour de boas-vindas abre sozinho na primeira visita', tourSozinho);
-  ok('3 iframes (ficha + orçamento + contrato)', doc.querySelectorAll('iframe').length === 3);
-  ok('3 abas no topo', doc.querySelectorAll('.switch-btn').length === 3);
+  ok('4 iframes (ficha + orçamento + recibo + contrato)', doc.querySelectorAll('iframe').length === 4);
+  ok('4 abas no topo', doc.querySelectorAll('.switch-btn').length === 4);
+  ok('aba Recibo existe e é marcada como teste', !!doc.getElementById('btn-recibo') && /TESTE/.test(doc.getElementById('btn-recibo').textContent));
+  ok('recibo começa sem src (lazy-load)', !doc.getElementById('frame-recibo').getAttribute('src') && doc.getElementById('frame-recibo').dataset.src === 'criador_recibo/index.html');
   ok('ficha é a aba inicial', doc.getElementById('frame-ficha').classList.contains('active'));
   ok('orçamento começa sem src (lazy-load)', !doc.getElementById('frame-orcamento').getAttribute('src') && !!doc.getElementById('frame-orcamento').dataset.src);
   ok('sem popup de ficha (V7)', !doc.getElementById('fichaPopup') && !oc.includes('ficha-popup'));
@@ -57,9 +60,27 @@ const { BASE } = require('./_base');
   ok('abrir orçamento define o src', doc.getElementById('frame-orcamento').getAttribute('src') === 'criador_orcamento/index.html');
   ok('orçamento ativo', doc.getElementById('frame-orcamento').classList.contains('active') && !doc.getElementById('frame-ficha').classList.contains('active'));
   ok('aba do orçamento marcada', doc.getElementById('btn-orcamento').classList.contains('active') && !doc.getElementById('btn-ficha').classList.contains('active'));
+  w.eval(`showProject('recibo')`);
+  await new Promise(r => setTimeout(r, 80));
+  ok('abrir recibo define o src', doc.getElementById('frame-recibo').getAttribute('src') === 'criador_recibo/index.html');
+  ok('recibo ativo e aba marcada', doc.getElementById('frame-recibo').classList.contains('active') && doc.getElementById('btn-recibo').classList.contains('active'));
   w.eval(`showProject('ficha')`);
   await new Promise(r => setTimeout(r, 60));
   ok('volta para a ficha', doc.getElementById('frame-ficha').classList.contains('active'));
+
+  /* ── ponte Ficha → Recibo ──
+     A ficha manda os dados antes de o módulo avisar que carregou: eles
+     precisam ficar na fila e chegar inteiros no `vooalto-recibo-pronto`. */
+  frames.recibo.got.length = 0;
+  w.postMessage({ type: 'vooalto-abrir-recibo', ficha: { dc_nome: 'Ana', _numFicha: '77', _prod: [{ modelo: 'Camiseta', valor: '50,00', qtd: '2' }] }, meta: { id: 'f1', name: 'Ficha da Ana' } }, '*');
+  await new Promise(r => setTimeout(r, 80));
+  ok('pedido de recibo troca de aba', doc.getElementById('frame-recibo').classList.contains('active'));
+  ok('a ficha espera o módulo avisar que carregou', !frames.recibo.got.some(m => m.type === 'vooalto-carregar-ficha'));
+  w.postMessage({ type: 'vooalto-recibo-pronto' }, '*');
+  await new Promise(r => setTimeout(r, 80));
+  const carga = frames.recibo.got.find(m => m.type === 'vooalto-carregar-ficha');
+  ok('o recibo recebe a ficha depois do aviso', !!carga && carga.ficha.dc_nome === 'Ana' && carga.meta && carga.meta.id === 'f1');
+  ok('a fila não entrega a mesma ficha duas vezes', frames.recibo.got.filter(m => m.type === 'vooalto-carregar-ficha').length === 1);
 
   /* ── mensagens entre módulos ── */
   w.postMessage({ type: 'vooalto-switch-tab', tab: 'orcamento' }, '*');
@@ -92,6 +113,7 @@ const { BASE } = require('./_base');
   ok('escuro aplica data-theme', doc.documentElement.dataset.theme === 'escuro');
   ok('escuro ajusta as variáveis', doc.documentElement.style.getPropertyValue('--shell-bg') === '#04060a' && doc.documentElement.style.getPropertyValue('--bar-text') === '#fff');
   ok('orçamento recebe escuro', ultimoTema('orcamento') === 'escuro');
+  ok('recibo recebe escuro', ultimoTema('recibo') === 'escuro');
   ok('não devolve o tema para quem enviou', !frames.ficha.got.some(m => m.type === 'vooalto-theme' && m.theme === 'escuro'));
 
   w.eval(`applyThemeFromShell('claro')`);

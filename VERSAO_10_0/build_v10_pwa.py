@@ -3,7 +3,7 @@
 
 Usage: python3 build_v10_pwa.py
 
-V10: três módulos (Ficha Técnica, Orçamento e Contrato). A V10 é a única versão
+V10: quatro módulos (Ficha Técnica, Orçamento, Recibo [teste] e Contrato). A V10 é a única versão
 do projeto (as pastas V5..V9 foram removidas) e mantém o MESMO endereço local
 (http://localhost:4800/) e as mesmas chaves de dados da V8/V9, para que a
 atualização não perca fichas, rascunhos, orçamentos nem o estado do contrato.
@@ -157,19 +157,48 @@ self.addEventListener('activate', event => {{
   }})());
 }});
 
-// Cache-first para recursos do próprio app; os dados do usuário ficam em
-// localStorage/IndexedDB e nunca passam pelo service worker.
+// HTML sempre tenta a REDE primeiro; o resto é cache-first (rápido e offline).
+//
+// Antes era cache-first para tudo, inclusive navegação: quem já tinha aberto o
+// app continuava vendo a página antiga mesmo depois de recarregar (o service
+// worker entregava o HTML do cache) e as correções pareciam não ter chegado.
+// Com rede-first na navegação, recarregar já mostra a versão nova; sem
+// internet, cai no cache e o app continua funcionando offline.
+const REDE_ESPERA_MS = 4000;
+
 self.addEventListener('fetch', event => {{
   const request = event.request;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname === '/__vooalto_health') return;
 
+  const doCache = async (cache) => (await cache.match(request))
+    || (await cache.match(url.pathname, {{ ignoreSearch: true }}));
+
   event.respondWith((async () => {{
     const cache = await caches.open(CACHE);
-    const hit = await cache.match(request) || (request.mode === 'navigate'
-      ? await cache.match(url.pathname, {{ ignoreSearch: true }})
-      : null);
+
+    if (request.mode === 'navigate') {{
+      try {{
+        const resposta = await Promise.race([
+          fetch(request),
+          new Promise(resolve => setTimeout(() => resolve(null), REDE_ESPERA_MS))
+        ]);
+        if (resposta) {{
+          if (resposta.ok && url.pathname.startsWith('/')) {{
+            cache.put(request, resposta.clone()).catch(() => {{}});
+          }}
+          return resposta;
+        }}
+      }} catch (error) {{
+        /* sem internet: usa o que está guardado */
+      }}
+      const guardado = await doCache(cache);
+      if (guardado) return guardado;
+      throw new Error('offline e sem cópia em cache');
+    }}
+
+    const hit = await doCache(cache);
     if (hit) return hit;
 
     try {{

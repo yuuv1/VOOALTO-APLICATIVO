@@ -17,13 +17,14 @@ mão (ver §13).
 
 ## 1. O que o sistema é
 
-Três ferramentas de produção de documento, rodando **inteiramente no
+Quatro ferramentas de produção de documento, rodando **inteiramente no
 navegador**:
 
 | Módulo | Pasta | Produz |
 |---|---|---|
 | 📋 Ficha Técnica | `criador_ficha_tecnica/` | folha(s) A4 de produção, em PDF/PNG |
 | 💰 Orçamento | `criador_orcamento/` | proposta de venda A4, em PDF/PNG |
+| 🧾 Recibo **(teste)** | `criador_recibo/` | recibo de pagamento A4 (total/parcial), em PDF/PNG |
 | 📄 Contrato | `criador_contrato/` | documento contratual em .docx e .pdf (A4) |
 
 Nada é enviado para a internet. O servidor local serve arquivos estáticos e
@@ -40,10 +41,11 @@ VERSAO_10_0/
   tools/atualizar_contrato.py copia o motor de contratos e corrige o cache
 
 ATUALIZACAO_V10/               ← é esta pasta que recebe o serviço
-  index.html                  shell: barra do topo + 3 iframes em tela cheia
+  index.html                  shell: barra do topo + 4 iframes em tela cheia
   criador_ficha_tecnica/      módulo 1
   criador_orcamento/          módulo 2
-  criador_contrato/           módulo 3 (artefato autônomo do projeto
+  criador_recibo/             módulo 3 — recibo de pagamento (versão de teste)
+  criador_contrato/           módulo 4 (artefato autônomo do projeto
                               documento-contratual/, copiado e corrigido)
   manual.html                 manual completo (abre pelo ? Ajuda)
   limpar_cache.html           apaga só o cache do service worker
@@ -81,6 +83,9 @@ Todo o contrato é `postMessage` com `{type: ...}`:
 | `vooalto-switch-tab` | módulo → shell | troca a aba |
 | `vooalto-abrir-manual` | módulo → shell | abre o manual |
 | `vooalto-abrir-backup` | módulo → shell | abre a Central de Backup |
+| `vooalto-abrir-recibo` | Ficha → shell | abre a aba Recibo e guarda a ficha na fila |
+| `vooalto-recibo-pronto` | Recibo → shell | o módulo carregou; o shell entrega a ficha que estava na fila |
+| `vooalto-carregar-ficha` | shell → Recibo | aplica a ficha (cliente, itens, valores) no recibo |
 
 O **Contrato não participa** desse contrato: é um app fechado, embarcado por
 `<iframe>` e carregado sob demanda. Ele recebe `vooalto-theme` e simplesmente
@@ -110,6 +115,10 @@ endereço (`http://localhost:4800/`) e encontra tudo como deixou.
 | Último backup | `localStorage` | `vooalto_ultimo_backup_v8` | data do último backup exportado (a V10 lê a mesma) |
 | Estado do Contrato | `localStorage` | `vooalto_contrato_state_v2` | dados do último contrato montado (chave do **próprio** motor; entra no backup e na mesclagem) |
 | Credencial (não exportada) | `localStorage` | `vooalto_gemini_api_key_v1` | chave opcional da leitura por IA do Contrato — fica em `SKIP_KEYS`: **nunca** entra no `.json` de backup |
+| Recibos salvos | `localStorage` | `vooalto_recibos_v1` | lista de recibos (cliente, ficha, itens, valores, saldo) — é o que alimenta o “já recebido” |
+| Recibo: numeração | `localStorage` | `vooalto_recibo_numero_v1` | último número emitido (avança ao salvar) |
+| Recibo: rascunho | `localStorage` | `vooalto_recibo_autosave_v1` | o recibo em edição |
+| Recibo: cabeçalho | `localStorage` | `vooalto_recibo_empresa_v1` | telefone, CNPJ e endereço que saem na folha |
 
 **Por que os dados no IndexedDB e o índice no localStorage:** os dados têm
 imagens em base64 e estouram a cota do `localStorage` (≈5 MB) com poucas
@@ -184,8 +193,8 @@ navegador, com `Cache-Control: no-store`. Não é o servidor do app.
 
 ```
 npm install
-npm test              # 17 suítes jsdom (shell, módulos, mockup, peça, contrato,
-                      # espelho da folha 1, melhorias)
+npm test              # 24 suítes jsdom (shell, módulos, recibo, mockup, peça,
+                      # contrato, espelho da folha 1, melhorias)
 npm run test:python   # 15 testes (build + contrato + identidade + servidor)
 npm run build         # gera sw.js e o ZIP
 ```
@@ -391,6 +400,99 @@ Para atualizar o motor: rode o build no projeto dele, depois
 `python3 tools/atualizar_contrato.py`, `npm run build` (regera `sw.js`/ZIP) e
 `npm test` — o teste `tests/test_contrato_v10.js` confirma que a cópia está
 corrigida.
+
+## 13.1 O módulo Recibo (V10.6 — versão de teste)
+
+Módulo novo e **somente leitura em relação aos outros**: ele lê a ficha e não
+grava nada nas chaves da Ficha nem do Orçamento. Se aberto sozinho, funciona
+igual (a lista de fichas aparece vazia sem IndexedDB e o usuário pode digitar
+tudo à mão).
+
+**Fluxo.** O shell abre a aba sob demanda e o módulo avisa `vooalto-recibo-pronto`.
+A Ficha Técnica manda `vooalto-abrir-recibo` com a cópia de
+`capturarFichaParaJSON()` + `meta {id, num, name}`; o shell troca de aba, guarda
+a ficha numa **fila** e só entrega (`vooalto-carregar-ficha`) quando o módulo
+avisa que carregou. Sem a fila, a primeira abertura perderia a ficha (o iframe
+ainda não tinha `src`). A cópia enviada é **enxuta**: só cliente, `entradaVal`,
+itens de `_prod`/`_paginas[].prod` e número — as camadas e imagens em base64 de
+`capturarFichaParaJSON()` ficam de fora (seriam vários MB por postMessage).
+
+**Arrastar a ficha.** A aba inteira escuta `dragenter/dragover/dragleave/drop`
+(com contador para o overlay não piscar) e aceita **PDF**, `.json` da ficha e
+backup completo. Outras extensões são recusadas com aviso e **não** mexem no
+recibo em edição. Ao abrir com o recibo em branco, a ficha em edição
+(`vooalto_v7_ficha_ativa`) é aplicada sozinha (`autoFicha`, que também evita o
+diálogo de confirmação quando a ficha chega pela ponte logo depois).
+
+**PDF da ficha.** `assets/pdf/` traz pdf.js **3.11.174** (build legacy: 377 KB
++ worker 1,1 MB, Apache-2.0, `LICENSE.txt` junto). O `<script>` e o worker só
+são carregados no primeiro PDF solto — o módulo continua leve para quem usa só
+o .json. `textoDoPDF()` monta o texto com `hasEOL`; `interpretarFichaTexto()`
+procura os rótulos num índice **sem espaços** (a ficha imprime “N O M E / R A Z
+Ã O S O C I A L” por causa do letter-spacing), com mapa de volta para o texto
+original, e corta o valor até o rótulo seguinte. Itens saem da tabela entre
+“MODELO / DESCRIÇÃO” e “TOTAL DA PRODUÇÃO” (linha `n modelo R$ unit × qtd =
+R$ total`); total e entrada vêm dos rótulos e o total do PDF sobrepõe a soma
+dos itens (`totalManual`), porque o dinheiro do documento manda. O resultado
+alimenta o mesmo `aplicarFicha()` do .json e o painel mostra “Lido do PDF —
+confira …” com os campos que faltaram. PDF sem texto (scan/foto) é recusado
+sem tocar no recibo; **não há OCR aqui de propósito** (o contrato já tem
+tesseract, mas ler valor errado é pior que pedir o arquivo certo).
+
+**Parcelas.** `salvarENovo()` salva o recibo e já monta o próximo da mesma
+ficha: mantém cliente/itens/total/desconto/forma, zera observação, avança o
+número e sugere `base − jáRecebido` como valor. `novo()` grava na hora um
+rascunho vazio, para a aba não reabrir o recibo anterior.
+
+**De onde vêm os dados.**
+
+| Origem | Como é lida |
+|---|---|
+| Ficha em edição | `localStorage` `vooalto_v7_ficha_ativa` (+ `vooalto_v8_rascunho_meta` para saber se está vazia) |
+| Minhas fichas | índice `vooalto_ficha_rascunhos_v4_meta` para a lista; o registro só é lido do IndexedDB **na hora de carregar** (fichas com foto pesam) |
+| `.json` | ficha avulsa (`_version` `vooalto_ficha_*`) ou backup completo (usa as `fichas[]` de dentro) |
+
+Da ficha entram: `dc_nome`/`dc_doc`/`dc_tel`/`dc_end`/`dc_cidade`, `_numFicha`,
+`entradaVal` e os itens de `_prod` **mais** os de `_paginas[].prod` (páginas
+extras). O texto passa por `stripTags` — a ficha guarda HTML no `contenteditable`
+e o recibo não pode imprimir tag.
+
+**Conta do pagamento.** `calcular()` devolve
+`base = total − desconto`, `saldo = base − jáRecebido − pago` e
+`totalPagoFicha = jáRecebido + pago`.
+
+- **Total** cobra `base − jáRecebido` (quitação), não o total cheio: com
+  histórico, cobrar o total de novo duplicaria o valor.
+- **Parcial** deixa o valor por conta do usuário e mostra o saldo.
+- Qualquer valor digitado manda: se o valor do recibo ficar abaixo do total, o
+  modo vira **Parcial** sozinho. O total da produção também aceita digitação
+  (`totalManual`), com botão para voltar a somar os itens.
+- `jáRecebido` é a soma dos recibos salvos com o mesmo `fichaNum`, excluindo o
+  próprio recibo quando ele está sendo editado; pode ser corrigido à mão e
+  recalculado.
+
+**Numeração.** `proximoNumero()` = maior entre `vooalto_recibo_numero_v1` e os
+números da lista, +1. Salvar sem número atribui esse valor. Salvar de novo
+**atualiza** o registro aberto (mesmo `id`); número repetido pede confirmação.
+
+**Folha.** Uma página A4 fixa (794×1120), papel branco nos dois temas, com
+cabeçalho da empresa, faixa RECIBO/Nº, valor em números e **por extenso**,
+parágrafo “Recebemos de…”, referência com a ficha, tabela de itens (limitada
+para não invadir a assinatura), resumo financeiro, forma de pagamento, data,
+assinatura e carimbo **QUITADO** quando o saldo é zero. Impressão vetorial pelo
+navegador; PNG via `html2canvas`; zoom só da folha via `assets/zoom-folha.js`.
+O valor por extenso é implementado no próprio módulo (sem dependência), com
+teste para centavos, “cem”, milhares, milhões e bilhões.
+
+**Backup.** As quatro chaves têm prefixo `vooalto_` e entram no arquivo do
+Backup Completo. Na **mesclagem**, os três módulos que restauram backup (shell,
+Ficha e Orçamento) fazem a união dos recibos por `id` e mantêm o maior número —
+sem isso, mesclar um backup perderia os recibos locais.
+
+**O que não fazer:** não gravar recibo dentro da ficha, não apagar recibos ao
+“Nova ficha” e não usar `localStorage` para fotos (a regra do §10 continua).
+Recibo salvo é documento: salvar de novo o mesmo recibo não pode criar outro
+número (o teste cobre isso).
 
 ## 14. Ficha Técnica: a folha 1 é a configuração
 

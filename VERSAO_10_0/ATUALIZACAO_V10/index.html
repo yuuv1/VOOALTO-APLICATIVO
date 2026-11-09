@@ -162,6 +162,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
     <nav class="switcher">
       <button class="switch-btn active" id="btn-ficha" onclick="showProject('ficha')" title="Criar e editar a ficha técnica de produção">📋 Ficha Técnica</button>
       <button class="switch-btn" id="btn-orcamento" onclick="showProject('orcamento')" title="Criar orçamento / proposta de venda">💰 Orçamento</button>
+      <button class="switch-btn" id="btn-recibo" onclick="showProject('recibo')" title="Gerar o recibo de pagamento (total ou parcial) a partir da ficha técnica pronta">🧾 Recibo <span style="font-size:8px;font-weight:900;letter-spacing:.6px;background:rgba(212,24,122,.18);color:#D4187A;border:1px solid rgba(212,24,122,.45);border-radius:999px;padding:1px 5px;vertical-align:middle">TESTE</span></button>
       <button class="switch-btn" id="btn-contrato" onclick="showProject('contrato')" title="Gerar o documento contratual a partir da ficha ou da proposta">📄 Contrato</button>
     </nav>
     <div class="controls">
@@ -182,6 +183,8 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
          primeira vez. O Contrato é um bundle de ~10 MB: carregá-lo junto com o
          sistema dobraria o tempo de abertura. -->
     <iframe class="project-frame" id="frame-orcamento" data-src="criador_orcamento/index.html" title="Criador de Orçamento"></iframe>
+    <!-- Recibo: módulo novo da versão de teste. Carrega só quando a aba abre. -->
+    <iframe class="project-frame" id="frame-recibo" data-src="criador_recibo/index.html" title="Criador de Recibo de Pagamento"></iframe>
     <iframe class="project-frame" id="frame-contrato" data-src="criador_contrato/index.html" title="Criador de Documento Contratual"></iframe>
   </main>
 </div>
@@ -190,7 +193,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
   <div class="card wide">
     <button class="card-x" onclick="fecharTour()" title="Fechar a tela de boas-vindas (Esc)">✕</button>
     <h3>👋 Bem-vindo ao Vooalto V10</h3>
-    <div class="sub">Três ferramentas, sem etapas intermediárias: monte a ficha técnica, faça o orçamento e gere o contrato.</div>
+    <div class="sub">Quatro ferramentas, sem etapas intermediárias: monte a ficha técnica, faça o orçamento, gere o recibo de pagamento e o contrato.</div>
     <div class="tour-steps">
       <div class="tour-step">
         <div class="num">1</div>
@@ -204,6 +207,11 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       </div>
       <div class="tour-step">
         <div class="num">3</div>
+        <b>🧾 Recibo <span style="font-size:8px;font-weight:900;letter-spacing:.6px;color:#D4187A">TESTE</span></b>
+        <p>Jogue a ficha técnica aqui — arraste o <b>.json</b> da ficha para a aba ou escolha na lista — e o recibo sai preenchido na hora, com pagamento <b>total</b> ou <b>parcial</b> e todos os valores editáveis à mão. Salva a numeração e soma o que já foi recebido na mesma ficha.</p>
+      </div>
+      <div class="tour-step">
+        <div class="num">4</div>
         <b>📄 Contrato</b>
         <p>Arraste a ficha técnica ou a proposta (PDF) e o contrato sai preenchido, em <b>Word (.docx)</b> e <b>PDF</b>. A leitura acontece no seu navegador, sem enviar arquivo para lugar nenhum.</p>
       </div>
@@ -220,7 +228,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
   <div class="card narrow">
     <button class="card-x" onclick="closeHelp()" title="Fechar a ajuda (Esc)">✕</button>
     <h3>Como usar o Vooalto V10</h3>
-    <div class="sub">Três ferramentas: a ficha técnica de produção, o orçamento e o documento contratual. Tudo roda neste navegador — nada vai para a internet.</div>
+    <div class="sub">Quatro ferramentas: ficha técnica de produção, orçamento, recibo de pagamento (em teste) e documento contratual. Tudo roda neste navegador — nada vai para a internet.</div>
     <div class="help-item"><div class="ico">📋</div><div>
       <b>1 · Ficha Técnica</b>
       <p>Dados do cliente, modelos, valores, cores, medidas, imagens e páginas extras. A ficha em edição é <b>salva automaticamente</b> (o selo <b>Salvo HH:MM</b> mostra a hora da última gravação). <b>Salvar ficha</b> guarda na lista <b>Minhas fichas</b>, de onde você reabre quando quiser. <b>Nova ficha</b> começa outra em branco e avança o número.</p>
@@ -229,8 +237,12 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
       <b>2 · Orçamento</b>
       <p>Crie orçamentos/propostas com itens, valores, cliente e assinatura. O conteúdo é <b>salvo automaticamente</b> neste navegador — feche e volte que continua de onde parou. Use <b>Salvar .json</b> para guardar um arquivo.</p>
     </div></div>
+    <div class="help-item"><div class="ico">🧾</div><div>
+      <b>3 · Recibo <span style="font-size:9px;font-weight:900;letter-spacing:.6px;color:#D4187A">TESTE</span></b>
+      <p>Gere o <b>recibo de pagamento</b> a partir da ficha técnica pronta: cliente, itens e valores vêm preenchidos. Escolha <b>Total</b> (quita a produção) ou <b>Parcial</b> (mostra o saldo) e ajuste qualquer valor à mão. O número avança sozinho e o “já recebido” soma os recibos salvos da mesma ficha. Também abre pelo botão <b>🧾 Gerar recibo</b> dentro da Ficha Técnica.</p>
+    </div></div>
     <div class="help-item"><div class="ico">📄</div><div>
-      <b>3 · Contrato</b>
+      <b>4 · Contrato</b>
       <p>Gere o <b>documento contratual</b> a partir da ficha técnica ou da proposta de venda: arraste o PDF, confira os dados lidos e baixe em <b>Word (.docx)</b> e <b>PDF</b>. O motor de contratos abre dentro do Vooalto e também funciona <b>offline</b>. Fica na mesma aba, então não é preciso abrir outro programa.</p>
     </div></div>
     <div class="help-item"><div class="ico">🎨</div><div>
@@ -254,7 +266,7 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
     </div></div>
     <div class="help-item"><div class="ico">📖</div><div>
       <b>Precisa de mais detalhe?</b>
-      <p style="margin-bottom:8px">O manual completo tem o passo a passo dos três módulos, salvamento, backup e as dúvidas frequentes.</p>
+      <p style="margin-bottom:8px">O manual completo tem o passo a passo dos quatro módulos (Ficha, Orçamento, Recibo e Contrato), salvamento, backup e as dúvidas frequentes.</p>
       <button class="btn ghost" onclick="abrirManual()" title="Abrir o manual completo do Vooalto V10">📖 Abrir o manual</button>
       <button class="btn ghost" onclick="reabrirTour()" title="Mostrar de novo o tour de boas-vindas">👋 Ver o tour de novo</button>
     </div></div>
@@ -912,6 +924,26 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
         const vAtual=parseInt(lsGet(ck)||'0',10);
         if(vNovo>vAtual)lsSet(ck,String(vNovo));
       });
+      /* V10.6 — recibos (versão de teste). A mesclagem não pode perder a
+         lista que veio no backup: une por id (os dois lados ficam) e mantém
+         o maior número já emitido. */
+      try{
+        const recNovosRaw=norm.storage&&norm.storage['vooalto_recibos_v1'];
+        if(recNovosRaw){
+          let recNovos=null;
+          try{recNovos=JSON.parse(recNovosRaw)}catch(e){recNovos=null}
+          const mapaRec=new Map();
+          const atuaisRec=lsJSON('vooalto_recibos_v1',[]);
+          (Array.isArray(atuaisRec)?atuaisRec:[]).forEach(r=>{if(r&&r.id)mapaRec.set(String(r.id),r)});
+          (Array.isArray(recNovos)?recNovos:[]).forEach(r=>{if(r&&r.id&&!mapaRec.has(String(r.id)))mapaRec.set(String(r.id),r)});
+          if(mapaRec.size)lsSet('vooalto_recibos_v1',JSON.stringify(Array.from(mapaRec.values())));
+        }
+        const nRecAtual=parseInt(lsGet('vooalto_recibo_numero_v1')||'0',10)||0;
+        const nRecNovo=parseInt((norm.storage&&norm.storage['vooalto_recibo_numero_v1'])||'0',10)||0;
+        if(nRecNovo>nRecAtual)lsSet('vooalto_recibo_numero_v1',String(nRecNovo));
+        const empRec=norm.storage&&norm.storage['vooalto_recibo_empresa_v1'];
+        if(empRec&&!lsGet('vooalto_recibo_empresa_v1'))lsSet('vooalto_recibo_empresa_v1',String(empRec));
+      }catch(e){}
       /* Na mesclagem, preferências e o estado do contrato só entram se ainda
          não existir um valor local (o que o usuário está usando agora vence). */
       ['vooalto_ficha_quick_v7','va3_cores','va3_logo_st','vooalto_tema','vooalto_contrato_state_v2'].forEach(pk=>{
@@ -962,12 +994,14 @@ html[data-theme="escuro"] .bkp-msg.err{background:rgba(252,165,165,.14);color:#f
 <script>
 'use strict';
 /* ══ Vooalto V10 — shell ═══════════════════════════════════════════════
-   Três módulos em tela cheia: Ficha Técnica, Orçamento e Contrato.
+   Quatro módulos em tela cheia: Ficha Técnica, Orçamento, Recibo (versão de
+   teste) e Contrato.
    A V8 removeu a Catalogação; a ficha técnica voltou a abrir como aba
    normal (na V7 ela abria numa janela sobre o sistema). */
 const PROJECTS={
   ficha:{name:'Ficha Técnica',button:'btn-ficha',frame:'frame-ficha',pasta:'criador_ficha_tecnica',rota:'ficha'},
   orcamento:{name:'Orçamento',button:'btn-orcamento',frame:'frame-orcamento',pasta:'criador_orcamento',rota:'orcamento'},
+  recibo:{name:'Recibo',button:'btn-recibo',frame:'frame-recibo',pasta:'criador_recibo',rota:'recibo'},
   contrato:{name:'Contrato',button:'btn-contrato',frame:'frame-contrato',pasta:'criador_contrato',rota:'contrato'}
 };
 
@@ -1067,6 +1101,9 @@ function showProject(key,opts){
   if(vaiCarregar){
     fr.setAttribute('src',enderecoModulo(key));
     fr.removeAttribute('data-src');
+    /* O Recibo avisa quando terminou de carregar (`vooalto-recibo-pronto`).
+       Até lá, uma ficha enviada fica na fila em vez de se perder. */
+    if(key==='recibo')reciboPronto=false;
   }
   Object.keys(PROJECTS).forEach(k=>{
     document.getElementById(PROJECTS[k].button).classList.toggle('active',k===key);
@@ -1075,6 +1112,27 @@ function showProject(key,opts){
   if(l)l.style.display=vaiCarregar?'':'none';
   try{fr.contentWindow.postMessage({type:'vooalto-theme',theme:currentTheme||'claro'},location.origin)}catch(e){}
   if(!(opts&&opts.silent))toast('Aberto: '+p.name);
+}
+/* ── V10.6 — ponte Ficha Técnica → Recibo ──────────────────────────────
+   A ficha manda os dados por postMessage ao clicar em "🧾 Gerar recibo".
+   O shell troca de aba e entrega a ficha quando o módulo avisa que está
+   pronto (na primeira abertura ele ainda nem carregou). */
+let reciboPronto=false;
+let reciboPendente=null;
+function entregarFichaAoRecibo(){
+  if(!reciboPendente||!reciboPronto)return;
+  const fr=document.getElementById('frame-recibo');
+  if(!fr||!fr.contentWindow)return;
+  const carga=reciboPendente;
+  reciboPendente=null;
+  try{fr.contentWindow.postMessage({type:'vooalto-carregar-ficha',ficha:carga.ficha,meta:carga.meta||null},location.origin)}catch(e){}
+}
+function abrirReciboComFicha(ficha,meta){
+  if(!ficha)return;
+  reciboPendente={ficha:ficha,meta:meta||null};
+  showProject('recibo');
+  entregarFichaAoRecibo();
+  toast('🧾 Recibo aberto com a ficha atual');
 }
 function reloadActive(){
   const fr=document.getElementById(PROJECTS[activeProject].frame);
@@ -1116,6 +1174,8 @@ window.addEventListener('message',e=>{
     return;
   }
   if(d.type==='vooalto-switch-tab'&&PROJECTS[d.tab]){showProject(d.tab);return}
+  if(d.type==='vooalto-recibo-pronto'){reciboPronto=true;entregarFichaAoRecibo();return}
+  if(d.type==='vooalto-abrir-recibo'&&d.ficha){abrirReciboComFicha(d.ficha,d.meta);return}
   if(d.type==='vooalto-abrir-manual'){abrirManual();return}
   if(d.type==='vooalto-abrir-backup'){openBackupModal();return}
   if(d.type==='vooalto-backup-restaurado'){

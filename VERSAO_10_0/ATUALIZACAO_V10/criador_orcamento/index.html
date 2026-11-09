@@ -3934,6 +3934,26 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
         const vAtual=parseInt(lsGet(ck)||'0',10);
         if(vNovo>vAtual)lsSet(ck,String(vNovo));
       });
+      /* V10.6 — recibos (versão de teste). A mesclagem não pode perder a
+         lista que veio no backup: une por id (os dois lados ficam) e mantém
+         o maior número já emitido. */
+      try{
+        const recNovosRaw=norm.storage&&norm.storage['vooalto_recibos_v1'];
+        if(recNovosRaw){
+          let recNovos=null;
+          try{recNovos=JSON.parse(recNovosRaw)}catch(e){recNovos=null}
+          const mapaRec=new Map();
+          const atuaisRec=lsJSON('vooalto_recibos_v1',[]);
+          (Array.isArray(atuaisRec)?atuaisRec:[]).forEach(r=>{if(r&&r.id)mapaRec.set(String(r.id),r)});
+          (Array.isArray(recNovos)?recNovos:[]).forEach(r=>{if(r&&r.id&&!mapaRec.has(String(r.id)))mapaRec.set(String(r.id),r)});
+          if(mapaRec.size)lsSet('vooalto_recibos_v1',JSON.stringify(Array.from(mapaRec.values())));
+        }
+        const nRecAtual=parseInt(lsGet('vooalto_recibo_numero_v1')||'0',10)||0;
+        const nRecNovo=parseInt((norm.storage&&norm.storage['vooalto_recibo_numero_v1'])||'0',10)||0;
+        if(nRecNovo>nRecAtual)lsSet('vooalto_recibo_numero_v1',String(nRecNovo));
+        const empRec=norm.storage&&norm.storage['vooalto_recibo_empresa_v1'];
+        if(empRec&&!lsGet('vooalto_recibo_empresa_v1'))lsSet('vooalto_recibo_empresa_v1',String(empRec));
+      }catch(e){}
       ['vooalto_ficha_quick_v7','va3_cores','va3_logo_st','vooalto_tema'].forEach(pk=>{
         if(norm.storage&&norm.storage[pk]!=null&&!lsGet(pk))lsSet(pk,String(norm.storage[pk]));
       });

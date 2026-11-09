@@ -8,6 +8,7 @@
 //   /home                 → capa de entrada (entrar.html)
 //   /ficha/               → criador_ficha_tecnica/
 //   /orcamento/           → criador_orcamento/
+//   /recibo/              → criador_recibo/ (versão de teste)
 //   /contrato/            → criador_contrato/
 //   /<arquivo>            → qualquer arquivo do app
 //
@@ -75,6 +76,7 @@ const MIME: Record<string, string> = {
 const ROTAS: Record<string, string> = {
   'ficha': 'criador_ficha_tecnica/index.html',
   'orcamento': 'criador_orcamento/index.html',
+  'recibo': 'criador_recibo/index.html',
   'contrato': 'criador_contrato/index.html',
   'home': 'entrar.html',
   'entrar': 'entrar.html',

@@ -39,6 +39,10 @@ async function testInstallIdentity() {
   assert.match(worker, /LEGACY_CACHE_PREFIXES = \['vooalto-v9-', 'vooalto-v8-'\]/);
   assert.match(worker, /key\.startsWith\(CACHE_PREFIX\)/);
   assert.match(worker, /url\.pathname === '\/__vooalto_health'/);
+  /* Correção publicada tem de aparecer ao recarregar: navegação é rede-primeiro
+     (com o cache como rede de segurança offline), não cache-first. */
+  assert.match(worker, /request\.mode === 'navigate'/);
+  assert.match(worker, /REDE_ESPERA_MS = 4000/);
   assert.doesNotMatch(worker, /for \(const k of keys\) if \(k !== CACHE\) await caches\.delete\(k\)/);
 }
 

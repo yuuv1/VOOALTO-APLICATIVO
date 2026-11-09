@@ -8,10 +8,11 @@ de produção**, a **proposta de venda** e o **documento contratual** de uniform
 ```
 VERSAO_10_0/                    ← única versão do app
   ATUALIZACAO_V10/              app (é esta pasta que o servidor local serve)
-    index.html                  shell: barra do topo + 3 ferramentas em tela cheia
+    index.html                  shell: barra do topo + 4 ferramentas em tela cheia
     criador_ficha_tecnica/      módulo 1 — folha(s) A4 de produção
     criador_orcamento/          módulo 2 — proposta de venda A4
-    criador_contrato/           módulo 3 — contrato em .docx/.pdf (ver abaixo)
+    criador_recibo/             módulo 3 — recibo de pagamento A4 (versão de teste)
+    criador_contrato/           módulo 4 — contrato em .docx/.pdf (ver abaixo)
     manual.html                 manual completo
     mockup/                     estúdio da peça (camiseta) + render vetorial
     limpar_cache.html           apaga só o cache do service worker
@@ -42,13 +43,18 @@ base da V10. A V10 usa o **mesmo endereço** (`http://localhost:4800/`) e as
 **mesmas chaves de dados** — quem atualiza não perde ficha, rascunho, orçamento
 nem o estado do contrato.
 
-## As três ferramentas
+## As quatro ferramentas
 
 | Aba | O que faz | Carrega |
 |---|---|---|
 | 📋 Ficha Técnica | cliente, modelos, cores, medidas, artes e o estúdio do mockup; sai em A4 (PDF/PNG) | na abertura |
 | 💰 Orçamento | proposta com itens, totais, destaques e assinatura; sai em A4 | ao abrir a aba |
+| 🧾 Recibo **(teste)** | puxa a ficha pronta e gera o recibo de pagamento — total ou parcial, tudo editável; numeração própria e “já recebido” por ficha | ao abrir a aba |
 | 📄 Contrato | arrasta a ficha ou a proposta em PDF e gera o contrato em .docx e .pdf | ao abrir a aba (bundle de ~10 MB) |
+
+O Recibo é o módulo novo da **versão de teste** (V10.6): ele não altera a ficha
+nem o orçamento, só lê os dados. Também abre pelo botão **🧾 Gerar recibo** no
+pé da Ficha Técnica. Detalhes em `VERSAO_10_0/CHANGELOG_V10.md` (V10.6.1).
 
 O módulo de contrato é o app `documento-contratual/` embarcado: leitura de PDF e
 OCR acontecem **no navegador**, nada é enviado para fora. Ele **não** é copiado à
@@ -66,7 +72,7 @@ Desenvolvimento:
 ```bash
 cd VERSAO_10_0
 npm install            # Node 20+ (jsdom é a única dependência)
-npm test               # suíte JS (jsdom) — 16 suítes
+npm test               # suíte JS (jsdom) — 24 suítes
 npm run test:python    # build, contrato, identidade e servidor (Python 3.10+)
 npm run build          # regenera sw.js e o ZIP de distribuição
 
