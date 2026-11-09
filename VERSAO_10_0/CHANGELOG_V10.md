@@ -43,6 +43,13 @@ Outros pontos que fizeram o recibo funcionar como documento:
   quatro reais e cinquenta e seis centavos”), com centavos, milhões e bilhões.
 - Saída **A4 vetorial** (imprimir/PDF), **PNG** (html2canvas) e **copiar texto**
   para WhatsApp; zoom só da folha reaproveita o `assets/zoom-folha.js`.
+- **Fim da faixa branca no topo do PDF**: a marca d'água (`.wm`) nascia
+  `position:absolute`, mas a regra `.page > *{position:relative}` — mesma
+  especificidade e escrita depois — a jogava para dentro do fluxo, e o bloco
+  de 470px dela empurrava o recibo para baixo (~1/3 de página em branco antes
+  do logo). Agora `.page > .wm` é fundo absoluto de novo e o recibo começa no
+  topo, com a assinatura no pé da folha; `test_recibo_v10.js` confere
+  `getComputedStyle('.wm').position === 'absolute'`.
 - Rascunho do recibo em edição salvo sozinho (`vooalto_recibo_autosave_v1`) e
   cabeçalho da empresa em `vooalto_recibo_empresa_v1`. Tudo com prefixo
   `vooalto_`, então entra no **Backup Completo**; a mesclagem de backup une os

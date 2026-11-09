@@ -83,6 +83,17 @@ const FICHA = {
   ok('carrega as bibliotecas locais', /\.\.\/assets\/tema-v10\.css/.test(HTML) && /\.\.\/assets\/zoom-folha\.js/.test(HTML) && /\.\.\/assets\/html2canvas\.min\.js/.test(HTML));
   ok('tem botão de imprimir, PNG, salvar e recibos salvos', /Recibo\.imprimir\(\)/.test(HTML) && /Recibo\.exportarPNG\(\)/.test(HTML) && /Recibo\.salvar\(\)/.test(HTML) && /Recibo\.abrirSalvos\(\)/.test(HTML));
   ok('sem erro de página no módulo', errs.length === 0, errs.slice(0, 3));
+  /* A marca d'água já nasceu `absolute`, mas a regra `.page > *` (mesma
+     especificidade e mais abaixo) a tornava `relative`: o bloco de 470px dela
+     entrava no fluxo e o recibo impresso saía com uma faixa branca no topo. */
+  const wm = d.querySelector('.wm');
+  const posWm = wm ? w.getComputedStyle(wm).position : 'sem .wm';
+  ok('a marca d’água fica fora do fluxo (sem faixa branca no topo do PDF)', posWm === 'absolute', posWm);
+  const secoes = ['p-head', 'p-band', 'p-value', 'p-text', 'p-items', 'p-sum'];
+  ok('o recibo começa pelo cabeçalho (nenhum bloco decorativo antes)',
+    (d.getElementById('reciboFolha').children[0].className || '').split(' ')[0] === 'wm' &&
+    d.querySelectorAll('#' + 'reciboFolha > .p-head').length === 1 &&
+    secoes.every(c => d.querySelector('.' + c)));
 
   console.log('\n── 2. Dinheiro: leitura, escrita e extenso ──');
   const casosParse = [
