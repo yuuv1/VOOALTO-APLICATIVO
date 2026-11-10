@@ -1,5 +1,30 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.2 — Assinatura da empresa no pé do recibo (2026-11-06)
+
+O pedido: *"o recibo não precisa de assinatura do cliente, só a assinatura aqui
+da empresa, tem uma assinatura com o nome Ésio Francisco, é dela que preciso no
+recibo."*
+
+O pé do recibo era só uma linha com o texto “VOOALTO UNIFORMES / Responsável
+pelo recebimento”. Agora ele traz a **assinatura em imagem**, a mesma do
+Contrato, com o nome do responsável embaixo:
+
+| Antes | Agora |
+|---|---|
+| linha + “VOOALTO UNIFORMES” + “Responsável pelo recebimento” | **assinatura (imagem)** acima da linha, **Ésio Francisco** e **VOOALTO UNIFORMES** embaixo |
+
+- A imagem é **a mesma do Contrato**, byte a byte (PNG 1039×199 embutido no
+  módulo, 46 px de altura na folha): recibo e contrato saem com a assinatura
+  idêntica. Vale para a tela, para a impressão/Salvar PDF e para o PNG.
+- **Sem assinatura de cliente** no recibo.
+- O campo **Responsável (assinatura)** continua editável; vazio mostra
+  “Ésio Francisco”.
+- `version.json`, `package.json`/`package-lock.json` e o selo do módulo foram
+  para **10.6.2**.
+- Testes: 6 verificações novas (imagem no pé da folha, nome/cargo, mesmo PNG do
+  contrato, PNG válido e nítido, CSS do bloco).
+
 ## V10.6.1 — Recibo automático a partir da ficha, agora lendo o PDF (versão de teste) (2026-11-06)
 
 O pedido: *"precisamos fazer uma versão de teste adicionando mais uma função no

@@ -444,7 +444,32 @@ const FICHA = {
     ok('foto/print não é lida e o recibo atual não é perdido',
       R3.estadoAtual().cliente.nome === 'Cliente do Arquivo' && /Aceito o PDF da ficha ou o \.json/.test(d3.getElementById('reciboToast').textContent),
       d3.getElementById('reciboToast').textContent.slice(0, 100));
+    /* ── assinatura da empresa no pé do recibo ────────────────────────── */
+    const img=d3.getElementById('pvAssinatura');
+    const src=img?(img.getAttribute('src')||''):'';
+    ok('o pé do recibo traz a assinatura da empresa em imagem', !!img && /^data:image\/png;base64,/.test(src), src.slice(0,34));
+    ok('a linha de assinatura mostra Ésio Francisco / VOOALTO UNIFORMES',
+      d3.getElementById('pvResp').textContent.trim()==='Ésio Francisco' &&
+      d3.getElementById('pvRespCargo').textContent.trim()==='VOOALTO UNIFORMES',
+      [d3.getElementById('pvResp').textContent, d3.getElementById('pvRespCargo').textContent]);
+    ok('a assinatura fica dentro da folha (bloco .p-sign com imagem acima da linha)',
+      d3.querySelector('.p-sign > img.p-sign-img')===img && d3.querySelector('.p-sign > .p-sign-line')!==null);
     dom3.window.close();
+  }
+
+  /* ── a assinatura do recibo é a MESMA imagem do contrato ─────────────── */
+  {
+    const rec=fs.readFileSync(path.join(BASE,'criador_recibo','index.html'),'utf-8');
+    const con=fs.readFileSync(path.join(BASE,'criador_contrato','index.html'),'utf-8');
+    const mRec=(rec.match(/id="pvAssinatura"[^>]*src="(data:image\/png;base64,[^"]+)"/)||[])[1]||'';
+    const mCon=(con.match(/eb="(data:image\/png;base64,[A-Za-z0-9+/=]+)"/)||[])[1]||'';
+    ok('a assinatura do recibo é a mesma do contrato', !!mRec && mRec===mCon, { recibo:mRec.length, contrato:mCon.length });
+    const b64=mRec.split(',')[1]||'';
+    const buf=Buffer.from(b64,'base64');
+    const png=buf.slice(0,8).toString('hex')==='89504e470d0a1a0a';
+    const w=buf.readUInt32BE(16), h=buf.readUInt32BE(20);
+    ok('a imagem é um PNG válido e nítido (assinatura Ésio Francisco)', png && w>800 && h>150, { bytes:buf.length, w, h });
+    ok('o CSS da assinatura existe na folha', /\.p-sign-img\{[^}]*height:46px/.test(rec));
   }
 
   console.log(fail ? `\n═══ RECIBO V10.6: ${fail} FALHA(S) ═══` : '\n═══ RECIBO V10.6: tudo OK ═══');
