@@ -173,7 +173,6 @@
 .p-ref{border-top:1px solid #d8d8d8;border-bottom:1px solid #d8d8d8;padding:8px 0;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start}
     .p-ref-lbl{font-size:8.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#666;flex:0 0 78px;padding-top:2px}
     .p-ref-txt{font-size:12px;line-height:1.5;font-weight:600;flex:1}
-    .p-ficha-tag{display:inline-block;background:#17172a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.6px;border-radius:4px;padding:3px 8px;margin-left:6px;white-space:nowrap}
 
     .p-items{width:100%;border-collapse:collapse;margin-bottom:12px}
     .p-items th{background:#17172a;color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:7px 8px;text-align:left}
@@ -273,7 +272,7 @@
   <!-- ══════════ PAINEL ══════════ -->
   <aside class="sidebar">
     <div class="sb-head">
-      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.2 — assinatura da empresa no recibo">teste</span></h1>
+      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.3 — nº da ficha na faixa do recibo">teste</span></h1>
       <p><b>Jogue a ficha técnica aqui</b> (arraste o .json ou escolha na lista) e o recibo já sai pronto: cliente, itens e valores preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo ajustável à mão.</p>
       <div class="sb-toprow">
         <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
@@ -457,7 +456,7 @@
 
           <div class="p-band">
             <div class="p-band-red">Recibo de pagamento</div>
-            <div class="p-band-black"><small>Nº</small><span id="pvNumero">0001</span></div>
+            <div class="p-band-black"><small id="pvNumeroRotulo">Ficha nº</small><span id="pvNumero">0001</span></div>
           </div>
 
           <div class="p-value">
@@ -475,7 +474,7 @@
           <div class="p-ref">
             <div class="p-ref-lbl">Referente a</div>
             <div class="p-ref-txt">
-              <span id="pvReferente"></span><span class="p-ficha-tag" id="pvFichaTag" style="display:none"></span>
+              <span id="pvReferente"></span>
             </div>
           </div>
 
@@ -596,7 +595,7 @@
     </ul>
 
     <div class="ajuda-foot">
-      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.2</span>
+      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.3</span>
       <button class="btn btn-secondary" type="button" onclick="Recibo.fecharAjuda()">Fechar</button>
     </div>
   </div>
@@ -1479,7 +1478,11 @@ function renderSidebar(){
 function renderPreview(){
   const c=calcular();
   const e=estado;
-  preencher('pvNumero',numeroExibido(e.numero));
+  /* A faixa leva o nº da FICHA anexada (é o que identifica o documento);
+     só cai para o nº do recibo quando o recibo foi digitado sem ficha. */
+  const numFicha=String(e.fichaNum||'').trim();
+  preencher('pvNumero',numFicha||numeroExibido(e.numero));
+  preencher('pvNumeroRotulo',numFicha?'Ficha nº':'Recibo nº');
   preencher('pvValor',fmtBRL(c.pago));
   preencher('pvExtenso',extensoReais(c.pago));
   preencher('pvTexto',textoDoRecibo(e));
@@ -1493,12 +1496,6 @@ function renderPreview(){
     if(endereco)extras.push('<b>'+esc(endereco)+'</b>');
     linhaCliente.innerHTML=extras.length?('Dados do cliente: '+extras.join(' · ')):'';
     linhaCliente.style.display=extras.length?'block':'none';
-  }
-  const tag=$('pvFichaTag');
-  if(tag){
-    const n=String(e.fichaNum||'').trim();
-    tag.style.display=n?'inlineBlock':'none';
-    tag.textContent=n?'Ficha nº '+n:'';
   }
   preencher('pvForma',e.forma||'—');
   preencher('pvData',e.data?isoParaBR(e.data):'—');
@@ -1573,8 +1570,8 @@ function renderPreview(){
   preencher('pvRespCargo','VOOALTO UNIFORMES');
   const local=[String(e.cidadeAssinatura||'').trim(),dataLonga(e.data)].filter(Boolean).join(', ');
   preencher('pvLocal',local);
-  const numTxt=numeroExibido(e.numero);
-  preencher('pvLegal','Recibo nº '+numTxt+' · '+empresa.cnpj+' · emitido em '+agoraBR()+' · VOOALTO UNIFORMES');
+  const numTxt=String(e.fichaNum||'').trim()?'Ficha nº '+String(e.fichaNum).trim():'Recibo nº '+numeroExibido(e.numero);
+  preencher('pvLegal',numTxt+' · '+empresa.cnpj+' · emitido em '+agoraBR()+' · VOOALTO UNIFORMES');
 }
 
 function renderTudo(opts){

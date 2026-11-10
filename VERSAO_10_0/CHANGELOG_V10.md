@@ -1,5 +1,28 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.3 — A faixa do recibo leva o nº da FICHA anexada (2026-11-06)
+
+O pedido: *"se for colocar algum número de recibo aqui, coloque o número da
+ficha técnica anexada."*
+
+A faixa preta do recibo mostrava o **nº do recibo** (0001, 0002…). Agora ela
+mostra o **número da ficha técnica** que originou o recibo:
+
+| Situação | Faixa preta | Rodapé |
+|---|---|---|
+| recibo vindo de uma ficha | **FICHA Nº 3371** | “Ficha nº 3371 · CNPJ · emitido em …” |
+| recibo digitado sem ficha | **RECIBO Nº 0001** (como antes) | “Recibo nº 0001 · CNPJ · …” |
+
+- A etiqueta “Ficha nº …” que ficava pendurada em “Referente a …” saiu (o
+  número agora está na faixa, uma vez só).
+- O nº interno do recibo continua existindo em **Recibos salvos** (numeração,
+  “já recebido por ficha” e aviso de repetido) — ele só não estampa mais a
+  folha quando há ficha.
+- `version.json`, `package.json`/`package-lock.json` e o selo do módulo foram
+  para **10.6.3**.
+- Testes: 3 verificações atualizadas (faixa com nº da ficha, rodapé sem “Recibo
+  nº” e saída da etiqueta antiga).
+
 ## V10.6.2 — Assinatura da empresa no pé do recibo (2026-11-06)
 
 O pedido: *"o recibo não precisa de assinatura do cliente, só a assinatura aqui
