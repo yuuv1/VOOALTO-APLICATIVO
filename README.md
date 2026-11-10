@@ -55,8 +55,9 @@ nem o estado do contrato.
 O Recibo é o módulo novo da **versão de teste** (V10.6): ele não altera a ficha
 nem o orçamento, só lê os dados. Também abre pelo botão **🧾 Gerar recibo** no
 pé da Ficha Técnica. O pé da folha leva a **assinatura da empresa** (Ésio
-Francisco / VOOALTO UNIFORMES), a mesma imagem usada no Contrato. Detalhes em
-`VERSAO_10_0/CHANGELOG_V10.md` (V10.6.2).
+Francisco / VOOALTO UNIFORMES), a mesma imagem usada no Contrato, e a
+faixa preta estampa o número da ficha técnica de origem. Detalhes em
+`VERSAO_10_0/CHANGELOG_V10.md` (V10.6.3).
 
 O módulo de contrato é o app `documento-contratual/` embarcado: leitura de PDF e
 OCR acontecem **no navegador**, nada é enviado para fora. Ele **não** é copiado à

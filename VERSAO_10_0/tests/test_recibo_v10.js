@@ -142,9 +142,14 @@ const FICHA = {
   ok('o texto do recibo cita cliente, valor e extenso',
     /Recebemos de Ana Silva/.test(R.textoDoRecibo(e)) && /R\$ 300,00/.test(R.textoDoRecibo(e)) &&
     /trezentos reais/.test(R.textoDoRecibo(e)), R.textoDoRecibo(e));
-  ok('a folha mostra o valor e o número', d.getElementById('pvValor').textContent === 'R$ 300,00' && d.getElementById('pvNumero').textContent === '0001',
-    { valor: d.getElementById('pvValor').textContent, numero: d.getElementById('pvNumero').textContent });
-  ok('a folha mostra a ficha de origem', d.getElementById('pvFichaTag').textContent === 'Ficha nº 3456' && d.getElementById('pvFichaTag').style.display !== 'none');
+  ok('a folha mostra o valor', d.getElementById('pvValor').textContent === 'R$ 300,00',
+    { valor: d.getElementById('pvValor').textContent });
+  ok('a faixa preta leva o nº da FICHA anexada (não o nº 0001 do recibo)',
+    d.getElementById('pvNumero').textContent === '3456' && /Ficha/i.test(d.getElementById('pvNumeroRotulo').textContent),
+    { rotulo: d.getElementById('pvNumeroRotulo').textContent, numero: d.getElementById('pvNumero').textContent });
+  ok('o rodapé também identifica a ficha, sem o nº 0001', /Ficha nº 3456/.test(d.getElementById('pvLegal').textContent) && !/Recibo nº/.test(d.getElementById('pvLegal').textContent),
+    d.getElementById('pvLegal').textContent);
+  ok('a etiqueta antiga de ficha no "Referente a" sai da folha', !d.getElementById('pvFichaTag'));
   ok('a tabela de itens é renderizada', d.querySelectorAll('#pvItens tr').length === 3, d.querySelectorAll('#pvItens tr').length);
   ok('o resumo mostra saldo devedor', d.getElementById('pvSaldo').textContent === 'R$ 800,00' && d.getElementById('pvSaldoBox').style.display !== 'none',
     d.getElementById('pvSaldo').textContent);
