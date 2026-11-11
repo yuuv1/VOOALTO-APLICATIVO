@@ -272,7 +272,7 @@
   <!-- ══════════ PAINEL ══════════ -->
   <aside class="sidebar">
     <div class="sb-head">
-      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.3 — nº da ficha na faixa do recibo">teste</span></h1>
+      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.4 — OCR local para PDFs de fichas digitalizadas">teste</span></h1>
       <p><b>Jogue a ficha técnica aqui</b> (arraste o .json ou escolha na lista) e o recibo já sai pronto: cliente, itens e valores preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo ajustável à mão.</p>
       <div class="sb-toprow">
         <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
@@ -568,7 +568,7 @@
       <li>Ou escolha a ficha em <b>Ficha técnica de origem</b>: ao selecionar, o recibo já é montado. Se o recibo estiver em branco e você tiver uma ficha aberta na Ficha Técnica, ela entra sozinha.</li>
       <li>Também funciona pelo botão <b>🧾 Gerar recibo</b> dentro da Ficha Técnica — ele abre esta aba já preenchida com a ficha que está na tela.</li>
       <li><b>PDF da ficha</b> também funciona: arraste o PDF exportado pela Ficha Técnica (texto selecionável) e o recibo é montado na hora. O sistema avisa para você conferir os valores lidos.</li>
-      <li>PDF <b>digitalizado/foto</b> (sem texto) não é lido — nesse caso use o .json ou o botão dentro da ficha.</li>
+      <li>PDF <b>digitalizado</b> (sem camada de texto) passa por OCR local. Confira todos os valores antes de salvar: se a leitura não identificar cliente, nº da ficha, itens e total, o recibo atual permanece intacto. Como alternativa, use o .json da ficha.</li>
     </ul>
 
     <h4>2 · Total ou parcial</h4>
@@ -595,7 +595,7 @@
     </ul>
 
     <div class="ajuda-foot">
-      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.3</span>
+      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.4</span>
       <button class="btn btn-secondary" type="button" onclick="Recibo.fecharAjuda()">Fechar</button>
     </div>
   </div>
@@ -1838,9 +1838,32 @@ async function receberArquivo(file){
     return false;
   }
 }
-/* ── ficha em PDF (texto do próprio PDF, sem OCR) ──────────────────────── */
+/* ── ficha em PDF: texto nativo ou OCR local quando digitalizada ─────────── */
 let pdfjsCarregando=null;
+let ocrCarregando=null;
 let lendoPDF=false;
+function carregarOcr(){
+  if(ocrCarregando)return ocrCarregando;
+  ocrCarregando=new Promise((resolve,reject)=>{
+    const iniciar=()=>{
+      if(!window.Tesseract){reject(new Error('motor OCR não carregou'));return;}
+      const base=new URL('../assets/ocr/',location.href).href;
+      window.Tesseract.createWorker('por',1,{
+        workerPath:base+'worker.min.js',
+        corePath:base+'tesseract-core-simd-lstm.wasm.js',
+        langPath:base,
+        cacheMethod:'none'
+      }).then(resolve,reject);
+    };
+    if(window.Tesseract){iniciar();return;}
+    const script=document.createElement('script');
+    script.src='../assets/ocr/tesseract.min.js';
+    script.onload=iniciar;
+    script.onerror=()=>reject(new Error('motor OCR local ausente (assets/ocr)'));
+    document.head.appendChild(script);
+  }).catch(e=>{ocrCarregando=null;throw e});
+  return ocrCarregando;
+}
 
 function carregarPdfJs(){
   if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
@@ -1861,9 +1884,8 @@ function carregarPdfJs(){
   return pdfjsCarregando;
 }
 
-/* Só o TEXTO do PDF: ficha digitalizada (foto/scan) não tem texto e cai no
-   aviso. Não há OCR aqui de propósito — ler número errado é pior que pedir o
-   .json. */
+/* Fichas com camada textual são lidas diretamente; as impressas como imagem
+   passam pelo OCR português offline e só são aplicadas após validação. */
 function lerBinario(file){
   return new Promise((resolve,reject)=>{
     if(file&&typeof file.arrayBuffer==='function'){
@@ -1883,25 +1905,54 @@ async function textoDoPDF(file){
   const pdfjs=await carregarPdfJs();
   const buf=await lerBinario(file);
   const doc=await pdfjs.getDocument({data:buf,isEvalSupported:false,useSystemFonts:false,disableFontFace:true}).promise;
-  let texto='';
+  let texto='',usouOcr=false,ocr=null,primeiraPaginaDigital=false;
   try{
     const total=Math.min(doc.numPages||1,8);
     for(let p=1;p<=total;p++){
       const pagina=await doc.getPage(p);
       const conteudo=await pagina.getTextContent();
-      let linha='';
+      let linha='',textoPagina='';
       (conteudo.items||[]).forEach(it=>{
         if(!it||typeof it.str!=='string')return;
         linha+=it.str;
-        if(it.hasEOL){texto+=linha.replace(/[ \t]+$/,'')+'\n';linha='';}
+        if(it.hasEOL){textoPagina+=linha.replace(/[ \t]+$/,'')+'\n';linha='';}
         else linha+=' ';
       });
-      if(linha.trim())texto+=linha.replace(/[ \t]+$/,'')+'\n';
+      if(linha.trim())textoPagina+=linha.replace(/[ \t]+$/,'')+'\n';
+      if(p===1)primeiraPaginaDigital=textoPagina.replace(/\s/g,'').length>=24;
+      // Anexos/croquis sem texto após uma folha digital não exigem OCR.
+      if(textoPagina.replace(/\s/g,'').length<24&&!primeiraPaginaDigital){
+        usouOcr=true;
+        if(!ocr){
+          ocr=await carregarOcr();
+          await ocr.setParameters({tessedit_pageseg_mode:'3'});
+        }
+        toast('🔎 Reconhecendo texto da página '+p+' de '+total+' no navegador…','info',9000);
+        const base=pagina.getViewport({scale:1});
+        const escala=Math.min(3,Math.sqrt(3600000/(base.width*base.height)));
+        const vista=pagina.getViewport({scale:escala});
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.floor(vista.width);canvas.height=Math.floor(vista.height);
+        const ctx=canvas.getContext('2d');
+        if(!ctx)throw new Error('navegador sem suporte a Canvas para OCR');
+        await pagina.render({canvasContext:ctx,viewport:vista}).promise;
+        let lido=await ocr.recognize(canvas);
+        textoPagina=String(lido.data&&lido.data.text||'');
+        if(textoPagina.replace(/\s/g,'').length<24){
+          await ocr.setParameters({tessedit_pageseg_mode:'6'});
+          lido=await ocr.recognize(canvas);
+          textoPagina=String(lido.data&&lido.data.text||'');
+          await ocr.setParameters({tessedit_pageseg_mode:'3'});
+        }
+        canvas.width=1;canvas.height=1;
+      }
+      texto+=textoPagina+'\n';
     }
   }finally{
-    try{doc.destroy()}catch(e){}
+    if(ocr){try{await ocr.terminate()}catch(e){} ocrCarregando=null;}
+    try{await doc.destroy()}catch(e){}
   }
-  return texto.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+  return {texto:texto.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim(),usouOcr:usouOcr};
 }
 
 function pdfSemAcento(v){
@@ -1945,7 +1996,7 @@ function pdfItensDoTrecho(trecho){
   const itens=[];
   String(trecho||'').split(/\n/).forEach(linha=>{
     const l=pdfNorm(linha);
-    const m=l.match(/^(\d{1,3})\s+(.+?)\s+R\$\s*([\d.]+,\d{2})\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*=\s*(?:R\$\s*([\d.]+,\d{2})|—|-)$/);
+    const m=l.match(/^(\d{1,3})[).]?\s+(.+?)\s+R\$\s*([\d.]+,\d{2})\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(?:=\s*)?(?:R\$\s*([\d.]+,\d{2})|—|-)$/i);
     if(!m)return;
     const qtd=Number(String(m[4]).replace(',','.'));
     if(!(qtd>0))return;
@@ -1966,6 +2017,7 @@ function interpretarFichaTexto(texto){
 
   const R={
     nome:pdfRotulo('NOME / RAZÃO SOCIAL'),
+    nomeSemBarra:pdfRotulo('NOME RAZÃO SOCIAL'),
     razao:pdfRotulo('RAZÃO SOCIAL'),
     doc:pdfRotulo('CPF / CNPJ'),
     cnpj:pdfRotulo('CNPJ'),
@@ -1975,6 +2027,7 @@ function interpretarFichaTexto(texto){
     cep:pdfRotulo('CEP'),
     vendedor:pdfRotulo('VENDEDOR'),
     prod:pdfRotulo('MODELO / DESCRIÇÃO'),
+    prodSemBarra:pdfRotulo('MODELO DESCRIÇÃO'),
     total:pdfRotulo('TOTAL DA PRODUÇÃO'),
     entrada:pdfRotulo('ENTRADA'),
     restante:pdfRotulo('RESTANTE'),
@@ -2006,7 +2059,7 @@ function interpretarFichaTexto(texto){
   const mNum=bruto.match(/N\s*[º°o]\s*(\d{1,8})/i)||bruto.match(/FICHA\s*(?:N[º°o]?)?\s*(\d{1,8})/i);
   if(mNum)num=mNum[1];
 
-  const aNome=achar([R.nome,R.razao],0);
+  const aNome=achar([R.nome,R.nomeSemBarra,R.razao],0);
   const nome=valorDepois(aNome,[R.doc,R.cnpj,R.tel,R.vendedor]);
   const aDoc=achar([R.doc,R.cnpj],aNome.i>=0?aNome.i:0);
   const doc=valorDepois(aDoc,[R.vendedor,R.tel,R.end]);
@@ -2019,7 +2072,7 @@ function interpretarFichaTexto(texto){
 
   let itens=[];
   const avisos=[];
-  const aProd=achar([R.prod],0);
+  const aProd=achar([R.prod,R.prodSemBarra],0);
   const aTot=achar([R.total],aProd.i>=0?aProd.i:0);
   if(aProd.i>=0&&aTot.i>aProd.i){
     const ini=map.mapa[aProd.i+aProd.rot.length-1]+1;
@@ -2029,14 +2082,14 @@ function interpretarFichaTexto(texto){
        total) e quando a tabela continua na página seguinte (aí o total é o
        mesmo). Só é outra tabela — e só a 1ª é lida — quando o cabeçalho
        seguinte tem um total PRÓPRIO, antes do total que já usamos. */
-    const outroProd=busca(R.prod,aProd.i+R.prod.length);
+    const outroProd=busca(aProd.rot,aProd.i+aProd.rot.length);
     if(outroProd>=0){
       const totalDoOutro=busca(R.total,outroProd);
       if(totalDoOutro>=0&&totalDoOutro!==aTot.i){
         /* Página 2 da ficha repete a MESMA tabela; aí não há nada de errado.
            Tabela diferente (produção extra) não entra no recibo: avisa. */
         const chave=arr=>arr.map(it=>it.modelo+'|'+it.qtd+'|'+it.unit).join(';');
-        const itens2=pdfItensDoTrecho(bruto.slice(map.mapa[outroProd+R.prod.length-1]+1,map.mapa[totalDoOutro]));
+        const itens2=pdfItensDoTrecho(bruto.slice(map.mapa[outroProd+aProd.rot.length-1]+1,map.mapa[totalDoOutro]));
         if(chave(itens2)!==chave(itens))avisos.push('só os itens da 1ª tabela');
       }
     }
@@ -2116,16 +2169,22 @@ async function receberPDF(file){
   if(rotulo)rotulo.textContent='📄 Lendo o PDF…';
   toast('📄 Lendo a ficha do PDF…');
   try{
-    const texto=await textoDoPDF(file);
-    const semEspaco=String(texto||'').replace(/\s/g,'');
-    if(semEspaco.length<24){
-      toast('⚠ Este PDF não tem texto (parece digitalizado ou foto). Exporte a ficha em .json ou preencha à mão.','erro',7500);
+    const leitura=await textoDoPDF(file);
+    if(String(leitura.texto||'').replace(/\s/g,'').length<24){
+      toast('⚠ O OCR não encontrou texto legível nesta ficha. Tente o .json ou preencha o recibo à mão.','erro',7500);
       return false;
     }
-    const r=interpretarFichaTexto(texto);
+    const r=interpretarFichaTexto(leitura.texto);
     if(!r.ok){
       toast('⚠ Não reconheci uma ficha técnica neste PDF. Use o .json ou o botão 🧾 dentro da ficha.','erro',7500);
       return false;
+    }
+    if(leitura.usouOcr){
+      const soma=(r.itens||[]).reduce((v,it)=>v+it.unit*it.qtd,0);
+      if(!r.num||!r.nome||!r.itens.length||!(r.total>0)||Math.abs(r.total-soma)>0.05){
+        toast('⚠ O OCR não confirmou número, cliente, itens e total da ficha. O recibo anterior foi mantido; use o .json ou confira/preencha à mão.','erro',9000);
+        return false;
+      }
     }
     return aplicarFichaPDF(r,file.name||'ficha.pdf');
   }catch(e){

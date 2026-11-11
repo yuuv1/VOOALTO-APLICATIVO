@@ -1,5 +1,14 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.4 — OCR local no Recibo para PDF de ficha sem camada de texto (2026-11-11)
+
+- PDFs digitalizados/gerados por impressão em imagem passam por OCR português
+  local no navegador; PDFs com texto continuam no leitor nativo.
+- Antes de criar o recibo por OCR, confirma nº da ficha, cliente, itens e total
+  conciliado com quantidades × preços. Se falhar, mantém o recibo anterior.
+- Inclui o motor OCR e o idioma português nos assets offline; teste de regressão
+  cobre ficha escaneada, OCR incompleto, PDF digital e variações de pontuação.
+
 ## V10.6.3 — A faixa do recibo leva o nº da FICHA anexada (2026-11-06)
 
 O pedido: *"se for colocar algum número de recibo aqui, coloque o número da
