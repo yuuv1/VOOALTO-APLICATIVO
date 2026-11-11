@@ -1,5 +1,11 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.6 — Nome do arquivo do Recibo com cliente e data de hoje (2026-11-11)
+
+- Exportação PNG e JSON: `RECIBO - Nome do cliente - DD-MM-AAAA` (data local de hoje, independente da data do pagamento).
+- Imprimir/Salvar PDF: título temporário com o mesmo nome para sugestão do diálogo de salvar; título original volta após a impressão.
+- Nome é saneado para Windows/macOS/Linux; cliente vazio vira `SEM CLIENTE`. Testes cobrem formatos e impressão.
+
 ## V10.6.5 — Recibo manual sem ficha ou PDF (2026-11-11)
 
 - Botão de preenchimento manual em destaque e campo editável para número/código da ficha.

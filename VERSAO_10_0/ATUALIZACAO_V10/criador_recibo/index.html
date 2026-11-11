@@ -272,7 +272,7 @@
   <!-- ══════════ PAINEL ══════════ -->
   <aside class="sidebar">
     <div class="sb-head">
-      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.5 — recibo também preenchido manualmente">teste</span></h1>
+      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.6 — exportação com cliente e data de hoje">teste</span></h1>
       <p><b>Preencha o recibo à mão</b> — número da ficha, cliente, itens e valores — ou importe a ficha por PDF/.json para adiantar. A importação é opcional; você pode corrigir tudo antes de salvar.</p>
       <div class="sb-toprow">
         <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
@@ -594,8 +594,8 @@
     <h4>3 · Salvar e imprimir</h4>
     <ul>
       <li><b>Salvar recibo</b> guarda na lista <b>Recibos salvos</b> (com numeração que avança sozinha) e é o que alimenta o “já recebido” das próximas fichas.</li>
-      <li><b>Imprimir / Salvar PDF</b> usa a impressão do navegador — o PDF sai vetorial, só com a folha A4.</li>
-      <li><b>PNG</b> baixa a folha como imagem; <b>Copiar texto</b> serve para mandar o recibo por WhatsApp.</li>
+      <li><b>Imprimir / Salvar PDF</b> usa a impressão do navegador — o PDF sai vetorial, só com a folha A4. O nome sugerido no diálogo é <b>RECIBO - Cliente - DD-MM-AAAA</b> (data de hoje).</li>
+      <li><b>PNG</b> baixa a folha como imagem com o mesmo nome do PDF; <b>Copiar texto</b> serve para mandar o recibo por WhatsApp.</li>
       <li>O rascunho do recibo em edição é salvo automaticamente neste navegador.</li>
     </ul>
 
@@ -606,7 +606,7 @@
     </ul>
 
     <div class="ajuda-foot">
-      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.5</span>
+      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.6</span>
       <button class="btn btn-secondary" type="button" onclick="Recibo.fecharAjuda()">Fechar</button>
     </div>
   </div>
@@ -795,10 +795,6 @@ function dataLonga(iso){
 function agoraBR(){
   const d=new Date(),p=n=>String(n).padStart(2,'0');
   return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());
-}
-function carimboArquivo(){
-  const d=new Date(),p=n=>String(n).padStart(2,'0');
-  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'_'+p(d.getHours())+'h'+p(d.getMinutes());
 }
 function numeroExibido(n){
   const s=String(n==null?'':n).trim();
@@ -2316,12 +2312,15 @@ function baixarBlob(blob,nome){
   a.remove();
   setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},10000);
 }
-function nomeArquivoRecibo(){
-  const num=String(estado.numero||'').trim()||'sem-numero';
-  const cli=String(estado.cliente.nome||'').trim()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').substring(0,40);
-  return 'recibo_'+(num?('n'+num):'')+(cli?'_'+cli:'')+'_'+carimboArquivo();
+function nomeArquivoRecibo(est, dataAtual){
+  const e=est||estado;
+  const cliente=String(e.cliente&&e.cliente.nome||'').normalize('NFC')
+    .replace(/[<>:"/\\|?*\u0000-\u001f\u007f]+/g,' ')
+    .replace(/\s+/g,' ').trim().replace(/^[. -]+|[. -]+$/g,'')
+    .slice(0,80).replace(/[. -]+$/g,'')||'SEM CLIENTE';
+  // A data é a do download (não a data editável do pagamento no recibo).
+  const hoje=isoParaBR(dataAtual||hojeISO()).replace(/\//g,'-');
+  return 'RECIBO - '+cliente+' - '+hoje;
 }
 function exportarJSON(){
   try{
@@ -2363,7 +2362,15 @@ async function exportarPNG(){
 function imprimir(){
   if(!String(estado.numero||'').trim())estado.numero=proximoNumero();
   renderPreview();
-  try{window.print()}catch(e){}
+  // A impressão vetorial usa o título da página como sugestão de nome do PDF.
+  const tituloAnterior=document.title;
+  const restaurarTitulo=()=>{
+    document.title=tituloAnterior;
+    window.removeEventListener('afterprint',restaurarTitulo);
+  };
+  document.title=nomeArquivoRecibo();
+  window.addEventListener('afterprint',restaurarTitulo,{once:true});
+  try{window.print()}catch(e){restaurarTitulo()}
 }
 
 function textoParaCopiar(){
@@ -2494,6 +2501,7 @@ window.ReciboInterno={
   descricaoAutomatica,
   textoDoRecibo,
   textoParaCopiar,
+  nomeArquivoRecibo,
   aplicarFicha,
   aplicarFichaPDF,
   interpretarFichaTexto,
