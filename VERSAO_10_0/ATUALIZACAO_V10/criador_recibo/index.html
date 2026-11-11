@@ -272,8 +272,8 @@
   <!-- ══════════ PAINEL ══════════ -->
   <aside class="sidebar">
     <div class="sb-head">
-      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.4 — OCR local para PDFs de fichas digitalizadas">teste</span></h1>
-      <p><b>Jogue a ficha técnica aqui</b> (arraste o .json ou escolha na lista) e o recibo já sai pronto: cliente, itens e valores preenchidos. Pagamento <b>total</b> ou <b>parcial</b> — tudo ajustável à mão.</p>
+      <h1>🧾 Recibo automático <span class="beta-chip" title="Versão V10.6.5 — recibo também preenchido manualmente">teste</span></h1>
+      <p><b>Preencha o recibo à mão</b> — número da ficha, cliente, itens e valores — ou importe a ficha por PDF/.json para adiantar. A importação é opcional; você pode corrigir tudo antes de salvar.</p>
       <div class="sb-toprow">
         <span class="save-chip" id="reciboSaveChip" title="Este recibo é guardado automaticamente como rascunho neste navegador">💾 —</span>
         <button class="help-btn" type="button" onclick="Recibo.abrirAjuda()" title="Ajuda do Recibo">? Ajuda</button>
@@ -283,8 +283,12 @@
     <div class="sb-scroll">
       <!-- 1. FICHA DE ORIGEM -->
       <div class="card">
-        <div class="card-title"><span class="n">1</span> Ficha técnica de origem</div>
-        <label class="fl" for="fichaSelect">Ficha pronta</label>
+        <div class="card-title"><span class="n">1</span> Ficha técnica (opcional)</div>
+        <div class="row"><button class="btn btn-secondary" type="button" onclick="Recibo.novoManual()" title="Começar um recibo em branco, sem importar ficha">✍️ Preencher manualmente</button></div>
+        <label class="fl" for="f-fichanum">Número / código da ficha</label>
+        <input class="inp" id="f-fichanum" type="text" autocomplete="off" placeholder="Ex: 3374 (opcional)" oninput="Recibo.campo('fichaNum',this.value)">
+        <div class="hint">Digite o código se houver. Cliente, itens e pagamento são preenchidos nos campos abaixo — nenhum arquivo é obrigatório.</div>
+        <label class="fl" for="fichaSelect">Ou escolha uma ficha pronta</label>
         <select class="inp" id="fichaSelect" onchange="Recibo.carregarFichaSelecionada()" title="Escolha a ficha: o recibo é criado na hora">
           <option value="">Carregando fichas…</option>
         </select>
@@ -296,7 +300,7 @@
           <b>📂 Arraste a ficha técnica aqui</b>
           <span><b>PDF</b> da ficha ou o <b>.json</b> (“Exportar só esta ficha”)</span>
         </div>
-        <div class="hint" id="fichaHint">Escolha a ficha na lista ou arraste o <b>PDF</b> (ou o .json) — o recibo é criado na hora. Também funciona pelo botão <b>🧾 Recibo</b> dentro da própria ficha.</div>
+        <div class="hint" id="fichaHint">Sem ficha? Clique em <b>Preencher manualmente</b> e digite os dados abaixo. O PDF/.json e a lista são só atalhos opcionais.</div>
         <div class="resumo" id="fichaResumo" style="display:none"></div>
       </div>
 
@@ -560,9 +564,16 @@
 <div class="ajuda-bg" id="ajudaRecibo" onclick="if(event.target===this)Recibo.fecharAjuda()">
   <div class="ajuda-card">
     <h3>🧾 Ajuda — Recibo automático <span class="beta-chip">teste</span></h3>
-    <div class="sub">O recibo nasce da ficha técnica pronta e pode ser ajustado campo por campo. Nada sai deste navegador.</div>
+    <div class="sub">Preencha o recibo manualmente ou use a ficha técnica apenas para adiantar os campos. Nada sai deste navegador.</div>
 
-    <h4>1 · Puxar a ficha</h4>
+    <h4>1 · Preencher sem ficha</h4>
+    <ul>
+      <li>Clique em <b>✍️ Preencher manualmente</b> para começar em branco (salve o recibo atual antes de substituí-lo).</li>
+      <li>Digite o número/código da ficha se houver, os dados do cliente, os itens ou o total, e o valor recebido. Tudo é editável; o PDF é opcional.</li>
+      <li>O código pode ser corrigido também depois de importar uma ficha. O novo código será usado para calcular o já recebido em recibos anteriores.</li>
+    </ul>
+
+    <h4>2 · Puxar a ficha (opcional)</h4>
     <ul>
       <li><b>Arraste o PDF da ficha para qualquer lugar desta tela</b> (o mesmo arquivo que você imprime) e o recibo é criado na hora, com cliente, nº, itens, total e entrada. O <b>.json</b> (“Exportar só esta ficha”) e o backup completo também servem.</li>
       <li>Ou escolha a ficha em <b>Ficha técnica de origem</b>: ao selecionar, o recibo já é montado. Se o recibo estiver em branco e você tiver uma ficha aberta na Ficha Técnica, ela entra sozinha.</li>
@@ -595,7 +606,7 @@
     </ul>
 
     <div class="ajuda-foot">
-      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.4</span>
+      <span style="margin-right:auto;font-size:10px;color:var(--v10-t3);font-weight:700" title="Versão deste módulo">V10.6.5</span>
       <button class="btn btn-secondary" type="button" onclick="Recibo.fecharAjuda()">Fechar</button>
     </div>
   </div>
@@ -834,7 +845,7 @@ function estadoVazio(){
   return {
     id:'', numero:'', data:hojeISO(),
     cliente:{nome:'',doc:'',tel:'',end:'',cidade:''},
-    fichaId:'', fichaNum:'', fichaNome:'',
+    fichaId:'', fichaNum:'', fichaNome:'', manualSemFicha:false,
     itens:[],
     totalProducao:0, totalManual:false,
     desconto:0,
@@ -867,6 +878,7 @@ function normalizarEstado(base){
   e.mostrarSaldo=base.mostrarSaldo!==false;
   e.carimbo=base.carimbo!==false;
   e.autoFicha=!!base.autoFicha;
+  e.manualSemFicha=!!base.manualSemFicha;
   e.pdf=(base.pdf&&typeof base.pdf==='object')?base.pdf:null;
   if(!e.data)e.data=hojeISO();
   return e;
@@ -1133,8 +1145,7 @@ async function carregarFichaSelecionada(){
     meta={id:id,name:item?item.rotulo:'Ficha',num:item?item.num:''};
   }
   if(!dados){toast('⚠ Não consegui abrir esta ficha (ela pode estar sem dados salvos).','erro');return false}
-  aplicarFicha(dados,meta);
-  return true;
+  return aplicarFicha(dados,meta);
 }
 
 /* Aplica uma ficha ao estado do recibo. */
@@ -1147,9 +1158,13 @@ function aplicarFicha(dados,meta,opts){
      confirmação (o recibo salvo continua na lista de qualquer jeito). */
   const numNovo=numDaFicha(dados)||String((meta&&meta.num)||'').trim();
   const trocando=temNumeroFicha(numNovo)&&temNumeroFicha(estado.fichaNum)&&chaveFicha(numNovo)!==chaveFicha(estado.fichaNum);
-  const temConteudo=String(estado.cliente.nome||'').trim()!==''||num(estado.valorPago)>0;
-  if(!opts.forcar&&!opts.auto&&!estado.autoFicha&&trocando&&temConteudo&&typeof confirm==='function'){
-    if(!confirm('Já existe um recibo em edição (nº '+numeroExibido(estado.numero)+').\n\nSubstituir pelos dados da ficha '+(numNovo||'')+'?'))return false;
+  const temConteudo=!!(String(estado.fichaNum||'').trim()||String(estado.cliente.nome||'').trim()||estado.itens.length||num(estado.totalProducao)>0||num(estado.valorPago)>0);
+  // Mesmo código não autoriza sobrescrever dados que foram digitados à mão.
+  if(!opts.forcar&&!opts.auto&&!estado.autoFicha&&(trocando||estado.manualSemFicha)&&temConteudo&&typeof confirm==='function'){
+    if(!confirm('Já existe um recibo em edição (nº '+numeroExibido(estado.numero)+').\n\nSubstituir os dados atuais pela ficha '+(numNovo||'selecionada')+'? Salve o recibo antes se quiser manter os dados digitados.')){
+      const sel=$('fichaSelect');if(sel)sel.value=estado.fichaId||'';
+      return false;
+    }
   }
   const itens=itensDaFicha(dados);
   estado.pdf=null;
@@ -1187,6 +1202,7 @@ function aplicarFicha(dados,meta,opts){
   }
   estado.valorPagoManual=false;
   estado.autoFicha=!!opts.auto;
+  estado.manualSemFicha=false;
   renderFichas();
   if(!String(estado.cidadeAssinatura||'').trim()&&cliente.cidade)estado.cidadeAssinatura=cliente.cidade;
   renderTudo({sidebar:true,itens:true});
@@ -1201,7 +1217,18 @@ function aplicarFicha(dados,meta,opts){
 /* ── campos ─────────────────────────────────────────────────────────────── */
 function campo(chave,valor){
   estado.autoFicha=false;
+  estado.manualSemFicha=true;
   switch(chave){
+    case 'fichaNum':{
+      estado.fichaNum=String(valor==null?'':valor).trim();
+      // Uma correção manual do código não pode continuar vinculada ao PDF ou
+      // ao ID de outra ficha: evita somar pagamentos da ficha errada.
+      estado.fichaId='';estado.fichaNome='';estado.pdf=null;
+      if(!estado.jaRecebidoManual)estado.jaRecebido=jaRecebidoDaFicha(estado.fichaNum,estado.id);
+      if(estado.modo==='total'&&!estado.valorPagoManual)estado.valorPago=valorQuitacao();
+      const sel=$('fichaSelect');if(sel)sel.value='';
+      break;
+    }
     case 'numero': estado.numero=String(valor==null?'':valor).trim(); break;
     case 'data': estado.data=String(valor||''); break;
     case 'nome': estado.cliente.nome=String(valor||''); break;
@@ -1249,6 +1276,7 @@ function campo(chave,valor){
 }
 function check(chave,valor){
   estado.autoFicha=false;
+  estado.manualSemFicha=true;
   if(chave==='mostrarItens')estado.mostrarItens=!!valor;
   else if(chave==='mostrarSaldo')estado.mostrarSaldo=!!valor;
   else if(chave==='carimbo')estado.carimbo=!!valor;
@@ -1286,6 +1314,7 @@ function recalcularJaRecebido(){
 
 function definirModo(modo){
   estado.autoFicha=false;
+  estado.manualSemFicha=true;
   modo=(modo==='parcial')?'parcial':'total';
   estado.modo=modo;
   estado.valorPagoManual=false;
@@ -1405,6 +1434,8 @@ function renderResumos(){
       : (estado.entradaFicha>0.005
         ? 'Ficha carregada. A <b>entrada</b> da ficha ('+esc(fmtBRL(estado.entradaFicha))+') foi sugerida como pagamento parcial — se ela já foi paga antes, lance o valor em <b>Já recebido</b>.'
         : 'Ficha carregada: confira os valores e escolha <b>Total</b> ou <b>Parcial</b>. Tudo pode ser alterado à mão.');
+  }else if(fichaHint){
+    fichaHint.innerHTML='✍️ Recibo manual: digite o código da ficha (se houver), os dados do cliente e os valores abaixo. A importação por PDF/.json é opcional.';
   }
   const fichaResumo=$('fichaResumo');
   if(fichaResumo){
@@ -1450,6 +1481,7 @@ function formatarItem(idx,campoNome){
 function renderSidebar(){
   const set=(id,val)=>{const el=$(id);if(el&&document.activeElement!==el)el.value=val};
   set('f-numero',estado.numero);
+  set('f-fichanum',estado.fichaNum);
   set('f-data',estado.data);
   set('f-nome',estado.cliente.nome);
   set('f-doc',estado.cliente.doc);
@@ -1762,13 +1794,16 @@ function fecharSalvos(){
 }
 
 function novo(){
-  const temConteudo=!!(String(estado.cliente.nome||'').trim()||estado.itens.length||calcular().pago>0);
-  if(temConteudo&&typeof confirm==='function'&&!confirm('Começar um recibo novo?\n\nO recibo em edição fica guardado como rascunho.')){
+  const temConteudo=!!(String(estado.fichaNum||'').trim()||
+    Object.values(estado.cliente).some(v=>String(v||'').trim())||
+    estado.itens.length||calcular().total>0||calcular().pago>0||String(estado.obs||'').trim());
+  if(temConteudo&&typeof confirm==='function'&&!confirm('Começar um recibo novo?\n\nOs dados não salvos do recibo atual serão substituídos. Salve o recibo antes de continuar.')){
     return false;
   }
   const responsavel=estado.responsavel;
   const cidade=estado.cidadeAssinatura;
   estado=estadoVazio();
+  estado.manualSemFicha=true;
   estado.numero=proximoNumero();
   estado.responsavel=responsavel;
   estado.cidadeAssinatura=cidade||'Goiânia - GO';
@@ -1780,6 +1815,15 @@ function novo(){
   renderTudo({sidebar:true,itens:true});
   const sel=$('fichaSelect');if(sel)sel.value='';
   toast('🗋 Recibo novo — nº '+numeroExibido(estado.numero));
+  return true;
+}
+function novoManual(){
+  if(!novo())return false;
+  const campoFicha=$('f-fichanum');
+  if(campoFicha){
+    if(typeof campoFicha.scrollIntoView==='function')campoFicha.scrollIntoView({block:'center'});
+    campoFicha.focus();
+  }
   return true;
 }
 
@@ -2411,7 +2455,7 @@ function iniciar(){
     &&!(num(estado.valorPago)>0)
     &&!String(estado.fichaNum||'').trim()
     &&!estado.itens.length;
-  if(reciboVazio){
+  if(reciboVazio&&!estado.manualSemFicha){
     const live=lsJSON(FICHA_LIVE_KEY,null);
     const metaLive=lsJSON(FICHA_META_KEY,null);
     if(temFicha(live)&&!(metaLive&&metaLive.vazio)){
@@ -2430,7 +2474,7 @@ window.Recibo={
   definirModo,recalcularTotal,recalcularJaRecebido,
   adicionarItem,itemCampo,formatarItem,removerItem,
   carregarFichaSelecionada,importarArquivo,receberArquivo,receberPDF,
-  salvar,salvarENovo,novo,abrirSalvos,fecharSalvos,abrirRecibo,excluirRecibo,
+  salvar,salvarENovo,novo,novoManual,abrirSalvos,fecharSalvos,abrirRecibo,excluirRecibo,
   abrirSalvo:id=>abrirRecibo(id),
   excluirSalvo:id=>excluirRecibo(id),
   imprimir,exportarPNG,exportarJSON,copiarTexto,

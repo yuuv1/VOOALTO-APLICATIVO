@@ -1,0 +1,113 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { JSDOM } = require('jsdom');
+const { BASE } = require('./_base');
+const html = fs.readFileSync(path.join(BASE, 'criador_recibo', 'index.html'), 'utf8');
+const ficha = { _version:'vooalto_ficha_v7', _numFicha:'9000', dc_nome:'Cliente da ficha aberta',
+  dc_doc:'111.222.333-44', _prod:[{modelo:'Uniforme',valor:'50,00',qtd:'2'}] };
+function abrir(autosave, recibos) {
+  return new JSDOM(html, {
+    url:'http://localhost:4800/criador_recibo/index.html', runScripts:'dangerously', pretendToBeVisual:true,
+    beforeParse(w) {
+      w.localStorage.setItem('vooalto_v7_ficha_ativa', JSON.stringify(ficha));
+      if(autosave)w.localStorage.setItem('vooalto_recibo_autosave_v1',autosave);
+      if(recibos)w.localStorage.setItem('vooalto_recibos_v1',recibos);
+      w.confirm=()=>true; w.alert=()=>{}; w.print=()=>{};
+      w.matchMedia=()=>({matches:false, addListener(){}, removeListener(){}, addEventListener(){}, removeEventListener(){}});
+    }
+  });
+}
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const editar=(w,id,valor)=>{const el=w.document.getElementById(id); assert.ok(el,id); el.value=valor;el.dispatchEvent(new w.Event('input',{bubbles:true}));};
+(async()=>{
+  const dom=abrir(); const w=dom.window; const d=w.document;
+  await wait(100);
+  const R=w.ReciboInterno;
+  assert.equal(R.estadoAtual().fichaNum,'9000','primeira abertura ainda carrega a ficha ativa');
+  assert.ok(d.querySelector('button[onclick="Recibo.novoManual()"]'));
+  assert.equal(w.Recibo.novoManual(),true);
+  assert.equal(d.activeElement.id,'f-fichanum');
+  assert.equal(R.estadoAtual().manualSemFicha,true);
+  assert.equal(R.estadoAtual().fichaNum,'');
+  assert.equal(R.estadoAtual().cliente.nome,'');
+  editar(w,'f-fichanum','4242');
+  editar(w,'f-nome','Cliente preenchido à mão');
+  editar(w,'f-doc','123.456.789-00');
+  editar(w,'f-tel','(62) 98765-4321');
+  editar(w,'f-end','Rua do teste, 42');
+  editar(w,'f-cidade','Goiânia - GO');
+  w.confirm=()=>false;
+  assert.equal(w.Recibo.novoManual(),false,'cancelar protege os dados digitados');
+  assert.equal(R.estadoAtual().fichaNum,'4242');
+  assert.equal(R.estadoAtual().cliente.nome,'Cliente preenchido à mão');
+  w.confirm=()=>true;
+  w.Recibo.adicionarItem();
+  w.Recibo.itemCampo(0,'modelo','Camisa bordada');
+  w.Recibo.itemCampo(0,'qtd','3');
+  w.Recibo.itemCampo(0,'unit','50,00');
+  assert.equal(R.estadoAtual().totalProducao,150);
+  assert.equal(R.estadoAtual().valorPago,150);
+  assert.equal(d.getElementById('pvNumeroRotulo').textContent,'Ficha nº');
+  assert.equal(d.getElementById('pvNumero').textContent,'4242');
+  assert.match(d.getElementById('pvTexto').textContent,/Cliente preenchido à mão/);
+  const registro=w.Recibo.salvar();
+  assert.ok(registro);
+  assert.equal(registro.fichaNum,'4242');
+  assert.equal(registro.cliente.doc,'123.456.789-00');
+  assert.equal(registro.itens[0].modelo,'Camisa bordada');
+  assert.equal(registro.valorPago,150);
+  assert.equal(w.Recibo.novoManual(),true);
+  assert.equal(R.estadoAtual().cliente.nome,'');
+  const autosave=w.localStorage.getItem('vooalto_recibo_autosave_v1');
+  const recibos=w.localStorage.getItem('vooalto_recibos_v1');
+  dom.window.close();
+
+  const reload=abrir(autosave,recibos), w2=reload.window, R2=w2.ReciboInterno;
+  await wait(100);
+  assert.equal(R2.estadoAtual().cliente.nome,'','ao reabrir o manual em branco não carrega a ficha ativa');
+  assert.equal(R2.estadoAtual().fichaNum,'');
+  assert.equal(R2.estadoAtual().manualSemFicha,true);
+  editar(w2,'f-fichanum','4242');
+  assert.equal(R2.estadoAtual().jaRecebido,150,'código manual soma recibos anteriores');
+  w2.confirm=()=>false;
+  assert.equal(R2.aplicarFicha({...ficha,_numFicha:'4242'},{id:'__live__',num:'4242',name:'Outra ficha'}),false,
+    'PDF/ficha com o mesmo código não sobrescreve dados manuais sem confirmar');
+  assert.equal(R2.estadoAtual().fichaNum,'4242');
+  assert.equal(R2.estadoAtual().fichaId,'');
+  w2.confirm=()=>true;
+  R2.aplicarFicha(ficha,{id:'__live__',num:'9000',name:'Ficha importada'});
+  assert.equal(R2.estadoAtual().manualSemFicha,false);
+  assert.equal(R2.estadoAtual().fichaId,'__live__');
+  R2.estadoAtual().pdf={arquivo:'teste.pdf',avisos:[]};
+  editar(w2,'f-fichanum','4242');
+  assert.equal(R2.estadoAtual().fichaNum,'4242');
+  assert.equal(R2.estadoAtual().fichaId,'','corrigir código desvincula ficha importada');
+  assert.equal(R2.estadoAtual().pdf,null,'corrigir código remove indicação do PDF antigo');
+  assert.equal(R2.estadoAtual().jaRecebido,150);
+  assert.equal(w2.document.getElementById('f-fichanum').value,'4242');
+  assert.equal(w2.document.getElementById('pvNumero').textContent,'4242');
+  assert.equal(w2.document.getElementById('fichaSelect').value,'');
+  w2.Recibo.novoManual();
+  editar(w2,'f-nome','Sem ficha associada');
+  editar(w2,'f-total','80,00');
+  assert.equal(R2.estadoAtual().valorPago,80);
+  const semFicha=w2.Recibo.salvar();
+  assert.ok(semFicha);
+  assert.equal(semFicha.fichaNum,'');
+  assert.equal(w2.document.getElementById('pvNumeroRotulo').textContent,'Recibo nº');
+  w2.Recibo.novoManual();
+  editar(w2,'f-nome','Pagamento parcial manual');
+  editar(w2,'f-total','100,00');
+  w2.Recibo.definirModo('parcial');
+  editar(w2,'f-pago','30,00');
+  const parcial=w2.Recibo.salvar();
+  assert.ok(parcial);
+  assert.equal(parcial.modo,'parcial');
+  assert.equal(parcial.valorPago,30);
+  assert.equal(parcial.saldo,70);
+  reload.window.close();
+  console.log('✓ Recibo manual: ficha, cliente, itens, valores, edição após PDF e rascunho sem autoimportação');
+  process.exit(0);
+})().catch(e=>{console.error(e);process.exit(1)});

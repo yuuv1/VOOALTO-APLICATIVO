@@ -49,15 +49,16 @@ nem o estado do contrato.
 |---|---|---|
 | 📋 Ficha Técnica | cliente, modelos, cores, medidas, artes e o estúdio do mockup; sai em A4 (PDF/PNG) | na abertura |
 | 💰 Orçamento | proposta com itens, totais, destaques e assinatura; sai em A4 | ao abrir a aba |
-| 🧾 Recibo **(teste)** | puxa a ficha pronta e gera o recibo de pagamento — total ou parcial, tudo editável; numeração própria e “já recebido” por ficha | ao abrir a aba |
+| 🧾 Recibo **(teste)** | preenchimento manual completo ou importação opcional de ficha/PDF; pagamento total ou parcial, numeração própria e “já recebido” por código de ficha | ao abrir a aba |
 | 📄 Contrato | arrasta a ficha ou a proposta em PDF e gera o contrato em .docx e .pdf | ao abrir a aba (bundle de ~10 MB) |
 
-O Recibo é o módulo novo da **versão de teste** (V10.6): ele não altera a ficha
-nem o orçamento, só lê os dados. Também abre pelo botão **🧾 Gerar recibo** no
-pé da Ficha Técnica. O pé da folha leva a **assinatura da empresa** (Ésio
-Francisco / VOOALTO UNIFORMES), a mesma imagem usada no Contrato, e a
-faixa preta estampa o número da ficha técnica de origem. Detalhes em
-`VERSAO_10_0/CHANGELOG_V10.md` (V10.6.3).
+O Recibo é o módulo de **versão de teste** (V10.6.5): permite iniciar sem ficha
+pelo botão **✍️ Preencher manualmente** e digitar o código da ficha, cliente,
+itens, total e pagamento. O PDF/.json é apenas um atalho; o recibo não altera
+ficha nem orçamento. O pé da folha leva a **assinatura da empresa** (Ésio
+Francisco / VOOALTO UNIFORMES), a mesma imagem usada no Contrato; a faixa
+preta mostra o código da ficha quando informado, ou o número do recibo.
+Detalhes em `VERSAO_10_0/CHANGELOG_V10.md` (V10.6.5).
 
 O módulo de contrato é o app `documento-contratual/` embarcado: leitura de PDF e
 OCR acontecem **no navegador**, nada é enviado para fora. Ele **não** é copiado à

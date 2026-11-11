@@ -1,5 +1,13 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.6.5 — Recibo manual sem ficha ou PDF (2026-11-11)
+
+- Botão de preenchimento manual em destaque e campo editável para número/código da ficha.
+- Cliente, itens, total e pagamento podem ser informados sem importação; o PDF/.json fica opcional.
+- Alterar o código de uma ficha importada desvincula o arquivo antigo e atualiza o valor já recebido pelo novo código.
+- Um recibo manual em branco não é substituído automaticamente pela ficha ativa após recarregar a tela.
+- Testes cobrem criação, pagamento total/parcial, salvamento, reabertura e correção manual após importação.
+
 ## V10.6.4 — OCR local no Recibo para PDF de ficha sem camada de texto (2026-11-11)
 
 - PDFs digitalizados/gerados por impressão em imagem passam por OCR português
