@@ -38,6 +38,38 @@
   var root = null;
   var refs = {};
   var onChange = null;
+  var historico = [], futuro = [], ultimoEstado = '';
+  var rendendo = false;
+  var geracao = 0;
+
+  function atualizarHistorico() {
+    if (refs.desfazer) refs.desfazer.disabled = !historico.length;
+    if (refs.refazer) refs.refazer.disabled = !futuro.length;
+  }
+
+  function navegarHistorico(origem, destino) {
+    if (!origem.length) return;
+    destino.push(JSON.stringify(estado()));
+    if (destino.length > 40) destino.shift();
+    state = JSON.parse(origem.pop());
+    ultimoEstado = JSON.stringify(estado());
+    if (!arteAtual()) arteSel = null;
+    desenharTudo();
+    atualizarHistorico();
+    if (typeof onChange === 'function') { try { onChange(estado()); } catch (e) {} }
+  }
+
+  function registrarAntes(snapshot) {
+    if (snapshot === JSON.stringify(estado())) return;
+    if (snapshot) { historico.push(snapshot); if (historico.length > 40) historico.shift(); }
+    ultimoEstado = JSON.stringify(estado());
+    futuro = [];
+    atualizarHistorico();
+    if (typeof onChange === 'function') { try { onChange(estado()); } catch (e) {} }
+  }
+
+  function desfazer() { navegarHistorico(historico, futuro); }
+  function refazer() { navegarHistorico(futuro, historico); }
 
   /* ── utilidades ───────────────────────────────────────────────────────── */
   function h(tag, attrs, filhos) {
@@ -68,7 +100,18 @@
     toastTimer = setTimeout(function () { el.className = 'pk-toast' + (tipo ? ' pk-' + tipo : ''); }, 2600);
   }
 
-  function avisar (cb) { if (typeof onChange === 'function') { try { onChange(estado()); } catch (e) {} } }
+  function avisar() {
+    var atual = JSON.stringify(estado());
+    if (atual === ultimoEstado) return;
+    if (ultimoEstado) {
+      historico.push(ultimoEstado);
+      if (historico.length > 40) historico.shift();
+    }
+    ultimoEstado = atual;
+    futuro = [];
+    atualizarHistorico();
+    if (typeof onChange === 'function') { try { onChange(estado()); } catch (e) {} }
+  }
 
   /* ── estado ──────────────────────────────────────────────────────────── */
   function estado() {
@@ -84,6 +127,7 @@
   }
 
   function carregar(est) {
+    geracao++;
     state = { frente: novoLado(), costas: novoLado(), acabamento: 'dryfit' };
     if (est) {
       if (est.acabamento === 'algodao') state.acabamento = 'algodao';
@@ -94,6 +138,10 @@
         if (Array.isArray(src.artes)) state[lado].artes = JSON.parse(JSON.stringify(src.artes));
       });
     }
+    arteSel = null;
+    historico = []; futuro = [];
+    ultimoEstado = JSON.stringify(estado());
+    atualizarHistorico();
   }
 
   /* ── arquivos → dataURL ──────────────────────────────────────────────── */
@@ -113,8 +161,7 @@
      pode carregar foto de celular em resolução cheia */
   var MAX_PX = 1400;
   function normalizarImagem(dataURL) {
-    /* V10.5 — se o otimizador único estiver na página, é ele quem reduz
-       (mesma regra do resto do app); a medição abaixo só roda sem ele. */
+    /* Mantém o otimizador de imagens da V10.5 presente na main online. */
     var VooaltoImagemRef = (typeof window !== 'undefined' && window.VooaltoImagem) || (typeof VooaltoImagem !== 'undefined' ? VooaltoImagem : null);
     if (VooaltoImagemRef && typeof dataURL === 'string') {
       return VooaltoImagemRef.otimizar(dataURL, { maxDim: MAX_PX }).then(function (src) {
@@ -169,9 +216,11 @@
 
   function desenhar() {
     var lado = ladoAtual;
+    rendendo = false;
     refs.canvas.innerHTML = svgDoLado(lado);
     desenharOverlay();
     desenharBadge();
+    if (refs.dica) refs.dica.hidden = !!state[lado].artes.length;
   }
 
   /* overlay: as artes viram elementos HTML por cima do SVG — dá para arrastar,
@@ -185,7 +234,7 @@
     /* área clicável (para soltar imagem e desselecionar) */
     var hit = h('div', { class: 'pk-zonehit' });
     hit.addEventListener('pointerdown', function (e) {
-      if (e.target === hit) { arteSel = null; desenhar(); }
+      if (e.target === hit) { arteSel = null; desenhar(); desenharListaArtes(); desenharPropriedades(); }
     });
     ov.appendChild(hit);
 
@@ -201,33 +250,29 @@
       el.style.opacity = a.opac === undefined ? 1 : a.opac;
 
       var img = h('img', { src: a.src, alt: '', draggable: 'false' });
+      if (a.flip) img.style.transform = 'scaleX(-1)';
       el.appendChild(img);
       el.addEventListener('pointerdown', function (e) { iniciarArraste(e, a, el); });
       ov.appendChild(el);
 
       if (a.id === arteSel) {
-        /* alça de tamanho (canto) e de giro (topo) */
-        var hr = h('div', { class: 'pk-handle', title: 'Redimensionar' });
-        hr.style.left = ((a.x / vb.w) * 100 + wPct / 2) + '%';
-        hr.style.top = ((a.y / vb.h) * 100 + hPct / 2) + '%';
-        hr.addEventListener('pointerdown', function (e) { iniciarTamanho(e, a); });
-        ov.appendChild(hr);
+        /* alças dentro da arte: acompanham tamanho e rotação do elemento */
+        var hr = h('div', { class: 'pk-handle pk-resize', title: 'Redimensionar (Shift: livre)' });
+        hr.addEventListener('pointerdown', function (e) { iniciarTamanho(e, a, el); });
+        el.appendChild(hr);
 
         var hg = h('div', { class: 'pk-handle pk-rot', title: 'Girar' });
-        hg.style.left = ((a.x / vb.w) * 100) + '%';
-        hg.style.top = ((a.y / vb.h) * 100 - hPct / 2 - 3) + '%';
         hg.addEventListener('pointerdown', function (e) { iniciarGiro(e, a); });
-        ov.appendChild(hg);
+        el.appendChild(hg);
 
-        var hd = h('div', { class: 'pk-handle pk-del', title: 'Remover', html: '×' });
-        hd.style.left = ((a.x / vb.w) * 100 - wPct / 2) + '%';
-        hd.style.top = ((a.y / vb.h) * 100 - hPct / 2) + '%';
-        hd.addEventListener('pointerdown', function (e) {
+        var hd = h('button', { type: 'button', class: 'pk-handle pk-del', title: 'Remover arte', 'aria-label': 'Remover arte' }, ['×']);
+        hd.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+        hd.addEventListener('click', function (e) {
           e.stopPropagation();
           state[ladoAtual].artes = state[ladoAtual].artes.filter(function (x) { return x.id !== a.id; });
-          arteSel = null; desenhar(); avisar();
+          arteSel = null; desenharTudo(); avisar();
         });
-        ov.appendChild(hd);
+        el.appendChild(hd);
       }
     });
   }
@@ -243,82 +288,106 @@
   function posicaoLocal(ev) {
     var r = refs.canvas.getBoundingClientRect();
     var vb = global.Peca.VB;
-    var x = (ev.clientX - r.left) / r.width * vb.w;
-    var y = (ev.clientY - r.top) / r.height * vb.h;
+    var x = r.width ? (ev.clientX - r.left) / r.width * vb.w : vb.w / 2;
+    var y = r.height ? (ev.clientY - r.top) / r.height * vb.h : vb.h * 0.40;
     return { x: Math.max(0, Math.min(vb.w, x)), y: Math.max(0, Math.min(vb.h, y)),
              px: ev.clientX - r.left, py: ev.clientY - r.top, r: r };
   }
 
-  /* arrastar a arte: ela anda pela peça e o ângulo vem do tecido */
+  function ocultarArteSvg() {
+    refs.canvas.querySelectorAll('[data-arte]').forEach(function (img) { img.style.visibility = 'hidden'; });
+  }
+
+  function refletirSvg() {
+    if (rendendo) return;
+    rendendo = true;
+    var canvas = refs.canvas, palco = root, lado = ladoAtual, peca = state;
+    (global.requestAnimationFrame || function (cb) { return setTimeout(cb, 16); })(function () {
+      rendendo = false;
+      if (canvas && palco && palco.isConnected && canvas === refs.canvas && lado === ladoAtual && peca === state) canvas.innerHTML = svgDoLado(ladoAtual);
+    });
+  }
+
+  /* arraste com guias de alinhamento; Alt evita encaixe, Shift preserva giro */
   function iniciarArraste(ev, arte, el) {
     ev.preventDefault();
+    var selecionou = arteSel !== arte.id;
     arteSel = arte.id;
-    var p0 = posicaoLocal(ev);
-    var ini = { x: arte.x, y: arte.y };
+    el.setAttribute('data-sel', 'true');
+    var r = refs.canvas.getBoundingClientRect(), vb = global.Peca.VB;
+    var ini = { x: arte.x, y: arte.y, rot: arte.rot };
     var movido = false;
-    el.setPointerCapture && el.setPointerCapture(ev.pointerId);
+    var antes = JSON.stringify(estado());
+    ocultarArteSvg();
     function mover(e) {
-      var p = posicaoLocal(e);
-      var vb = global.Peca.VB;
-      var dx = (e.clientX - ev.clientX) / p.r.width * vb.w;
-      var dy = (e.clientY - ev.clientY) / p.r.height * vb.h;
-      if (Math.abs(dx) + Math.abs(dy) > 1.5) movido = true;
-      arte.x = Math.max(-40, Math.min(vb.w + 40, ini.x + dx));
-      arte.y = Math.max(-40, Math.min(vb.h + 40, ini.y + dy));
-      /* acompanha o tecido: o ângulo é recalculado a cada movimento */
-      arte.rot = fmt(global.PecaRender.anguloEm(arte.x, arte.y));
-      el.style.left = ((arte.x / vb.w) * 100) + '%';
-      el.style.top = ((arte.y / vb.h) * 100) + '%';
+      if (!r.width || !r.height) return;
+      var x = Math.max(-40, Math.min(vb.w + 40, ini.x + (e.clientX - ev.clientX) / r.width * vb.w));
+      var y = Math.max(-40, Math.min(vb.h + 40, ini.y + (e.clientY - ev.clientY) / r.height * vb.h));
+      var guiaX = !e.altKey && Math.abs(x - vb.w / 2) < 12;
+      var guiaY = !e.altKey && Math.abs(y - vb.h * 0.40) < 12;
+      arte.x = guiaX ? vb.w / 2 : x;
+      arte.y = guiaY ? vb.h * 0.40 : y;
+      refs.guiaX.classList.toggle('pk-visible', guiaX);
+      refs.guiaY.classList.toggle('pk-visible', guiaY);
+      if (Math.abs(arte.x - ini.x) + Math.abs(arte.y - ini.y) > 1.5) movido = true;
+      arte.rot = e.shiftKey ? ini.rot : fmt(global.PecaRender.anguloEm(arte.x, arte.y));
+      refletirSvg();
+      el.style.left = (arte.x / vb.w * 100) + '%';
+      el.style.top = (arte.y / vb.h * 100) + '%';
       el.style.transform = 'translate(-50%,-50%) rotate(' + arte.rot + 'deg)';
       atualizarPropriedades();
-      desenharHandlesRapido(arte);
     }
     function soltar() {
       document.removeEventListener('pointermove', mover);
       document.removeEventListener('pointerup', soltar);
-      if (movido) { avisar(); toast('Arte presa à peça · ' + fmt(arte.rot) + '°'); }
+      document.removeEventListener('pointercancel', soltar);
+      refs.guiaX.classList.remove('pk-visible');
+      refs.guiaY.classList.remove('pk-visible');
       desenhar();
+      if (selecionou || movido) { desenharListaArtes(); desenharPropriedades(); }
+      if (movido) registrarAntes(antes);
     }
     document.addEventListener('pointermove', mover);
     document.addEventListener('pointerup', soltar);
+    document.addEventListener('pointercancel', soltar);
   }
 
-  function desenharHandlesRapido(arte) {
-    /* durante o arraste atualiza só as alças (evita redesenhar o SVG) */
-    var vb = global.Peca.VB;
-    var wPct = (arte.w / vb.w) * 100, hPct = (arte.h / vb.h) * 100;
-    var hs = refs.overlay.querySelectorAll('.pk-handle');
-    if (hs[0]) { hs[0].style.left = ((arte.x / vb.w) * 100 + wPct / 2) + '%'; hs[0].style.top = ((arte.y / vb.h) * 100 + hPct / 2) + '%'; }
-    if (hs[1]) { hs[1].style.left = ((arte.x / vb.w) * 100) + '%'; hs[1].style.top = ((arte.y / vb.h) * 100 - hPct / 2 - 3) + '%'; }
-    if (hs[2]) { hs[2].style.left = ((arte.x / vb.w) * 100 - wPct / 2) + '%'; hs[2].style.top = ((arte.y / vb.h) * 100 - hPct / 2) + '%'; }
-  }
-
-  function iniciarTamanho(ev, arte) {
+  function iniciarTamanho(ev, arte, el) {
     ev.preventDefault(); ev.stopPropagation();
-    var r = refs.canvas.getBoundingClientRect();
-    var vb = global.Peca.VB;
-    var ini = { w: arte.w, h: arte.h, cx: ev.clientX, cy: ev.clientY, ratio: (arte.w || 1) / (arte.h || 1) };
+    var r = refs.canvas.getBoundingClientRect(), vb = global.Peca.VB;
+    var ini = { w: arte.w, h: arte.h, cx: ev.clientX, cy: ev.clientY, ratio: arte.w / arte.h };
+    var rad = (arte.rot || 0) * Math.PI / 180;
+    var antes = JSON.stringify(estado());
+    ocultarArteSvg();
     function mover(e) {
+      if (!r.width || !r.height) return;
       var dx = (e.clientX - ini.cx) / r.width * vb.w;
       var dy = (e.clientY - ini.cy) / r.height * vb.h;
-      var delta = Math.max(dx, dy);
-      var w = Math.max(30, ini.w + delta * 2);
-      if (e.shiftKey) {
-        arte.w = w;
-        arte.h = w / ini.ratio;
+      var localX = dx * Math.cos(rad) + dy * Math.sin(rad);
+      var localY = -dx * Math.sin(rad) + dy * Math.cos(rad);
+      var livre = e.shiftKey || arte.proporcao === false;
+      if (livre) {
+        arte.w = Math.max(30, Math.min(2000, ini.w + localX * 2));
+        arte.h = Math.max(20, Math.min(2000, ini.h + localY * 2));
       } else {
-        arte.w = w;
-        arte.h = Math.max(20, ini.h + delta * 2);
+        var escala = Math.max(0.1, 1 + (localX / ini.w + localY / ini.h));
+        arte.w = Math.max(30, Math.min(2000, ini.w * escala));
+        arte.h = arte.w / ini.ratio;
       }
-      desenharOverlay(); atualizarPropriedades();
+      el.style.width = (arte.w / vb.w * 100) + '%';
+      el.style.height = (arte.h / vb.h * 100) + '%';
+      refletirSvg();
+      atualizarPropriedades();
     }
     function soltar() {
       document.removeEventListener('pointermove', mover);
       document.removeEventListener('pointerup', soltar);
-      desenhar(); avisar();
+      document.removeEventListener('pointercancel', soltar);
+      desenhar(); registrarAntes(antes);
     }
     document.addEventListener('pointermove', mover);
     document.addEventListener('pointerup', soltar);
+    document.addEventListener('pointercancel', soltar);
   }
 
   function iniciarGiro(ev, arte) {
@@ -329,9 +398,12 @@
     var cy = r.top + (arte.y / vb.h) * r.height;
     var ang0 = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
     var rot0 = arte.rot || 0;
+    var antes = JSON.stringify(estado());
+    ocultarArteSvg();
     function mover(e) {
       var a = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
       arte.rot = fmt(rot0 + (a - ang0));
+      refletirSvg();
       var el = refs.overlay.querySelector('.pk-arte[data-id="' + arte.id + '"]');
       if (el) el.style.transform = 'translate(-50%,-50%) rotate(' + arte.rot + 'deg)';
       atualizarPropriedades();
@@ -339,10 +411,12 @@
     function soltar() {
       document.removeEventListener('pointermove', mover);
       document.removeEventListener('pointerup', soltar);
-      desenhar(); avisar();
+      document.removeEventListener('pointercancel', soltar);
+      desenhar(); registrarAntes(antes);
     }
     document.addEventListener('pointermove', mover);
     document.addEventListener('pointerup', soltar);
+    document.addEventListener('pointercancel', soltar);
   }
 
   /* ── soltar imagem ───────────────────────────────────────────────────── */
@@ -367,10 +441,16 @@
     var vb = global.Peca.VB;
     var pendentes = arquivos.slice();
     var base = pos || { x: vb.w / 2, y: vb.h * 0.40 };
+    var ladoDestino = ladoAtual;
+    var ciclo = geracao;
+    var antesImportar = JSON.stringify(estado());
+    var adicionadas = 0;
     (function proximo() {
       var f = pendentes.shift();
-      if (!f) { desenhar(); avisar(); return; }
+      if (ciclo !== geracao) return;
+      if (!f) { if (adicionadas) { desenharTudo(); registrarAntes(antesImportar); } return; }
       lerArquivo(f).then(normalizarImagem).then(function (info) {
+        if (ciclo !== geracao) return;
         var largura = 300;
         var altura = largura * (info.h / info.w || 1);
         if (altura > 420) { altura = 420; largura = altura * (info.w / info.h || 1); }
@@ -383,12 +463,13 @@
           rot: fmt(global.PecaRender.anguloEm(base.x, base.y)),
           opac: 1
         };
-        state[ladoAtual].artes.push(arte);
-        arteSel = arte.id;
-        desenhar();
-        toast('Arte adicionada e presa à peça (' + fmt(arte.rot) + '°)', 'ok');
+        state[ladoDestino].artes.push(arte);
+        adicionadas++;
+        if (ladoAtual === ladoDestino) arteSel = arte.id;
+        desenharTudo();
+        toast('Arte adicionada em ' + (ladoDestino === 'frente' ? 'Frente' : 'Costas'), 'ok');
         proximo();
-      }).catch(function (e) { toast('Falha ao abrir a imagem: ' + e.message, 'erro'); proximo(); });
+      }).catch(function (e) { if (ciclo !== geracao) return; toast('Falha ao abrir a imagem: ' + e.message, 'erro'); proximo(); });
     })();
   }
 
@@ -581,65 +662,89 @@
       return;
     }
 
-    /* posição e tamanho em número, para quem quer precisão */
+    /* dimensões no mesmo sistema de coordenadas do SVG exportado */
     box.appendChild(h('div', { class: 'pk-row' }, [
       h('label', null, ['Largura']),
-      numInput(a.w, 20, 2000, 1, function (v) { a.w = v; if (a._proporcao !== false) a.h = a.h * (v / (a.w || v)); desenhar(); avisar(); })
+      numInput(a.w, 20, 2000, 1, function (v) {
+        if (a.proporcao !== false) a.h = Math.max(20, Math.min(2000, a.h * v / a.w));
+        a.w = v; desenhar(); desenharPropriedades(); avisar();
+      }, 'largura')
     ]));
     box.appendChild(h('div', { class: 'pk-row' }, [
       h('label', null, ['Altura']),
-      numInput(a.h, 20, 2000, 1, function (v) { a.h = v; desenhar(); avisar(); })
+      numInput(a.h, 20, 2000, 1, function (v) {
+        if (a.proporcao !== false) a.w = Math.max(20, Math.min(2000, a.w * v / a.h));
+        a.h = v; desenhar(); desenharPropriedades(); avisar();
+      }, 'altura')
     ]));
-    box.appendChild(slider('Girar', -180, 180, a.rot || 0, 1, function (v) { a.rot = v; desenhar(); avisar(); }));
+    var trava = h('input', { type: 'checkbox', 'aria-label': 'Manter proporção' });
+    trava.checked = a.proporcao !== false;
+    trava.addEventListener('change', function () { a.proporcao = trava.checked; avisar(); });
+    box.appendChild(h('label', { class: 'pk-lock' }, [trava, 'Manter proporção']));
+    box.appendChild(slider('Girar', -180, 180, a.rot || 0, 1, function (v) { a.rot = v; desenhar(); avisar(); }, 'arteGiro'));
     box.appendChild(slider('Opacidade', 0.05, 1, a.opac === undefined ? 1 : a.opac, 0.05, function (v) { a.opac = v; desenhar(); avisar(); }));
 
     var acoes = h('div', { class: 'pk-tools' }, [
       botao('↺ Seguir o tecido', function () {
         a.rot = fmt(global.PecaRender.anguloEm(a.x, a.y));
-        desenhar(); avisar();
+        desenhar(); desenharPropriedades(); avisar();
         toast('Ângulo do tecido: ' + fmt(a.rot) + '°');
       }),
       botao('⤢ Centralizar', function () {
         a.x = global.Peca.VB.w / 2; a.y = global.Peca.VB.h * 0.40;
         a.rot = fmt(global.PecaRender.anguloEm(a.x, a.y));
-        desenhar(); avisar();
+        desenhar(); desenharPropriedades(); avisar();
       }),
       botao('⧉ Duplicar', function () {
         var copia = JSON.parse(JSON.stringify(a));
         copia.id = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
         copia.x += 30; copia.y += 30;
         state[ladoAtual].artes.push(copia);
-        arteSel = copia.id; desenhar(); avisar();
+        arteSel = copia.id; desenhar(); desenharListaArtes(); desenharPropriedades(); avisar();
       }),
+      botao('↑ Trazer para frente', function () { moverCamada(a, 1); }),
+      botao('↓ Enviar para trás', function () { moverCamada(a, -1); }),
       botao('⇄ Espelhar', function () {
-        var el = refs.overlay.querySelector('.pk-arte[data-id="' + a.id + '"] img');
         a.flip = !a.flip;
         desenhar(); avisar();
       }),
       botao('🗑 Remover', function () {
         state[ladoAtual].artes = state[ladoAtual].artes.filter(function (x) { return x.id !== a.id; });
-        arteSel = null; desenhar(); avisar();
+        arteSel = null; desenhar(); desenharListaArtes(); desenharPropriedades(); avisar();
       })
     ]);
     box.appendChild(acoes);
-    box.appendChild(h('p', { class: 'pk-hint' }, ['Arraste na peça para mover. A imagem acompanha o ângulo do recorte (peito em pé, manga inclinada). Shift ao redimensionar mantém a proporção.']));
+    box.appendChild(h('p', { class: 'pk-hint' }, ['Arraste para mover e use as alças para girar e redimensionar. Shift: tamanho livre ou giro fixo ao mover. Alt: sem alinhamento automático. Setas movem; Delete remove.']));
   }
 
-  function numInput(valor, min, max, passo, aoMudar) {
-    var inp = h('input', { type: 'number', min: min, max: max, step: passo, value: Math.round(valor) });
+  function moverCamada(a, direcao) {
+    var lista = state[ladoAtual].artes;
+    var i = lista.indexOf(a), destino = i + direcao;
+    if (i < 0 || destino < 0 || destino >= lista.length) return;
+    lista.splice(i, 1);
+    lista.splice(destino, 0, a);
+    desenhar(); desenharListaArtes(); avisar();
+  }
+
+  function numInput(valor, min, max, passo, aoMudar, prop) {
+    var inp = h('input', { type: 'number', min: min, max: max, step: passo, value: Math.round(valor), 'data-prop': prop });
     inp.addEventListener('change', function () {
-      var v = Math.max(min, Math.min(max, parseFloat(inp.value) || min));
-      aoMudar(v);
+      var n = parseFloat(inp.value);
+      if (!Number.isFinite(n)) { inp.value = Math.round(valor); return; }
+      aoMudar(Math.max(min, Math.min(max, n)));
     });
     return inp;
   }
 
   function atualizarPropriedades() {
-    /* durante o arraste, só os números mudam */
     var a = arteAtual();
     if (!a) return;
-    var hd = refs.overlay.querySelector('.pk-handle');
-    desenharHandlesRapido(a);
+    var largura = refs.props.querySelector('[data-prop="largura"]');
+    var altura = refs.props.querySelector('[data-prop="altura"]');
+    if (largura) largura.value = Math.round(a.w);
+    if (altura) altura.value = Math.round(a.h);
+    var giro = refs.props.querySelector('[data-out="arteGiro"]');
+    if (giro) giro.textContent = fmt(a.rot || 0) + '°';
   }
 
   function desenharListaArtes() {
@@ -652,43 +757,85 @@
       return;
     }
     lista.forEach(function (a) {
-      var item = h('div', { class: 'pk-arte-item', 'data-sel': String(a.id === arteSel) }, [
+      var item = h('div', { class: 'pk-arte-item', 'data-sel': String(a.id === arteSel), role: 'button', tabindex: '0', 'aria-label': 'Selecionar ' + (a.nome || 'arte') }, [
         h('img', { src: a.src, alt: '' }),
         h('div', { class: 'pk-nm' }, [a.nome || 'arte']),
-        h('button', { class: 'pk-x', title: 'Remover', type: 'button' }, ['×'])
+        h('button', { class: 'pk-x', title: 'Remover', 'aria-label': 'Remover ' + (a.nome || 'arte'), type: 'button' }, ['×'])
       ]);
       item.addEventListener('click', function (e) {
         if (e.target.classList.contains('pk-x')) {
           state[ladoAtual].artes = state[ladoAtual].artes.filter(function (x) { return x.id !== a.id; });
           if (arteSel === a.id) arteSel = null;
-          desenhar(); avisar();
+          desenhar(); desenharListaArtes(); desenharPropriedades(); avisar();
           return;
         }
-        arteSel = a.id; desenhar();
+        arteSel = a.id; desenhar(); desenharListaArtes(); desenharPropriedades();
+      });
+      item.addEventListener('keydown', function (e) {
+        if (e.target === item && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); item.click(); }
       });
       box.appendChild(item);
     });
   }
 
   /* ── montagem da interface ───────────────────────────────────────────── */
+  var observadorPalco = null;
+  function ajustarPalco() {
+    if (!refs.stage || !refs.workspace) return;
+    var w = refs.stage.clientWidth, altura = refs.stage.clientHeight;
+    if (w && altura) refs.workspace.style.width = Math.max(1, Math.min(560, w - 24, (altura - 24) * global.Peca.VB.w / global.Peca.VB.h)) + 'px';
+  }
+
+  function aoTeclar(e) {
+    if (!root || !root.isConnected || (e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]'))) return;
+    var ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && e.key.toLowerCase() === 'z') {
+      e.preventDefault(); e.stopPropagation();
+      if (e.shiftKey) refazer(); else desfazer();
+      return;
+    }
+    if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); e.stopPropagation(); refazer(); return; }
+    var a = arteAtual();
+    if (!a || ctrl || e.altKey) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault(); e.stopPropagation();
+      state[ladoAtual].artes = state[ladoAtual].artes.filter(function (x) { return x.id !== a.id; });
+      arteSel = null; desenharTudo(); avisar();
+    } else if (/^Arrow(Left|Right|Up|Down)$/.test(e.key)) {
+      e.preventDefault(); e.stopPropagation();
+      var passo = e.shiftKey ? 10 : 1;
+      a.x = Math.max(0, Math.min(global.Peca.VB.w, a.x + (e.key === 'ArrowLeft' ? -passo : e.key === 'ArrowRight' ? passo : 0)));
+      a.y = Math.max(0, Math.min(global.Peca.VB.h, a.y + (e.key === 'ArrowUp' ? -passo : e.key === 'ArrowDown' ? passo : 0)));
+      a.rot = fmt(global.PecaRender.anguloEm(a.x, a.y));
+      desenhar(); atualizarPropriedades(); avisar();
+    }
+  }
+
+  function aoColar(e) {
+    if (!root || !root.isConnected || (e.target.closest && e.target.closest('input,textarea,[contenteditable="true"]'))) return;
+    var items = Array.prototype.slice.call(e.clipboardData && e.clipboardData.items || []);
+    var imagens = items.filter(function (i) { return /^image\//.test(i.type); }).map(function (i) { return i.getAsFile(); }).filter(Boolean);
+    if (imagens.length) { e.preventDefault(); e.stopPropagation(); adicionarArquivos(imagens, null); }
+  }
+
   function montar(container, opcoes) {
     root = container;
     onChange = opcoes && opcoes.onChange;
     carregar(opcoes && opcoes.estado);
-    if (opcoes && opcoes.lado) ladoAtual = opcoes.lado === 'costas' ? 'costas' : 'frente';
+    ladoAtual = opcoes && opcoes.lado === 'costas' ? 'costas' : 'frente';
 
     root.innerHTML = '';
     root.classList.add('pk-studio');
 
     /* topo */
     var segLado = h('div', { class: 'pk-seg' });
-    [['frente', 'Frente'], ['costas', 'Costas'], ['ambos', 'Frente e Costas']].forEach(function (par) {
+    [['frente', 'Frente'], ['costas', 'Costas']].forEach(function (par) {
       var b = h('button', { type: 'button', 'aria-pressed': String(ladoAtual === par[0]) }, [par[1]]);
       b.addEventListener('click', function () {
         ladoAtual = par[0];
         Array.prototype.forEach.call(segLado.children, function (c) { c.setAttribute('aria-pressed', 'false'); });
         b.setAttribute('aria-pressed', 'true');
-        refs.cavas.classList.toggle('pk-duplo', ladoAtual === 'ambos');
+        arteSel = null;
         desenharTudo();
       });
       segLado.appendChild(b);
@@ -707,8 +854,13 @@
       segAcab.appendChild(b);
     });
 
-    var btnImg = h('button', { type: 'button', class: 'pk-btn pk-primary' }, ['+ Imagem']);
+    var btnImg = h('button', { type: 'button', class: 'pk-btn pk-primary', title: 'Importar imagens da arte' }, ['+ Adicionar arte']);
     btnImg.addEventListener('click', abrirSeletorArte);
+    refs.desfazer = botao('↶ Desfazer', desfazer);
+    refs.refazer = botao('↷ Refazer', refazer);
+    refs.desfazer.title = 'Desfazer (Ctrl+Z)';
+    refs.refazer.title = 'Refazer (Ctrl+Shift+Z ou Ctrl+Y)';
+    atualizarHistorico();
 
     var btnAplicar = h('button', { type: 'button', class: 'pk-btn' }, ['✓ Aplicar na ficha']);
     btnAplicar.addEventListener('click', function () {
@@ -719,7 +871,7 @@
       h('div', { class: 'pk-brand' }, [h('i'), 'Peça']),
       segLado, segAcab,
       h('div', { class: 'pk-spacer' }),
-      btnImg, btnAplicar
+      refs.desfazer, refs.refazer, btnImg, btnAplicar
     ]);
 
     /* coluna esquerda */
@@ -742,9 +894,13 @@
     refs.canvas = h('div', { class: 'pk-canvas' });
     refs.overlay = h('div', { class: 'pk-overlay' });
     refs.badge = h('div', { class: 'pk-badge' });
+    refs.guiaX = h('div', { class: 'pk-guide pk-guide-x' });
+    refs.guiaY = h('div', { class: 'pk-guide pk-guide-y' });
+    refs.workspace = h('div', { class: 'pk-workspace' }, [refs.canvas, refs.overlay, refs.guiaX, refs.guiaY]);
+    refs.dica = h('div', { class: 'pk-stage-tip' }, ['Arraste uma imagem, cole com Ctrl+V ou clique em + Adicionar arte']);
     refs.stage = h('div', { class: 'pk-stage' }, [
       h('div', { class: 'pk-drop' }, ['Solte a imagem aqui']),
-      refs.badge, refs.canvas, refs.overlay
+      refs.dica, refs.badge, refs.workspace
     ]);
 
     refs.stage.addEventListener('dragover', function (e) { e.preventDefault(); refs.stage.classList.add('pk-dragover'); });
@@ -772,6 +928,18 @@
     root.appendChild(st);
 
     desenharTudo();
+    if (observadorPalco) observadorPalco.disconnect();
+    if (typeof ResizeObserver !== 'undefined') {
+      observadorPalco = new ResizeObserver(ajustarPalco);
+      observadorPalco.observe(refs.stage);
+    }
+    global.removeEventListener('resize', ajustarPalco);
+    global.addEventListener('resize', ajustarPalco);
+    document.removeEventListener('keydown', aoTeclar, true);
+    document.addEventListener('keydown', aoTeclar, true);
+    document.removeEventListener('paste', aoColar, true);
+    document.addEventListener('paste', aoColar, true);
+    ajustarPalco();
   }
 
   function desenharTudo() {

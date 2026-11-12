@@ -253,6 +253,94 @@ check('semCostura tira o tracejado e semArte tira a imagem (modo leve)',
   const est2 = w.PecaEditor.estado();
   check('segunda imagem entra como segunda arte', est2.frente.artes.length === 2);
   check('cada arte guarda o próprio ângulo', est2.frente.artes[0].rot !== est2.frente.artes[1].rot, [antesRot, est2.frente.artes[1].rot]);
+  [...app.querySelectorAll('.pk-top button')].find(b => /Desfazer/.test(b.textContent)).click();
+  check('uma importação pode ser desfeita', w.PecaEditor.estado().frente.artes.length === 1);
+  [...app.querySelectorAll('.pk-top button')].find(b => /Refazer/.test(b.textContent)).click();
+  check('refazer recupera a arte importada', w.PecaEditor.estado().frente.artes.length === 2);
+  app.querySelectorAll('.pk-arte-item')[1].click();
+
+  /* 1.4b ferramentas de edição: o palco, proporção, guias e histórico */
+  check('camada interativa ocupa o mesmo palco que o SVG',
+    !!app.querySelector('.pk-workspace > .pk-canvas + .pk-overlay'));
+  check('a arte selecionada mostra controles no próprio elemento',
+    !!app.querySelector('.pk-arte[data-sel="true"] .pk-resize') &&
+    !!app.querySelector('.pk-arte[data-sel="true"] .pk-rot'));
+  const dimensoesAntes = w.PecaEditor.estado().frente.artes[1];
+  const largura = app.querySelector('[data-prop="largura"]');
+  largura.value = String(dimensoesAntes.w * 2);
+  largura.dispatchEvent(new w.Event('change', { bubbles: true }));
+  check('editar largura mantém proporção por padrão',
+    Math.abs(w.PecaEditor.estado().frente.artes[1].h - dimensoesAntes.h * 2) < 0.01);
+  [...app.querySelectorAll('.pk-top button')].find(b => /Desfazer/.test(b.textContent)).click();
+  check('desfazer recupera as dimensões anteriores',
+    w.PecaEditor.estado().frente.artes[1].w === dimensoesAntes.w);
+  [...app.querySelectorAll('.pk-top button')].find(b => /Refazer/.test(b.textContent)).click();
+  check('refazer reaplica a dimensão',
+    w.PecaEditor.estado().frente.artes[1].w === dimensoesAntes.w * 2);
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  check('Ctrl+Z desfaz e não remove a seleção',
+    w.PecaEditor.estado().frente.artes[1].w === dimensoesAntes.w && !!app.querySelector('[data-prop="largura"]'));
+  const trava = app.querySelector('[aria-label="Manter proporção"]');
+  trava.checked = false;
+  trava.dispatchEvent(new w.Event('change', { bubbles: true }));
+  const larguraLivre = app.querySelector('[data-prop="largura"]');
+  larguraLivre.value = String(dimensoesAntes.w + 20);
+  larguraLivre.dispatchEvent(new w.Event('change', { bubbles: true }));
+  check('destravar proporção permite alterar só a largura',
+    w.PecaEditor.estado().frente.artes[1].w === dimensoesAntes.w + 20 &&
+    w.PecaEditor.estado().frente.artes[1].h === dimensoesAntes.h);
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+
+  const ordem = w.PecaEditor.estado().frente.artes.map(a => a.id);
+  [...app.querySelectorAll('.pk-prop button')].find(b => /Enviar para trás/.test(b.textContent)).click();
+  check('enviar para trás muda a ordem das artes no SVG e no estado',
+    w.PecaEditor.estado().frente.artes[0].id === ordem[1]);
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  check('desfazer também restaura a ordem das camadas',
+    w.PecaEditor.estado().frente.artes[0].id === ordem[0]);
+
+  const canvasEditor = app.querySelector('.pk-canvas');
+  canvasEditor.getBoundingClientRect = () => ({ left: 0, top: 0, width: 500, height: 620, right: 500, bottom: 620 });
+  app.querySelector('.pk-arte[data-sel="true"]').dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true, clientX: 400, clientY: 200 }));
+  doc.dispatchEvent(new w.MouseEvent('pointermove', { bubbles: true, clientX: 250, clientY: 248 }));
+  check('arrastar encaixa no centro e mostra as guias',
+    w.PecaEditor.estado().frente.artes[1].x === 500 &&
+    w.PecaEditor.estado().frente.artes[1].y === 496 &&
+    app.querySelectorAll('.pk-guide.pk-visible').length === 2);
+  doc.dispatchEvent(new w.MouseEvent('pointerup', { bubbles: true }));
+  check('as guias desaparecem ao soltar', !app.querySelector('.pk-guide.pk-visible'));
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  check('desfazer o arraste restaura a posição da arte',
+    w.PecaEditor.estado().frente.artes[1].x === 800);
+
+  const xAntes = w.PecaEditor.estado().frente.artes[1].x;
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowLeft', shiftKey: true, bubbles: true }));
+  check('Shift+seta move a arte 10 unidades', w.PecaEditor.estado().frente.artes[1].x === xAntes - 10);
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
+  check('Delete remove somente a arte selecionada', w.PecaEditor.estado().frente.artes.length === 1);
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  check('desfazer recupera a arte removida', w.PecaEditor.estado().frente.artes.length === 2);
+  app.querySelectorAll('.pk-arte-item')[1].click();
+
+  /* Alças de redimensionamento e rotação mantêm prévia e histórico. */
+  const antesAlca = w.PecaEditor.estado().frente.artes[1];
+  app.querySelector('.pk-arte[data-sel="true"] .pk-resize').dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true, clientX: 400, clientY: 200 }));
+  doc.dispatchEvent(new w.MouseEvent('pointermove', { bubbles: true, clientX: 425, clientY: 220 }));
+  const duranteAlca = w.PecaEditor.estado().frente.artes[1];
+  check('alça aumenta largura e mantém proporção', duranteAlca.w > antesAlca.w &&
+    Math.abs(duranteAlca.w / duranteAlca.h - antesAlca.w / antesAlca.h) < 0.01);
+  doc.dispatchEvent(new w.MouseEvent('pointerup', { bubbles: true }));
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  check('desfazer restaura o tamanho anterior ao gesto',
+    w.PecaEditor.estado().frente.artes[1].w === antesAlca.w);
+  const antesGiro = w.PecaEditor.estado().frente.artes[1].rot;
+  app.querySelector('.pk-arte[data-sel="true"] .pk-rot').dispatchEvent(new w.MouseEvent('pointerdown', { bubbles: true, clientX: 420, clientY: 200 }));
+  doc.dispatchEvent(new w.MouseEvent('pointermove', { bubbles: true, clientX: 440, clientY: 220 }));
+  doc.dispatchEvent(new w.MouseEvent('pointerup', { bubbles: true }));
+  check('alça de rotação altera o giro', w.PecaEditor.estado().frente.artes[1].rot !== antesGiro);
+  doc.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  check('desfazer restaura o giro', w.PecaEditor.estado().frente.artes[1].rot === antesGiro);
 
   /* 1.5 aplicar entrega o estado para a ficha */
   [...doc.querySelectorAll('.pk-top button')].find(b => /Aplicar/.test(b.textContent)).click();

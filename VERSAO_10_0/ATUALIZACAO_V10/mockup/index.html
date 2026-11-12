@@ -26,17 +26,16 @@
 <script>
 (function(){
   var app = document.getElementById('app');
+  var salvo = null;
+  try{ salvo = JSON.parse(localStorage.getItem('vooalto_peca_teste')||'null'); }catch(e){}
   window.PecaEditor.montar(app, {
+    estado: salvo,
     onChange: function(est){ try{ localStorage.setItem('vooalto_peca_teste', JSON.stringify(est)); }catch(e){} },
     onAplicar: function(est){
       try{ localStorage.setItem('vooalto_peca_teste', JSON.stringify(est)); }catch(e){}
       alert('Peça salva neste navegador (teste do estúdio).');
     }
   });
-  try{
-    var salvo = JSON.parse(localStorage.getItem('vooalto_peca_teste')||'null');
-    if (salvo) window.PecaEditor.carregar(salvo), window.PecaEditor.montar(app, {estado: salvo});
-  }catch(e){}
 })();
 </script>
 </body>
