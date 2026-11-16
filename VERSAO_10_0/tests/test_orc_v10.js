@@ -106,8 +106,15 @@ const fs = require('fs');
   passo('form-item-tecido-0','form-item-modelo-0',true);
   t('Tab no último campo não prende o foco (segue nativo para "Adicionar Item")',
     `__tabProbe('form-item-unit-1',false)==='form-item-unit-1|nativo'`);
-  t('Shift+Tab no primeiro campo não prende o foco (segue nativo)',
-    `__tabProbe('form-item-modelo-0',true)==='form-item-modelo-0|nativo'`);
+  /* V10.7 — o Sinal da produção tem duas caixas ANTES dos itens (percentual e
+     valor), então o Shift+Tab do primeiro item volta para o valor do sinal —
+     e a ponta de cima da lista agora é a porcentagem do sinal. */
+  t('Shift+Tab no primeiro item volta para o valor do sinal',
+    `__tabProbe('form-item-modelo-0',true)==='orcSinalVal|bloqueou'`);
+  t('Tab anda entre as caixas do sinal (percentual → valor)',
+    `__tabProbe('orcSinalPct',false)==='orcSinalVal|bloqueou'`);
+  t('Shift+Tab na primeira caixa do sinal não prende o foco (segue nativo)',
+    `__tabProbe('orcSinalPct',true)==='orcSinalPct|nativo'`);
   t('Tab num botão do painel não é interceptado',
     `(function(){var el=document.querySelector('#tab-itens .btn');el.focus();var ev=new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true});el.dispatchEvent(ev);return !ev.defaultPrevented})()`);
   t('Tab com Ctrl não é interceptado',

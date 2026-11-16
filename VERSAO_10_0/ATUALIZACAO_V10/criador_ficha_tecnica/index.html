@@ -37,7 +37,9 @@
 --az:#1E2937;--azm:#2D3F55;--azc:#EEF2F8;--ro:#D4187A;
 --vd:#166534;--vm:#DC2626;--tx:#1a1a2e;--txl:#6b7280;--bd:#D1D5DB;
 --bg:#F9FAFB;--br:var(--v10-paper);--hd:#3B82F6;--ar:#1D4ED8;
---sidebar-w:296px;
+/* V10.7 — a barra lateral ficou 50% mais larga (296px → 444px): mais respiro
+   nos rótulos e os botões das ferramentas da página distribuem em 3 colunas. */
+--sidebar-w:444px;
 --glass-bg:rgba(15,23,42,.78);
 --glass-border:rgba(255,255,255,.12);
 --glass-card:rgba(255,255,255,.06);
@@ -220,9 +222,11 @@ opacity:0;transition:opacity .13s,background .13s,color .13s;
 .sb-page-group:hover .sb-remove-page{opacity:1}
 .sb-remove-page:hover{background:var(--v10-err-bg);color:var(--v10-err)}
 .sb-remove-page svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.sb-page-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:7px}
+/* V10.7 — barra mais larga: 3 colunas distribuem melhor as ferramentas
+   (a página 1 tem 8 botões: 3+3+2; as extras têm 6: 3+3). */
+.sb-page-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:8px}
 .sb-page-actions .sb-btn{
-width:100%;margin:0;height:31px;padding:0 8px;gap:7px;border-radius:6px;
+width:100%;margin:0;height:33px;padding:0 8px;gap:7px;border-radius:6px;
 font-size:10.5px;font-weight:600;background:var(--sb-hover);
 }
 .sb-page-actions .sb-btn:hover{background:var(--sb-active)}
@@ -241,6 +245,15 @@ cursor:pointer;transition:background .13s,border-color .13s,color .13s;
 .sb-add-page:hover{border-color:rgba(212,24,122,.55);color:var(--sb-rosa2);background:rgba(212,24,122,.06)}
 .sb-add-page-icon{display:flex;align-items:center;flex-shrink:0}
 .sb-add-page svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* V10.7 — com a barra mais larga, os dois botões de página nova ficam lado a
+   lado (mesma força, mesma altura) e os pares de backup dividem a linha. */
+.sb-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 4px}
+.sb-add-grid .sb-add-page{width:100%;margin:0;padding:0 8px}
+.sb-pair{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 3px}
+.sb-pair .sb-btn{width:100%;margin:0;height:31px;padding:0 8px;font-size:10.5px}
+.sb-pair .sb-btn-label{white-space:normal;line-height:1.2}
+#sidebar.collapsed .sb-add-grid,#sidebar.collapsed .sb-pair{display:flex;flex-direction:column;gap:3px;margin:0 0 3px 4px}
+#sidebar.collapsed .sb-pair .sb-btn{margin:0}
 
 /* ═══ CAMPOS (AJUSTES) ═══ */
 .sb-field{
@@ -577,6 +590,20 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .pecas-card{min-width:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
 .pecas-lbl{font-size:6.5px;font-weight:700;color:var(--az);text-decoration:underline;text-align:center;line-height:1.3}
 .pecas-num{width:46px;height:36px;border:2px solid var(--az);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:var(--az);background:var(--bg)}
+/* V10.7 — a grade da página nova nasce VAZIA. Este botão pequeno na lateral
+   copia a grade de tamanhos da página anterior para os casos raros em que as
+   duas folhas usam a mesma grade. Não sai na impressão nem no PNG. */
+.grade-copiar{
+flex-shrink:0;width:34px;min-height:66px;
+display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+border:1.5px dashed var(--bd);border-radius:6px;background:var(--azc);
+color:var(--az);font-family:inherit;cursor:pointer;padding:4px 2px;
+transition:background .15s,border-color .15s,color .15s;
+}
+.grade-copiar svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.grade-copiar span{font-size:6.5px;font-weight:800;letter-spacing:.2px;text-transform:uppercase;text-align:center;line-height:1.25}
+.grade-copiar:hover{background:#FFF0F8;border-color:var(--ro);color:var(--ro)}
+.grade-copiar:active{transform:translateY(1px)}
 
 /* SEPARADOR */
 .sep-wrap{display:flex;justify-content:center;padding:2px 0;flex-shrink:0;position:relative;margin-left:-14px;margin-right:-14px;}
@@ -797,7 +824,7 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .folha.print-skip,.folha-branca.print-skip{display:none!important}
 html,body{width:210mm;height:auto;background:#fff!important;color:var(--tx)!important;color-scheme:light!important;margin:0!important;padding:0!important;font-size:11px!important}
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-#sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb,#fichaFloatCta,#fichaSugBox{display:none!important}
+#sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb,#fichaFloatCta,#fichaSugBox,.grade-copiar{display:none!important}
 .dc-inp:empty::before{content:none!important}
 #pw{padding:0!important;display:block!important;background:#fff!important;min-height:unset!important;gap:0!important;margin-left:0!important}
 .page-label{display:none!important}
@@ -1152,7 +1179,7 @@ body.mke-exportando .canvas-tb,body.mke-exportando .text-tb,body.mke-exportando 
 body.mke-exportando .shape-tb,body.mke-exportando .canvas-add-img,body.mke-exportando .canvas-ph,
 body.mke-exportando .layers-panel,body.mke-exportando .lyr-h,body.mke-exportando .lyr-rot,
 body.mke-exportando .tl-resize,body.mke-exportando .tl-rot,body.mke-exportando .arr-h,
-body.mke-exportando .arr-rot,body.mke-exportando .arr-ep,body.mke-exportando .mke-menu{display:none!important}
+body.mke-exportando .arr-rot,body.mke-exportando .arr-ep,body.mke-exportando .mke-menu,body.mke-exportando .grade-copiar{display:none!important}
 /* moldura cuja foto se perdeu: sinaliza na tela, mas não sai no PDF/impressão */
 .img-layer.mke-sem-img{background:repeating-linear-gradient(45deg,rgba(245,158,11,.10) 0 10px,rgba(245,158,11,.03) 10px 20px)}
 .img-layer.mke-sem-img img{outline:2px dashed #f59e0b;outline-offset:-3px}
@@ -1297,14 +1324,17 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
       <!-- Grupos de páginas extras são inseridos aqui via JS -->
       <div id="extraPagesNav"></div>
 
-      <button title="Adicionar uma página (com o layout padrão)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
-        <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span>
-        <span class="sb-add-page-label">Adicionar página</span>
-      </button>
-      <button title="Adicionar uma página em branco" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')">
-        <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-file"/></svg></span>
-        <span class="sb-add-page-label">Página em branco</span>
-      </button>
+      <!-- V10.7 — os dois comandos lado a lado, distribuídos na barra larga -->
+      <div class="sb-add-grid">
+        <button title="Adicionar uma página com o layout padrão — dados do cliente, produção e nº da ficha iguais à folha 1; a GRADE nasce vazia (botão “Mesma grade” copia a da página anterior)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
+          <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span>
+          <span class="sb-add-page-label">Adicionar página</span>
+        </button>
+        <button title="Adicionar uma página em branco (só o nº da ficha é herdado)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')">
+          <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-file"/></svg></span>
+          <span class="sb-add-page-label">Página em branco</span>
+        </button>
+      </div>
     </div>
 
     <!-- ─── MINHAS FICHAS ─── -->
@@ -1317,14 +1347,17 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
         <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-save"/></svg></span>
         <span class="sb-btn-label">Exportar tudo (com rascunhos)</span>
       </button>
-      <button class="sb-btn" id="btnImportarBackupFicha" onclick="$('fichaJsonInput').click()" title="Importar backup completo (.json) ou uma ficha técnica individual (.json)">
-        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-folder-open"/></svg></span>
-        <span class="sb-btn-label">Importar backup (.json)</span>
-      </button>
-      <button class="sb-btn" onclick="exportarFichaJSON()" title="Baixar apenas esta ficha aberta em .json">
-        <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-upload"/></svg></span>
-        <span class="sb-btn-label">Exportar só esta ficha</span>
-      </button>
+      <!-- V10.7 — par lado a lado: importar / exportar a ficha aberta -->
+      <div class="sb-pair">
+        <button class="sb-btn" id="btnImportarBackupFicha" onclick="$('fichaJsonInput').click()" title="Importar backup completo (.json) ou uma ficha técnica individual (.json)">
+          <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-folder-open"/></svg></span>
+          <span class="sb-btn-label">Importar backup (.json)</span>
+        </button>
+        <button class="sb-btn" onclick="exportarFichaJSON()" title="Baixar apenas esta ficha aberta em .json">
+          <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-upload"/></svg></span>
+          <span class="sb-btn-label">Exportar só esta ficha</span>
+        </button>
+      </div>
     </div>
 
     <!-- ─── AJUSTES ─── -->
@@ -1984,7 +2017,8 @@ try{if(typeof v7Renumerar==='function')v7Renumerar();}catch(e){}
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Autosave==='function')v7Autosave();
 if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
-toast(`✔ Página ${num} adicionada!`,'sucesso');
+/* V10.7 — a página nova lembra: mesmos dados/nº, grade vazia. */
+toast(`✔ Página ${num} adicionada — mesmos dados e nº; grade vazia (botão “Mesma grade” copia a anterior)`,'sucesso',3400);
 snap();
 }
 
@@ -2298,6 +2332,8 @@ ${[...Array(7)].map(()=>`<td><input class="gi" data-g="${pid}i" type="text" inpu
 </tbody></table>
 </div>
 <div class="pecas-card"><div class="pecas-lbl">Total<br>de Peças</div><div class="pecas-num" id="totalPecas_${pid}">—</div></div>
+<button type="button" class="grade-copiar" id="gradeCopiar_${pid}" onclick="copiarGradePaginaAnterior('${pid}')" title="A grade desta página nasce vazia. Se ela usa a MESMA grade de tamanhos da página anterior (caso raro), clique aqui para copiar os números.">
+<svg viewBox="0 0 24 24"><use href="#i-swap"/></svg><span>Mesma<br>grade</span></button>
 </div></div></div>
 
 <div class="sep-wrap" style="margin-top:4px">
@@ -2469,10 +2505,11 @@ document.addEventListener('input',e=>{
 
 /* ═══ ESPELHO DA FOLHA 1 (V10) ═══
    A folha 1 é a CONFIGURAÇÃO da ficha: número, data, previsão, separador (texto
-   e tamanho), títulos das seções, aviso, tipo de tecido, paleta de cores, grade
-   de produção, medidas, produção e entrada. As páginas 2, 3… são a MESMA ficha
-   com outra arte — a página extra é cópia, nunca origem (mesma regra que o
-   v8MedSync já usava para as medidas).
+   e tamanho), títulos das seções, aviso, tipo de tecido, paleta de cores,
+   medidas, produção e entrada. As páginas 2, 3… são a MESMA ficha com outra
+   arte — a página extra é cópia, nunca origem (mesma regra que o v8MedSync já
+   usava para as medidas). Assim os dados do cliente, as informações da
+   produção e o número da ficha se mantêm IGUAIS em todas as páginas.
 
    Antes, ao criar a página, só parte disso era copiada: o tamanho do separador,
    o título das cores, o título do tecido e o aviso ficavam com o padrão de
@@ -2481,7 +2518,11 @@ document.addEventListener('input',e=>{
    aviso velho e a paleta de quando a página nasceu.
 
    Tudo aqui é idempotente: rodar de novo sem mudança não toca no DOM (o que
-   evita recriar a paleta e os campos enquanto o usuário digita na folha 1). */
+   evita recriar a paleta e os campos enquanto o usuário digita na folha 1).
+
+   V10.7 — EXCEÇÃO: a grade de produção não é mais espelhada; cada página tem
+   a sua e a página nova nasce com ela vazia (copiarGradePaginaAnterior copia
+   a da página anterior quando as duas folhas usam a mesma grade). */
 
 const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','coresTitulo','tipoTitulo','avisoTxt'];
 
@@ -2539,21 +2580,11 @@ function espelharCoresP1(p){
   return origem.length;
 }
 
-/* Grade de produção (masculino / baby look / infantil). */
-function espelharGradeP1(p){
-  let mudou=0;
-  ['m','b','i'].forEach(g=>{
-    const src=[...document.querySelectorAll(`.gi[data-g="${g}"]`)];
-    const dst=[...document.querySelectorAll(`.gi[data-g="${p.id}${g}"]`)];
-    src.forEach((el,i)=>{
-      if(!dst[i])return;
-      if(dst[i].value!==el.value){dst[i].value=el.value;mudou++;}
-      dst[i].classList.toggle('v',(parseInt(el.value)||0)>0);
-    });
-  });
-  if(mudou)recalcGradeExtra(p);
-  return mudou;
-}
+/* V10.7 — a grade de produção NÃO é mais espelhada: cada página tem a sua,
+   e a página nova nasce com ela vazia. Quando as duas folhas usam a mesma
+   grade (caso raro), o botão “Mesma grade” na lateral da grade copia os
+   números da página anterior (copiarGradePaginaAnterior). Os demais dados —
+   dados do cliente, produção, entrada, nº da ficha — continuam espelhados. */
 
 /* Tabela de medidas (feminino / masculino). */
 function espelharMedidasP1(p){
@@ -2602,23 +2633,23 @@ function espelharProducaoP1(p){
    (autosave, JSON, desfazer) devolvia o campo 14 e o texto em 7px. */
 function aplicarSepFontSizeP1(){applySepFontSize('sepTxt','sepFontSize');}
 
-/* Espelha a folha 1 para UMA página (usado ao criar a página). */
+/* Espelha a folha 1 para UMA página (usado ao criar a página).
+   V10.7 — a grade não é mais copiada: a página nova nasce com ela vazia. */
 function copiarP1paraExtra(p){
   if(!p||p.tipo==='branca')return;
   sincTodasPaginas();
   espelharCamposP1(p);
   espelharCoresP1(p);
-  espelharGradeP1(p);
   espelharMedidasP1(p);
   espelharProducaoP1(p);
 }
 
-/* Espelha para TODAS as páginas extras (usado quando a folha 1 muda). */
+/* Espelha para TODAS as páginas extras (usado quando a folha 1 muda).
+   V10.7 — sem espelhar a grade (cada página tem a sua). */
 function sincronizarPaginasExtra(){
   const alvos=paginasEspelhadas();
   alvos.forEach(espelharCamposP1);
   alvos.forEach(espelharCoresP1);
-  alvos.forEach(espelharGradeP1);
   alvos.forEach(espelharMedidasP1);
   alvos.forEach(espelharProducaoP1);
   /* V10.2 — as páginas BRANCAS também recebem o nº da ficha (só o número:
@@ -2636,13 +2667,14 @@ function espelharAgendar(){
 }
 
 /* Origem do espelho: só a folha 1. Cobre input, select, contenteditable e os
-   campos criados depois (delegação no documento). */
+   campos criados depois (delegação no documento). V10.7 — a grade (.gi) saiu
+   da lista: ela não é mais espelhada, cada página tem a sua. */
 function _eOrigemDoEspelho(t){
   if(!t||typeof t.closest!=='function')return false;
   if(!t.closest('#folha1'))return false;
   if(t.id&&P1_CAMPOS_ESPELHADOS.indexOf(t.id)>=0)return true;
   if(t.id==='sepFontSize'||t.id==='tipoTecido')return true;
-  if(t.classList&&(t.classList.contains('gi')||t.classList.contains('med-inp')||t.classList.contains('field')))return true;
+  if(t.classList&&(t.classList.contains('med-inp')||t.classList.contains('field')))return true;
   if(t.closest&&t.closest('#prodLinhas'))return true;
   return false;
 }
@@ -2708,6 +2740,47 @@ document.querySelectorAll(`.gi[data-g="${pid}i"]`).forEach(x=>i+=parseInt(x.valu
 const tM=$('tM_'+pid),tB=$('tB_'+pid),tI=$('tI_'+pid),tp=$('totalPecas_'+pid);
 if(tM)tM.textContent=m||'—';if(tB)tB.textContent=b||'—';if(tI)tI.textContent=i||'—';
 if(tp)tp.textContent=(m+b+i)||'—';
+}
+
+/* ═══ V10.7 — A GRADE É DE CADA PÁGINA ═══
+   A página nova nasce com a grade VAZIA (a folha 1 não espelha mais os seus
+   números nas páginas adicionadas). Nos casos raros em que a página usa a
+   MESMA grade de tamanhos da anterior, o botão pequeno na lateral da grade
+   copia os números da página que vem antes dela na ordem: a folha 1 para a
+   página 2, a página 2 para a 3, e assim por diante — páginas brancas não
+   têm grade e são puladas. */
+function _pagGradeArr(pid){
+const pega=g=>[...document.querySelectorAll(`.gi[data-g="${pid}${g}"]`)].map(el=>el.value);
+return {m:pega('m'),b:pega('b'),i:pega('i')};
+}
+function _gradeSigOf(g){g=g||{};return ['m','b','i'].map(k=>(g[k]||[]).join(',')).join('|');}
+function copiarGradePaginaAnterior(pid){
+const folhas=[...document.querySelectorAll('#pw .folha')];
+const idx=folhas.indexOf(document.getElementById('folha_'+pid));
+if(idx<1){toast('Não há página anterior para copiar.','erro');return;}
+let origem=null;
+for(let i=idx-1;i>=0;i--){
+const fid=folhas[i].id;
+if(fid==='folha1'){origem='folha1';break;}
+const ant=paginas.find(x=>x.id===fid.replace('folha_',''));
+if(ant&&ant.tipo!=='branca'){origem=ant.id;break;}
+}
+if(!origem){toast('A página anterior não tem grade para copiar.','erro');return;}
+const sel=g=>origem==='folha1'?`.gi[data-g="${g}"]`:`.gi[data-g="${origem}${g}"]`;
+let copiou=0;
+['m','b','i'].forEach(g=>{
+const src=[...document.querySelectorAll(sel(g))].map(el=>el.value);
+document.querySelectorAll(`.gi[data-g="${pid}${g}"]`).forEach((el,i)=>{
+if(src[i]===undefined)return;
+if(el.value!==src[i]){el.value=src[i];copiou++;}
+el.classList.toggle('v',(parseInt(src[i],10)||0)>0);
+});
+});
+const p=paginas.find(x=>x.id===pid);
+if(p)recalcGradeExtra(p);
+if(typeof snap==='function')snap();
+if(typeof v7Autosave==='function')v7Autosave();
+toast(copiou?'✔ Grade copiada da página anterior':'A grade anterior está vazia — nada para copiar.',copiou?'sucesso':'',2600);
 }
 
 /* ═══ CORES EXTRA ═══ */
@@ -3154,7 +3227,10 @@ const grade={};document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[da
 const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');cores.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});
 d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
-d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0}));
+/* V10.7 — a grade de CADA página entra no estado (desfazer/refazer). Antes a
+   grade era sempre cópia da folha 1, então bastava guardar a da folha 1;
+   agora cada página tem a sua, e ela volta junto no Ctrl+Z. */
+d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id)}));
 return d;
 }
 // Assinatura LEVE do estado — NÃO inclui src de imagens (que podem ser MBs), mas cobre todos os campos de texto e metadados das camadas.
@@ -3172,11 +3248,11 @@ function _layerSig(l){
   if(l.type==='rect'||l.type==='circle')s+='|'+(l.fillColor||'');
   return s;
 }
-/* Assinatura do conjunto de páginas extras (ordem + camadas de cada uma). */
+/* Assinatura do conjunto de páginas extras (ordem + camadas + grade de cada uma). */
 function _paginasSig(lista){
   var arr=lista||(typeof paginas!=='undefined'?paginas:[]);
   return arr.map(function(p){
-    return p.id+'#'+p.layers.length+'#['+p.layers.map(_layerSig).join(';')+']';
+    return p.id+'#'+p.layers.length+'#['+p.layers.map(_layerSig).join(';')+']#'+_gradeSigOf(typeof _pagGradeArr==='function'?_pagGradeArr(p.id):null);
   }).join('&');
 }
 /* Assinatura do ESTADO salvo (capState), sem dataURL: diz se mudou algo que
@@ -3190,6 +3266,8 @@ function _estadoSig(st){
   var g=st._grade||{};for(var i in g)p.push('g'+i+'='+g[i]);
   p.push('C='+(st._cores||[]).map(function(c){return (c.hex||'')+(c.nome||'');}).join('~'));
   p.push('L='+(st._layers||[]).map(_layerSig).join(';'));
+  /* V10.7 — a grade de cada página também diferencia estados */
+  p.push('GE='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+_gradeSigOf(x.grade);}).join('&'));
   p.push('P='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+(x.layers||[]).map(_layerSig).join(';');}).join('&'));
   return p.join('\u0002');
 }
@@ -3258,6 +3336,16 @@ if(Array.isArray(s._paginasDetalhe)){
       else if(x.type==='rect'){addRectLayerExtra(p,x);}
       else if(x.type==='circle'){addCirculoLayerExtra(p,x);}
     });
+    /* V10.7 — a grade de cada página volta junto no desfazer/refazer */
+    if(snap.grade){
+      ['m','b','i'].forEach(g=>{
+        const arr=snap.grade[g]||[];
+        document.querySelectorAll(`.gi[data-g="${p.id}${g}"]`).forEach((el,i)=>{
+          if(arr[i]!==undefined){el.value=arr[i];el.classList.toggle('v',(parseInt(arr[i],10)||0)>0);}
+        });
+      });
+      if(typeof recalcGradeExtra==='function')recalcGradeExtra(p);
+    }
     if(typeof updPhExtra==='function')updPhExtra(p);
   });
 }

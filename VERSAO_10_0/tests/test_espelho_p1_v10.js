@@ -8,12 +8,16 @@
    Quando o usuário adiciona a página 2 (ou 3, 4…), ela tem de nascer IGUAL —
    é a mesma ficha, só com outra arte. O que este arquivo trava:
 
-   1. cópia na criação (copiarP1paraExtra): todos os campos acima;
+   1. cópia na criação (copiarP1paraExtra): os campos acima (V10.7: MENOS a
+      grade de produção — a página nova nasce com a grade VAZIA);
    2. espelho depois disso: mudou na folha 1, muda nas outras páginas — antes
       só as medidas (v8MedSync) e os dados do cliente (sincTodasPaginas)
       acompanhavam, então trocar o título das cores, o texto do aviso, o
       tamanho do separador ou acrescentar uma cor deixava a página 2 com a
-      configuração antiga, e a ficha impressa saía inconsistente. */
+      configuração antiga, e a ficha impressa saía inconsistente.
+   3. V10.7 — a grade é de cada página: não espelha, não acompanha; o botão
+      “Mesma grade” na lateral copia a grade da página anterior (caso raro de
+      folhas com a mesma grade de tamanhos). */
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { BASE } = require('./_base');
@@ -94,11 +98,15 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   });
   ok('paleta de cores (nomes e hex)', cores2.length === 2 && cores2[0] === 'VERMELHO|#FF0000' && cores2[1] === 'VERDE|#00AA55', cores2);
 
+  /* V10.7 — a grade da página nova nasce VAZIA (é a exceção do espelho).
+     O botão “Mesma grade” fica na lateral da grade para os casos raros em
+     que a página usa a mesma grade da anterior. */
   const gradeP2 = g => [...d.querySelectorAll(`#folha_p2 .gi[data-g="p2${g}"]`)].map(e => e.value).join(',');
-  ok('grade masculino', gradeP2('m') === '1,2,3,4,5,6,7,8,9,10', gradeP2('m'));
-  ok('grade baby look', gradeP2('b') === '2,3,4,5,6,7,8,9,10,11', gradeP2('b'));
-  ok('grade infantil', gradeP2('i') === '3,4,5,6,7,8,9', gradeP2('i'));
-  ok('total de peças acompanha', ($('totalPecas_p2') || {}).textContent !== '—', ($('totalPecas_p2') || {}).textContent);
+  ok('grade masculino nasce vazia', gradeP2('m') === ',,,,,,,,,', gradeP2('m'));
+  ok('grade baby look nasce vazia', gradeP2('b') === ',,,,,,,,,', gradeP2('b'));
+  ok('grade infantil nasce vazia', gradeP2('i') === ',,,,,,', gradeP2('i'));
+  ok('total de peças da página 2 fica em —', ($('totalPecas_p2') || {}).textContent === '—', ($('totalPecas_p2') || {}).textContent);
+  ok('o botão “Mesma grade” existe na página 2', !!$('gradeCopiar_p2'), !!$('gradeCopiar_p2'));
 
   const med = sel => [...d.querySelectorAll(sel)].map(e => e.value).join(',');
   ok('medidas femininas', med('#folha_p2 .med-bloco.fem .med-inp') === med('#folha1 .med-bloco.fem .med-inp'));
@@ -107,6 +115,15 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   const prod = pid => [...d.querySelectorAll(`#prodLinhas_${pid} tr`)].map(tr => [...tr.querySelectorAll('input')].map(i => i.value).join('|')).join(' / ');
   ok('linhas de produção', prod('p2') === prod('prodLinhas') || prod('p2') === [...d.querySelectorAll('#prodLinhas tr')].map(tr => [...tr.querySelectorAll('input')].map(i => i.value).join('|')).join(' / '), prod('p2'));
   ok('entrada', $('entradaVal_p2') && $('entradaVal_p2').value === '500,00', $('entradaVal_p2') && $('entradaVal_p2').value);
+
+  /* ── 2b. o botão “Mesma grade” copia a grade da página anterior ── */
+  console.log('\n── 2b. Botão “Mesma grade” copia a grade da página anterior ──');
+  w.eval("copiarGradePaginaAnterior('p2')");
+  await wait(250);
+  ok('grade masculino copiada da folha 1', gradeP2('m') === '1,2,3,4,5,6,7,8,9,10', gradeP2('m'));
+  ok('grade baby look copiada', gradeP2('b') === '2,3,4,5,6,7,8,9,10,11', gradeP2('b'));
+  ok('grade infantil copiada', gradeP2('i') === '3,4,5,6,7,8,9', gradeP2('i'));
+  ok('total de peças acompanha a cópia', ($('totalPecas_p2') || {}).textContent === '162', ($('totalPecas_p2') || {}).textContent);
 
   /* ── 3. mexer na folha 1 depois continua espelhando ── */
   console.log('\n── 3. Mudança na folha 1 depois da página criada ──');
@@ -137,7 +154,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   ok('título do tecido novo', $('tipoTitulo_p2').value === 'TECIDO REVISADO', $('tipoTitulo_p2').value);
   ok('número novo', $('fichaNum_p2').value === '9999', $('fichaNum_p2').value);
   ok('previsão nova', $('previsao_p2').value === '60 dias', $('previsao_p2').value);
-  ok('grade nova', d.querySelectorAll('#folha_p2 .gi[data-g="p2m"]')[0].value === '77', d.querySelectorAll('#folha_p2 .gi[data-g="p2m"]')[0].value);
+  /* V10.7 — a grade da página 2 é independente: mudou na folha 1, a página
+     2 mantém os números que já tem (a cópia só acontece pelo botão). */
+  ok('grade da folha 1 mudou', d.querySelectorAll('#folha1 .gi[data-g="m"]')[0].value === '77', d.querySelectorAll('#folha1 .gi[data-g="m"]')[0].value);
+  ok('grade da página 2 NÃO acompanha (fica independente)', d.querySelectorAll('#folha_p2 .gi[data-g="p2m"]')[0].value === '1', d.querySelectorAll('#folha_p2 .gi[data-g="p2m"]')[0].value);
   ok('cor nova entrou na página 2 (sem duplicar as antigas)',
     d.querySelectorAll('#coresList_p2 [id^="ci_"]').length === 3,
     d.querySelectorAll('#coresList_p2 [id^="ci_"]').length);
@@ -151,13 +171,18 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     [...d.querySelectorAll('#coresList_p2 [id^="ci_"]')].map(it => ($('cni_' + it.id.replace('ci_', '')) || {}).value));
 
   /* ── 4. terceira página herda o estado já revisado ── */
-  console.log('\n── 4. Página 3 herda a revisão ──');
+  console.log('\n── 4. Página 3 herda a revisão (e a grade vem da página 2 pelo botão) ──');
   w.eval('adicionarPagina()');
   await wait(400);
   ok('página 3 com o separador revisado', $('sepTxt_p3') && $('sepTxt_p3').value === '▸ NOVO SEPARADOR ◂', $('sepTxt_p3') && $('sepTxt_p3').value);
   ok('página 3 com o aviso revisado', $('avisoTxt_p3') && $('avisoTxt_p3').value === '⚠ AVISO REVISADO');
   ok('página 3 com as 3 cores', d.querySelectorAll('#coresList_p3 [id^="ci_"]').length === 3, d.querySelectorAll('#coresList_p3 [id^="ci_"]').length);
-  ok('página 3 com a grade revisada', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value === '77');
+  ok('página 3 com a grade VAZIA', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value === '', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value);
+  /* o “anterior” da página 3 é a página 2 (não a folha 1): a página 2 tem a
+     grade copiada antes da revisão da folha 1, então o primeiro número é 1. */
+  w.eval("copiarGradePaginaAnterior('p3')");
+  await wait(250);
+  ok('botão da página 3 copia a grade da página 2', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value === '1', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value);
   ok('página 2 não foi duplicada nem apagada', d.querySelectorAll('#coresList_p2 [id^="ci_"]').length === 3, d.querySelectorAll('#coresList_p2 [id^="ci_"]').length);
 
   /* ── 5. remover uma página do meio e adicionar outra ── */
