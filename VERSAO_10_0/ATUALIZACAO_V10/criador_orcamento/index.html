@@ -115,6 +115,49 @@
     .orc-running-total b { font-size: 16px; color: var(--v10-pink); text-transform: none; letter-spacing: 0; }
     .orc-running-total .ort-items { font-size: 10px; color: var(--v10-t3); text-transform: none; }
 
+    /* V10.7 — SINAL DA PRODUÇÃO: por padrão mostra EXATAMENTE 50% do Total
+       geral; a porcentagem é editável e, nos casos raros, o valor pode ser
+       digitado por cima (valor fixo). Acompanha os itens em todas as páginas. */
+    .orc-sinal {
+      margin: 10px 14px 0;
+      padding: 10px 12px;
+      background: var(--v10-surface-2);
+      border: 1px solid var(--v10-line);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .orc-sinal-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .orc-sinal-rot { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px; color: var(--v10-t3); }
+    .orc-sinal-pct { display: flex; align-items: center; gap: 4px; color: var(--v10-t2); font-size: 11px; font-weight: 800; }
+    .orc-sinal-pct input {
+      width: 52px; height: 26px; padding: 0 4px; text-align: center;
+      border: 1px solid var(--v10-line); border-radius: 7px;
+      background: var(--v10-surface); color: var(--v10-t1);
+      font-family: inherit; font-size: 12px; font-weight: 800; outline: none;
+    }
+    .orc-sinal-pct input:focus { border-color: var(--v10-pink); box-shadow: 0 0 0 2px rgba(212, 24, 122, .14); }
+    .orc-sinal-val { display: flex; align-items: baseline; gap: 6px; color: var(--v10-t2); }
+    .orc-sinal-val > span { font-size: 11px; font-weight: 800; color: var(--v10-t3); }
+    .orc-sinal-val input {
+      flex: 1; min-width: 0; height: 32px; padding: 0 8px; text-align: right;
+      border: 1px solid var(--v10-line); border-radius: 8px;
+      background: var(--v10-surface); color: var(--v10-t1);
+      font-family: inherit; font-size: 16px; font-weight: 800; outline: none;
+    }
+    .orc-sinal-val input:focus { border-color: var(--v10-pink); box-shadow: 0 0 0 2px rgba(212, 24, 122, .14); }
+    .orc-sinal-val input.orc-sinal-fixo { border-color: var(--v10-pink); color: var(--v10-pink); }
+    .orc-sinal-reset {
+      width: 28px; height: 28px; padding: 0; flex-shrink: 0;
+      border: 1px solid var(--v10-line); border-radius: 7px;
+      background: var(--v10-surface); color: var(--v10-t2);
+      font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
+      transition: background .13s, border-color .13s, color .13s;
+    }
+    .orc-sinal-reset:hover { border-color: var(--v10-pink); color: var(--v10-pink); background: rgba(212, 24, 122, .08); }
+    .orc-sinal-sub { font-size: 9.5px; color: var(--v10-t3); letter-spacing: .1px; }
+
     .btn-dup-row {
       position: absolute;
       top: 12px;
@@ -1110,6 +1153,25 @@
         <div class="ort-values"><b id="orcRunningTotal">R$ 0,00</b><span class="ort-items" id="orcRunningItems">0 itens</span></div>
       </div>
 
+      <!-- V10.7 — Sinal da produção: exatamente 50% do Total geral por padrão.
+           A porcentagem pode mudar e, nos casos raros, o valor pode ser
+           digitado por cima (valor fixo). Não sai na impressão. -->
+      <div class="orc-sinal" id="orcSinalBox" title="Sinal da produção: mostra exatamente 50% do Total geral (a entrada/sinal do pedido). Mude a porcentagem ao lado ou digite um valor por cima quando precisar de um valor diferente.">
+        <div class="orc-sinal-top">
+          <span class="orc-sinal-rot">Sinal da produção</span>
+          <div class="orc-sinal-pct">
+            <input type="number" id="orcSinalPct" min="1" max="100" step="1" value="50" oninput="orcSinalAoMudarPct()" title="Porcentagem do Total geral — padrão 50%">
+            <span>%</span>
+          </div>
+        </div>
+        <div class="orc-sinal-val">
+          <span>R$</span>
+          <input type="text" id="orcSinalVal" inputmode="decimal" placeholder="0,00" oninput="orcSinalAoDigitarValor()" onblur="orcSinalAoSair()" title="50% do Total geral — acompanha os itens. Digite por cima para fixar um valor (caso raro); o botão ↺ volta a calcular pela porcentagem.">
+          <button type="button" class="orc-sinal-reset" id="orcSinalReset" onclick="orcSinalVoltarAoPercentual()" title="Voltar a calcular pela porcentagem">↺</button>
+        </div>
+        <span class="orc-sinal-sub" id="orcSinalSub">Exatamente 50% do Total geral · acompanha os itens</span>
+      </div>
+
       <!-- Editor Content -->
       <div class="editor-content">
         
@@ -1416,6 +1478,8 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
         version: 'vooalto_orcamento_v9',
         form: form,
         pages: documentPages.map(p => ({ id: p.id, tableItems: p.tableItems })),
+        /* V10.7 — sinal da produção (% e valor fixo quando houver) */
+        sinal: orcSinalEstado(),
         signature: (typeof currentSignatureBase64 !== 'undefined' && currentSignatureBase64 && currentSignatureBase64 !== DEFAULT_SIGNATURE) ? currentSignatureBase64 : ''
       };
     }
@@ -1588,6 +1652,8 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         activeFormPageIndex = 0;
         syncDocumentPagesDOM();
       }
+      /* V10.7 — sinal da produção volta como estava (% / valor fixo) */
+      orcSinalAplicarEstado(s.sinal);
       if (s.signature) currentSignatureBase64 = s.signature;
       return true;
     }
@@ -1603,6 +1669,10 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const today = new Date();
       const ds = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
       const ed = document.getElementById('edit-proposal-date'); if(ed) ed.value = ds;
+      /* V10.7 — orçamento novo: sinal volta ao padrão (50%, calculado) */
+      orcSinalModo = 'percentual';
+      const sPct = document.getElementById('orcSinalPct'); if (sPct) sPct.value = '50';
+      const sVal = document.getElementById('orcSinalVal'); if (sVal) { sVal.value = ''; sVal.classList.remove('orc-sinal-fixo'); }
       documentPages = [{ id: 1, tableItems: [] }];
       activeFormPageIndex = 0;
       syncDocumentPagesDOM();
@@ -2234,16 +2304,125 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     }
 
     function orcUpdateRunningTotal() {
+      const soma = orcSomaGeral();
+      const rt = document.getElementById('orcRunningTotal');
+      if (rt) rt.textContent = orcFmt(soma.tot);
+      const ri = document.getElementById('orcRunningItems');
+      if (ri) ri.textContent = soma.itens + (soma.itens === 1 ? ' item' : ' itens') + (soma.qtd ? ' · ' + soma.qtd + ' pçs' : '');
+      orcSinalAtualizar(soma.tot);
+    }
+
+    /* ══ V10.7 — SINAL DA PRODUÇÃO ══
+       Mostra EXATAMENTE 50% do Total geral (entrada/sinal do pedido). A
+       porcentagem é editável (1–100, padrão 50) e, nos casos raros, o valor
+       pode ser digitado por cima — vira “valor fixo” e para de acompanhar o
+       total até o botão ↺ (ou uma mudança de porcentagem) voltar ao cálculo.
+       O modo e o valor entram no autosave, nos rascunhos e no .json. */
+    let orcSinalModo = 'percentual'; /* 'percentual' calcula do total; 'fixo' usa o valor digitado */
+
+    function orcSomaGeral() {
       let tot = 0, itens = 0, qtd = 0;
       documentPages.forEach(p => p.tableItems.forEach(it => {
         tot += (it.qnt || 0) * (it.unit || 0);
         itens++;
         qtd += (it.qnt || 0);
       }));
-      const rt = document.getElementById('orcRunningTotal');
-      if (rt) rt.textContent = orcFmt(tot);
-      const ri = document.getElementById('orcRunningItems');
-      if (ri) ri.textContent = itens + (itens === 1 ? ' item' : ' itens') + (qtd ? ' · ' + qtd + ' pçs' : '');
+      return { tot, itens, qtd };
+    }
+
+    function orcSinalPctNum() {
+      const el = document.getElementById('orcSinalPct');
+      const v = parseFloat(String((el && el.value) || '').replace(',', '.'));
+      return (isFinite(v) && v > 0 && v <= 100) ? v : 50;
+    }
+
+    /* Aceita "1.234,56", "1234.56", "R$ 1.234,56" — igual à digitação de valores. */
+    function orcSinalParse(txt) {
+      let s = String(txt == null ? '' : txt).trim();
+      if (!s) return 0;
+      s = s.replace(/[^\d.,-]/g, '');
+      if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+      const v = parseFloat(s);
+      return isFinite(v) ? v : 0;
+    }
+
+    /* Número → texto pt-BR SEM o "R$ " (o cifrão fica no card). */
+    function orcSinalFmtNum(v) {
+      return (+v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    /* Chamado por orcUpdateRunningTotal (itens mudaram) e quando a
+       porcentagem muda. Em modo fixo NÃO sobrescreve o valor digitado. */
+    function orcSinalAtualizar(tot) {
+      const valEl = document.getElementById('orcSinalVal');
+      if (!valEl) return;
+      const sub = document.getElementById('orcSinalSub');
+      const pct = orcSinalPctNum();
+      if (orcSinalModo === 'fixo') {
+        if (sub) sub.textContent = 'Valor fixo (não acompanha o total) · ↺ volta ao ' + pct + '%';
+        return;
+      }
+      const sinal = (tot || 0) * pct / 100;
+      valEl.value = sinal ? orcSinalFmtNum(sinal) : '';
+      valEl.classList.remove('orc-sinal-fixo');
+      if (sub) sub.textContent = 'Exatamente ' + pct + '% do Total geral · acompanha os itens';
+    }
+
+    function orcSinalAoMudarPct() {
+      /* mudou a porcentagem → volta a calcular (o valor fixo era da % antiga) */
+      orcSinalModo = 'percentual';
+      orcUpdateRunningTotal();
+      scheduleOrcautosave();
+    }
+
+    function orcSinalAoDigitarValor() {
+      orcSinalModo = 'fixo';
+      const valEl = document.getElementById('orcSinalVal');
+      if (valEl) valEl.classList.add('orc-sinal-fixo');
+      const sub = document.getElementById('orcSinalSub');
+      const pct = orcSinalPctNum();
+      if (sub) sub.textContent = 'Valor fixo (não acompanha o total) · ↺ volta ao ' + pct + '%';
+      scheduleOrcautosave();
+    }
+
+    function orcSinalAoSair() {
+      /* formata o que foi digitado ao sair do campo ("1500" → "1.500,00") */
+      if (orcSinalModo !== 'fixo') return;
+      const valEl = document.getElementById('orcSinalVal');
+      if (!valEl) return;
+      const v = orcSinalParse(valEl.value);
+      valEl.value = v ? orcSinalFmtNum(v) : '';
+      scheduleOrcautosave();
+    }
+
+    function orcSinalVoltarAoPercentual() {
+      orcSinalModo = 'percentual';
+      orcUpdateRunningTotal();
+      scheduleOrcautosave();
+      orcToast('↺ Sinal voltou a calcular pela porcentagem');
+    }
+
+    /* O sinal entra no estado salvo (autosave, rascunhos e .json). */
+    function orcSinalEstado() {
+      const pct = document.getElementById('orcSinalPct');
+      const val = document.getElementById('orcSinalVal');
+      const st = { pct: pct ? pct.value : '50', modo: orcSinalModo };
+      if (orcSinalModo === 'fixo') st.fixo = val ? val.value : '';
+      return st;
+    }
+
+    function orcSinalAplicarEstado(s) {
+      if (!s || typeof s !== 'object') return;
+      const pct = document.getElementById('orcSinalPct');
+      const val = document.getElementById('orcSinalVal');
+      if (pct && s.pct != null && String(s.pct) !== '') pct.value = s.pct;
+      if (s.modo === 'fixo' || (s.fixo != null && s.fixo !== '')) {
+        orcSinalModo = 'fixo';
+        if (val) { val.value = (s.fixo != null ? s.fixo : '') || ''; val.classList.add('orc-sinal-fixo'); }
+      } else {
+        orcSinalModo = 'percentual';
+        if (val) val.classList.remove('orc-sinal-fixo');
+      }
     }
 
     function itemKeydown(e, idx, field) {

@@ -1,5 +1,48 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.7.0 — Grade independente por página, sinal de 50% no Orçamento e barra lateral maior (2026-11-16)
+
+**Ficha Técnica**
+
+- **Página nova nasce com a grade VAZIA.** Até a V10.6.6 a grade de produção
+  (tamanhos × quantidades) era copiada da folha 1 e continuava espelhando
+  qualquer mudança dela. Agora a grade é de **cada página**: quem adiciona
+  página para uma peça com grade diferente não precisa mais apagar os números
+  herdados um a um. Os demais dados — **dados do cliente, linhas de produção,
+  entrada e o número da ficha** — continuam espelhados da folha 1 em todas as
+  páginas, como eram.
+- **Botão “Mesma grade” na lateral da grade** das páginas extras: para os
+  casos raros em que a página usa a mesma grade de tamanhos da anterior, um
+  clique copia os números da página que vem antes dela (folha 1 para a
+  página 2, página 2 para a 3…; páginas brancas são puladas). O botão não
+  aparece na folha 1, não sai na impressão nem no PNG.
+- Duplicar página (⧉) continua copiando a grade preenchida, como antes.
+- Desfazer/refazer (Ctrl+Z/Ctrl+Y) agora devolve também a grade de cada página
+  (antes só a da folha 1 — a das extras era sempre cópia).
+- Salvar/rascunho/backup (.json) já guardavam a grade por página; o
+  comportamento não muda para fichas salvas.
+- **Barra lateral 50% mais larga** (296px → 444px) e botões redistribuídos:
+  ferramentas de página em 3 colunas, “Adicionar página” e “Página em branco”
+  lado a lado, e “Importar backup” + “Exportar só esta ficha” dividindo a
+  mesma linha.
+
+**Orçamento**
+
+- **Sinal da produção**: cartão abaixo do Total geral mostrando **exatamente
+  50% do total** dos itens (todas as páginas), atualizando junto com eles.
+- A **porcentagem é editável** (padrão 50%; muda e recalcula na hora) e, nos
+  casos raros, o **valor pode ser digitado por cima** — vira valor fixo, não
+  acompanha mais o total até o botão **↺** (ou uma mudança de porcentagem)
+  voltar ao cálculo. O valor digitado é formatado ao sair do campo
+  (“350” → “350,00”; aceita “R$ 1.234,56”).
+- O modo (percentual/fixo), a porcentagem e o valor entram no autosave, nos
+  rascunhos, no .json e no desfazer/refazer do orçamento. “Novo orçamento”
+  volta ao padrão (50% calculado). Não aparece na folha impressa.
+- `version.json`, `package.json`/`package-lock.json` → **10.7.0**.
+- Testes: nova suíte `test_orc_sinal_v10.js` (32 verificações) e a suíte do
+  espelho da folha 1 passou a travar o novo comportamento da grade
+  (57 verificações).
+
 ## V10.6.6 — Nome do arquivo do Recibo com cliente e data de hoje (2026-11-11)
 
 - Exportação PNG e JSON: `RECIBO - Nome do cliente - DD-MM-AAAA` (data local de hoje, independente da data do pagamento).
