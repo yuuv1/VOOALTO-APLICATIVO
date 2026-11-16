@@ -915,6 +915,28 @@
       z-index: 2;
     }
 
+    /* V10.7.1 — SINAL DA PRODUÇÃO na folha: logo abaixo do TOTAL, fecha a
+       proposta com a entrada (padrão: exatamente 50% do Total geral). A
+       porcentagem e o valor fixo são controlados no painel do orçamento. */
+    .sinal-bar {
+      width: 100%;
+      height: 36px;
+      background-color: #000000;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+      z-index: 2;
+    }
+    .sinal-bar.orc-sinal-fixo {
+      box-shadow: inset 0 -4px 0 var(--v10-pink);
+    }
+
     /* Payment Terms Section - FLOWING */
     .payment-terms {
       width: 100%;
@@ -1169,7 +1191,7 @@
           <input type="text" id="orcSinalVal" inputmode="decimal" placeholder="0,00" oninput="orcSinalAoDigitarValor()" onblur="orcSinalAoSair()" title="50% do Total geral — acompanha os itens. Digite por cima para fixar um valor (caso raro); o botão ↺ volta a calcular pela porcentagem.">
           <button type="button" class="orc-sinal-reset" id="orcSinalReset" onclick="orcSinalVoltarAoPercentual()" title="Voltar a calcular pela porcentagem">↺</button>
         </div>
-        <span class="orc-sinal-sub" id="orcSinalSub">Exatamente 50% do Total geral · acompanha os itens</span>
+        <span class="orc-sinal-sub" id="orcSinalSub">Exatamente 50% do Total geral · sai na folha do orçamento</span>
       </div>
 
       <!-- Editor Content -->
@@ -1356,6 +1378,13 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
           <!-- Total Bar -->
           <div class="total-bar" id="preview-total-bar-1">
             TOTAL: R$ 0,00
+          </div>
+
+          <!-- V10.7.1 — Sinal da produção: fecha a folha com a entrada
+               (padrão: exatamente 50% do Total geral). Só a ÚLTIMA página
+               da proposta mostra a barra. -->
+          <div class="sinal-bar" id="preview-sinal-bar-1">
+            SINAL DA PRODUÇÃO (50%): R$ 0,00
           </div>
 
           <!-- Payment Terms -->
@@ -1564,6 +1593,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
         ['.budget-title', `preview-budget-title-${pageId}`],
         ['.budget-table tbody', `preview-table-body-${pageId}`],
         ['.total-bar', `preview-total-bar-${pageId}`],
+        ['.sinal-bar', `preview-sinal-bar-${pageId}`],
         ['.payment-title', `preview-payment-title-${pageId}`],
         ['.payment-text', `preview-payment-text-${pageId}`],
         ['.signature-image', `preview-signature-${pageId}`],
@@ -2352,7 +2382,8 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
     }
 
     /* Chamado por orcUpdateRunningTotal (itens mudaram) e quando a
-       porcentagem muda. Em modo fixo NÃO sobrescreve o valor digitado. */
+       porcentagem muda. Em modo fixo NÃO sobrescreve o valor digitado.
+       V10.7.1 — atualiza também a barra do SINAL na folha A4. */
     function orcSinalAtualizar(tot) {
       const valEl = document.getElementById('orcSinalVal');
       if (!valEl) return;
@@ -2360,12 +2391,39 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const pct = orcSinalPctNum();
       if (orcSinalModo === 'fixo') {
         if (sub) sub.textContent = 'Valor fixo (não acompanha o total) · ↺ volta ao ' + pct + '%';
-        return;
+      } else {
+        const sinal = (tot || 0) * pct / 100;
+        valEl.value = sinal ? orcSinalFmtNum(sinal) : '';
+        valEl.classList.remove('orc-sinal-fixo');
+        if (sub) sub.textContent = 'Exatamente ' + pct + '% do Total geral · sai na folha do orçamento';
       }
-      const sinal = (tot || 0) * pct / 100;
-      valEl.value = sinal ? orcSinalFmtNum(sinal) : '';
-      valEl.classList.remove('orc-sinal-fixo');
-      if (sub) sub.textContent = 'Exatamente ' + pct + '% do Total geral · acompanha os itens';
+      orcSinalAtualizarFolhas(tot);
+    }
+
+    /* ── V10.7.1 — a barra do SINAL na folha A4 ──
+       Fecha a proposta com a entrada: padrão EXATAMENTE 50% do Total geral
+       (todas as páginas), ou o valor fixo digitado no painel. Só a ÚLTIMA
+       página mostra (numa folha só, é logo abaixo do TOTAL). */
+    function orcSinalValorAtual(tot) {
+      if (orcSinalModo === 'fixo') {
+        const valEl = document.getElementById('orcSinalVal');
+        return orcSinalParse(valEl ? valEl.value : '');
+      }
+      return (tot || 0) * orcSinalPctNum() / 100;
+    }
+
+    function orcSinalAtualizarFolhas(tot) {
+      const valor = orcSinalValorAtual(tot);
+      const fixo = orcSinalModo === 'fixo';
+      const rotulo = 'SINAL DA PRODUÇÃO' + (fixo ? '' : ' (' + orcSinalPctNum() + '%)') + ': ' + formatCurrency(valor);
+      const ultima = documentPages.length;
+      documentPages.forEach((p, idx) => {
+        const el = document.getElementById(`preview-sinal-bar-${p.id}`);
+        if (!el) return;
+        el.style.display = (idx === ultima - 1) ? 'flex' : 'none';
+        el.innerText = rotulo;
+        el.classList.toggle('orc-sinal-fixo', fixo);
+      });
     }
 
     function orcSinalAoMudarPct() {
@@ -2382,6 +2440,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const sub = document.getElementById('orcSinalSub');
       const pct = orcSinalPctNum();
       if (sub) sub.textContent = 'Valor fixo (não acompanha o total) · ↺ volta ao ' + pct + '%';
+      /* em modo fixo o campo NÃO é sobrescrito pelo recálculo — a folha A4
+         acompanha a digitação ao vivo */
+      if (typeof orcUpdateRunningTotal === 'function') orcUpdateRunningTotal();
       scheduleOrcautosave();
     }
 
@@ -2462,30 +2523,32 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const page = document.getElementById(`printable-a4-page-${pageId}`);
       if (!page) return;
       
+      /* V10.7.1 — as margens encolheram um pouco mais para abrir espaço à
+         barra do SINAL (36px + 8px) sem estourar a folha em páginas cheias. */
       if (itemsCount <= 1) {
         page.style.setProperty('--cell-padding', '23px 8px');
         page.style.setProperty('--font-scale', '13.5px');
         page.style.setProperty('--table-top-margin', '25px');
-        page.style.setProperty('--total-top-margin', '20px');
-        page.style.setProperty('--payment-top-margin', '35px');
+        page.style.setProperty('--total-top-margin', '16px');
+        page.style.setProperty('--payment-top-margin', '26px');
       } else if (itemsCount === 2) {
         page.style.setProperty('--cell-padding', '16px 8px');
         page.style.setProperty('--font-scale', '13px');
         page.style.setProperty('--table-top-margin', '20px');
-        page.style.setProperty('--total-top-margin', '15px');
-        page.style.setProperty('--payment-top-margin', '25px');
+        page.style.setProperty('--total-top-margin', '12px');
+        page.style.setProperty('--payment-top-margin', '18px');
       } else if (itemsCount === 3) {
         page.style.setProperty('--cell-padding', '12px 8px');
         page.style.setProperty('--font-scale', '12.5px');
         page.style.setProperty('--table-top-margin', '15px');
-        page.style.setProperty('--total-top-margin', '12px');
-        page.style.setProperty('--payment-top-margin', '18px');
+        page.style.setProperty('--total-top-margin', '9px');
+        page.style.setProperty('--payment-top-margin', '12px');
       } else { // 4 or more items
         page.style.setProperty('--cell-padding', '8px 6px');
         page.style.setProperty('--font-scale', '11.5px');
         page.style.setProperty('--table-top-margin', '10px');
-        page.style.setProperty('--total-top-margin', '8px');
-        page.style.setProperty('--payment-top-margin', '12px');
+        page.style.setProperty('--total-top-margin', '6px');
+        page.style.setProperty('--payment-top-margin', '7px');
       }
     }
 
@@ -2732,6 +2795,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
 
       // Update grand total bar for this specific page
       document.getElementById(`preview-total-bar-${pageId}`).innerText = "TOTAL: " + formatCurrency(pageTotal);
+      /* V10.7.1 — o sinal (50% do Total geral) também acompanha a edição
+         direto na folha: atualiza a barra da última página e o painel. */
+      if (typeof orcUpdateRunningTotal === 'function') orcUpdateRunningTotal();
     }
 
     // Adjust watermark opacity
