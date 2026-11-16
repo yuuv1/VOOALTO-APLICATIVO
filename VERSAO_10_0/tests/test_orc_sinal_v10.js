@@ -53,7 +53,7 @@ function check(label, ok, extra) {
   /* ── 1. o campo existe e nasce certo ── */
   check('caixa do sinal (#orcSinalBox) existe', !!doc.getElementById('orcSinalBox'));
   check('campo de porcentagem nasce em 50', t(`document.getElementById('orcSinalPct').value`) === '50');
-  check('sub-título anuncia 50% do total', t(`document.getElementById('orcSinalSub').textContent`) === 'Exatamente 50% do Total geral · acompanha os itens', t(`document.getElementById('orcSinalSub').textContent`));
+  check('sub-título anuncia 50% do total na folha', t(`document.getElementById('orcSinalSub').textContent`) === 'Exatamente 50% do Total geral · sai na folha do orçamento', t(`document.getElementById('orcSinalSub').textContent`));
   check('botão ↺ (voltar ao percentual) existe', !!doc.getElementById('orcSinalReset'));
 
   /* ── 2. acompanha o total: 2 itens × R$ 100 = R$ 200 → sinal R$ 100,00 ── */
@@ -127,7 +127,42 @@ function check(label, ok, extra) {
   check('novo orçamento: modo percentual', t(`orcSinalModo`) === 'percentual');
   check('novo orçamento: valor zerado', t(`document.getElementById('orcSinalVal').value`) === '', t(`document.getElementById('orcSinalVal').value`));
 
-  /* ── 7. nada estourou ── */
+  /* ── 8. o sinal aparece na FOLHA A4 (o orçamento impresso) ──
+     V10.7.1 — o campo de 50% tem de aparecer na própria folha do orçamento,
+     logo abaixo do TOTAL, atualizando sozinho. */
+  console.log('\n── 8. O sinal aparece na FOLHA A4 do orçamento ──');
+  t(`orcRestoreState({version:'vooalto_orcamento_v9',form:{},pages:[{id:1,tableItems:[]}]}); orcSinalAplicarEstado({pct:'50',modo:'percentual'}); updatePreviewFromForm(); 'ok'`);
+  t(`addTableRow(); documentPages[0].tableItems[0].modelo='Camisa'; documentPages[0].tableItems[0].qnt=2; documentPages[0].tableItems[0].unit=100; updatePreviewFromForm(); 'ok'`);
+  check('barra do sinal existe na folha A4', !!doc.getElementById('preview-sinal-bar-1'));
+  check('barra mostra SINAL DA PRODUÇÃO (50%): R$ 100,00', t(`document.getElementById('preview-sinal-bar-1').innerText`) === 'SINAL DA PRODUÇÃO (50%): R$ 100,00', t(`document.getElementById('preview-sinal-bar-1').innerText`));
+  check('o TOTAL da folha segue lá', t(`document.getElementById('preview-total-bar-1').innerText`) === 'TOTAL: R$ 200,00');
+
+  /* editar a quantidade DIRETO na folha (caminho do recalculateTotalsFromTable) */
+  t(`documentPages[0].tableItems[0].qnt=10; recalculateTotalsFromTable(0); 'ok'`);
+  check('edição direto na folha atualiza o sinal (R$ 500,00)', t(`document.getElementById('preview-sinal-bar-1').innerText`) === 'SINAL DA PRODUÇÃO (50%): R$ 500,00', t(`document.getElementById('preview-sinal-bar-1').innerText`));
+
+  /* porcentagem diferente na folha */
+  t(`document.getElementById('orcSinalPct').value='30'; orcSinalAoMudarPct(); 'ok'`);
+  check('30% aparece na folha', t(`document.getElementById('preview-sinal-bar-1').innerText`) === 'SINAL DA PRODUÇÃO (30%): R$ 300,00', t(`document.getElementById('preview-sinal-bar-1').innerText`));
+
+  /* valor fixo na folha (sem porcentagem no rótulo) */
+  t(`(function(){var el=document.getElementById('orcSinalVal');el.value='250';el.dispatchEvent(new window.Event('input',{bubbles:true}));return 'ok'})()`);
+  check('valor fixo aparece na folha (sem %)', t(`document.getElementById('preview-sinal-bar-1').innerText`) === 'SINAL DA PRODUÇÃO: R$ 250,00', t(`document.getElementById('preview-sinal-bar-1').innerText`));
+
+  /* multi-página: o sinal fecha a proposta — só na ÚLTIMA página */
+  t(`addDocumentPage(); updatePreviewFromForm(); 'ok'`);
+  check('com 2 páginas, a 1ª NÃO mostra o sinal', t(`document.getElementById('preview-sinal-bar-1').style.display`) === 'none', t(`document.getElementById('preview-sinal-bar-1').style.display`));
+  check('a 2ª (última) mostra, com base no total geral', t(`document.getElementById('preview-sinal-bar-2').innerText`) === 'SINAL DA PRODUÇÃO: R$ 250,00' && t(`document.getElementById('preview-sinal-bar-2').style.display`) === 'flex', t(`document.getElementById('preview-sinal-bar-2').innerText`));
+  t(`removeActiveDocumentPage(); updatePreviewFromForm(); 'ok'`);
+  check('voltando a 1 página, o sinal volta a aparecer na folha', t(`document.getElementById('preview-sinal-bar-1').style.display`) === 'flex');
+
+  /* a barra do sinal NÃO pode estar na lista de elementos escondidos na impressão */
+  const idxChrome = html.indexOf('Hide ALL editor / UI chrome');
+  const listaChrome = idxChrome >= 0 ? html.slice(idxChrome, idxChrome + 1200) : '';
+  check('a lista de impressão esconde o painel (.orc-running-total)', listaChrome.includes('.orc-running-total'));
+  check('.sinal-bar NÃO está na lista de impressão (sai na proposta)', !listaChrome.includes('.sinal-bar'));
+
+  /* ── 9. nada estourou ── */
   check('nenhum erro de página durante os testes', errs.length === 0, errs);
 
   console.log(`\n═══ SINAL DA PRODUÇÃO: ${pass} OK, ${fail} FAIL ═══`);

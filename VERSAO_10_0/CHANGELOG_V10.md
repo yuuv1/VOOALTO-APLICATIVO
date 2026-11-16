@@ -1,5 +1,27 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.7.1 — O sinal de 50% agora aparece NA FOLHA do Orçamento (2026-11-16)
+
+O pedido: *"não aparece automaticamente os 50% no orçamento como pedi"*. Na
+V10.7.0 o sinal existia só no painel do editor — a folha A4 da proposta não
+mostrava nada.
+
+- **Barra “SINAL DA PRODUÇÃO (50%)” na folha A4**, logo abaixo do TOTAL:
+  aparece e se atualiza sozinha com os itens, e **sai na impressão/PDF**.
+- Mostra **exatamente 50% do Total geral** (todas as páginas). Em orçamentos
+  de várias páginas, a barra fecha a proposta: aparece só na **última página**.
+- A **porcentagem** mudada no painel reflete na folha na hora — o rótulo
+  acompanha (30% → “SINAL DA PRODUÇÃO (30%)”).
+- **Valor digitado por cima** (caso raro): a folha mostra
+  “SINAL DA PRODUÇÃO: R$ …” com uma faixa rosa na base da barra, também
+  atualizando enquanto digita.
+- Editar quantidade/valor **direto na folha** atualiza o sinal junto.
+- Margens do layout denso encolheram um pouco para a barra caber sem estourar
+  a A4 (assinatura e rodapé continuam presos no pé da folha).
+- `version.json`, `package.json`/`package-lock.json` → **10.7.1**.
+- Testes: a suíte do sinal passou a travar a folha (43 verificações: barra
+  presente, 50/30/fixo, edição in-place, multi-página e impressão).
+
 ## V10.7.0 — Grade independente por página, sinal de 50% no Orçamento e barra lateral maior (2026-11-16)
 
 **Ficha Técnica**
