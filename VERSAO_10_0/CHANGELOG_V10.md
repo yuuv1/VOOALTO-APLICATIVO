@@ -1,5 +1,46 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.7.4 — Ficha Técnica: as páginas adicionadas têm as mesmas opções de alteração de texto (2026-11-18)
+
+**O pedido:** *“a opção de alteração/modificação de texto que tem no tipo de
+tecido da primeira página não acontece nas páginas adicionadas”*.
+
+**Ficha Técnica**
+
+- **A barra de formatação (negrito, tamanho, cor, marcador e limpar) agora
+  aparece e funciona no campo “tipo de tecido” de TODAS as páginas.** Ela
+  estava escondida por dois defeitos:
+  - **A barra é `position:fixed` (posição da tela), mas era posicionada com
+    `window.scrollY + rect.top` (posição da página).** A rolagem era contada
+    duas vezes: na folha 1 (rolagem ~0) a barra aparecia; na página
+    adicionada, lá embaixo (rolagem de ~1200 px), a barra caía fora da tela e
+    o usuário nunca via as opções.
+  - **O botão de formatação só reconhecia a seleção quando o nó da seleção
+    era um texto dentro do campo.** Com o **Ctrl+A** dentro do campo (que
+    seleciona o campo inteiro), o nó era o próprio campo e a barra não
+    abria. Agora o Ctrl+A também abre a barra — e ela fecha sozinha quando a
+    seleção não está em um campo editável.
+- **O título das seções (“CORES DO TECIDO”, “TIPO DE TECIDO”) é de cada
+  página.** Antes o espelho da folha 1 sobrescrevia o título da página extra:
+  a alteração de texto que a pessoa fazia na página adicionada era
+  revertida. A página nova continua nascendo com o mesmo título da folha 1,
+  mas **depois cada uma tem o seu**.
+- **A formatação do texto do “tipo de tecido” sobrevive ao salvamento.** Na
+  folha 1 o HTML era salvo (negrito, cor, tamanho); na página extra só o
+  texto simples — a formatação se perdia ao reabrir a ficha. Agora as duas
+  pages salvam do mesmo jeito.
+- **O título da seção e o tipo de tecido da página extra entram no `.json`**
+  e voltam com a página, no rascunho automático e no desfazer/refazer.
+- **O resto não mudou:** a página nova continua nascendo limpa (sem cor, sem
+  tipo de tecido e sem imagem da anterior) e o ⧉ Duplicar continua copiando
+  tudo.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.7.4**.
+- Testes: `test_pagina_nova_v10.js` passou de 34 para **48 verificações**
+  (alteração de texto na página adicionada, título por página, formatação
+  que sobrevive ao `.json`, barra que abre e que fica na tela) e ajuste da
+  suíte do espelho (58 verificações).
+
 ## V10.7.3 — Ficha Técnica: a página nova nasce limpa (2026-11-18)
 
 **O pedido:** *“quando clica pra criar uma nova pagina ele não pode copiar a

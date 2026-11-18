@@ -2400,9 +2400,17 @@ document.addEventListener('input',e=>{
 
    V10.7 — EXCEÇÃO: a grade de produção não é mais espelhada; cada página tem
    a sua e a página nova nasce com ela vazia (copiarGradePaginaAnterior copia
-   a da página anterior quando as duas folhas usam a mesma grade). */
+   a da página anterior quando as duas folhas usam a mesma grade).
 
-const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','coresTitulo','tipoTitulo','avisoTxt'];
+   V10.7.4 — os TÍTULOS das seções (cores e tipo de tecido) também são de
+   cada página: a página nova começa com o mesmo título da folha 1, mas
+   depois cada uma pode ter o seu. Antes o espelho sobrescrevia o título da
+   página extra e a alteração de texto que o usuário fazia nela era
+   revertida — na folha 1 a alteração pegava, na página adicionada não. */
+
+const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','avisoTxt'];
+/* Títulos copiados SÓ na criação da página (depois cada página tem o seu). */
+const P1_TITULOS_PAGINA=['coresTitulo','tipoTitulo'];
 
 /* Páginas que têm os campos da ficha (a página branca é canvas livre). */
 function paginasEspelhadas(){return (typeof paginas!=='undefined'?paginas:[]).filter(p=>p&&p.tipo!=='branca');}
@@ -2504,8 +2512,20 @@ function copiarP1paraExtra(p){
   if(!p||p.tipo==='branca')return;
   sincTodasPaginas();
   espelharCamposP1(p);
+  copiarTitulosP1(p);
   espelharMedidasP1(p);
   espelharProducaoP1(p);
+}
+
+/* V10.7.4 — o título das seções (cores e tipo de tecido) entra na página
+   nova junto com o resto, mas DEPOIS cada página tem o seu: o espelho não
+   mexe mais neles (a alteração de texto da página extra fica). */
+function copiarTitulosP1(p){
+  const pid=p.id;
+  P1_TITULOS_PAGINA.forEach(id=>{
+    const src=$(id),dst=$(id+'_'+pid);
+    if(src&&dst&&dst.value!==src.value)dst.value=src.value;
+  });
 }
 
 /* Espelha para TODAS as páginas extras (usado quando a folha 1 muda).
@@ -3056,13 +3076,24 @@ const richBar=$('richBar');
 let rfSavedRange=null;
 function rfShow(){
 const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){rfHide();return;}
-const anc=sel.anchorNode,parent=anc?.parentElement;if(!parent)return;
-const inCE=parent.closest('[contenteditable="true"]');if(!inCE)return;
+const anc=sel.anchorNode;if(!anc){rfHide();return;}
+/* V10.7.4 — o nó da seleção pode ser o próprio campo (seleção de tudo com
+   Ctrl+A) ou um texto dentro dele. Antes só o segundo caso era reconhecido:
+   com o Ctrl+A dentro do campo, a barra de formatação não abria. */
+const el=(anc.nodeType===1)?anc:(anc.parentElement||null);if(!el){rfHide();return;}
+const inCE=el.closest?el.closest('[contenteditable="true"]'):null;
+if(!inCE){rfHide();return;}
 rfSavedRange=sel.getRangeAt(0).cloneRange();
 const rect=sel.getRangeAt(0).getBoundingClientRect();
 const barW=richBar.offsetWidth||420;
-richBar.style.top=(window.scrollY+rect.top-56)+'px';
-richBar.style.left=Math.max(8,window.scrollX+rect.left+rect.width/2-barW/2)+'px';
+/* V10.7.4 — a barra é `position:fixed`: a posição dela é a da TELA, não a
+   da página. Antes era `window.scrollY + rect.top`, que contava a rolagem
+   duas vezes: na folha 1 (rolagem ~0) a barra aparecia, mas na página
+   adicionada (lá embaixo, rolagem de ~1200px) a barra ficava fora da tela
+   e o usuário nunca via as opções de formatação do texto. */
+const vw=window.innerWidth||1024,vh=window.innerHeight||768;
+richBar.style.top=Math.max(8,Math.min(rect.top-56,vh-70))+'px';
+richBar.style.left=Math.max(8,Math.min(rect.left+rect.width/2-barW/2,vw-barW-8))+'px';
 richBar.classList.add('vis');rfSyncState();
 }
 function rfHide(){richBar.classList.remove('vis');}
@@ -3074,7 +3105,13 @@ function rfHL(){if(!rfRestore())return;document.execCommand('hiliteColor',false,
 function rfHLClear(){if(!rfRestore())return;document.execCommand('hiliteColor',false,'transparent');rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;}
 function rfClear(){if(!rfRestore())return;document.execCommand('removeFormat',false,null);}
 document.addEventListener('mouseup',e=>{setTimeout(()=>{if(!richBar.contains(e.target))rfShow();},80);});
-document.addEventListener('keyup',e=>{if(e.shiftKey||['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))setTimeout(rfShow,80);});
+/* V10.7.4 — a barra de formatação também abre com Ctrl+A e com as setas,
+   em QUALQUER campo editável (inclusive o tipo de tecido das páginas
+   adicionadas). Mexer dentro da própria barra não a esconde. */
+document.addEventListener('keyup',e=>{
+  if(e.target&&e.target.closest&&e.target.closest('#richBar'))return;
+  if(e.shiftKey||['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)||(e.ctrlKey&&(e.key==='a'||e.key==='A')))setTimeout(rfShow,80);
+});
 
 /* ═══ UNDO / REDO ═══ */
 const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','sepFontSize','coresTitulo','tipoTitulo'];
@@ -3097,7 +3134,7 @@ d._paginas=paginas.length;
    agora cada página tem a sua, e ela volta junto no Ctrl+Z.
    V10.7.3 — a paleta de cores e o tipo de tecido também são de cada página:
    entram no estado para o desfazer devolver a cor que estava na página. */
-d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id),cores:_pagCores(p.id),tipoTecido:($('tipoTecido_'+p.id)||{}).innerHTML||''}));
+d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id),cores:_pagCores(p.id),tipoTecido:($('tipoTecido_'+p.id)||{}).innerHTML||'',coresTitulo:($('coresTitulo_'+p.id)||{}).value||'',tipoTitulo:($('tipoTitulo_'+p.id)||{}).value||''}));
 return d;
 }
 /* Paleta de cores de UMA página (folha 1 ou extra). */
@@ -3147,6 +3184,10 @@ function _estadoSig(st){
   /* V10.7.3 — a paleta e o tipo de tecido de cada página também */
   p.push('PC='+(st._paginasDetalhe||[]).map(function(x){
     return x.id+'#'+(x.cores||[]).map(function(c){return (c.hex||'')+(c.nome||'');}).join('~')+'#'+(x.tipoTecido||'');
+  }).join('&'));
+  /* V10.7.4 — e o título da seção de cada página */
+  p.push('PT='+(st._paginasDetalhe||[]).map(function(x){
+    return x.id+'#'+(x.coresTitulo||'')+'#'+(x.tipoTitulo||'');
   }).join('&'));
   p.push('P='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+(x.layers||[]).map(_layerSig).join(';');}).join('&'));
   return p.join('\u0002');
@@ -3235,6 +3276,9 @@ if(Array.isArray(s._paginasDetalhe)){
       const tt=$('tipoTecido_'+p.id);
       if(tt)tt.innerHTML=snap.tipoTecido||'';
     }
+    /* V10.7.4 — o título da seção de cada página */
+    if(snap.coresTitulo!==undefined){const ct=$('coresTitulo_'+p.id);if(ct)ct.value=snap.coresTitulo;}
+    if(snap.tipoTitulo!==undefined){const tt=$('tipoTitulo_'+p.id);if(tt)tt.value=snap.tipoTitulo;}
     if(typeof updPhExtra==='function')updPhExtra(p);
   });
 }
@@ -8837,6 +8881,13 @@ function v7AplicarPaginaSalva(p,s){
   const pid=p.id;
   const setH=(id,v)=>{const el=$(id);if(el&&v!==undefined&&v!==''){if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.value=v;else el.innerHTML=v;}};
   if(s.hdr){setH('fichaNum_'+pid,s.hdr.fichaNum);setH('fichaData_'+pid,s.hdr.fichaData);setH('previsao_'+pid,s.hdr.previsao);setH('sepTxt_'+pid,s.hdr.sepTxt);setH('tipoTecido_'+pid,s.hdr.tipoTecido);setH('entradaVal_'+pid,s.hdr.entradaVal);}
+  /* V10.7.4 — o título da seção volta com a página (inclusive vazio: se o
+     usuário limpou o título, ele volta limpo — e não com o padrão). */
+  if(s.hdr){
+    const ct=$('coresTitulo_'+pid),tt=$('tipoTitulo_'+pid);
+    if(ct&&s.hdr.coresTitulo!==undefined)ct.value=s.hdr.coresTitulo;
+    if(tt&&s.hdr.tipoTitulo!==undefined)tt.value=s.hdr.tipoTitulo;
+  }
   /* V10.2 — o nº da página BRANCA é restaurado do arquivo salvo; se a ficha
      salva é anterior a esta versão (sem fbNum), herda o nº da folha 1.
      A marca `data-num-proprio` diz que o número NÃO é cópia: o .json precisa
@@ -8991,7 +9042,15 @@ function v7CapturarPaginaExtra(p){
     fichaData:($('fichaData_'+pid)||{}).value||'',
     previsao:($('previsao_'+pid)||{}).value||'',
     sepTxt:($('sepTxt_'+pid)||{}).value||'',
-    tipoTecido:($('tipoTecido_'+pid)||{}).textContent||'',
+    /* V10.7.4 — o tipo de tecido é salvo com o HTML (igual à folha 1): o
+       negrito, a cor e o tamanho que a barra de formatação aplica no texto
+       precisam sobreviver ao salvamento. Antes só o texto simples era salvo
+       e a formatação da página extra se perdia. */
+    tipoTecido:($('tipoTecido_'+pid)||{}).innerHTML||'',
+    /* V10.7.4 — o título da seção é de cada página: entra no estado para
+       voltar com a página (o espelho não devolve mais o da folha 1). */
+    coresTitulo:($('coresTitulo_'+pid)||{}).value||'',
+    tipoTitulo:($('tipoTitulo_'+pid)||{}).value||'',
     entradaVal:($('entradaVal_'+pid)||{}).value||''
   };
   /* V10.2 — a página BRANCA tem nº próprio em `fbNum_<pid>`. Ele só vai para
@@ -9763,6 +9822,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     <ul>
       <li><b>Adicionar página</b> usa o layout padrão e <b>página em branco</b> vem vazia — os dois botões ficam na faixa inferior, ao lado das miniaturas (<b>＋</b> e <b>🗋</b>). Arraste as miniaturas para reordenar. Para apagar uma página, use o <b>✕</b> na régua ao lado da folha.</li>
       <li><b>A página nova nasce limpa</b>: ela <b>não copia</b> a cor, o tipo de tecido nem a imagem (arte) da página anterior — cada página tem as suas. O que ela herda é a ficha: nº, data, previsão, separador, títulos, aviso, medidas e produção. Se quiser a mesma arte da página anterior, use <b>⧉ duplicar</b> na régua.</li>
+      <li><b>Cada página tem o seu texto</b>: o <b>tipo de tecido</b> e o <b>título</b> da seção (“TIPO DE TECIDO”, “CORES DO TECIDO”) são de cada página — mexer na página 2 não mexe na página 1. E a <b>barra de formatação</b> (negrito, tamanho, cor, marcador, limpar) aparece em <b>todas</b> as páginas: selecione o texto do tipo de tecido e a barrinha aparece logo acima dele. Use <kbd>Ctrl</kbd>+<kbd>A</kbd> para pegar o texto inteiro do campo.</li>
     </ul>
     <h4>Salvar e continuar depois</h4>
     <ul>

@@ -155,9 +155,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
   ok('separador novo', $('sepTxt_p2').value === '▸ NOVO SEPARADOR ◂', $('sepTxt_p2').value);
   ok('tamanho novo do separador aplicado', $('sepTxt_p2').style.fontSize === '9px', $('sepTxt_p2').style.fontSize);
-  ok('título das cores novo', $('coresTitulo_p2').value === 'CORES REVISADAS', $('coresTitulo_p2').value);
+  /* V10.7.4 — o título da seção é de cada página: a página 2 guarda o dela
+     (a alteração de texto feita nela não é revertida pelo espelho). */
+  ok('título das cores da página 2 fica o dela', $('coresTitulo_p2').value === 'CORES DO CLIENTE', $('coresTitulo_p2').value);
   ok('aviso novo', $('avisoTxt_p2').value === '⚠ AVISO REVISADO', $('avisoTxt_p2').value);
-  ok('título do tecido novo', $('tipoTitulo_p2').value === 'TECIDO REVISADO', $('tipoTitulo_p2').value);
+  ok('título do tecido da página 2 fica o dele', $('tipoTitulo_p2').value === 'TECIDO ESPECIAL', $('tipoTitulo_p2').value);
   ok('número novo', $('fichaNum_p2').value === '9999', $('fichaNum_p2').value);
   ok('previsão nova', $('previsao_p2').value === '60 dias', $('previsao_p2').value);
   /* V10.7 — a grade da página 2 é independente: mudou na folha 1, a página

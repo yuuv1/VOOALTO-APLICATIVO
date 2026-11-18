@@ -48,6 +48,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
         get src() { return this._src; }
       };
       w.addEventListener('error', e => erros.push(e.message));
+      /* jsdom não mede a seleção: a barra de formatação (richBar) precisa da
+         posição da seleção para se posicionar, e `queryCommandState` não
+         existe no jsdom. */
+      w.Range.prototype.getBoundingClientRect = function () { return { top: 100, left: 100, width: 80, height: 14, bottom: 114, right: 180 }; };
+      w.document.queryCommandState = () => false;
     }
   });
   const w = dom.window, d = w.document;
@@ -144,7 +149,87 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   ok('ao reabrir, a página volta com a cor', coresDe(p2b) === 1, coresDe(p2b));
   ok('ao reabrir, a página volta com o tipo de tecido', ($('tipoTecido_' + p2b) || {}).textContent === 'MEIA MALHA', ($('tipoTecido_' + p2b) || {}).textContent);
 
-  /* ── 7. o desfazer devolve a cor da página ── */
+  /* ── 7. a ALTERAÇÃO DE TEXTO na página adicionada ──
+     O pedido: *"a opção de alteração de texto que tem no tipo de tecido da
+     primeira pagina não acontece nas paginas adicionadas"*.
+     O que precisa valer na página extra:
+       a) o TÍTULO do bloco ("TIPO DE TECIDO") pode ser alterado e fica;
+       b) o TEXTO do tipo de tecido pode ser alterado e fica;
+       c) a FORMATAÇÃO (negrito, cor, tamanho) aplicada no texto fica
+          também depois de salvar/reabrir — na folha 1 ela já ficava. */
+  console.log('\n── 7. Alteração de texto na página adicionada ──');
+  $('tipoTitulo_' + p2).value = 'TECIDO DA CAMISETA';
+  $('coresTitulo_' + p2).value = 'CORES DA CAMISETA';
+  $('tipoTecido_' + p2).innerHTML = 'MEIA <b>MALHA</b> PRETA';
+  await wait(600);
+  ok('o título do tipo de tecido da página 2 fica', $('tipoTitulo_' + p2).value === 'TECIDO DA CAMISETA', $('tipoTitulo_' + p2).value);
+  ok('o título das cores da página 2 fica', $('coresTitulo_' + p2).value === 'CORES DA CAMISETA', $('coresTitulo_' + p2).value);
+  ok('o texto do tipo de tecido da página 2 fica', ($('tipoTecido_' + p2) || {}).textContent === 'MEIA MALHA PRETA', ($('tipoTecido_' + p2) || {}).textContent);
+  ok('a formatação do texto da página 2 fica', /<b>/i.test(($('tipoTecido_' + p2) || {}).innerHTML || ''), ($('tipoTecido_' + p2) || {}).innerHTML);
+
+  /* a BARRA de formatação (negrito, tamanho, cor, marcador) abre com o texto
+     selecionado — na folha 1 e na página adicionada */
+  const barraAbre = (id) => {
+    const el = $(id);
+    if (!el) return false;
+    if (!el.textContent) el.textContent = 'PIQUET PA';   /* sem isso o textContent apagaria a formatação */
+    const r = d.createRange(); r.selectNodeContents(el);
+    const sel = w.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    w.eval('rfShow()');
+    return d.getElementById('richBar').classList.contains('vis');
+  };
+  ok('a barra de formatação abre no tipo de tecido da folha 1', barraAbre('tipoTecido'));
+  ok('a barra de formatação abre no tipo de tecido da página adicionada', barraAbre('tipoTecido_' + p2));
+
+  /* A barra é `position:fixed`: a posição dela é a da TELA. Antes ela usava
+     `window.scrollY + rect.top`, que contava a rolagem duas vezes — na página
+     adicionada (lá embaixo) a barra caía fora da tela e o usuário nunca via
+     as opções de formatação do texto. */
+  const rectTela = { top: 500, left: 300, width: 100, height: 18, bottom: 518, right: 400 };
+  w.Range.prototype.getBoundingClientRect = function () { return rectTela; };
+  const scrollAntes = w.scrollY;
+  Object.defineProperty(w, 'scrollY', { value: 1200, configurable: true });
+  const elBarra = $('tipoTecido_' + p2);
+  const r2 = d.createRange(); r2.selectNodeContents(elBarra);
+  const sel2 = w.getSelection(); sel2.removeAllRanges(); sel2.addRange(r2);
+  w.eval('rfShow()');
+  const topBarra = parseFloat(d.getElementById('richBar').style.top);
+  ok('a barra de formatação fica na tela (sem contar a rolagem duas vezes)', topBarra === 444, topBarra);
+  /* a MESMA posição de tela na folha 1 e na página adicionada */
+  const topP1 = (id) => {
+    const el = $(id);
+    const r = d.createRange(); r.selectNodeContents(el);
+    const s = w.getSelection(); s.removeAllRanges(); s.addRange(r);
+    w.eval('rfShow()');
+    return parseFloat(d.getElementById('richBar').style.top);
+  };
+  ok('a barra fica na MESMA tela na folha 1 e na página adicionada', topP1('tipoTecido') === topP1('tipoTecido_' + p2), topP1('tipoTecido') + ' / ' + topP1('tipoTecido_' + p2));
+  Object.defineProperty(w, 'scrollY', { value: scrollAntes, configurable: true });
+
+  /* mexer na folha 1 NÃO pode voltar a mexer no texto da página extra */
+  $('tipoTitulo').value = 'TECIDO DA FOLHA 1';
+  $('tipoTitulo').dispatchEvent(new w.Event('input', { bubbles: true }));
+  $('coresTitulo').value = 'CORES DA FOLHA 1';
+  $('coresTitulo').dispatchEvent(new w.Event('input', { bubbles: true }));
+  $('tipoTecido').textContent = 'PIQUET DA FOLHA 1';
+  $('tipoTecido').dispatchEvent(new w.Event('input', { bubbles: true }));
+  await wait(700);
+  ok('o título do tecido da página 2 continua o dela', $('tipoTitulo_' + p2).value === 'TECIDO DA CAMISETA', $('tipoTitulo_' + p2).value);
+  ok('o título das cores da página 2 continua o dela', $('coresTitulo_' + p2).value === 'CORES DA CAMISETA', $('coresTitulo_' + p2).value);
+  ok('o tecido da página 2 continua o dele', ($('tipoTecido_' + p2) || {}).textContent === 'MEIA MALHA PRETA', ($('tipoTecido_' + p2) || {}).textContent);
+
+  /* a alteração de texto sobrevive ao .json (com a formatação) */
+  const dump2 = w.eval('JSON.parse(JSON.stringify(capturarFichaParaJSON()))');
+  const pg2 = (dump2._paginas || []).find(x => x.id === p2);
+  ok('o .json guarda o título da página', !!pg2 && pg2.hdr && pg2.hdr.tipoTitulo === 'TECIDO DA CAMISETA', pg2 && pg2.hdr && pg2.hdr.tipoTitulo);
+  ok('o .json guarda o texto com a formatação', !!pg2 && pg2.hdr && /<b>/i.test(pg2.hdr.tipoTecido || ''), pg2 && pg2.hdr && pg2.hdr.tipoTecido);
+  w.eval(`restaurarDeJSON(${JSON.stringify(dump2)})`);
+  await wait(700);
+  const p2c = w.eval('paginas.filter(p=>p.tipo!=="branca")[0].id');
+  ok('ao reabrir, o título da página volta', $('tipoTitulo_' + p2c).value === 'TECIDO DA CAMISETA', $('tipoTitulo_' + p2c).value);
+  ok('ao reabrir, a formatação do texto volta', /<b>/i.test(($('tipoTecido_' + p2c) || {}).innerHTML || ''), ($('tipoTecido_' + p2c) || {}).innerHTML);
+
+  /* ── 8. o desfazer devolve a cor da página ── */
   console.log('\n── 7. Desfazer/refazer não perde a cor da página ──');
   const estado = w.eval('JSON.parse(JSON.stringify(capState()))');
   const det = (estado._paginasDetalhe || []).find(x => x.id === p2b);
