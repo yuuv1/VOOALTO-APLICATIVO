@@ -16,8 +16,10 @@
 - A mesma regra vale para o **.json** importado (mesma porta de entrada) — o
   PDF nunca teve o problema porque lê só a primeira tabela.
 - **A folha do recibo passa a se identificar como RECIBO**: a faixa preta
-  mostra **“RECIBO Nº 0001”** e, ao lado, **“FICHA 3418”** (o nº da ficha
-  continua no rodapé e no “Referente a”, como antes).
+  mostra **“RECIBO · FICHA Nº 3418”** — o número é o da ficha anexada (o nº
+  interno do recibo, 0001/0002…, continua só na lista de **Recibos salvos** e
+  no “já recebido”) e a ficha também aparece no rodapé e no “Referente a”,
+  como antes.
 
 **Ficha Técnica**
 

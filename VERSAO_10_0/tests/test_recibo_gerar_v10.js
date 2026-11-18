@@ -102,10 +102,10 @@ async function abrirRecibo() {
   ok('a folha do recibo se identifica como RECIBO',
     /Recibo/i.test(rw.document.getElementById('pvNumeroRotulo').textContent),
     rw.document.getElementById('pvNumeroRotulo').textContent);
-  ok('a folha mostra o nº do recibo e o nº da ficha ao lado',
-    rw.document.getElementById('pvNumero').textContent === '0001' &&
-    /3456|3418/.test(rw.document.getElementById('pvFichaNum').textContent + rw.document.getElementById('pvNumero').textContent),
-    { numero: rw.document.getElementById('pvNumero').textContent, ficha: rw.document.getElementById('pvFichaNum').textContent });
+  ok('a folha mostra o nº da ficha anexada (o nº interno do recibo não sai na folha)',
+    rw.document.getElementById('pvNumero').textContent === '3418' &&
+    /Ficha/i.test(rw.document.getElementById('pvNumeroRotulo').textContent),
+    { numero: rw.document.getElementById('pvNumero').textContent, rotulo: rw.document.getElementById('pvNumeroRotulo').textContent });
 
   console.log('\n── 3. A mesma regra vale para o .json importado ──');
   const json = JSON.parse(JSON.stringify(payload.ficha));

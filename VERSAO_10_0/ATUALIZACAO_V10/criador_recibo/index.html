@@ -160,9 +160,6 @@
     .p-band-red{flex:58;background:#D46460;color:#fff;display:flex;align-items:center;padding-left:22px;font-size:21px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;clip-path:polygon(0 0,100% 0,calc(100% - 26px) 100%,0 100%)}
     .p-band-black{flex:42;background:#000;color:#fff;display:flex;align-items:center;justify-content:flex-end;padding-right:24px;font-size:19px;font-weight:800;letter-spacing:.5px;clip-path:polygon(26px 0,100% 0,100% 100%,0 100%);margin-left:-18px}
     .p-band-black small{font-size:10px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;opacity:.75;margin-right:8px}
-    /* A ficha fica DEPOIS do nº do recibo, com espaço próprio (o `small` da
-       faixa usa margem para o número). */
-    .p-band-black .p-band-ficha{margin:0 0 0 12px;margin-right:0;opacity:.7;border-left:1px solid rgba(255,255,255,.35);padding-left:10px}
 
     .p-value{border:2px solid #17172a;border-left:9px solid #D46460;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
     .p-value-lbl{font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#555;margin-bottom:2px}
@@ -463,7 +460,7 @@
 
           <div class="p-band">
             <div class="p-band-red">Recibo de pagamento</div>
-            <div class="p-band-black"><small id="pvNumeroRotulo">Recibo nº</small><span id="pvNumero">0001</span><small class="p-band-ficha" id="pvFichaNum" style="display:none"></small></div>
+            <div class="p-band-black"><small id="pvNumeroRotulo">Recibo nº</small><span id="pvNumero">0001</span></div>
           </div>
 
           <div class="p-value">
@@ -1526,16 +1523,12 @@ function renderPreview(){
   const c=calcular();
   const e=estado;
   /* A faixa preta identifica o documento como RECIBO (é o que o cliente
-     leva na mão). O nº da ficha continua ao lado — é ele que amarra o
-     recibo à ficha — e também aparece no "Referente a" e no rodapé. */
+     leva na mão) e mostra o número da ficha que o originou. O nº interno do
+     recibo (0001, 0002…) é interno: fica na lista de Recibos salvos e no
+     "já recebido" — não sai na folha. */
   const numFicha=String(e.fichaNum||'').trim();
-  preencher('pvNumero',numeroExibido(e.numero));
-  preencher('pvNumeroRotulo','Recibo nº');
-  const marcaFicha=$('pvFichaNum');
-  if(marcaFicha){
-    marcaFicha.textContent=numFicha?('Ficha '+numFicha):'';
-    marcaFicha.style.display=numFicha?'':'none';
-  }
+  preencher('pvNumero',numFicha||numeroExibido(e.numero));
+  preencher('pvNumeroRotulo',numFicha?'Recibo · Ficha nº':'Recibo nº');
   preencher('pvValor',fmtBRL(c.pago));
   preencher('pvExtenso',extensoReais(c.pago));
   preencher('pvTexto',textoDoRecibo(e));
