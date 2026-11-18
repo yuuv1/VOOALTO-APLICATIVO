@@ -153,6 +153,9 @@ const FICHA = {
   ok('o rodapé também identifica a ficha', /Ficha nº 3456/.test(d.getElementById('pvLegal').textContent),
     d.getElementById('pvLegal').textContent);
   ok('a etiqueta antiga de ficha no "Referente a" sai da folha', !d.getElementById('pvFichaTag'));
+  ok('a folha não usa "FICHA TÉCNICA" em lugar nenhum (o documento é RECIBO)',
+    !/ficha\s*técnica/i.test(d.getElementById('reciboFolha').textContent),
+    (d.getElementById('reciboFolha').textContent.match(/.{0,40}ficha\s*técnica.{0,40}/i) || ['sem ocorrência'])[0]);
   ok('a tabela de itens é renderizada', d.querySelectorAll('#pvItens tr').length === 3, d.querySelectorAll('#pvItens tr').length);
   ok('o resumo mostra saldo devedor', d.getElementById('pvSaldo').textContent === 'R$ 800,00' && d.getElementById('pvSaldoBox').style.display !== 'none',
     d.getElementById('pvSaldo').textContent);

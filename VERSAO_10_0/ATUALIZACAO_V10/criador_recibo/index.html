@@ -932,7 +932,9 @@ function descricaoAutomatica(est){
   const e=est||estado;
   const tipo=(e.modo==='total')?'Pagamento total':'Pagamento parcial';
   let txt=tipo+' da produção';
-  if(String(e.fichaNum||'').trim())txt+=', Ficha Técnica nº '+String(e.fichaNum).trim();
+  /* O documento é um RECIBO: no "Referente a" a origem entra como "Ficha nº",
+     sem repetir "FICHA TÉCNICA" (que soa como título de outro documento). */
+  if(String(e.fichaNum||'').trim())txt+=', Ficha nº '+String(e.fichaNum).trim();
   const pecas=arred(totalPecas(e));
   if(pecas>0)txt+=' · '+fmtQtd(pecas)+' peça'+(Math.abs(pecas-1)<1e-9?'':'s');
   if(e.modo==='parcial'&&String(e.previsao||'').trim())txt+=' · saldo para '+String(e.previsao).trim();

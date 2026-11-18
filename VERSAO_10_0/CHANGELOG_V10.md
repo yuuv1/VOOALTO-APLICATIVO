@@ -20,6 +20,9 @@
   interno do recibo, 0001/0002…, continua só na lista de **Recibos salvos** e
   no “já recebido”) e a ficha também aparece no rodapé e no “Referente a”,
   como antes.
+- **A palavra “FICHA TÉCNICA” saiu da folha**: no “Referente a” a origem
+  agora entra como **“Ficha nº 3418”** — o documento inteiro (faixa, texto e
+  rodapé) fala em RECIBO e em ficha só como referência.
 
 **Ficha Técnica**
 
