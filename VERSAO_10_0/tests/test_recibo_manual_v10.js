@@ -49,7 +49,7 @@ const editar=(w,id,valor)=>{const el=w.document.getElementById(id); assert.ok(el
   w.Recibo.itemCampo(0,'unit','50,00');
   assert.equal(R.estadoAtual().totalProducao,150);
   assert.equal(R.estadoAtual().valorPago,150);
-  assert.equal(d.getElementById('pvNumeroRotulo').textContent,'Ficha nº');
+  assert.equal(d.getElementById('pvNumeroRotulo').textContent,'Recibo · Ficha nº');
   assert.equal(d.getElementById('pvNumero').textContent,'4242');
   assert.match(d.getElementById('pvTexto').textContent,/Cliente preenchido à mão/);
   const registro=w.Recibo.salvar();

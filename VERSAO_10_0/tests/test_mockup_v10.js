@@ -505,8 +505,22 @@ function check(label, ok, extra) {
   const idUltima = t(`paginas[paginas.length-1].id`);
   t(`v7PageDesfazer({type:'add',index:1,id:'` + idUltima + `'}); 'ok'`);
   check('Ctrl+Z desfaz a página duplicada', t(`paginas.length`) === nPagDup - 1, t(`paginas.length`));
-  check('existe o botão ⧉ na barra lateral de cada página',
-    doc.querySelectorAll('#extraPagesNav .sb-dup-page').length === t(`paginas.length`));
+  check('existe o botão ⧉ na régua de cada página extra (a barra lateral não tem mais a lista de páginas)',
+    (function () {
+      const extras = t(`paginas.map(function (p) { return p.id; }).join(',')`);
+      if (!extras) return false;
+      return extras.split(',').every(function (id) {
+        t(`v7MostrarToolbar({id:'${id}',tipo:'normal',p1:false}); 'ok'`);
+        const html = doc.getElementById('v7PageToolbar').innerHTML;
+        return html.includes('⧉') && html.includes('v7ToolAcao(\'duplicar\')');
+      });
+    })());
+  check('a folha 1 não ganha botão de duplicar/remover na régua',
+    (function () {
+      t(`v7MostrarToolbar({id:'folha1',tipo:'normal',p1:true}); 'ok'`);
+      const html = doc.getElementById('v7PageToolbar').innerHTML;
+      return !html.includes('v7ToolAcao(\'duplicar\')') && !html.includes('v7ToolAcao(\'remover\')');
+    })());
   check('folha 1 não pode ser duplicada', t(`v7DuplicarPagina('folha1')`) === undefined);
 
   /* ── 17.9 O painel diz em qual página vai agir ── */

@@ -1,5 +1,124 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.7.4 — Ficha Técnica: as páginas adicionadas têm as mesmas opções de alteração de texto (2026-11-18)
+
+**O pedido:** *“a opção de alteração/modificação de texto que tem no tipo de
+tecido da primeira página não acontece nas páginas adicionadas”*.
+
+**Ficha Técnica**
+
+- **A barra de formatação (negrito, tamanho, cor, marcador e limpar) agora
+  aparece e funciona no campo “tipo de tecido” de TODAS as páginas.** Ela
+  estava escondida por dois defeitos:
+  - **A barra é `position:fixed` (posição da tela), mas era posicionada com
+    `window.scrollY + rect.top` (posição da página).** A rolagem era contada
+    duas vezes: na folha 1 (rolagem ~0) a barra aparecia; na página
+    adicionada, lá embaixo (rolagem de ~1200 px), a barra caía fora da tela e
+    o usuário nunca via as opções.
+  - **O botão de formatação só reconhecia a seleção quando o nó da seleção
+    era um texto dentro do campo.** Com o **Ctrl+A** dentro do campo (que
+    seleciona o campo inteiro), o nó era o próprio campo e a barra não
+    abria. Agora o Ctrl+A também abre a barra — e ela fecha sozinha quando a
+    seleção não está em um campo editável.
+- **O título das seções (“CORES DO TECIDO”, “TIPO DE TECIDO”) é de cada
+  página.** Antes o espelho da folha 1 sobrescrevia o título da página extra:
+  a alteração de texto que a pessoa fazia na página adicionada era
+  revertida. A página nova continua nascendo com o mesmo título da folha 1,
+  mas **depois cada uma tem o seu**.
+- **A formatação do texto do “tipo de tecido” sobrevive ao salvamento.** Na
+  folha 1 o HTML era salvo (negrito, cor, tamanho); na página extra só o
+  texto simples — a formatação se perdia ao reabrir a ficha. Agora as duas
+  pages salvam do mesmo jeito.
+- **O título da seção e o tipo de tecido da página extra entram no `.json`**
+  e voltam com a página, no rascunho automático e no desfazer/refazer.
+- **O resto não mudou:** a página nova continua nascendo limpa (sem cor, sem
+  tipo de tecido e sem imagem da anterior) e o ⧉ Duplicar continua copiando
+  tudo.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.7.4**.
+- Testes: `test_pagina_nova_v10.js` passou de 34 para **48 verificações**
+  (alteração de texto na página adicionada, título por página, formatação
+  que sobrevive ao `.json`, barra que abre e que fica na tela) e ajuste da
+  suíte do espelho (58 verificações).
+
+## V10.7.3 — Ficha Técnica: a página nova nasce limpa (2026-11-18)
+
+**O pedido:** *“quando clica pra criar uma nova pagina ele não pode copiar a
+cor, o tipo de tecido e nem a imagem anterior. garanta pra mim que isso não
+ocorra de novo”*.
+
+**Ficha Técnica**
+
+- **A página nova (＋ “Adicionar página”) não copia mais a cor, o tipo de
+  tecido nem a imagem (arte) da página anterior.** Ela nasce limpa: paleta
+  vazia, tipo de tecido vazio e nenhuma arte no quadro — só o convite para
+  inserir a imagem.
+- **O espelho da folha 1 também parou de mexer nisso.** Era ele que trazia
+  a cor de volta: 150 ms depois de criada a página, qualquer mexida na folha 1
+  devolvia a paleta e o tipo de tecido antigos. Agora **cor e tipo de tecido
+  são de cada página** (o mesmo caminho que a grade de produção, desde a
+  V10.7).
+- **O resto da ficha continua espelhado** — nº, data, previsão, separador
+  (texto e tamanho), títulos das seções, aviso, dados do cliente, medidas e
+  produção. Nada se perdeu.
+- **Apagar uma cor na página 2 apaga só na página 2** (antes apagava a mesma
+  cor da folha 1, porque a paleta era espelhada).
+- **A cor e o tipo de tecido de cada página agora sobrevivem ao salvamento**:
+  entram no `.json` da ficha, no rascunho automático e no desfazer/refazer.
+  Sem isso, a cor da página 2 se perderia ao reabrir a ficha.
+- **⧉ Duplicar continua copiando tudo** (campos, grade, medidas, produção,
+  cores, tipo de tecido e artes) — é a cópia de propósito. O manual e a ajuda
+  da Ficha Técnica explicam a diferença entre “adicionar” e “duplicar”.
+- `paginaNovaLimpa()` é a garantia final: se um dia alguém voltar a copiar
+  cor, tecido ou arte na criação da página, essa chamada limpa a página.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.7.3**.
+- Testes: nova suíte `test_pagina_nova_v10.js` (34 verificações — página
+  nova limpa, espelho que não devolve cor, cor por página, duplicar que copia
+  tudo, ida e volta no `.json` e no desfazer) e ajuste da suíte do espelho.
+
+## V10.7.2 — Recibo sem página dobrada, recibo que se identifica como RECIBO e barra lateral enxuta (2026-11-18)
+
+**Recibo**
+
+- **O botão “🧾 Gerar recibo” (barra lateral da Ficha Técnica) não inventa mais
+  item nem total.** O problema: na ficha técnica toda página extra nasce como
+  **espelho da folha 1** (mesma produção) e continua espelhando quando a folha 1
+  muda. O recibo somava a folha 1 **e** cada página extra — numa ficha de 2
+  páginas o total saía **dobrado** (R$ 13.152 em vez de R$ 6.576) e o valor
+  recebido sugerido nascia errado.
+- Agora o Recibo reconhece a página que é **espelho** da folha 1 e não a conta
+  de novo. Página em branco nunca entra; página com produção **própria**
+  (fichas antigas) **entra** normalmente.
+- A mesma regra vale para o **.json** importado (mesma porta de entrada) — o
+  PDF nunca teve o problema porque lê só a primeira tabela.
+- **A folha do recibo passa a se identificar como RECIBO**: a faixa preta
+  mostra **“RECIBO · FICHA Nº 3418”** — o número é o da ficha anexada (o nº
+  interno do recibo, 0001/0002…, continua só na lista de **Recibos salvos** e
+  no “já recebido”) e a ficha também aparece no rodapé e no “Referente a”,
+  como antes.
+- **A palavra “FICHA TÉCNICA” saiu da folha**: no “Referente a” a origem
+  agora entra como **“Ficha nº 3418”** — o documento inteiro (faixa, texto e
+  rodapé) fala em RECIBO e em ficha só como referência.
+
+**Ficha Técnica**
+
+- **Saiu da barra lateral a seção “Páginas”** (os cartões de cada página com
+  Imagem/Texto/Seta/Retângulo/Círculo/Camadas/Estúdio/Cor e os botões
+  “Adicionar página”/“Página em branco”) — nunca era usada e ocupava metade
+  da tela.
+- **Nada se perde**: as ferramentas de cada folha já estavam na **régua ao
+  lado da página** (a que mostra “Pág. 2”) e o “adicionar página” está na
+  **faixa de miniaturas** (o **＋** e o **🗋**). O **⧉** (duplicar) e o **✕**
+  (remover) da página em foco foram para o fim dessa régua.
+- **Barra lateral mais estreita** de volta ao tamanho de antes (444px → 296px)
+  e o par “Importar/Exportar backup” voltou a ter um botão por linha.
+- Manual e ajuda da Ficha Técnica atualizados.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.7.2**.
+- Testes: nova suíte `test_recibo_gerar_v10.js` (o botão da Ficha até o
+  recibo, o espelho que não duplica e a faixa “RECIBO”).
+
 ## V10.7.1 — O sinal de 50% agora aparece NA FOLHA do Orçamento (2026-11-16)
 
 O pedido: *"não aparece automaticamente os 50% no orçamento como pedi"*. Na

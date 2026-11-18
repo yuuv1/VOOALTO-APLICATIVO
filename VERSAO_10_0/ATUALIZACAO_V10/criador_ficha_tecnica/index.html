@@ -37,9 +37,9 @@
 --az:#1E2937;--azm:#2D3F55;--azc:#EEF2F8;--ro:#D4187A;
 --vd:#166534;--vm:#DC2626;--tx:#1a1a2e;--txl:#6b7280;--bd:#D1D5DB;
 --bg:#F9FAFB;--br:var(--v10-paper);--hd:#3B82F6;--ar:#1D4ED8;
-/* V10.7 — a barra lateral ficou 50% mais larga (296px → 444px): mais respiro
-   nos rótulos e os botões das ferramentas da página distribuem em 3 colunas. */
---sidebar-w:444px;
+/* V10.7.2 — a barra lateral voltou ao tamanho de antes (296px): a seção
+   “Páginas” (que só existia para as ferramentas da folha) saiu do menu. */
+--sidebar-w:296px;
 --glass-bg:rgba(15,23,42,.78);
 --glass-border:rgba(255,255,255,.12);
 --glass-card:rgba(255,255,255,.06);
@@ -194,65 +194,11 @@ background:var(--sb-hover);border-color:var(--sb-line);
 /* ═══ DIVISOR ═══ */
 .sb-divider{height:1px;background:var(--sb-line);margin:8px 14px}
 
-/* ═══ CARTÃO DE PÁGINA ═══ */
-.sb-page-group{
-background:var(--sb-card);border:1px solid var(--sb-line);border-radius:9px;
-margin:0 10px 6px;overflow:hidden;
-}
-.sb-page-header{
-display:flex;align-items:center;gap:7px;height:32px;padding:0 4px 0 9px;
-border-bottom:1px solid var(--sb-line);
-font-size:10.5px;font-weight:700;color:var(--sb-t2);
-}
-.sb-page-num{
-width:17px;height:17px;border-radius:4px;flex-shrink:0;
-background:var(--sb-active);color:var(--sb-t2);
-font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
-}
-.sb-page-branca{
-font-size:7.5px;font-weight:800;letter-spacing:.5px;color:var(--sb-t3);
-border:1px solid var(--sb-line2);border-radius:4px;padding:1px 4px;
-}
-.sb-remove-page{
-margin-left:auto;width:22px;height:22px;flex-shrink:0;padding:0;
-border:none;border-radius:5px;background:transparent;color:var(--sb-t3);
-display:flex;align-items:center;justify-content:center;cursor:pointer;
-opacity:0;transition:opacity .13s,background .13s,color .13s;
-}
-.sb-page-group:hover .sb-remove-page{opacity:1}
-.sb-remove-page:hover{background:var(--v10-err-bg);color:var(--v10-err)}
-.sb-remove-page svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-/* V10.7 — barra mais larga: 3 colunas distribuem melhor as ferramentas
-   (a página 1 tem 8 botões: 3+3+2; as extras têm 6: 3+3). */
-.sb-page-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:8px}
-.sb-page-actions .sb-btn{
-width:100%;margin:0;height:33px;padding:0 8px;gap:7px;border-radius:6px;
-font-size:10.5px;font-weight:600;background:var(--sb-hover);
-}
-.sb-page-actions .sb-btn:hover{background:var(--sb-active)}
-.sb-page-actions .sb-btn-icon{width:15px;height:15px;opacity:.65}
-.sb-page-actions .sb-btn-icon svg{width:14px;height:14px}
-.sb-page-actions .sb-btn:hover .sb-btn-icon{opacity:1}
-
-/* ═══ ADICIONAR PÁGINA ═══ */
-.sb-add-page{
-display:flex;align-items:center;gap:8px;
-width:calc(100% - 20px);margin:0 10px 4px;height:31px;padding:0 9px;
-border:1px dashed var(--sb-line2);border-radius:7px;background:transparent;
-color:var(--sb-t3);font-family:inherit;font-size:10.5px;font-weight:600;
-cursor:pointer;transition:background .13s,border-color .13s,color .13s;
-}
-.sb-add-page:hover{border-color:rgba(212,24,122,.55);color:var(--sb-rosa2);background:rgba(212,24,122,.06)}
-.sb-add-page-icon{display:flex;align-items:center;flex-shrink:0}
-.sb-add-page svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* V10.7 — com a barra mais larga, os dois botões de página nova ficam lado a
-   lado (mesma força, mesma altura) e os pares de backup dividem a linha. */
-.sb-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 4px}
-.sb-add-grid .sb-add-page{width:100%;margin:0;padding:0 8px}
-.sb-pair{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 3px}
+/* ═══ PAR DE BOTÕES (backup) ═══ */
+.sb-pair{display:grid;grid-template-columns:1fr;gap:4px;margin:0 10px 3px}
 .sb-pair .sb-btn{width:100%;margin:0;height:31px;padding:0 8px;font-size:10.5px}
 .sb-pair .sb-btn-label{white-space:normal;line-height:1.2}
-#sidebar.collapsed .sb-add-grid,#sidebar.collapsed .sb-pair{display:flex;flex-direction:column;gap:3px;margin:0 0 3px 4px}
+#sidebar.collapsed .sb-pair{display:flex;flex-direction:column;gap:3px;margin:0 0 3px 4px}
 #sidebar.collapsed .sb-pair .sb-btn{margin:0}
 
 /* ═══ CAMPOS (AJUSTES) ═══ */
@@ -430,10 +376,6 @@ transition:background .13s,border-color .13s;
 #sidebar.collapsed .sb-section-title,
 #sidebar.collapsed .sb-section-desc,
 #sidebar.collapsed .sb-btn-label,
-#sidebar.collapsed .sb-add-page-label,
-#sidebar.collapsed .sb-page-title,
-#sidebar.collapsed .sb-page-branca,
-#sidebar.collapsed .sb-remove-page,
 #sidebar.collapsed .sb-footer,
 #sidebar.collapsed .sb-hint,
 #sidebar.collapsed .v7-save-chip,
@@ -442,11 +384,6 @@ transition:background .13s,border-color .13s;
 #sidebar.collapsed .sb-field{display:none!important}
 #sidebar.collapsed .sb-logo{padding-left:6px;padding-right:0}
 #sidebar.collapsed .sb-btn{width:34px;margin:0 0 3px 4px;padding:0;justify-content:center}
-#sidebar.collapsed .sb-add-page{width:34px;margin:0 0 4px 4px;padding:0;justify-content:center;border:none}
-#sidebar.collapsed .sb-page-group{margin:0 16px 6px 4px}
-#sidebar.collapsed .sb-page-header{justify-content:center;padding:0;border-bottom:1px solid var(--sb-line)}
-#sidebar.collapsed .sb-page-actions{grid-template-columns:1fr;padding:3px}
-#sidebar.collapsed .sb-page-actions .sb-btn{width:26px;height:28px;margin:0 auto}
 
 
 /* ═══ PÁGINA WRAPPER ═══ */
@@ -954,6 +891,11 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 .v7-tb-label{margin:0 0 3px!important;text-align:center!important;writing-mode:initial!important;font-size:8.5px;font-weight:900;color:var(--v10-pink);text-transform:uppercase;letter-spacing:.6px;margin-right:4px;white-space:nowrap}
 .v7-tb-btn{border:0;background:var(--v10-hover);color:var(--v10-t1);width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
 .v7-tb-btn:hover{background:var(--v10-active)}
+/* separador + botão de remover página na régua da página */
+.v7-tb-sep{display:block;width:20px;height:1px;background:var(--v10-line-2);margin:3px 0}
+.v7-tb-btn.v7-tb-del:hover{background:var(--v10-err-bg);color:var(--v10-err)}
+/* botão ligado (modo seta, por exemplo) */
+.v7-tb-btn.v7-tb-on{background:var(--v10-warn-bg);color:var(--v10-warn)}
 .v7-thumb{cursor:grab}
 .v7-thumb.dragging{opacity:.4;border-style:dashed}
 .v7-thumb.drop-before{box-shadow:inset 4px 0 0 #34D399!important;border-color:#34D399!important}
@@ -1148,7 +1090,6 @@ body.mke-studio-on::after{
 .lp-row.mke-lock .lp-lock{color:#B45309}
 /* Shift+clique na lista: mesma marca azul da área, para ver o grupo inteiro */
 .lp-row.msel-row{background:rgba(59,130,246,.12);box-shadow:inset 2px 0 0 #3B82F6}
-.sb-dup-page{font-size:11px;font-weight:900;line-height:1}
 .mke-warn{color:#B45309;font-size:8px;line-height:1;cursor:help}
 
 /* ── Camada travada: sem alças, sem cursor de arraste ── */
@@ -1272,68 +1213,6 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
           <button type="button" class="sb-draft-btn ghost" id="v8DraftDescartar" onclick="v8RascunhoDescartar()" disabled title="Apaga o rascunho guardado (a ficha aberta não muda)">Descartar</button>
           <button type="button" class="sb-draft-btn ghost" id="v8DraftBackupBtn" onclick="abrirCentralBackupV8()" title="Exportar ou importar backup completo com todos os rascunhos">💾 Backup</button>
         </div>
-      </div>
-    </div>
-
-    <!-- ─── PÁGINAS ─── -->
-    <div class="sb-section">
-      <div class="sb-section-title">Páginas</div>
-      <div class="sb-section-desc">Ferramentas para adicionar elementos em cada folha</div>
-
-      <div class="sb-page-group" id="pgGroup1">
-        <div class="sb-page-header">
-          <div class="sb-page-num">1</div>
-          <span class="sb-page-title">Página 1</span>
-        </div>
-        <div class="sb-page-actions">
-          <button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput').click()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></span>
-            <span class="sb-btn-label">Imagem</span>
-          </button>
-          <button title="Adicionar uma caixa de texto" class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-type"/></svg></span>
-            <span class="sb-btn-label">Texto</span>
-          </button>
-          <button title="Desenhar seta/anotação" class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg></span>
-            <span class="sb-btn-label">Seta</span>
-          </button>
-          <button title="Adicionar retângulo" class="sb-btn" onclick="criarRetangulo()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-square"/></svg></span>
-            <span class="sb-btn-label">Retângulo</span>
-          </button>
-          <button title="Adicionar círculo" class="sb-btn" onclick="criarCirculo()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-circle"/></svg></span>
-            <span class="sb-btn-label">Círculo</span>
-          </button>
-          <button title="Painel de camadas: o que está na frente e nos fundos" class="sb-btn" onclick="toggleLayersPanel()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg></span>
-            <span class="sb-btn-label">Camadas</span>
-          </button>
-          <button title="Estúdio do mockup: amplia a área e abre trocar imagem, espelhar, girar, alinhar e organizar" class="sb-btn" onclick="mkeAbrirEstudio()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg></span>
-            <span class="sb-btn-label">Estúdio</span>
-          </button>
-          <button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCor()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-palette"/></svg></span>
-            <span class="sb-btn-label">Cor</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Grupos de páginas extras são inseridos aqui via JS -->
-      <div id="extraPagesNav"></div>
-
-      <!-- V10.7 — os dois comandos lado a lado, distribuídos na barra larga -->
-      <div class="sb-add-grid">
-        <button title="Adicionar uma página com o layout padrão — dados do cliente, produção e nº da ficha iguais à folha 1; a GRADE nasce vazia (botão “Mesma grade” copia a da página anterior)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
-          <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span>
-          <span class="sb-add-page-label">Adicionar página</span>
-        </button>
-        <button title="Adicionar uma página em branco (só o nº da ficha é herdado)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')">
-          <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-file"/></svg></span>
-          <span class="sb-add-page-label">Página em branco</span>
-        </button>
       </div>
     </div>
 
@@ -2000,6 +1879,11 @@ recalcGradeExtra(pageData);
 atualizarRodapes();
 sincTodasPaginas();
 copiarP1paraExtra(pageData);
+/* V10.7.3 — a página nova nasce LIMPA: sem cor, sem tipo de tecido e sem
+   nenhuma arte/imagem da página anterior. É a garantia final (o espelho já
+   não copia cor nem tecido) — se um dia alguém voltar a copiar alguma coisa
+   aqui, esta chamada limpa a página. */
+paginaNovaLimpa(pageData);
 
 const ci=$('canvasInner_'+pid);
 if(ci){
@@ -2008,7 +1892,6 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }).observe(ci);
 }
 
-atualizarNavSidebar();
 /* Recalcula número de página, rodapé e ordem a partir do DOM. Sem isso o
    rodapé anunciava "de 4" numa ficha de 3 páginas sempre que uma página do
    meio tinha sido removida antes (o contador ficava à frente da realidade) e a
@@ -2017,9 +1900,34 @@ try{if(typeof v7Renumerar==='function')v7Renumerar();}catch(e){}
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Autosave==='function')v7Autosave();
 if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
-/* V10.7 — a página nova lembra: mesmos dados/nº, grade vazia. */
-toast(`✔ Página ${num} adicionada — mesmos dados e nº; grade vazia (botão “Mesma grade” copia a anterior)`,'sucesso',3400);
+/* V10.7.3 — a página nova lembra: mesmos dados/nº; grade, cor, tipo de tecido
+   e artes nascem vazios (cada página tem os seus). */
+toast(`✔ Página ${num} adicionada — mesmos dados e nº; cor, tipo de tecido e artes ficam limpos (grade vazia: use “Mesma grade”)`,'sucesso',3600);
 snap();
+}
+
+/* ═══ PÁGINA NOVA LIMPA (V10.7.3) ═══
+   A página que o usuário cria não pode herdar da anterior:
+     · a paleta de cores  → começa vazia (cada página tem a sua);
+     · o tipo de tecido   → começa vazio (é o da PEÇA, não da ficha);
+     · as artes/imagens   → nada de layers, nada de <img> no canvas.
+   A grade de produção já nascia vazia desde a V10.7. */
+function paginaNovaLimpa(p){
+  if(!p||!p.id)return;
+  const pid=p.id;
+  /* cores: lista zerada (e o contador de ids reiniciado) */
+  const lista=$('coresList_'+pid);
+  if(lista){lista.innerHTML='';}
+  p.corId=0;
+  /* tipo de tecido: o texto da peça é de cada página */
+  const tt=$('tipoTecido_'+pid);
+  if(tt)tt.innerHTML='';
+  /* artes/imagens: nenhuma camada e nenhum <img> sobrando no canvas */
+  p.layers=[];
+  p.selId=null;
+  const canvas=$('canvasInner_'+pid);
+  if(canvas)canvas.querySelectorAll('img,.img-layer,.txt-layer,.arr-layer,.rect-layer,.circle-layer').forEach(el=>el.remove());
+  if(typeof updPhExtra==='function')updPhExtra(p);
 }
 
 /* ═══ PÁGINA BRANCA ═══ */
@@ -2060,7 +1968,6 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }).observe(ci);
 }
 
-atualizarNavSidebar();
 /* V10.2 — a página em branco nasce com o MESMO Nº da ficha (antes o campo
    "Nº da Operação" dela ficava vazio e a pessoa achava que o número havia
    "sumido"). `data-ficha-num` marca que o valor é cópia da folha 1: o espelho
@@ -2204,7 +2111,6 @@ const inp=$('canvasInput_'+pid);if(inp)inp.remove();
 paginas.splice(idx,1);
 totalPaginas--;
 if(typeof v7PaginaAtiva==='object'&&v7PaginaAtiva&&v7PaginaAtiva.id===pid&&typeof v7EsconderToolbar==='function')v7EsconderToolbar();
-atualizarNavSidebar();
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Renumerar==='function')v7Renumerar();else atualizarRodapes();
 /* o estúdio volta a apontar para a folha 1 (ou para a página que sobrou) */
@@ -2214,34 +2120,6 @@ try{if(typeof mkeSync==='function')mkeSync();}catch(e){}
 try{if(typeof updList==='function')updList();}catch(e){}
 toast(`Página ${num} removida.`);
 snap();
-}
-
-function atualizarNavSidebar(){
-const nav=$('extraPagesNav');if(!nav)return;
-nav.innerHTML='';
-paginas.forEach(p=>{
-const grp=document.createElement('div');
-grp.className='sb-page-group';grp.id='sbGroup_'+p.id;
-const isBranca=p.tipo==='branca';
-const ico=n=>'<span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-'+n+'"/></svg></span>';
-grp.innerHTML=`
-<div class="sb-page-header">
-<div class="sb-page-num">${p.num}</div>
-<span class="sb-page-title">Página ${p.num}</span>
-${isBranca?'<span class="sb-page-branca">BRANCA</span>':''}
-<button title="Duplicar esta página (campos, grade, medidas e artes)" class="sb-remove-page sb-dup-page" onclick="v7DuplicarPagina('${p.id}')">⧉</button>
-<button title="Remover esta página" class="sb-remove-page" onclick="removerPagina('${p.id}')"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
-</div>
-<div class="sb-page-actions">
-<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput_${p.id}').click()">${ico('image')}<span class="sb-btn-label">Imagem</span></button>
-<button title="Adicionar uma caixa de texto" class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">${ico('type')}<span class="sb-btn-label">Texto</span></button>
-<button title="Desenhar seta/anotação" class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">${ico('arrow')}<span class="sb-btn-label">Seta</span></button>
-<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">${ico('square')}<span class="sb-btn-label">Retângulo</span></button>
-<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculoExtra('${p.id}')">${ico('circle')}<span class="sb-btn-label">Círculo</span></button>
-${!isBranca?`<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCorExtra('${p.id}')">${ico('palette')}<span class="sb-btn-label">Cor</span></button>`:''}
-</div>`;
-nav.appendChild(grp);
-});
 }
 
 function htmlPaginaExtra(p){
@@ -2522,17 +2400,30 @@ document.addEventListener('input',e=>{
 
    V10.7 — EXCEÇÃO: a grade de produção não é mais espelhada; cada página tem
    a sua e a página nova nasce com ela vazia (copiarGradePaginaAnterior copia
-   a da página anterior quando as duas folhas usam a mesma grade). */
+   a da página anterior quando as duas folhas usam a mesma grade).
 
-const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','coresTitulo','tipoTitulo','avisoTxt'];
+   V10.7.4 — os TÍTULOS das seções (cores e tipo de tecido) também são de
+   cada página: a página nova começa com o mesmo título da folha 1, mas
+   depois cada uma pode ter o seu. Antes o espelho sobrescrevia o título da
+   página extra e a alteração de texto que o usuário fazia nela era
+   revertida — na folha 1 a alteração pegava, na página adicionada não. */
+
+const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','avisoTxt'];
+/* Títulos copiados SÓ na criação da página (depois cada página tem o seu). */
+const P1_TITULOS_PAGINA=['coresTitulo','tipoTitulo'];
 
 /* Páginas que têm os campos da ficha (a página branca é canvas livre). */
 function paginasEspelhadas(){return (typeof paginas!=='undefined'?paginas:[]).filter(p=>p&&p.tipo!=='branca');}
 
-/* Campos simples + tipo de tecido (contenteditable) + tamanho do separador.
+/* Campos simples + tamanho do separador.
    O tamanho do separador vive em DOIS lugares: o campo `sepFS` e o estilo
    inline aplicado por applySepFontSize — copiar só um dos dois deixa a página
-   nova com o texto certo em 7px. */
+   nova com o texto certo em 7px.
+
+   V10.7.3 — o TIPO DE TECIDO NÃO é mais espelhado: cada página tem o seu
+   (a página nova nasce vazio). A paleta de cores também não é mais espelhada
+   (a função que espelhava saiu). O que continua espelhado é a ficha:
+   número, data, previsão, títulos das seções, aviso, medidas e produção. */
 function espelharCamposP1(p){
   const pid=p.id;
   P1_CAMPOS_ESPELHADOS.forEach(id=>{
@@ -2551,33 +2442,11 @@ function espelharCamposP1(p){
       try{dstNum.dataset.fichaNum='1';}catch(e){}
     }
   }
-  const tt=$('tipoTecido'),tt2=$('tipoTecido_'+pid);
-  if(tt&&tt2&&tt2.innerHTML!==tt.innerHTML)tt2.innerHTML=tt.innerHTML;
   const fsSrc=$('sepFontSize'),fsDst=$('sepFS_'+pid);
   if(fsSrc&&fsDst){
     if(fsDst.value!==fsSrc.value)fsDst.value=fsSrc.value;
     applySepFontSize('sepTxt_'+pid,'sepFS_'+pid);
   }
-}
-
-/* Paleta de cores: mesma lista, mesmos nomes, mesma ordem. Compara antes de
-   reconstruir porque cada reconstrução cria ids novos (p2c1, p2c2…) e jogaria
-   fora o foco de quem estivesse editando a cor na página 2. */
-function espelharCoresP1(p){
-  const lista=$('coresList_'+p.id);if(!lista)return 0;
-  const origem=[...document.querySelectorAll('#coresList [id^="ci_"]')].map(it=>{
-    const i=it.id.replace('ci_','');
-    return {hex:($('chi_'+i)||{}).value||'#3B82F6',nome:($('cni_'+i)||{}).value||'COR'};
-  });
-  const assinatura=lista=>[...lista.querySelectorAll('[id^="ci_"]')].map(it=>{
-    const i=it.id.replace('ci_','');
-    return String(($('chi_'+i)||{}).value||'').toUpperCase()+'|'+(($('cni_'+i)||{}).value||'');
-  }).join('§');
-  const alvo=origem.map(c=>String(c.hex).toUpperCase()+'|'+c.nome).join('§');
-  if(assinatura(lista)===alvo)return 0;
-  lista.innerHTML='';p.corId=0;
-  origem.forEach(c=>_addCorExtra(p,c.hex,c.nome));
-  return origem.length;
 }
 
 /* V10.7 — a grade de produção NÃO é mais espelhada: cada página tem a sua,
@@ -2634,22 +2503,39 @@ function espelharProducaoP1(p){
 function aplicarSepFontSizeP1(){applySepFontSize('sepTxt','sepFontSize');}
 
 /* Espelha a folha 1 para UMA página (usado ao criar a página).
-   V10.7 — a grade não é mais copiada: a página nova nasce com ela vazia. */
+   V10.7 — a grade não é mais copiada: a página nova nasce com ela vazia.
+   V10.7.3 — a PALETA DE CORES e o TIPO DE TECIDO também não são copiados:
+   cada página tem os seus (a página nova nasce sem cor e sem tipo de tecido).
+   O que a página nova herda é a ficha: número, data, previsão, separador,
+   títulos das seções, aviso, medidas e produção. */
 function copiarP1paraExtra(p){
   if(!p||p.tipo==='branca')return;
   sincTodasPaginas();
   espelharCamposP1(p);
-  espelharCoresP1(p);
+  copiarTitulosP1(p);
   espelharMedidasP1(p);
   espelharProducaoP1(p);
 }
 
+/* V10.7.4 — o título das seções (cores e tipo de tecido) entra na página
+   nova junto com o resto, mas DEPOIS cada página tem o seu: o espelho não
+   mexe mais neles (a alteração de texto da página extra fica). */
+function copiarTitulosP1(p){
+  const pid=p.id;
+  P1_TITULOS_PAGINA.forEach(id=>{
+    const src=$(id),dst=$(id+'_'+pid);
+    if(src&&dst&&dst.value!==src.value)dst.value=src.value;
+  });
+}
+
 /* Espelha para TODAS as páginas extras (usado quando a folha 1 muda).
-   V10.7 — sem espelhar a grade (cada página tem a sua). */
+   V10.7 — sem espelhar a grade (cada página tem a sua).
+   V10.7.3 — sem espelhar a paleta de cores nem o tipo de tecido: são de cada
+   página. Sem isso, mexer na cor da folha 1 devolvia a cor antiga (e a arte
+   antiga) na página nova — era o "espelho" que o usuário viu. */
 function sincronizarPaginasExtra(){
   const alvos=paginasEspelhadas();
   alvos.forEach(espelharCamposP1);
-  alvos.forEach(espelharCoresP1);
   alvos.forEach(espelharMedidasP1);
   alvos.forEach(espelharProducaoP1);
   /* V10.2 — as páginas BRANCAS também recebem o nº da ficha (só o número:
@@ -2668,12 +2554,14 @@ function espelharAgendar(){
 
 /* Origem do espelho: só a folha 1. Cobre input, select, contenteditable e os
    campos criados depois (delegação no documento). V10.7 — a grade (.gi) saiu
-   da lista: ela não é mais espelhada, cada página tem a sua. */
+   da lista: ela não é mais espelhada, cada página tem a sua.
+   V10.7.3 — o tipo de tecido saiu: ele é de cada página, então digitar nele
+   na folha 1 não precisa varrer as outras. */
 function _eOrigemDoEspelho(t){
   if(!t||typeof t.closest!=='function')return false;
   if(!t.closest('#folha1'))return false;
   if(t.id&&P1_CAMPOS_ESPELHADOS.indexOf(t.id)>=0)return true;
-  if(t.id==='sepFontSize'||t.id==='tipoTecido')return true;
+  if(t.id==='sepFontSize')return true;
   if(t.classList&&(t.classList.contains('med-inp')||t.classList.contains('field')))return true;
   if(t.closest&&t.closest('#prodLinhas'))return true;
   return false;
@@ -2805,17 +2693,14 @@ const lista=$('coresList_'+p.id);if(lista)lista.appendChild(div);
 function onCorPickerExtra(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const chi=$(`chi_${id}`);if(chi)chi.value=hex.toUpperCase();}
 function onCorHexExtra(id,hex){const h=hex.trim();if(/^#[0-9A-Fa-f]{6}$/.test(h)){const tc=contraste(h);const cr=$(`cr_${id}`);if(cr)cr.style.background=h;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const cp=$(`cp_${id}`);if(cp)cp.value=h;}}
 function onCorNomeExtra(id,nome){const cn=$(`cn_${id}`);if(cn)cn.textContent=nome.toUpperCase();}
-/* A paleta é da ficha, não da página: apagar a cor numa página extra apaga a
-   mesma cor na folha 1 (por posição) — senão o espelho a traria de volta no
-   próximo instante e o botão pareceria não funcionar. */
+/* V10.7.3 — a paleta é de CADA PÁGINA: apagar a cor numa página extra apaga
+   só ali. Antes apagava a mesma cor da folha 1 (por posição), porque a paleta
+   era espelhada — hoje o espelho não mexe em cor, então a página guarda a
+   sua. */
 function excluirCorExtra(id){
-const el=$(`ci_${id}`);if(!el)return;
-const pid=String(id).split('c')[0];
-const lista=$('coresList_'+pid);
-const idx=lista?[...lista.querySelectorAll('[id^="ci_"]')].indexOf(el):-1;
-const origem=[...document.querySelectorAll('#coresList [id^="ci_"]')];
-if(idx>=0&&origem[idx]&&typeof excluirCor==='function'){excluirCor(origem[idx].id.replace('ci_',''));return;}
-el.remove();
+  const el=$(`ci_${id}`);if(!el)return;
+  el.remove();
+  try{snap();}catch(e){}
 }
 
 /* ═══ CANVAS EXTRA ENGINE ═══ */
@@ -3191,13 +3076,24 @@ const richBar=$('richBar');
 let rfSavedRange=null;
 function rfShow(){
 const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){rfHide();return;}
-const anc=sel.anchorNode,parent=anc?.parentElement;if(!parent)return;
-const inCE=parent.closest('[contenteditable="true"]');if(!inCE)return;
+const anc=sel.anchorNode;if(!anc){rfHide();return;}
+/* V10.7.4 — o nó da seleção pode ser o próprio campo (seleção de tudo com
+   Ctrl+A) ou um texto dentro dele. Antes só o segundo caso era reconhecido:
+   com o Ctrl+A dentro do campo, a barra de formatação não abria. */
+const el=(anc.nodeType===1)?anc:(anc.parentElement||null);if(!el){rfHide();return;}
+const inCE=el.closest?el.closest('[contenteditable="true"]'):null;
+if(!inCE){rfHide();return;}
 rfSavedRange=sel.getRangeAt(0).cloneRange();
 const rect=sel.getRangeAt(0).getBoundingClientRect();
 const barW=richBar.offsetWidth||420;
-richBar.style.top=(window.scrollY+rect.top-56)+'px';
-richBar.style.left=Math.max(8,window.scrollX+rect.left+rect.width/2-barW/2)+'px';
+/* V10.7.4 — a barra é `position:fixed`: a posição dela é a da TELA, não a
+   da página. Antes era `window.scrollY + rect.top`, que contava a rolagem
+   duas vezes: na folha 1 (rolagem ~0) a barra aparecia, mas na página
+   adicionada (lá embaixo, rolagem de ~1200px) a barra ficava fora da tela
+   e o usuário nunca via as opções de formatação do texto. */
+const vw=window.innerWidth||1024,vh=window.innerHeight||768;
+richBar.style.top=Math.max(8,Math.min(rect.top-56,vh-70))+'px';
+richBar.style.left=Math.max(8,Math.min(rect.left+rect.width/2-barW/2,vw-barW-8))+'px';
 richBar.classList.add('vis');rfSyncState();
 }
 function rfHide(){richBar.classList.remove('vis');}
@@ -3209,7 +3105,13 @@ function rfHL(){if(!rfRestore())return;document.execCommand('hiliteColor',false,
 function rfHLClear(){if(!rfRestore())return;document.execCommand('hiliteColor',false,'transparent');rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;}
 function rfClear(){if(!rfRestore())return;document.execCommand('removeFormat',false,null);}
 document.addEventListener('mouseup',e=>{setTimeout(()=>{if(!richBar.contains(e.target))rfShow();},80);});
-document.addEventListener('keyup',e=>{if(e.shiftKey||['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))setTimeout(rfShow,80);});
+/* V10.7.4 — a barra de formatação também abre com Ctrl+A e com as setas,
+   em QUALQUER campo editável (inclusive o tipo de tecido das páginas
+   adicionadas). Mexer dentro da própria barra não a esconde. */
+document.addEventListener('keyup',e=>{
+  if(e.target&&e.target.closest&&e.target.closest('#richBar'))return;
+  if(e.shiftKey||['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)||(e.ctrlKey&&(e.key==='a'||e.key==='A')))setTimeout(rfShow,80);
+});
 
 /* ═══ UNDO / REDO ═══ */
 const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','sepFontSize','coresTitulo','tipoTitulo'];
@@ -3229,9 +3131,20 @@ d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
 /* V10.7 — a grade de CADA página entra no estado (desfazer/refazer). Antes a
    grade era sempre cópia da folha 1, então bastava guardar a da folha 1;
-   agora cada página tem a sua, e ela volta junto no Ctrl+Z. */
-d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id)}));
+   agora cada página tem a sua, e ela volta junto no Ctrl+Z.
+   V10.7.3 — a paleta de cores e o tipo de tecido também são de cada página:
+   entram no estado para o desfazer devolver a cor que estava na página. */
+d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id),cores:_pagCores(p.id),tipoTecido:($('tipoTecido_'+p.id)||{}).innerHTML||'',coresTitulo:($('coresTitulo_'+p.id)||{}).value||'',tipoTitulo:($('tipoTitulo_'+p.id)||{}).value||''}));
 return d;
+}
+/* Paleta de cores de UMA página (folha 1 ou extra). */
+function _pagCores(pid){
+  const out=[];
+  document.querySelectorAll('#coresList_'+pid+' [id^="ci_"]').forEach(it=>{
+    const i=it.id.replace('ci_','');
+    out.push({hex:($('chi_'+i)||{}).value||'#3B82F6',nome:($('cni_'+i)||{}).value||'COR'});
+  });
+  return out;
 }
 // Assinatura LEVE do estado — NÃO inclui src de imagens (que podem ser MBs), mas cobre todos os campos de texto e metadados das camadas.
 // Serve para detectar "nada mudou" sem serializar o blob das imagens.
@@ -3268,6 +3181,14 @@ function _estadoSig(st){
   p.push('L='+(st._layers||[]).map(_layerSig).join(';'));
   /* V10.7 — a grade de cada página também diferencia estados */
   p.push('GE='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+_gradeSigOf(x.grade);}).join('&'));
+  /* V10.7.3 — a paleta e o tipo de tecido de cada página também */
+  p.push('PC='+(st._paginasDetalhe||[]).map(function(x){
+    return x.id+'#'+(x.cores||[]).map(function(c){return (c.hex||'')+(c.nome||'');}).join('~')+'#'+(x.tipoTecido||'');
+  }).join('&'));
+  /* V10.7.4 — e o título da seção de cada página */
+  p.push('PT='+(st._paginasDetalhe||[]).map(function(x){
+    return x.id+'#'+(x.coresTitulo||'')+'#'+(x.tipoTitulo||'');
+  }).join('&'));
   p.push('P='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+(x.layers||[]).map(_layerSig).join(';');}).join('&'));
   return p.join('\u0002');
 }
@@ -3346,6 +3267,18 @@ if(Array.isArray(s._paginasDetalhe)){
       });
       if(typeof recalcGradeExtra==='function')recalcGradeExtra(p);
     }
+    /* V10.7.3 — a paleta e o tipo de tecido voltam com a página */
+    if(Array.isArray(snap.cores)){
+      const lista=$('coresList_'+p.id);
+      if(lista){lista.innerHTML='';p.corId=0;snap.cores.forEach(c=>_addCorExtra(p,c.hex,c.nome));}
+    }
+    if(snap.tipoTecido!==undefined){
+      const tt=$('tipoTecido_'+p.id);
+      if(tt)tt.innerHTML=snap.tipoTecido||'';
+    }
+    /* V10.7.4 — o título da seção de cada página */
+    if(snap.coresTitulo!==undefined){const ct=$('coresTitulo_'+p.id);if(ct)ct.value=snap.coresTitulo;}
+    if(snap.tipoTitulo!==undefined){const tt=$('tipoTitulo_'+p.id);if(tt)tt.value=snap.tipoTitulo;}
     if(typeof updPhExtra==='function')updPhExtra(p);
   });
 }
@@ -3929,13 +3862,21 @@ function toggleModoSeta(){modoSeta?desativarModoSeta():ativarModoSeta();}
 function ativarModoSeta(){
 if(eyeAtivo)desativarEye();deselecionarTudo();modoSeta=true;
 canvasInner.classList.add('modo-seta');arrDrawHint.classList.add('vis');
-$('btnSeta').classList.add('ativo-desenho');
+const bs=$('btnSeta');if(bs)bs.classList.add('ativo-desenho');
+/* a seta agora vive na régua da folha (o botão da barra lateral foi sair) */
+document.querySelectorAll('#v7PageToolbar .v7-tb-btn').forEach(b=>{
+  if(b.getAttribute('data-acao')==='seta')b.classList.add('v7-tb-on');
+});
 canvasInner.addEventListener('mousedown',onSetaMouseDown);
 toast('➜ Modo seta · Clique e arraste','',2500);
 }
 function desativarModoSeta(){
 modoSeta=false;canvasInner.classList.remove('modo-seta');arrDrawHint.classList.remove('vis');
-$('btnSeta').classList.remove('ativo-desenho');arrowPreview.style.display='none';
+const bs=$('btnSeta');if(bs)bs.classList.remove('ativo-desenho');
+document.querySelectorAll('#v7PageToolbar .v7-tb-btn').forEach(b=>{
+  if(b.getAttribute('data-acao')==='seta')b.classList.remove('v7-tb-on');
+});
+arrowPreview.style.display='none';
 canvasInner.removeEventListener('mousedown',onSetaMouseDown);
 }
 function buildArrSVGFromPoints(x1,y1,x2,y2,color,stroke,style,id,W,H){
@@ -7255,6 +7196,9 @@ function capturarFichaParaJSON() {
       id: p.id, num: p.num, tipo: p.tipo,
       layers: p.layers.map(serLayer),
       prod, med: { fem: medFem, masc: medMasc }, grade: { m: gm, b: gb, i: gi2 },
+      /* V10.7.3 — a paleta de cores é de cada página: ela PRECISA ir no
+         .json, senão a cor da página 2 se perde ao reabrir a ficha. */
+      cores: (snapExtra.cores || []),
       hdr: hdrExtra
     };
   });
@@ -7786,8 +7730,7 @@ function v8LimparPaginasExtras(){
   totalPaginas=1;
   v7PaginaAtiva=null;
   if(typeof v7EsconderToolbar==='function'){try{v7EsconderToolbar();}catch(e){}}
-  atualizarNavSidebar();
-  if(typeof v7Renumerar==='function'){try{v7Renumerar();}catch(e){}}
+    if(typeof v7Renumerar==='function'){try{v7Renumerar();}catch(e){}}
   else if(typeof atualizarRodapes==='function')atualizarRodapes();
   return removidas;
 }
@@ -8938,6 +8881,13 @@ function v7AplicarPaginaSalva(p,s){
   const pid=p.id;
   const setH=(id,v)=>{const el=$(id);if(el&&v!==undefined&&v!==''){if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.value=v;else el.innerHTML=v;}};
   if(s.hdr){setH('fichaNum_'+pid,s.hdr.fichaNum);setH('fichaData_'+pid,s.hdr.fichaData);setH('previsao_'+pid,s.hdr.previsao);setH('sepTxt_'+pid,s.hdr.sepTxt);setH('tipoTecido_'+pid,s.hdr.tipoTecido);setH('entradaVal_'+pid,s.hdr.entradaVal);}
+  /* V10.7.4 — o título da seção volta com a página (inclusive vazio: se o
+     usuário limpou o título, ele volta limpo — e não com o padrão). */
+  if(s.hdr){
+    const ct=$('coresTitulo_'+pid),tt=$('tipoTitulo_'+pid);
+    if(ct&&s.hdr.coresTitulo!==undefined)ct.value=s.hdr.coresTitulo;
+    if(tt&&s.hdr.tipoTitulo!==undefined)tt.value=s.hdr.tipoTitulo;
+  }
   /* V10.2 — o nº da página BRANCA é restaurado do arquivo salvo; se a ficha
      salva é anterior a esta versão (sem fbNum), herda o nº da folha 1.
      A marca `data-num-proprio` diz que o número NÃO é cópia: o .json precisa
@@ -8969,6 +8919,15 @@ function v7AplicarPaginaSalva(p,s){
   if(s.med){
     document.querySelectorAll('#folha_'+pid+' .med-bloco.fem .med-inp').forEach((el,i)=>{if(s.med.fem&&s.med.fem[i]!==undefined)el.value=s.med.fem[i];});
     document.querySelectorAll('#folha_'+pid+' .med-bloco.masc .med-inp').forEach((el,i)=>{if(s.med.masc&&s.med.masc[i]!==undefined)el.value=s.med.masc[i];});
+  }
+  /* V10.7.3 — a paleta de cores é de cada página: volta com a página. */
+  if(Array.isArray(s.cores)){
+    const lista=$('coresList_'+pid);
+    if(lista){
+      lista.innerHTML='';
+      p.corId=0;
+      s.cores.forEach(c=>_addCorExtra(p,c.hex,c.nome));
+    }
   }
   if(Array.isArray(s.layers)){
     (p.layers||[]).forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.remove();});
@@ -9083,7 +9042,15 @@ function v7CapturarPaginaExtra(p){
     fichaData:($('fichaData_'+pid)||{}).value||'',
     previsao:($('previsao_'+pid)||{}).value||'',
     sepTxt:($('sepTxt_'+pid)||{}).value||'',
-    tipoTecido:($('tipoTecido_'+pid)||{}).textContent||'',
+    /* V10.7.4 — o tipo de tecido é salvo com o HTML (igual à folha 1): o
+       negrito, a cor e o tamanho que a barra de formatação aplica no texto
+       precisam sobreviver ao salvamento. Antes só o texto simples era salvo
+       e a formatação da página extra se perdia. */
+    tipoTecido:($('tipoTecido_'+pid)||{}).innerHTML||'',
+    /* V10.7.4 — o título da seção é de cada página: entra no estado para
+       voltar com a página (o espelho não devolve mais o da folha 1). */
+    coresTitulo:($('coresTitulo_'+pid)||{}).value||'',
+    tipoTitulo:($('tipoTitulo_'+pid)||{}).value||'',
     entradaVal:($('entradaVal_'+pid)||{}).value||''
   };
   /* V10.2 — a página BRANCA tem nº próprio em `fbNum_<pid>`. Ele só vai para
@@ -9123,7 +9090,6 @@ function v7DuplicarPagina(pid){
   }catch(e){}
   v7CriarPaginaRestaurada(snap,idx);
   try{if(typeof v7PushPageUndo==='function')v7PushPageUndo({type:'add',index:idx,id:novoId});}catch(e){}
-  try{if(typeof atualizarNavSidebar==='function')atualizarNavSidebar();}catch(e){}
   try{if(typeof renderPageStrip==='function')renderPageStrip();}catch(e){}
   try{if(typeof v7Autosave==='function')v7Autosave();}catch(e){}
   toast('⧉ Página '+p.num+' duplicada','',2200);
@@ -9442,7 +9408,7 @@ function v7MostrarToolbar(meta){
   const pid=meta.id,isP1=meta.p1,isBranca=meta.tipo==='branca';
   const numTxt=isP1?1:((paginas.find(x=>x.id===pid)||{}).num||'');
   const btns=[];
-  const b=(a,ico,t)=>{btns.push('<button class="v7-tb-btn" onclick="v7ToolAcao(\''+a+'\')" title="'+t+'">'+ico+'</button>');};
+  const b=(a,ico,t)=>{btns.push('<button class="v7-tb-btn" data-acao="'+a+'" onclick="v7ToolAcao(\''+a+'\')" title="'+t+'">'+ico+'</button>');};
   b('img','🖼','Adicionar imagem');
   b('txt','✍','Adicionar texto');
   b('seta','➜','Desenhar seta');
@@ -9454,6 +9420,14 @@ function v7MostrarToolbar(meta){
      e as guias passam a morar na área que está em foco (mkeMoverUI). */
   b('estudio','⤢','Ampliar a área do mockup desta página');
   b('ferramentas','🎛','Ferramentas do mockup (trocar, espelhar, alinhar, organizar)');
+  /* V10.7.2 — a régua da página é onde ficaram as ferramentas que a barra
+     lateral usava mostrar: duplicar e remover a folha que está em foco
+     (a folha 1 não sai — use “Adicionar página”). */
+  if(!isP1){
+    btns.push('<span class="v7-tb-sep"></span>');
+    b('duplicar','⧉','Duplicar esta página (campos, grade, medidas e artes)');
+    btns.push('<button class="v7-tb-btn v7-tb-del" onclick="v7ToolAcao(\'remover\')" title="Remover esta página">✕</button>');
+  }
   tb.innerHTML='<span class="v7-tb-label">Pág. '+numTxt+'</span>'+btns.join('');
   tb.style.display='flex';
   v7PosicionarToolbar();
@@ -9474,6 +9448,8 @@ function v7ToolAcao(a){
     else if(a==='camadas'){toggleLayersPanel();}
     else if(a==='estudio'){mkeEntrarEstudio();}
     else if(a==='ferramentas'){mkeAlternarEstudio();mkePainelAbrir('ajustes');}
+    else if(a==='duplicar'){if(!isP1)v7DuplicarPagina(pid);}
+    else if(a==='remover'){if(!isP1)removerPagina(pid);}
   }catch(e){console.warn('v7ToolAcao',e);}
   v7PosicionarToolbar();
 }
@@ -9815,7 +9791,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     </ul>
     <h4 id="ajudaMockup">Estúdio do mockup (área da direita)</h4>
     <ul>
-      <li><b>⤢ Estúdio</b> (na régua da área, na barra lateral ou na barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta ao normal.</li>
+      <li><b>⤢ Estúdio</b> (na régua da área ou na barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta ao normal.</li>
       <li>A régua da esquerda da área tem: <b>+ imagem</b>, <b>⤢ ampliar</b>, <b>📐 guias</b> (centro / grade / margem), <b>🗂 camadas</b>, <b>🧲 ímã</b> e <b>🎛 ferramentas</b>.</li>
       <li>O <b>⋯</b> abre o painel de ferramentas: <b>⇄ trocar imagem</b> mantendo lugar e tamanho, <b>espelhar</b>, <b>girar 90°</b>, <b>opacidade</b>, <b>travar</b>, <b>alinhar e distribuir</b>, <b>organizar</b> (frente e costas lado a lado, empilhado ou em grade), <b>precisão em %</b> com leitura em <b>mm</b> e <b>baixar só esta área em PNG</b>.</li>
       <li>Arraste as fotos para a área ou cole um print com <kbd>Ctrl</kbd>+<kbd>V</kbd>. A segunda imagem já entra ao lado da primeira, sem cobrir.</li>
@@ -9840,11 +9816,13 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
       <li><kbd>Enter</kbd> e <kbd>Tab</kbd> andam de campo em campo nos dados do cliente, na tabela de <b>medidas</b>, na <b>grade</b> de tamanhos e na <b>produção</b>.</li>
       <li>Na <b>produção</b>, <kbd>Enter</kbd> no último campo (Qtd) já abre a linha seguinte.</li>
       <li><b>Colar uma coluna do Excel</b> dentro da grade, das medidas ou da produção espalha os valores pelas células seguintes. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> copia a tabela inteira para colar na planilha.</li>
-      <li>Cada página extra tem <b>⧉ duplicar página</b> na barra lateral: copia campos, grade, medidas, produção e artes.</li>
+      <li>Cada página extra tem <b>⧉ duplicar página</b> na régua ao lado da folha (a que mostra “Pág. 2”): copia campos, grade, medidas, produção e artes.</li>
     </ul>
     <h4>Páginas</h4>
     <ul>
-      <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia. Arraste as miniaturas na faixa inferior para reordenar. Para apagar uma página, use o <b>✕</b> ao lado do número dela na barra lateral (aparece quando o mouse passa por cima).</li>
+      <li><b>Adicionar página</b> usa o layout padrão e <b>página em branco</b> vem vazia — os dois botões ficam na faixa inferior, ao lado das miniaturas (<b>＋</b> e <b>🗋</b>). Arraste as miniaturas para reordenar. Para apagar uma página, use o <b>✕</b> na régua ao lado da folha.</li>
+      <li><b>A página nova nasce limpa</b>: ela <b>não copia</b> a cor, o tipo de tecido nem a imagem (arte) da página anterior — cada página tem as suas. O que ela herda é a ficha: nº, data, previsão, separador, títulos, aviso, medidas e produção. Se quiser a mesma arte da página anterior, use <b>⧉ duplicar</b> na régua.</li>
+      <li><b>Cada página tem o seu texto</b>: o <b>tipo de tecido</b> e o <b>título</b> da seção (“TIPO DE TECIDO”, “CORES DO TECIDO”) são de cada página — mexer na página 2 não mexe na página 1. E a <b>barra de formatação</b> (negrito, tamanho, cor, marcador, limpar) aparece em <b>todas</b> as páginas: selecione o texto do tipo de tecido e a barrinha aparece logo acima dele. Use <kbd>Ctrl</kbd>+<kbd>A</kbd> para pegar o texto inteiro do campo.</li>
     </ul>
     <h4>Salvar e continuar depois</h4>
     <ul>

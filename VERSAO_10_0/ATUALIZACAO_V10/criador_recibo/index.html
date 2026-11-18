@@ -460,7 +460,7 @@
 
           <div class="p-band">
             <div class="p-band-red">Recibo de pagamento</div>
-            <div class="p-band-black"><small id="pvNumeroRotulo">Ficha nº</small><span id="pvNumero">0001</span></div>
+            <div class="p-band-black"><small id="pvNumeroRotulo">Recibo nº</small><span id="pvNumero">0001</span></div>
           </div>
 
           <div class="p-value">
@@ -932,7 +932,9 @@ function descricaoAutomatica(est){
   const e=est||estado;
   const tipo=(e.modo==='total')?'Pagamento total':'Pagamento parcial';
   let txt=tipo+' da produção';
-  if(String(e.fichaNum||'').trim())txt+=', Ficha Técnica nº '+String(e.fichaNum).trim();
+  /* O documento é um RECIBO: no "Referente a" a origem entra como "Ficha nº",
+     sem repetir "FICHA TÉCNICA" (que soa como título de outro documento). */
+  if(String(e.fichaNum||'').trim())txt+=', Ficha nº '+String(e.fichaNum).trim();
   const pecas=arred(totalPecas(e));
   if(pecas>0)txt+=' · '+fmtQtd(pecas)+' peça'+(Math.abs(pecas-1)<1e-9?'':'s');
   if(e.modo==='parcial'&&String(e.previsao||'').trim())txt+=' · saldo para '+String(e.previsao).trim();
@@ -1022,8 +1024,24 @@ function itensDaFicha(d){
       out.push({modelo,qtd,unit});
     });
   };
+  /* Assinatura da tabela de produção de uma página (modelo|qtd|unitário).
+     Serve para reconhecer a página extra que é só um ESPELHO da folha 1:
+     na ficha técnica toda página nova nasce com a mesma produção da folha 1
+     (copiarP1paraExtra) e continua espelhando quando a folha 1 muda. */
+  const assinatura=arr=>(Array.isArray(arr)?arr:[]).map(p=>{
+    if(!p||typeof p!=='object')return '';
+    return stripTags(p.modelo)+'|'+num(p.qtd)+'|'+parseBRL(p.valor);
+  }).join(';');
   push(d&&d._prod);
-  (Array.isArray(d&&d._paginas)?d._paginas:[]).forEach(pg=>push(pg&&pg.prod));
+  const folha1=assinatura(d&&d._prod);
+  (Array.isArray(d&&d._paginas)?d._paginas:[]).forEach(pg=>{
+    if(!pg||typeof pg!=='object')return;
+    if(pg.tipo==='branca')return;                 /* página em branco não tem produção */
+    const k=assinatura(pg.prod);
+    if(!k)return;                                 /* página sem produção */
+    if(k===folha1)return;                         /* espelho da folha 1: NÃO conta de novo */
+    push(pg.prod);
+  });
   return out;
 }
 function dadosDoCliente(d){
@@ -1506,11 +1524,13 @@ function renderSidebar(){
 function renderPreview(){
   const c=calcular();
   const e=estado;
-  /* A faixa leva o nº da FICHA anexada (é o que identifica o documento);
-     só cai para o nº do recibo quando o recibo foi digitado sem ficha. */
+  /* A faixa preta identifica o documento como RECIBO (é o que o cliente
+     leva na mão) e mostra o número da ficha que o originou. O nº interno do
+     recibo (0001, 0002…) é interno: fica na lista de Recibos salvos e no
+     "já recebido" — não sai na folha. */
   const numFicha=String(e.fichaNum||'').trim();
   preencher('pvNumero',numFicha||numeroExibido(e.numero));
-  preencher('pvNumeroRotulo',numFicha?'Ficha nº':'Recibo nº');
+  preencher('pvNumeroRotulo',numFicha?'Recibo · Ficha nº':'Recibo nº');
   preencher('pvValor',fmtBRL(c.pago));
   preencher('pvExtenso',extensoReais(c.pago));
   preencher('pvTexto',textoDoRecibo(e));
