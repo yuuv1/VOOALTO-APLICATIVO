@@ -1,5 +1,42 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.7.2 — Recibo sem página dobrada, recibo que se identifica como RECIBO e barra lateral enxuta (2026-11-18)
+
+**Recibo**
+
+- **O botão “🧾 Gerar recibo” (barra lateral da Ficha Técnica) não inventa mais
+  item nem total.** O problema: na ficha técnica toda página extra nasce como
+  **espelho da folha 1** (mesma produção) e continua espelhando quando a folha 1
+  muda. O recibo somava a folha 1 **e** cada página extra — numa ficha de 2
+  páginas o total saía **dobrado** (R$ 13.152 em vez de R$ 6.576) e o valor
+  recebido sugerido nascia errado.
+- Agora o Recibo reconhece a página que é **espelho** da folha 1 e não a conta
+  de novo. Página em branco nunca entra; página com produção **própria**
+  (fichas antigas) **entra** normalmente.
+- A mesma regra vale para o **.json** importado (mesma porta de entrada) — o
+  PDF nunca teve o problema porque lê só a primeira tabela.
+- **A folha do recibo passa a se identificar como RECIBO**: a faixa preta
+  mostra **“RECIBO Nº 0001”** e, ao lado, **“FICHA 3418”** (o nº da ficha
+  continua no rodapé e no “Referente a”, como antes).
+
+**Ficha Técnica**
+
+- **Saiu da barra lateral a seção “Páginas”** (os cartões de cada página com
+  Imagem/Texto/Seta/Retângulo/Círculo/Camadas/Estúdio/Cor e os botões
+  “Adicionar página”/“Página em branco”) — nunca era usada e ocupava metade
+  da tela.
+- **Nada se perde**: as ferramentas de cada folha já estavam na **régua ao
+  lado da página** (a que mostra “Pág. 2”) e o “adicionar página” está na
+  **faixa de miniaturas** (o **＋** e o **🗋**). O **⧉** (duplicar) e o **✕**
+  (remover) da página em foco foram para o fim dessa régua.
+- **Barra lateral mais estreita** de volta ao tamanho de antes (444px → 296px)
+  e o par “Importar/Exportar backup” voltou a ter um botão por linha.
+- Manual e ajuda da Ficha Técnica atualizados.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.7.2**.
+- Testes: nova suíte `test_recibo_gerar_v10.js` (o botão da Ficha até o
+  recibo, o espelho que não duplica e a faixa “RECIBO”).
+
 ## V10.7.1 — O sinal de 50% agora aparece NA FOLHA do Orçamento (2026-11-16)
 
 O pedido: *"não aparece automaticamente os 50% no orçamento como pedi"*. Na

@@ -160,6 +160,9 @@
     .p-band-red{flex:58;background:#D46460;color:#fff;display:flex;align-items:center;padding-left:22px;font-size:21px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;clip-path:polygon(0 0,100% 0,calc(100% - 26px) 100%,0 100%)}
     .p-band-black{flex:42;background:#000;color:#fff;display:flex;align-items:center;justify-content:flex-end;padding-right:24px;font-size:19px;font-weight:800;letter-spacing:.5px;clip-path:polygon(26px 0,100% 0,100% 100%,0 100%);margin-left:-18px}
     .p-band-black small{font-size:10px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;opacity:.75;margin-right:8px}
+    /* A ficha fica DEPOIS do nº do recibo, com espaço próprio (o `small` da
+       faixa usa margem para o número). */
+    .p-band-black .p-band-ficha{margin:0 0 0 12px;margin-right:0;opacity:.7;border-left:1px solid rgba(255,255,255,.35);padding-left:10px}
 
     .p-value{border:2px solid #17172a;border-left:9px solid #D46460;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
     .p-value-lbl{font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#555;margin-bottom:2px}
@@ -460,7 +463,7 @@
 
           <div class="p-band">
             <div class="p-band-red">Recibo de pagamento</div>
-            <div class="p-band-black"><small id="pvNumeroRotulo">Ficha nº</small><span id="pvNumero">0001</span></div>
+            <div class="p-band-black"><small id="pvNumeroRotulo">Recibo nº</small><span id="pvNumero">0001</span><small class="p-band-ficha" id="pvFichaNum" style="display:none"></small></div>
           </div>
 
           <div class="p-value">
@@ -1022,8 +1025,24 @@ function itensDaFicha(d){
       out.push({modelo,qtd,unit});
     });
   };
+  /* Assinatura da tabela de produção de uma página (modelo|qtd|unitário).
+     Serve para reconhecer a página extra que é só um ESPELHO da folha 1:
+     na ficha técnica toda página nova nasce com a mesma produção da folha 1
+     (copiarP1paraExtra) e continua espelhando quando a folha 1 muda. */
+  const assinatura=arr=>(Array.isArray(arr)?arr:[]).map(p=>{
+    if(!p||typeof p!=='object')return '';
+    return stripTags(p.modelo)+'|'+num(p.qtd)+'|'+parseBRL(p.valor);
+  }).join(';');
   push(d&&d._prod);
-  (Array.isArray(d&&d._paginas)?d._paginas:[]).forEach(pg=>push(pg&&pg.prod));
+  const folha1=assinatura(d&&d._prod);
+  (Array.isArray(d&&d._paginas)?d._paginas:[]).forEach(pg=>{
+    if(!pg||typeof pg!=='object')return;
+    if(pg.tipo==='branca')return;                 /* página em branco não tem produção */
+    const k=assinatura(pg.prod);
+    if(!k)return;                                 /* página sem produção */
+    if(k===folha1)return;                         /* espelho da folha 1: NÃO conta de novo */
+    push(pg.prod);
+  });
   return out;
 }
 function dadosDoCliente(d){
@@ -1506,11 +1525,17 @@ function renderSidebar(){
 function renderPreview(){
   const c=calcular();
   const e=estado;
-  /* A faixa leva o nº da FICHA anexada (é o que identifica o documento);
-     só cai para o nº do recibo quando o recibo foi digitado sem ficha. */
+  /* A faixa preta identifica o documento como RECIBO (é o que o cliente
+     leva na mão). O nº da ficha continua ao lado — é ele que amarra o
+     recibo à ficha — e também aparece no "Referente a" e no rodapé. */
   const numFicha=String(e.fichaNum||'').trim();
-  preencher('pvNumero',numFicha||numeroExibido(e.numero));
-  preencher('pvNumeroRotulo',numFicha?'Ficha nº':'Recibo nº');
+  preencher('pvNumero',numeroExibido(e.numero));
+  preencher('pvNumeroRotulo','Recibo nº');
+  const marcaFicha=$('pvFichaNum');
+  if(marcaFicha){
+    marcaFicha.textContent=numFicha?('Ficha '+numFicha):'';
+    marcaFicha.style.display=numFicha?'':'none';
+  }
   preencher('pvValor',fmtBRL(c.pago));
   preencher('pvExtenso',extensoReais(c.pago));
   preencher('pvTexto',textoDoRecibo(e));

@@ -37,9 +37,9 @@
 --az:#1E2937;--azm:#2D3F55;--azc:#EEF2F8;--ro:#D4187A;
 --vd:#166534;--vm:#DC2626;--tx:#1a1a2e;--txl:#6b7280;--bd:#D1D5DB;
 --bg:#F9FAFB;--br:var(--v10-paper);--hd:#3B82F6;--ar:#1D4ED8;
-/* V10.7 — a barra lateral ficou 50% mais larga (296px → 444px): mais respiro
-   nos rótulos e os botões das ferramentas da página distribuem em 3 colunas. */
---sidebar-w:444px;
+/* V10.7.2 — a barra lateral voltou ao tamanho de antes (296px): a seção
+   “Páginas” (que só existia para as ferramentas da folha) saiu do menu. */
+--sidebar-w:296px;
 --glass-bg:rgba(15,23,42,.78);
 --glass-border:rgba(255,255,255,.12);
 --glass-card:rgba(255,255,255,.06);
@@ -194,65 +194,11 @@ background:var(--sb-hover);border-color:var(--sb-line);
 /* ═══ DIVISOR ═══ */
 .sb-divider{height:1px;background:var(--sb-line);margin:8px 14px}
 
-/* ═══ CARTÃO DE PÁGINA ═══ */
-.sb-page-group{
-background:var(--sb-card);border:1px solid var(--sb-line);border-radius:9px;
-margin:0 10px 6px;overflow:hidden;
-}
-.sb-page-header{
-display:flex;align-items:center;gap:7px;height:32px;padding:0 4px 0 9px;
-border-bottom:1px solid var(--sb-line);
-font-size:10.5px;font-weight:700;color:var(--sb-t2);
-}
-.sb-page-num{
-width:17px;height:17px;border-radius:4px;flex-shrink:0;
-background:var(--sb-active);color:var(--sb-t2);
-font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
-}
-.sb-page-branca{
-font-size:7.5px;font-weight:800;letter-spacing:.5px;color:var(--sb-t3);
-border:1px solid var(--sb-line2);border-radius:4px;padding:1px 4px;
-}
-.sb-remove-page{
-margin-left:auto;width:22px;height:22px;flex-shrink:0;padding:0;
-border:none;border-radius:5px;background:transparent;color:var(--sb-t3);
-display:flex;align-items:center;justify-content:center;cursor:pointer;
-opacity:0;transition:opacity .13s,background .13s,color .13s;
-}
-.sb-page-group:hover .sb-remove-page{opacity:1}
-.sb-remove-page:hover{background:var(--v10-err-bg);color:var(--v10-err)}
-.sb-remove-page svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-/* V10.7 — barra mais larga: 3 colunas distribuem melhor as ferramentas
-   (a página 1 tem 8 botões: 3+3+2; as extras têm 6: 3+3). */
-.sb-page-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:8px}
-.sb-page-actions .sb-btn{
-width:100%;margin:0;height:33px;padding:0 8px;gap:7px;border-radius:6px;
-font-size:10.5px;font-weight:600;background:var(--sb-hover);
-}
-.sb-page-actions .sb-btn:hover{background:var(--sb-active)}
-.sb-page-actions .sb-btn-icon{width:15px;height:15px;opacity:.65}
-.sb-page-actions .sb-btn-icon svg{width:14px;height:14px}
-.sb-page-actions .sb-btn:hover .sb-btn-icon{opacity:1}
-
-/* ═══ ADICIONAR PÁGINA ═══ */
-.sb-add-page{
-display:flex;align-items:center;gap:8px;
-width:calc(100% - 20px);margin:0 10px 4px;height:31px;padding:0 9px;
-border:1px dashed var(--sb-line2);border-radius:7px;background:transparent;
-color:var(--sb-t3);font-family:inherit;font-size:10.5px;font-weight:600;
-cursor:pointer;transition:background .13s,border-color .13s,color .13s;
-}
-.sb-add-page:hover{border-color:rgba(212,24,122,.55);color:var(--sb-rosa2);background:rgba(212,24,122,.06)}
-.sb-add-page-icon{display:flex;align-items:center;flex-shrink:0}
-.sb-add-page svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* V10.7 — com a barra mais larga, os dois botões de página nova ficam lado a
-   lado (mesma força, mesma altura) e os pares de backup dividem a linha. */
-.sb-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 4px}
-.sb-add-grid .sb-add-page{width:100%;margin:0;padding:0 8px}
-.sb-pair{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 10px 3px}
+/* ═══ PAR DE BOTÕES (backup) ═══ */
+.sb-pair{display:grid;grid-template-columns:1fr;gap:4px;margin:0 10px 3px}
 .sb-pair .sb-btn{width:100%;margin:0;height:31px;padding:0 8px;font-size:10.5px}
 .sb-pair .sb-btn-label{white-space:normal;line-height:1.2}
-#sidebar.collapsed .sb-add-grid,#sidebar.collapsed .sb-pair{display:flex;flex-direction:column;gap:3px;margin:0 0 3px 4px}
+#sidebar.collapsed .sb-pair{display:flex;flex-direction:column;gap:3px;margin:0 0 3px 4px}
 #sidebar.collapsed .sb-pair .sb-btn{margin:0}
 
 /* ═══ CAMPOS (AJUSTES) ═══ */
@@ -430,10 +376,6 @@ transition:background .13s,border-color .13s;
 #sidebar.collapsed .sb-section-title,
 #sidebar.collapsed .sb-section-desc,
 #sidebar.collapsed .sb-btn-label,
-#sidebar.collapsed .sb-add-page-label,
-#sidebar.collapsed .sb-page-title,
-#sidebar.collapsed .sb-page-branca,
-#sidebar.collapsed .sb-remove-page,
 #sidebar.collapsed .sb-footer,
 #sidebar.collapsed .sb-hint,
 #sidebar.collapsed .v7-save-chip,
@@ -442,11 +384,6 @@ transition:background .13s,border-color .13s;
 #sidebar.collapsed .sb-field{display:none!important}
 #sidebar.collapsed .sb-logo{padding-left:6px;padding-right:0}
 #sidebar.collapsed .sb-btn{width:34px;margin:0 0 3px 4px;padding:0;justify-content:center}
-#sidebar.collapsed .sb-add-page{width:34px;margin:0 0 4px 4px;padding:0;justify-content:center;border:none}
-#sidebar.collapsed .sb-page-group{margin:0 16px 6px 4px}
-#sidebar.collapsed .sb-page-header{justify-content:center;padding:0;border-bottom:1px solid var(--sb-line)}
-#sidebar.collapsed .sb-page-actions{grid-template-columns:1fr;padding:3px}
-#sidebar.collapsed .sb-page-actions .sb-btn{width:26px;height:28px;margin:0 auto}
 
 
 /* ═══ PÁGINA WRAPPER ═══ */
@@ -954,6 +891,11 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 .v7-tb-label{margin:0 0 3px!important;text-align:center!important;writing-mode:initial!important;font-size:8.5px;font-weight:900;color:var(--v10-pink);text-transform:uppercase;letter-spacing:.6px;margin-right:4px;white-space:nowrap}
 .v7-tb-btn{border:0;background:var(--v10-hover);color:var(--v10-t1);width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
 .v7-tb-btn:hover{background:var(--v10-active)}
+/* separador + botão de remover página na régua da página */
+.v7-tb-sep{display:block;width:20px;height:1px;background:var(--v10-line-2);margin:3px 0}
+.v7-tb-btn.v7-tb-del:hover{background:var(--v10-err-bg);color:var(--v10-err)}
+/* botão ligado (modo seta, por exemplo) */
+.v7-tb-btn.v7-tb-on{background:var(--v10-warn-bg);color:var(--v10-warn)}
 .v7-thumb{cursor:grab}
 .v7-thumb.dragging{opacity:.4;border-style:dashed}
 .v7-thumb.drop-before{box-shadow:inset 4px 0 0 #34D399!important;border-color:#34D399!important}
@@ -1148,7 +1090,6 @@ body.mke-studio-on::after{
 .lp-row.mke-lock .lp-lock{color:#B45309}
 /* Shift+clique na lista: mesma marca azul da área, para ver o grupo inteiro */
 .lp-row.msel-row{background:rgba(59,130,246,.12);box-shadow:inset 2px 0 0 #3B82F6}
-.sb-dup-page{font-size:11px;font-weight:900;line-height:1}
 .mke-warn{color:#B45309;font-size:8px;line-height:1;cursor:help}
 
 /* ── Camada travada: sem alças, sem cursor de arraste ── */
@@ -1272,68 +1213,6 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
           <button type="button" class="sb-draft-btn ghost" id="v8DraftDescartar" onclick="v8RascunhoDescartar()" disabled title="Apaga o rascunho guardado (a ficha aberta não muda)">Descartar</button>
           <button type="button" class="sb-draft-btn ghost" id="v8DraftBackupBtn" onclick="abrirCentralBackupV8()" title="Exportar ou importar backup completo com todos os rascunhos">💾 Backup</button>
         </div>
-      </div>
-    </div>
-
-    <!-- ─── PÁGINAS ─── -->
-    <div class="sb-section">
-      <div class="sb-section-title">Páginas</div>
-      <div class="sb-section-desc">Ferramentas para adicionar elementos em cada folha</div>
-
-      <div class="sb-page-group" id="pgGroup1">
-        <div class="sb-page-header">
-          <div class="sb-page-num">1</div>
-          <span class="sb-page-title">Página 1</span>
-        </div>
-        <div class="sb-page-actions">
-          <button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput').click()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-image"/></svg></span>
-            <span class="sb-btn-label">Imagem</span>
-          </button>
-          <button title="Adicionar uma caixa de texto" class="sb-btn" id="btnTextoP1" onclick="criarTexto()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-type"/></svg></span>
-            <span class="sb-btn-label">Texto</span>
-          </button>
-          <button title="Desenhar seta/anotação" class="sb-btn" id="btnSeta" onclick="toggleModoSeta()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-arrow"/></svg></span>
-            <span class="sb-btn-label">Seta</span>
-          </button>
-          <button title="Adicionar retângulo" class="sb-btn" onclick="criarRetangulo()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-square"/></svg></span>
-            <span class="sb-btn-label">Retângulo</span>
-          </button>
-          <button title="Adicionar círculo" class="sb-btn" onclick="criarCirculo()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-circle"/></svg></span>
-            <span class="sb-btn-label">Círculo</span>
-          </button>
-          <button title="Painel de camadas: o que está na frente e nos fundos" class="sb-btn" onclick="toggleLayersPanel()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-layers"/></svg></span>
-            <span class="sb-btn-label">Camadas</span>
-          </button>
-          <button title="Estúdio do mockup: amplia a área e abre trocar imagem, espelhar, girar, alinhar e organizar" class="sb-btn" onclick="mkeAbrirEstudio()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-expand"/></svg></span>
-            <span class="sb-btn-label">Estúdio</span>
-          </button>
-          <button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCor()">
-            <span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-palette"/></svg></span>
-            <span class="sb-btn-label">Cor</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Grupos de páginas extras são inseridos aqui via JS -->
-      <div id="extraPagesNav"></div>
-
-      <!-- V10.7 — os dois comandos lado a lado, distribuídos na barra larga -->
-      <div class="sb-add-grid">
-        <button title="Adicionar uma página com o layout padrão — dados do cliente, produção e nº da ficha iguais à folha 1; a GRADE nasce vazia (botão “Mesma grade” copia a da página anterior)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('normal')">
-          <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-plus"/></svg></span>
-          <span class="sb-add-page-label">Adicionar página</span>
-        </button>
-        <button title="Adicionar uma página em branco (só o nº da ficha é herdado)" class="sb-add-page" onclick="v7AdicionarPaginaComUndo('branca')">
-          <span class="sb-add-page-icon"><svg viewBox="0 0 24 24"><use href="#i-file"/></svg></span>
-          <span class="sb-add-page-label">Página em branco</span>
-        </button>
       </div>
     </div>
 
@@ -2008,7 +1887,6 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }).observe(ci);
 }
 
-atualizarNavSidebar();
 /* Recalcula número de página, rodapé e ordem a partir do DOM. Sem isso o
    rodapé anunciava "de 4" numa ficha de 3 páginas sempre que uma página do
    meio tinha sido removida antes (o contador ficava à frente da realidade) e a
@@ -2060,7 +1938,6 @@ pageData.layers.forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id)
 }).observe(ci);
 }
 
-atualizarNavSidebar();
 /* V10.2 — a página em branco nasce com o MESMO Nº da ficha (antes o campo
    "Nº da Operação" dela ficava vazio e a pessoa achava que o número havia
    "sumido"). `data-ficha-num` marca que o valor é cópia da folha 1: o espelho
@@ -2204,7 +2081,6 @@ const inp=$('canvasInput_'+pid);if(inp)inp.remove();
 paginas.splice(idx,1);
 totalPaginas--;
 if(typeof v7PaginaAtiva==='object'&&v7PaginaAtiva&&v7PaginaAtiva.id===pid&&typeof v7EsconderToolbar==='function')v7EsconderToolbar();
-atualizarNavSidebar();
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Renumerar==='function')v7Renumerar();else atualizarRodapes();
 /* o estúdio volta a apontar para a folha 1 (ou para a página que sobrou) */
@@ -2214,34 +2090,6 @@ try{if(typeof mkeSync==='function')mkeSync();}catch(e){}
 try{if(typeof updList==='function')updList();}catch(e){}
 toast(`Página ${num} removida.`);
 snap();
-}
-
-function atualizarNavSidebar(){
-const nav=$('extraPagesNav');if(!nav)return;
-nav.innerHTML='';
-paginas.forEach(p=>{
-const grp=document.createElement('div');
-grp.className='sb-page-group';grp.id='sbGroup_'+p.id;
-const isBranca=p.tipo==='branca';
-const ico=n=>'<span class="sb-btn-icon"><svg viewBox="0 0 24 24"><use href="#i-'+n+'"/></svg></span>';
-grp.innerHTML=`
-<div class="sb-page-header">
-<div class="sb-page-num">${p.num}</div>
-<span class="sb-page-title">Página ${p.num}</span>
-${isBranca?'<span class="sb-page-branca">BRANCA</span>':''}
-<button title="Duplicar esta página (campos, grade, medidas e artes)" class="sb-remove-page sb-dup-page" onclick="v7DuplicarPagina('${p.id}')">⧉</button>
-<button title="Remover esta página" class="sb-remove-page" onclick="removerPagina('${p.id}')"><svg viewBox="0 0 24 24"><use href="#i-x"/></svg></button>
-</div>
-<div class="sb-page-actions">
-<button title="Inserir imagem na página" class="sb-btn" onclick="$('canvasInput_${p.id}').click()">${ico('image')}<span class="sb-btn-label">Imagem</span></button>
-<button title="Adicionar uma caixa de texto" class="sb-btn" id="sbTxt_${p.id}" onclick="criarTextoExtra('${p.id}')">${ico('type')}<span class="sb-btn-label">Texto</span></button>
-<button title="Desenhar seta/anotação" class="sb-btn" id="sbSeta_${p.id}" onclick="toggleModoSetaExtra('${p.id}')">${ico('arrow')}<span class="sb-btn-label">Seta</span></button>
-<button title="Adicionar retângulo" class="sb-btn" onclick="criarRetanguloExtra('${p.id}')">${ico('square')}<span class="sb-btn-label">Retângulo</span></button>
-<button title="Adicionar círculo" class="sb-btn" onclick="criarCirculoExtra('${p.id}')">${ico('circle')}<span class="sb-btn-label">Círculo</span></button>
-${!isBranca?`<button title="Adicionar uma cor à paleta" class="sb-btn" onclick="adicionarCorExtra('${p.id}')">${ico('palette')}<span class="sb-btn-label">Cor</span></button>`:''}
-</div>`;
-nav.appendChild(grp);
-});
 }
 
 function htmlPaginaExtra(p){
@@ -3929,13 +3777,21 @@ function toggleModoSeta(){modoSeta?desativarModoSeta():ativarModoSeta();}
 function ativarModoSeta(){
 if(eyeAtivo)desativarEye();deselecionarTudo();modoSeta=true;
 canvasInner.classList.add('modo-seta');arrDrawHint.classList.add('vis');
-$('btnSeta').classList.add('ativo-desenho');
+const bs=$('btnSeta');if(bs)bs.classList.add('ativo-desenho');
+/* a seta agora vive na régua da folha (o botão da barra lateral foi sair) */
+document.querySelectorAll('#v7PageToolbar .v7-tb-btn').forEach(b=>{
+  if(b.getAttribute('data-acao')==='seta')b.classList.add('v7-tb-on');
+});
 canvasInner.addEventListener('mousedown',onSetaMouseDown);
 toast('➜ Modo seta · Clique e arraste','',2500);
 }
 function desativarModoSeta(){
 modoSeta=false;canvasInner.classList.remove('modo-seta');arrDrawHint.classList.remove('vis');
-$('btnSeta').classList.remove('ativo-desenho');arrowPreview.style.display='none';
+const bs=$('btnSeta');if(bs)bs.classList.remove('ativo-desenho');
+document.querySelectorAll('#v7PageToolbar .v7-tb-btn').forEach(b=>{
+  if(b.getAttribute('data-acao')==='seta')b.classList.remove('v7-tb-on');
+});
+arrowPreview.style.display='none';
 canvasInner.removeEventListener('mousedown',onSetaMouseDown);
 }
 function buildArrSVGFromPoints(x1,y1,x2,y2,color,stroke,style,id,W,H){
@@ -7786,8 +7642,7 @@ function v8LimparPaginasExtras(){
   totalPaginas=1;
   v7PaginaAtiva=null;
   if(typeof v7EsconderToolbar==='function'){try{v7EsconderToolbar();}catch(e){}}
-  atualizarNavSidebar();
-  if(typeof v7Renumerar==='function'){try{v7Renumerar();}catch(e){}}
+    if(typeof v7Renumerar==='function'){try{v7Renumerar();}catch(e){}}
   else if(typeof atualizarRodapes==='function')atualizarRodapes();
   return removidas;
 }
@@ -9123,7 +8978,6 @@ function v7DuplicarPagina(pid){
   }catch(e){}
   v7CriarPaginaRestaurada(snap,idx);
   try{if(typeof v7PushPageUndo==='function')v7PushPageUndo({type:'add',index:idx,id:novoId});}catch(e){}
-  try{if(typeof atualizarNavSidebar==='function')atualizarNavSidebar();}catch(e){}
   try{if(typeof renderPageStrip==='function')renderPageStrip();}catch(e){}
   try{if(typeof v7Autosave==='function')v7Autosave();}catch(e){}
   toast('⧉ Página '+p.num+' duplicada','',2200);
@@ -9442,7 +9296,7 @@ function v7MostrarToolbar(meta){
   const pid=meta.id,isP1=meta.p1,isBranca=meta.tipo==='branca';
   const numTxt=isP1?1:((paginas.find(x=>x.id===pid)||{}).num||'');
   const btns=[];
-  const b=(a,ico,t)=>{btns.push('<button class="v7-tb-btn" onclick="v7ToolAcao(\''+a+'\')" title="'+t+'">'+ico+'</button>');};
+  const b=(a,ico,t)=>{btns.push('<button class="v7-tb-btn" data-acao="'+a+'" onclick="v7ToolAcao(\''+a+'\')" title="'+t+'">'+ico+'</button>');};
   b('img','🖼','Adicionar imagem');
   b('txt','✍','Adicionar texto');
   b('seta','➜','Desenhar seta');
@@ -9454,6 +9308,14 @@ function v7MostrarToolbar(meta){
      e as guias passam a morar na área que está em foco (mkeMoverUI). */
   b('estudio','⤢','Ampliar a área do mockup desta página');
   b('ferramentas','🎛','Ferramentas do mockup (trocar, espelhar, alinhar, organizar)');
+  /* V10.7.2 — a régua da página é onde ficaram as ferramentas que a barra
+     lateral usava mostrar: duplicar e remover a folha que está em foco
+     (a folha 1 não sai — use “Adicionar página”). */
+  if(!isP1){
+    btns.push('<span class="v7-tb-sep"></span>');
+    b('duplicar','⧉','Duplicar esta página (campos, grade, medidas e artes)');
+    btns.push('<button class="v7-tb-btn v7-tb-del" onclick="v7ToolAcao(\'remover\')" title="Remover esta página">✕</button>');
+  }
   tb.innerHTML='<span class="v7-tb-label">Pág. '+numTxt+'</span>'+btns.join('');
   tb.style.display='flex';
   v7PosicionarToolbar();
@@ -9474,6 +9336,8 @@ function v7ToolAcao(a){
     else if(a==='camadas'){toggleLayersPanel();}
     else if(a==='estudio'){mkeEntrarEstudio();}
     else if(a==='ferramentas'){mkeAlternarEstudio();mkePainelAbrir('ajustes');}
+    else if(a==='duplicar'){if(!isP1)v7DuplicarPagina(pid);}
+    else if(a==='remover'){if(!isP1)removerPagina(pid);}
   }catch(e){console.warn('v7ToolAcao',e);}
   v7PosicionarToolbar();
 }
@@ -9815,7 +9679,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     </ul>
     <h4 id="ajudaMockup">Estúdio do mockup (área da direita)</h4>
     <ul>
-      <li><b>⤢ Estúdio</b> (na régua da área, na barra lateral ou na barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta ao normal.</li>
+      <li><b>⤢ Estúdio</b> (na régua da área ou na barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta ao normal.</li>
       <li>A régua da esquerda da área tem: <b>+ imagem</b>, <b>⤢ ampliar</b>, <b>📐 guias</b> (centro / grade / margem), <b>🗂 camadas</b>, <b>🧲 ímã</b> e <b>🎛 ferramentas</b>.</li>
       <li>O <b>⋯</b> abre o painel de ferramentas: <b>⇄ trocar imagem</b> mantendo lugar e tamanho, <b>espelhar</b>, <b>girar 90°</b>, <b>opacidade</b>, <b>travar</b>, <b>alinhar e distribuir</b>, <b>organizar</b> (frente e costas lado a lado, empilhado ou em grade), <b>precisão em %</b> com leitura em <b>mm</b> e <b>baixar só esta área em PNG</b>.</li>
       <li>Arraste as fotos para a área ou cole um print com <kbd>Ctrl</kbd>+<kbd>V</kbd>. A segunda imagem já entra ao lado da primeira, sem cobrir.</li>
@@ -9840,11 +9704,11 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
       <li><kbd>Enter</kbd> e <kbd>Tab</kbd> andam de campo em campo nos dados do cliente, na tabela de <b>medidas</b>, na <b>grade</b> de tamanhos e na <b>produção</b>.</li>
       <li>Na <b>produção</b>, <kbd>Enter</kbd> no último campo (Qtd) já abre a linha seguinte.</li>
       <li><b>Colar uma coluna do Excel</b> dentro da grade, das medidas ou da produção espalha os valores pelas células seguintes. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> copia a tabela inteira para colar na planilha.</li>
-      <li>Cada página extra tem <b>⧉ duplicar página</b> na barra lateral: copia campos, grade, medidas, produção e artes.</li>
+      <li>Cada página extra tem <b>⧉ duplicar página</b> na régua ao lado da folha (a que mostra “Pág. 2”): copia campos, grade, medidas, produção e artes.</li>
     </ul>
     <h4>Páginas</h4>
     <ul>
-      <li><b>Adicionar página</b> usa o layout padrão; <b>página em branco</b> vem vazia. Arraste as miniaturas na faixa inferior para reordenar. Para apagar uma página, use o <b>✕</b> ao lado do número dela na barra lateral (aparece quando o mouse passa por cima).</li>
+      <li><b>Adicionar página</b> usa o layout padrão e <b>página em branco</b> vem vazia — os dois botões ficam na faixa inferior, ao lado das miniaturas (<b>＋</b> e <b>🗋</b>). Arraste as miniaturas para reordenar. Para apagar uma página, use o <b>✕</b> na régua ao lado da folha.</li>
     </ul>
     <h4>Salvar e continuar depois</h4>
     <ul>

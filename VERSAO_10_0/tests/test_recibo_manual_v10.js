@@ -49,8 +49,8 @@ const editar=(w,id,valor)=>{const el=w.document.getElementById(id); assert.ok(el
   w.Recibo.itemCampo(0,'unit','50,00');
   assert.equal(R.estadoAtual().totalProducao,150);
   assert.equal(R.estadoAtual().valorPago,150);
-  assert.equal(d.getElementById('pvNumeroRotulo').textContent,'Ficha nº');
-  assert.equal(d.getElementById('pvNumero').textContent,'4242');
+  assert.equal(d.getElementById('pvNumeroRotulo').textContent,'Recibo nº');
+  assert.equal(d.getElementById('pvFichaNum').textContent,'Ficha 4242');
   assert.match(d.getElementById('pvTexto').textContent,/Cliente preenchido à mão/);
   const registro=w.Recibo.salvar();
   assert.ok(registro);
@@ -87,7 +87,7 @@ const editar=(w,id,valor)=>{const el=w.document.getElementById(id); assert.ok(el
   assert.equal(R2.estadoAtual().pdf,null,'corrigir código remove indicação do PDF antigo');
   assert.equal(R2.estadoAtual().jaRecebido,150);
   assert.equal(w2.document.getElementById('f-fichanum').value,'4242');
-  assert.equal(w2.document.getElementById('pvNumero').textContent,'4242');
+  assert.equal(w2.document.getElementById('pvFichaNum').textContent,'Ficha 4242');
   assert.equal(w2.document.getElementById('fichaSelect').value,'');
   w2.Recibo.novoManual();
   editar(w2,'f-nome','Sem ficha associada');

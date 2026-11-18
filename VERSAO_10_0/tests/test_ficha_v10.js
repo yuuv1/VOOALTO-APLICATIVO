@@ -59,6 +59,24 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   t('sidebar: 4 seções com descrição', `document.querySelectorAll('.sb-section-desc').length >= 4`);
   t('sidebar: botão primário nova ficha', `!!document.querySelector('.sb-btn-primary')`);
   t('sidebar: botão accent rápido', `!!document.querySelector('.sb-btn-accent')`);
+  /* V10.7.2 — a barra lateral perdeu a lista de páginas (nunca usada): as
+     ferramentas de cada folha ficaram na régua ao lado da página e o
+     “adicionar página” na faixa de baixo (miniaturas). */
+  t('sidebar: sem seção de páginas (nem cartões nem botões de página nova)',
+    `!document.getElementById('extraPagesNav') && !document.querySelector('.sb-page-group') && !document.querySelector('.sb-add-grid')`);
+  t('a faixa de baixo (miniaturas) tem os dois botões de página nova',
+    `document.querySelectorAll('#pageStripWrap .v7-strip-btn').length === 2`);
+  t('a régua da folha tem as ferramentas que eram da barra lateral',
+    `v7MostrarToolbarP1(); document.getElementById('v7PageToolbar').innerHTML.indexOf("v7ToolAcao('img')")>-1 && document.getElementById('v7PageToolbar').innerHTML.indexOf("v7ToolAcao('estudio')")>-1`);
+  t('o modo seta liga e desliga pela régua (o botão da barra lateral não existe mais)',
+    `(function(){
+       v7MostrarToolbarP1();
+       v7ToolAcao('seta');
+       var on=document.querySelector('#v7PageToolbar .v7-tb-btn[data-acao="seta"]').classList.contains('v7-tb-on');
+       v7ToolAcao('seta');
+       var off=!document.querySelector('#v7PageToolbar .v7-tb-btn[data-acao="seta"]').classList.contains('v7-tb-on');
+       return on&&off;
+     })()`);
   t('chip prontidão existe', `!!document.getElementById('fichaReadiness')`);
   t('CTA flutuante existe', `!!document.getElementById('fichaFloatCta')`);
   t('ficha tem conteúdo quando o cliente está preenchido', `v8FichaTemConteudo()`);
@@ -90,9 +108,9 @@ const AUTOSAVE_KEY = 'vooalto_v7_ficha_ativa';
   console.log('  [info] antes de limpar: paginas/folhas/brancas =', JSON.stringify(antes));
   t('página extra conta como conteúdo (não pode ser descartada sem oferecer salvar)', `v8FichaTemConteudo()`);
   ow.eval('limparParaNovaFicha(7)');
-  const depois = ow.eval("[paginas.length, totalPaginas, document.querySelectorAll('#pw .folha').length, document.querySelectorAll('#pw .folha-branca').length, document.querySelectorAll('#extraPagesNav .sb-page-group').length]");
-  t('nova ficha apaga TODAS as páginas extras (array, contador, DOM e menu)',
-    JSON.stringify(depois) === JSON.stringify([0,1,1,0,0]), { depois });
+  const depois = ow.eval("[paginas.length, totalPaginas, document.querySelectorAll('#pw .folha').length, document.querySelectorAll('#pw .folha-branca').length, document.querySelectorAll('#pageStripList .v7-thumb').length]");
+  t('nova ficha apaga TODAS as páginas extras (array, contador, DOM e faixa de páginas)',
+    JSON.stringify(depois) === JSON.stringify([0,1,1,0,1]), { depois });
   t('nova ficha não deixa label nem input de página órfão',
     `document.querySelectorAll('#pw .page-label').length === 1 && document.querySelectorAll('input[id^="canvasInput_"]').length === 0`);
 
