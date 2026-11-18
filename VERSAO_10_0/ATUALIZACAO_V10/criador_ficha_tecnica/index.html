@@ -1879,6 +1879,11 @@ recalcGradeExtra(pageData);
 atualizarRodapes();
 sincTodasPaginas();
 copiarP1paraExtra(pageData);
+/* V10.7.3 — a página nova nasce LIMPA: sem cor, sem tipo de tecido e sem
+   nenhuma arte/imagem da página anterior. É a garantia final (o espelho já
+   não copia cor nem tecido) — se um dia alguém voltar a copiar alguma coisa
+   aqui, esta chamada limpa a página. */
+paginaNovaLimpa(pageData);
 
 const ci=$('canvasInner_'+pid);
 if(ci){
@@ -1895,9 +1900,34 @@ try{if(typeof v7Renumerar==='function')v7Renumerar();}catch(e){}
 if(typeof renderPageStrip==='function')renderPageStrip();
 if(typeof v7Autosave==='function')v7Autosave();
 if(typeof v7EnhanceTxtTbExtra==='function')setTimeout(v7EnhanceTxtTbExtra,300);
-/* V10.7 — a página nova lembra: mesmos dados/nº, grade vazia. */
-toast(`✔ Página ${num} adicionada — mesmos dados e nº; grade vazia (botão “Mesma grade” copia a anterior)`,'sucesso',3400);
+/* V10.7.3 — a página nova lembra: mesmos dados/nº; grade, cor, tipo de tecido
+   e artes nascem vazios (cada página tem os seus). */
+toast(`✔ Página ${num} adicionada — mesmos dados e nº; cor, tipo de tecido e artes ficam limpos (grade vazia: use “Mesma grade”)`,'sucesso',3600);
 snap();
+}
+
+/* ═══ PÁGINA NOVA LIMPA (V10.7.3) ═══
+   A página que o usuário cria não pode herdar da anterior:
+     · a paleta de cores  → começa vazia (cada página tem a sua);
+     · o tipo de tecido   → começa vazio (é o da PEÇA, não da ficha);
+     · as artes/imagens   → nada de layers, nada de <img> no canvas.
+   A grade de produção já nascia vazia desde a V10.7. */
+function paginaNovaLimpa(p){
+  if(!p||!p.id)return;
+  const pid=p.id;
+  /* cores: lista zerada (e o contador de ids reiniciado) */
+  const lista=$('coresList_'+pid);
+  if(lista){lista.innerHTML='';}
+  p.corId=0;
+  /* tipo de tecido: o texto da peça é de cada página */
+  const tt=$('tipoTecido_'+pid);
+  if(tt)tt.innerHTML='';
+  /* artes/imagens: nenhuma camada e nenhum <img> sobrando no canvas */
+  p.layers=[];
+  p.selId=null;
+  const canvas=$('canvasInner_'+pid);
+  if(canvas)canvas.querySelectorAll('img,.img-layer,.txt-layer,.arr-layer,.rect-layer,.circle-layer').forEach(el=>el.remove());
+  if(typeof updPhExtra==='function')updPhExtra(p);
 }
 
 /* ═══ PÁGINA BRANCA ═══ */
@@ -2377,10 +2407,15 @@ const P1_CAMPOS_ESPELHADOS=['fichaNum','fichaData','previsao','sepTxt','coresTit
 /* Páginas que têm os campos da ficha (a página branca é canvas livre). */
 function paginasEspelhadas(){return (typeof paginas!=='undefined'?paginas:[]).filter(p=>p&&p.tipo!=='branca');}
 
-/* Campos simples + tipo de tecido (contenteditable) + tamanho do separador.
+/* Campos simples + tamanho do separador.
    O tamanho do separador vive em DOIS lugares: o campo `sepFS` e o estilo
    inline aplicado por applySepFontSize — copiar só um dos dois deixa a página
-   nova com o texto certo em 7px. */
+   nova com o texto certo em 7px.
+
+   V10.7.3 — o TIPO DE TECIDO NÃO é mais espelhado: cada página tem o seu
+   (a página nova nasce vazio). A paleta de cores também não é mais espelhada
+   (a função que espelhava saiu). O que continua espelhado é a ficha:
+   número, data, previsão, títulos das seções, aviso, medidas e produção. */
 function espelharCamposP1(p){
   const pid=p.id;
   P1_CAMPOS_ESPELHADOS.forEach(id=>{
@@ -2399,33 +2434,11 @@ function espelharCamposP1(p){
       try{dstNum.dataset.fichaNum='1';}catch(e){}
     }
   }
-  const tt=$('tipoTecido'),tt2=$('tipoTecido_'+pid);
-  if(tt&&tt2&&tt2.innerHTML!==tt.innerHTML)tt2.innerHTML=tt.innerHTML;
   const fsSrc=$('sepFontSize'),fsDst=$('sepFS_'+pid);
   if(fsSrc&&fsDst){
     if(fsDst.value!==fsSrc.value)fsDst.value=fsSrc.value;
     applySepFontSize('sepTxt_'+pid,'sepFS_'+pid);
   }
-}
-
-/* Paleta de cores: mesma lista, mesmos nomes, mesma ordem. Compara antes de
-   reconstruir porque cada reconstrução cria ids novos (p2c1, p2c2…) e jogaria
-   fora o foco de quem estivesse editando a cor na página 2. */
-function espelharCoresP1(p){
-  const lista=$('coresList_'+p.id);if(!lista)return 0;
-  const origem=[...document.querySelectorAll('#coresList [id^="ci_"]')].map(it=>{
-    const i=it.id.replace('ci_','');
-    return {hex:($('chi_'+i)||{}).value||'#3B82F6',nome:($('cni_'+i)||{}).value||'COR'};
-  });
-  const assinatura=lista=>[...lista.querySelectorAll('[id^="ci_"]')].map(it=>{
-    const i=it.id.replace('ci_','');
-    return String(($('chi_'+i)||{}).value||'').toUpperCase()+'|'+(($('cni_'+i)||{}).value||'');
-  }).join('§');
-  const alvo=origem.map(c=>String(c.hex).toUpperCase()+'|'+c.nome).join('§');
-  if(assinatura(lista)===alvo)return 0;
-  lista.innerHTML='';p.corId=0;
-  origem.forEach(c=>_addCorExtra(p,c.hex,c.nome));
-  return origem.length;
 }
 
 /* V10.7 — a grade de produção NÃO é mais espelhada: cada página tem a sua,
@@ -2482,22 +2495,27 @@ function espelharProducaoP1(p){
 function aplicarSepFontSizeP1(){applySepFontSize('sepTxt','sepFontSize');}
 
 /* Espelha a folha 1 para UMA página (usado ao criar a página).
-   V10.7 — a grade não é mais copiada: a página nova nasce com ela vazia. */
+   V10.7 — a grade não é mais copiada: a página nova nasce com ela vazia.
+   V10.7.3 — a PALETA DE CORES e o TIPO DE TECIDO também não são copiados:
+   cada página tem os seus (a página nova nasce sem cor e sem tipo de tecido).
+   O que a página nova herda é a ficha: número, data, previsão, separador,
+   títulos das seções, aviso, medidas e produção. */
 function copiarP1paraExtra(p){
   if(!p||p.tipo==='branca')return;
   sincTodasPaginas();
   espelharCamposP1(p);
-  espelharCoresP1(p);
   espelharMedidasP1(p);
   espelharProducaoP1(p);
 }
 
 /* Espelha para TODAS as páginas extras (usado quando a folha 1 muda).
-   V10.7 — sem espelhar a grade (cada página tem a sua). */
+   V10.7 — sem espelhar a grade (cada página tem a sua).
+   V10.7.3 — sem espelhar a paleta de cores nem o tipo de tecido: são de cada
+   página. Sem isso, mexer na cor da folha 1 devolvia a cor antiga (e a arte
+   antiga) na página nova — era o "espelho" que o usuário viu. */
 function sincronizarPaginasExtra(){
   const alvos=paginasEspelhadas();
   alvos.forEach(espelharCamposP1);
-  alvos.forEach(espelharCoresP1);
   alvos.forEach(espelharMedidasP1);
   alvos.forEach(espelharProducaoP1);
   /* V10.2 — as páginas BRANCAS também recebem o nº da ficha (só o número:
@@ -2516,12 +2534,14 @@ function espelharAgendar(){
 
 /* Origem do espelho: só a folha 1. Cobre input, select, contenteditable e os
    campos criados depois (delegação no documento). V10.7 — a grade (.gi) saiu
-   da lista: ela não é mais espelhada, cada página tem a sua. */
+   da lista: ela não é mais espelhada, cada página tem a sua.
+   V10.7.3 — o tipo de tecido saiu: ele é de cada página, então digitar nele
+   na folha 1 não precisa varrer as outras. */
 function _eOrigemDoEspelho(t){
   if(!t||typeof t.closest!=='function')return false;
   if(!t.closest('#folha1'))return false;
   if(t.id&&P1_CAMPOS_ESPELHADOS.indexOf(t.id)>=0)return true;
-  if(t.id==='sepFontSize'||t.id==='tipoTecido')return true;
+  if(t.id==='sepFontSize')return true;
   if(t.classList&&(t.classList.contains('med-inp')||t.classList.contains('field')))return true;
   if(t.closest&&t.closest('#prodLinhas'))return true;
   return false;
@@ -2653,17 +2673,14 @@ const lista=$('coresList_'+p.id);if(lista)lista.appendChild(div);
 function onCorPickerExtra(id,hex){const tc=contraste(hex);const cr=$(`cr_${id}`);if(cr)cr.style.background=hex;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const chi=$(`chi_${id}`);if(chi)chi.value=hex.toUpperCase();}
 function onCorHexExtra(id,hex){const h=hex.trim();if(/^#[0-9A-Fa-f]{6}$/.test(h)){const tc=contraste(h);const cr=$(`cr_${id}`);if(cr)cr.style.background=h;const cn=$(`cn_${id}`);if(cn)cn.style.color=tc;const cp=$(`cp_${id}`);if(cp)cp.value=h;}}
 function onCorNomeExtra(id,nome){const cn=$(`cn_${id}`);if(cn)cn.textContent=nome.toUpperCase();}
-/* A paleta é da ficha, não da página: apagar a cor numa página extra apaga a
-   mesma cor na folha 1 (por posição) — senão o espelho a traria de volta no
-   próximo instante e o botão pareceria não funcionar. */
+/* V10.7.3 — a paleta é de CADA PÁGINA: apagar a cor numa página extra apaga
+   só ali. Antes apagava a mesma cor da folha 1 (por posição), porque a paleta
+   era espelhada — hoje o espelho não mexe em cor, então a página guarda a
+   sua. */
 function excluirCorExtra(id){
-const el=$(`ci_${id}`);if(!el)return;
-const pid=String(id).split('c')[0];
-const lista=$('coresList_'+pid);
-const idx=lista?[...lista.querySelectorAll('[id^="ci_"]')].indexOf(el):-1;
-const origem=[...document.querySelectorAll('#coresList [id^="ci_"]')];
-if(idx>=0&&origem[idx]&&typeof excluirCor==='function'){excluirCor(origem[idx].id.replace('ci_',''));return;}
-el.remove();
+  const el=$(`ci_${id}`);if(!el)return;
+  el.remove();
+  try{snap();}catch(e){}
 }
 
 /* ═══ CANVAS EXTRA ENGINE ═══ */
@@ -3077,9 +3094,20 @@ d._cores=cores;d._layers=layers.map(serLayer);
 d._paginas=paginas.length;
 /* V10.7 — a grade de CADA página entra no estado (desfazer/refazer). Antes a
    grade era sempre cópia da folha 1, então bastava guardar a da folha 1;
-   agora cada página tem a sua, e ela volta junto no Ctrl+Z. */
-d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id)}));
+   agora cada página tem a sua, e ela volta junto no Ctrl+Z.
+   V10.7.3 — a paleta de cores e o tipo de tecido também são de cada página:
+   entram no estado para o desfazer devolver a cor que estava na página. */
+d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id),cores:_pagCores(p.id),tipoTecido:($('tipoTecido_'+p.id)||{}).innerHTML||''}));
 return d;
+}
+/* Paleta de cores de UMA página (folha 1 ou extra). */
+function _pagCores(pid){
+  const out=[];
+  document.querySelectorAll('#coresList_'+pid+' [id^="ci_"]').forEach(it=>{
+    const i=it.id.replace('ci_','');
+    out.push({hex:($('chi_'+i)||{}).value||'#3B82F6',nome:($('cni_'+i)||{}).value||'COR'});
+  });
+  return out;
 }
 // Assinatura LEVE do estado — NÃO inclui src de imagens (que podem ser MBs), mas cobre todos os campos de texto e metadados das camadas.
 // Serve para detectar "nada mudou" sem serializar o blob das imagens.
@@ -3116,6 +3144,10 @@ function _estadoSig(st){
   p.push('L='+(st._layers||[]).map(_layerSig).join(';'));
   /* V10.7 — a grade de cada página também diferencia estados */
   p.push('GE='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+_gradeSigOf(x.grade);}).join('&'));
+  /* V10.7.3 — a paleta e o tipo de tecido de cada página também */
+  p.push('PC='+(st._paginasDetalhe||[]).map(function(x){
+    return x.id+'#'+(x.cores||[]).map(function(c){return (c.hex||'')+(c.nome||'');}).join('~')+'#'+(x.tipoTecido||'');
+  }).join('&'));
   p.push('P='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+(x.layers||[]).map(_layerSig).join(';');}).join('&'));
   return p.join('\u0002');
 }
@@ -3193,6 +3225,15 @@ if(Array.isArray(s._paginasDetalhe)){
         });
       });
       if(typeof recalcGradeExtra==='function')recalcGradeExtra(p);
+    }
+    /* V10.7.3 — a paleta e o tipo de tecido voltam com a página */
+    if(Array.isArray(snap.cores)){
+      const lista=$('coresList_'+p.id);
+      if(lista){lista.innerHTML='';p.corId=0;snap.cores.forEach(c=>_addCorExtra(p,c.hex,c.nome));}
+    }
+    if(snap.tipoTecido!==undefined){
+      const tt=$('tipoTecido_'+p.id);
+      if(tt)tt.innerHTML=snap.tipoTecido||'';
     }
     if(typeof updPhExtra==='function')updPhExtra(p);
   });
@@ -7111,6 +7152,9 @@ function capturarFichaParaJSON() {
       id: p.id, num: p.num, tipo: p.tipo,
       layers: p.layers.map(serLayer),
       prod, med: { fem: medFem, masc: medMasc }, grade: { m: gm, b: gb, i: gi2 },
+      /* V10.7.3 — a paleta de cores é de cada página: ela PRECISA ir no
+         .json, senão a cor da página 2 se perde ao reabrir a ficha. */
+      cores: (snapExtra.cores || []),
       hdr: hdrExtra
     };
   });
@@ -8825,6 +8869,15 @@ function v7AplicarPaginaSalva(p,s){
     document.querySelectorAll('#folha_'+pid+' .med-bloco.fem .med-inp').forEach((el,i)=>{if(s.med.fem&&s.med.fem[i]!==undefined)el.value=s.med.fem[i];});
     document.querySelectorAll('#folha_'+pid+' .med-bloco.masc .med-inp').forEach((el,i)=>{if(s.med.masc&&s.med.masc[i]!==undefined)el.value=s.med.masc[i];});
   }
+  /* V10.7.3 — a paleta de cores é de cada página: volta com a página. */
+  if(Array.isArray(s.cores)){
+    const lista=$('coresList_'+pid);
+    if(lista){
+      lista.innerHTML='';
+      p.corId=0;
+      s.cores.forEach(c=>_addCorExtra(p,c.hex,c.nome));
+    }
+  }
   if(Array.isArray(s.layers)){
     (p.layers||[]).forEach(l=>{const el=document.getElementById('ly_'+pid+'_'+l.id);if(el)el.remove();});
     p.layers=[];p.zCnt=10;p.selId=null;
@@ -9709,6 +9762,7 @@ window.addEventListener('DOMContentLoaded', ()=>{ applyGlobalTheme(v8TemaSalvo()
     <h4>Páginas</h4>
     <ul>
       <li><b>Adicionar página</b> usa o layout padrão e <b>página em branco</b> vem vazia — os dois botões ficam na faixa inferior, ao lado das miniaturas (<b>＋</b> e <b>🗋</b>). Arraste as miniaturas para reordenar. Para apagar uma página, use o <b>✕</b> na régua ao lado da folha.</li>
+      <li><b>A página nova nasce limpa</b>: ela <b>não copia</b> a cor, o tipo de tecido nem a imagem (arte) da página anterior — cada página tem as suas. O que ela herda é a ficha: nº, data, previsão, separador, títulos, aviso, medidas e produção. Se quiser a mesma arte da página anterior, use <b>⧉ duplicar</b> na régua.</li>
     </ul>
     <h4>Salvar e continuar depois</h4>
     <ul>

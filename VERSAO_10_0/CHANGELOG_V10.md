@@ -1,5 +1,41 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.7.3 — Ficha Técnica: a página nova nasce limpa (2026-11-18)
+
+**O pedido:** *“quando clica pra criar uma nova pagina ele não pode copiar a
+cor, o tipo de tecido e nem a imagem anterior. garanta pra mim que isso não
+ocorra de novo”*.
+
+**Ficha Técnica**
+
+- **A página nova (＋ “Adicionar página”) não copia mais a cor, o tipo de
+  tecido nem a imagem (arte) da página anterior.** Ela nasce limpa: paleta
+  vazia, tipo de tecido vazio e nenhuma arte no quadro — só o convite para
+  inserir a imagem.
+- **O espelho da folha 1 também parou de mexer nisso.** Era ele que trazia
+  a cor de volta: 150 ms depois de criada a página, qualquer mexida na folha 1
+  devolvia a paleta e o tipo de tecido antigos. Agora **cor e tipo de tecido
+  são de cada página** (o mesmo caminho que a grade de produção, desde a
+  V10.7).
+- **O resto da ficha continua espelhado** — nº, data, previsão, separador
+  (texto e tamanho), títulos das seções, aviso, dados do cliente, medidas e
+  produção. Nada se perdeu.
+- **Apagar uma cor na página 2 apaga só na página 2** (antes apagava a mesma
+  cor da folha 1, porque a paleta era espelhada).
+- **A cor e o tipo de tecido de cada página agora sobrevivem ao salvamento**:
+  entram no `.json` da ficha, no rascunho automático e no desfazer/refazer.
+  Sem isso, a cor da página 2 se perderia ao reabrir a ficha.
+- **⧉ Duplicar continua copiando tudo** (campos, grade, medidas, produção,
+  cores, tipo de tecido e artes) — é a cópia de propósito. O manual e a ajuda
+  da Ficha Técnica explicam a diferença entre “adicionar” e “duplicar”.
+- `paginaNovaLimpa()` é a garantia final: se um dia alguém voltar a copiar
+  cor, tecido ou arte na criação da página, essa chamada limpa a página.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.7.3**.
+- Testes: nova suíte `test_pagina_nova_v10.js` (34 verificações — página
+  nova limpa, espelho que não devolve cor, cor por página, duplicar que copia
+  tudo, ida e volta no `.json` e no desfazer) e ajuste da suíte do espelho.
+
 ## V10.7.2 — Recibo sem página dobrada, recibo que se identifica como RECIBO e barra lateral enxuta (2026-11-18)
 
 **Recibo**

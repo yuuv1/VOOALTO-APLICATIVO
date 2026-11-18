@@ -17,7 +17,10 @@
       configuração antiga, e a ficha impressa saía inconsistente.
    3. V10.7 — a grade é de cada página: não espelha, não acompanha; o botão
       “Mesma grade” na lateral copia a grade da página anterior (caso raro de
-      folhas com a mesma grade de tamanhos). */
+      folhas com a mesma grade de tamanhos).
+   4. V10.7.3 — a paleta de cores e o tipo de tecido também são de cada
+      página: a página nova nasce sem cor e sem tipo de tecido, e a folha 1
+      não os espelha mais (ver test_pagina_nova_v10.js). */
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 const { BASE } = require('./_base');
@@ -89,14 +92,17 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   ok('título das cores', $('coresTitulo_p2') && $('coresTitulo_p2').value === 'CORES DO CLIENTE', $('coresTitulo_p2') && $('coresTitulo_p2').value);
   ok('título do tecido', $('tipoTitulo_p2') && $('tipoTitulo_p2').value === 'TECIDO ESPECIAL', $('tipoTitulo_p2') && $('tipoTitulo_p2').value);
   ok('texto do aviso', $('avisoTxt_p2') && $('avisoTxt_p2').value === '⚠ PEÇA SOB MEDIDA NÃO TEM TROCA', $('avisoTxt_p2') && $('avisoTxt_p2').value);
-  ok('tipo de tecido', $('tipoTecido_p2') && $('tipoTecido_p2').textContent === 'PIQUET PREMIUM');
+  /* V10.7.3 — o tipo de tecido é de cada página: a página nova nasce vazio. */
+  ok('tipo de tecido NÃO é copiado (nasc vazio)', $('tipoTecido_p2') && $('tipoTecido_p2').textContent === '', $('tipoTecido_p2') && $('tipoTecido_p2').textContent);
   ok('dados do cliente', $('syn_nome_p2') && $('syn_nome_p2').textContent === 'CLIENTE TESTE LTDA');
 
   const cores2 = [...d.querySelectorAll('#coresList_p2 [id^="ci_"]')].map(it => {
     const i = it.id.replace('ci_', '');
     return ($('cni_' + i) || {}).value + '|' + ($('chi_' + i) || {}).value;
   });
-  ok('paleta de cores (nomes e hex)', cores2.length === 2 && cores2[0] === 'VERMELHO|#FF0000' && cores2[1] === 'VERDE|#00AA55', cores2);
+  /* V10.7.3 — a paleta de cores é de cada página: a página nova nasce sem
+     as cores da folha 1 (ver test_pagina_nova_v10.js). */
+  ok('paleta de cores NÃO é copiada (nasce vazia)', cores2.length === 0, cores2);
 
   /* V10.7 — a grade da página nova nasce VAZIA (é a exceção do espelho).
      O botão “Mesma grade” fica na lateral da grade para os casos raros em
@@ -158,11 +164,18 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
      2 mantém os números que já tem (a cópia só acontece pelo botão). */
   ok('grade da folha 1 mudou', d.querySelectorAll('#folha1 .gi[data-g="m"]')[0].value === '77', d.querySelectorAll('#folha1 .gi[data-g="m"]')[0].value);
   ok('grade da página 2 NÃO acompanha (fica independente)', d.querySelectorAll('#folha_p2 .gi[data-g="p2m"]')[0].value === '1', d.querySelectorAll('#folha_p2 .gi[data-g="p2m"]')[0].value);
-  ok('cor nova entrou na página 2 (sem duplicar as antigas)',
-    d.querySelectorAll('#coresList_p2 [id^="ci_"]').length === 3,
+  /* V10.7.3 — a paleta é de cada página: a cor nova da folha 1 NÃO entra na
+     página 2 (e a página 2 continua com a paleta que ela tiver). */
+  ok('cor nova da folha 1 NÃO entra na página 2',
+    d.querySelectorAll('#coresList_p2 [id^="ci_"]').length === 0,
     d.querySelectorAll('#coresList_p2 [id^="ci_"]').length);
+  ok('a folha 1 ficou com as 3 cores dela',
+    d.querySelectorAll('#coresList [id^="ci_"]').length === 3,
+    d.querySelectorAll('#coresList [id^="ci_"]').length);
 
   /* a cor continua editável na página 2 (não é só um retrato) */
+  w.eval("adicionarCorExtra('p2','#FF0000','VERMELHO'); adicionarCorExtra('p2','#00AA55','VERDE'); adicionarCorExtra('p2','#0000FF','AZUL');");
+  await wait(250);
   ok('cor da página 2 continua com os mesmos nomes',
     [...d.querySelectorAll('#coresList_p2 [id^="ci_"]')].map(it => {
       const i = it.id.replace('ci_', '');
@@ -176,14 +189,14 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await wait(400);
   ok('página 3 com o separador revisado', $('sepTxt_p3') && $('sepTxt_p3').value === '▸ NOVO SEPARADOR ◂', $('sepTxt_p3') && $('sepTxt_p3').value);
   ok('página 3 com o aviso revisado', $('avisoTxt_p3') && $('avisoTxt_p3').value === '⚠ AVISO REVISADO');
-  ok('página 3 com as 3 cores', d.querySelectorAll('#coresList_p3 [id^="ci_"]').length === 3, d.querySelectorAll('#coresList_p3 [id^="ci_"]').length);
+  ok('página 3 com a paleta VAZIA (a cor é de cada página)', d.querySelectorAll('#coresList_p3 [id^="ci_"]').length === 0, d.querySelectorAll('#coresList_p3 [id^="ci_"]').length);
   ok('página 3 com a grade VAZIA', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value === '', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value);
   /* o “anterior” da página 3 é a página 2 (não a folha 1): a página 2 tem a
      grade copiada antes da revisão da folha 1, então o primeiro número é 1. */
   w.eval("copiarGradePaginaAnterior('p3')");
   await wait(250);
   ok('botão da página 3 copia a grade da página 2', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value === '1', d.querySelectorAll('#folha_p3 .gi[data-g="p3m"]')[0].value);
-  ok('página 2 não foi duplicada nem apagada', d.querySelectorAll('#coresList_p2 [id^="ci_"]').length === 3, d.querySelectorAll('#coresList_p2 [id^="ci_"]').length);
+  ok('página 2 não foi duplicada nem apagada (as 3 cores continuam nela)', d.querySelectorAll('#coresList_p2 [id^="ci_"]').length === 3, d.querySelectorAll('#coresList_p2 [id^="ci_"]').length);
 
   /* ── 5. remover uma página do meio e adicionar outra ── */
   console.log('\n── 5. Remover página do meio e adicionar de novo ──');
@@ -205,9 +218,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     /de 3$/.test(($('rodNum') || {}).textContent || ''), ($('rodNum') || {}).textContent);
   const rotulos = [...d.querySelectorAll('#pw .page-label')].map(l => l.textContent.replace(/\s+/g, ' ').trim()).join(' / ');
   ok('numeração das páginas segue a ordem', rotulos === '— PÁGINA 1 — / — PÁGINA 2 — / — PÁGINA 3 —', rotulos);
-  ok('as cores da página nova batem com a folha 1',
-    [...d.querySelectorAll('#pw .folha')].filter(f => f.id !== 'folha1')
-      .every(f => d.querySelectorAll('#coresList_' + f.id.replace('folha_', '') + ' [id^="ci_"]').length === 3));
+  ok('a página nova nasce sem cor (a paleta é de cada página)',
+    [...d.querySelectorAll('#pw .folha')].filter(f => f.id !== 'folha1' && f.id !== 'folha_p3')
+      .every(f => d.querySelectorAll('#coresList_' + f.id.replace('folha_', '') + ' [id^="ci_"]').length === 0),
+    [...d.querySelectorAll('#pw .folha')].map(f => f.id));
 
   /* ── 6. o tamanho do separador entra no estado salvo ── */
   console.log('\n── 6. Separador sobrevive ao salvar/restaurar ──');
