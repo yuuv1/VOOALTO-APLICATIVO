@@ -640,11 +640,18 @@ transition:background .15s,border-color .15s,color .15s;
 .img-layer:active{cursor:grabbing}
 .img-layer.sel{outline:2px solid var(--hd);outline-offset:1px}
 .img-layer img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
-.lyr-h{width:12px;height:12px;border:2px solid var(--hd);box-shadow:0 1px 3px rgba(15,23,42,.25)}
+.lyr-h{width:14px;height:14px;border:2px solid var(--hd);box-shadow:0 1px 3px rgba(15,23,42,.25)}
 .img-layer.sel .lyr-h{display:block}
-.lyr-tl{top:-6px;left:-6px;cursor:nw-resize}.lyr-tr{top:-6px;right:-6px;cursor:ne-resize}
-.lyr-bl{bottom:-6px;left:-6px;cursor:sw-resize}.lyr-br{bottom:-6px;right:-6px;cursor:se-resize}
-.lyr-rot,.tl-rot,.arr-rot{width:12px;height:12px;border:2px solid #F59E0B;cursor:crosshair;top:-22px;left:50%;transform:translateX(-50%)}
+.lyr-tl{top:-7px;left:-7px;cursor:nw-resize}.lyr-tr{top:-7px;right:-7px;cursor:ne-resize}
+.lyr-bl{bottom:-7px;left:-7px;cursor:sw-resize}.lyr-br{bottom:-7px;right:-7px;cursor:se-resize}
+/* V10.8 — a alça é pequena e o clique errava: a pessoa achava que
+   "ampliar" não funcionava. O alvo de clique é maior que o desenho
+   (pseudo-elemento transparente) e a alça ficou um pouco maior. */
+.lyr-tl::before,.lyr-tr::before,.lyr-bl::before,.lyr-br::before,
+.tl-resize::before,.arr-h::before{
+  content:'';position:absolute;inset:-7px;border-radius:50%;
+}
+.lyr-rot,.tl-rot,.arr-rot{width:14px;height:14px;border:2px solid #F59E0B;cursor:crosshair;top:-23px;left:50%;transform:translateX(-50%)}
 .img-layer.sel .lyr-rot,.txt-layer.sel .tl-rot,.arr-layer.sel .arr-rot{display:block}
 .txt-layer{cursor:move;min-width:30px;min-height:16px;z-index:50}
 .txt-layer.sel{outline:2px dashed var(--ro);outline-offset:3px}
@@ -978,6 +985,14 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 .mke-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
 .mke-grid.g3{grid-template-columns:1fr 1fr 1fr}
 .mke-grid.g6{grid-template-columns:repeat(6,1fr)}
+.mke-seg{display:flex;gap:2px;background:var(--v10-surface-2);border:1px solid var(--v10-line);border-radius:7px;padding:2px;margin-bottom:5px}
+.mke-seg button{
+  flex:1;appearance:none;border:0;background:transparent;color:var(--v10-t2);
+  font:inherit;font-size:7.5px;font-weight:700;padding:4px 2px;border-radius:5px;cursor:pointer;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.mke-seg button:hover{background:var(--v10-hover);color:var(--v10-t1)}
+.mke-seg button.on{background:var(--v10-pink-soft);color:var(--v10-pink);box-shadow:0 1px 2px rgba(15,23,42,.12)}
 .mke-btn{
   display:flex;align-items:center;justify-content:center;gap:3px;
   padding:5px 3px;border:1px solid var(--v10-line-2);border-radius:6px;background:var(--v10-surface-2);
@@ -1606,6 +1621,7 @@ ondrop="onDrop(event)" onclick="bgClick(event)">
 <button title="Substituir a imagem mantendo tamanho e posição" class="ct-btn" onclick="mkeSubstituir()">⇄</button>
 <button title="Recortar a imagem (zoom, giro e proporção)" class="ct-btn" onclick="abrirCrop('layer')">✂</button>
 <button title="Travar a proporção ao redimensionar (Shift inverte durante o arraste)" class="ct-btn" id="propBtn" onclick="toggleProp()">🔒</button>
+<button title="Alinhar: encostar na borda, centralizar ou alinhar entre os objetos (Shift+clique seleciona vários)" class="ct-btn" onclick="mkePainel('alinhar')">⇹</button>
 <button title="Mais ferramentas: espelhar, girar, opacidade, alinhar, organizar e precisão" class="ct-btn" onclick="mkePainel('ajustes')">⋯</button>
 <div class="ct-sep"></div>
 <button title="Apagar o item selecionado" class="ct-btn" style="color:var(--vm)" onclick="excluirSel()">🗑</button>
@@ -2952,7 +2968,7 @@ const br=document.createElement('div');br.className='arr-h arr-br';el.appendChil
 el.addEventListener('mousedown',e=>{if(p.modoSeta)return;if(e.target===rh||e.target===br||e.target===ep1||e.target===ep2)return;e.stopPropagation();selLayerExtra(p,l.id);initDragArrExtra(e,p,l,el);});
 br.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayerExtra(p,l.id);initResizeArrExtra(e,p,l,el);});
 rh.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayerExtra(p,l.id);initRotElExtra(e,p,l,el);});
-[[ep1,'x1p','y1p'],[ep2,'x2p','y2p']].forEach(([ep,xk,yk])=>{ep.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayerExtra(p,l.id);const rect=ci.getBoundingClientRect(),W=cwExtra(pid),H=chExtra(pid);makeDragExtra(e,ev=>{l[xk]=(ev.clientX-rect.left)/W;l[yk]=(ev.clientY-rect.top)/H;posArrElExtra(p,l,el,false,W,H);refreshArrSVGExtra(p,l);},()=>{snap();});});});
+[[ep1,'x1p','y1p'],[ep2,'x2p','y2p']].forEach(([ep,xk,yk])=>{ep.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayerExtra(p,l.id);const rect=ci.getBoundingClientRect(),W=cwExtra(pid),H=chExtra(pid);makeDragExtra(e,ev=>{l[xk]=Math.max(0,Math.min(1,(ev.clientX-rect.left)/W));l[yk]=Math.max(0,Math.min(1,(ev.clientY-rect.top)/H));posArrElExtra(p,l,el,false,W,H);refreshArrSVGExtra(p,l);},()=>{snap();});});});
 ci.appendChild(el);
 }
 function refreshArrSVGExtra(p,l){const el=document.getElementById('ly_'+p.id+'_'+l.id);if(!el)return;const svg=el.querySelector('svg');if(!svg)return;const tmp=document.createElement('div');tmp.innerHTML=buildArrSVGExtra(p,l);el.replaceChild(tmp.firstChild,svg);}
@@ -2968,7 +2984,8 @@ makeDragExtra(e,ev=>{
   var nxp=ox+(ev.clientX-sx)/W, nyp=oy+(ev.clientY-sy)/H;
   /* O ímã também vale nas páginas extras (antes só a folha 1 encostava). */
   if(!ev.altKey && mkeImaLigado()){try{var s2=mkeSnapXY(l,nxp,nyp,W,H,p.layers);nxp=s2.xp;nyp=s2.yp;}catch(e3){}}
-  l.xp=nxp;l.yp=nyp;
+  /* a camada nunca some da tela: sempre sobra um pedaço dentro da área */
+  l.xp=mkeLimite(nxp,l.wp);l.yp=mkeLimite(nyp,l.hp,true);
   el.style.left=(l.xp*W)+'px';el.style.top=(l.yp*H)+'px';
   try{mkeMostrarMedida(l,W,H);}catch(e2){}
 },()=>{if(l.type==='txt')el.style.cursor='move';mkeArrasteFim();snap();});
@@ -2976,7 +2993,13 @@ makeDragExtra(e,ev=>{
 function initDragArrExtra(e,p,l,el){
 if(l&&l.locked)return;
 const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,ox1=l.x1p,oy1=l.y1p,ox2=l.x2p,oy2=l.y2p;
-makeDragExtra(e,ev=>{const dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H;l.x1p=ox1+dx;l.y1p=oy1+dy;l.x2p=ox2+dx;l.y2p=oy2+dy;posArrElExtra(p,l,el,false,W,H);},()=>{snap();});
+makeDragExtra(e,ev=>{const dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H;l.x1p=ox1+dx;l.y1p=oy1+dy;l.x2p=ox2+dx;l.y2p=oy2+dy;
+/* a seta também não some da tela (as duas pontas ficam dentro da área) */
+const m=Math.max(Math.min(l.x1p,l.x2p),0),M=Math.min(Math.max(l.x1p,l.x2p),1);
+if(l.x1p<m)l.x1p=m;if(l.x2p<m)l.x2p=m;if(l.x1p>M)l.x1p=M;if(l.x2p>M)l.x2p=M;
+const mn=Math.max(Math.min(l.y1p,l.y2p),0),Mx=Math.min(Math.max(l.y1p,l.y2p),1);
+if(l.y1p<mn)l.y1p=mn;if(l.y2p<mn)l.y2p=mn;if(l.y1p>Mx)l.y1p=Mx;if(l.y2p>Mx)l.y2p=Mx;
+posArrElExtra(p,l,el,false,W,H);},()=>{snap();});
 }
 function initResizeImgExtra(e,p,l,el,c){
 if(l&&l.locked)return;
@@ -2987,7 +3010,9 @@ if(c==='bl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp+dy);nxp=oxp+dx;}
 if(c==='tr'){nwp=Math.max(.04,swp+dx);nhp=Math.max(.03,shp-dy);nyp=oyp+dy;}
 if(c==='tl'){nwp=Math.max(.04,swp-dx);nhp=Math.max(.03,shp-dy);nxp=oxp+dx;nyp=oyp+dy;}
 const manter = ev.shiftKey ? !l.prop : !!l.prop;
-if(manter){nhp=nwp/l.ratio*(W/H);if(c==='tl'||c==='tr')nyp=oyp+(shp-nhp);if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);}
+/* a arte não passa da área (igual à folha 1) */
+const lim=mkeLimiteResize(c,{xp:oxp,yp:oyp,wp:swp,hp:shp,ratio:l.ratio},{xp:nxp,yp:nyp,wp:nwp,hp:nhp},manter,W,H);
+nwp=lim.wp;nhp=lim.hp;nxp=lim.xp;nyp=lim.yp;
 l.wp=nwp;l.hp=nhp;l.xp=nxp;l.yp=nyp;
 el.style.width=(nwp*W)+'px';el.style.height=(nhp*H)+'px';el.style.left=(nxp*W)+'px';el.style.top=(nyp*H)+'px';
 },()=>{snap();});
@@ -2998,7 +3023,7 @@ function initResizeTxtExtra(e,p,l,el){
   const tc=el.querySelector('.tc');
   makeDragExtra(e,ev=>{
     const delta=ev.clientX-sx;
-    const nwp=Math.max(.06,(sw+delta)/W);
+    const nwp=Math.min(1,Math.max(.06,(sw+delta)/W));
     l.wp=nwp;el.style.width=(nwp*W)+'px';
     const ns=Math.max(6,Math.min(180,startSize + delta/6 - (ev.clientY-sy)/10));
     l.size=Math.round(ns);
@@ -3007,7 +3032,7 @@ function initResizeTxtExtra(e,p,l,el){
     const slider=document.querySelector('.v4-font-slider'); if(slider)slider.value=l.size;
   },()=>{snap();if(typeof v7Autosave==='function')v7Autosave();});
 }
-function initResizeArrExtra(e,p,l,el){if(l&&l.locked)return;const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDragExtra(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{snap();});}
+function initResizeArrExtra(e,p,l,el){if(l&&l.locked)return;const pid=p.id,W=cwExtra(pid),H=chExtra(pid),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDragExtra(e,ev=>{l.wp=Math.min(1,Math.max(.04,swp+(ev.clientX-sx)/W));l.hp=Math.min(1,Math.max(.02,shp+(ev.clientY-sy)/H));el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{snap();});}
 function initRotElExtra(e,p,l,el){if(l&&l.locked)return;const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;makeDragExtra(e,ev=>{let a=Math.atan2(ev.clientY-cy,ev.clientX-cx)*(180/Math.PI)+90;if(ev.shiftKey)a=Math.round(a/15)*15;l.rot=Math.round(a*10)/10;el.style.transform=mkeTransform(l);},()=>{snap();});}
 
 /* ═══ SELECT/DESELECT EXTRA ═══ */
@@ -3116,7 +3141,7 @@ document.addEventListener('keyup',e=>{
 /* ═══ UNDO / REDO ═══ */
 const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','sepFontSize','coresTitulo','tipoTitulo'];
 const CAMPOS_CE=['dc_nome','dc_doc','dc_tel','dc_end','dc_cidade','dc_cep','dc_vendedor','tipoTecido'];
-let undoStack=[],redoStack=[],snapTimer=null;
+let undoStack=[],redoStack=[],snapTimer=null,snapPendente=false;
 let undoSeqStack=[],redoSeqStack=[],v7OpSeq=0,v7SuppressSnap=false;
 let snapLastSig=''; // assinatura LEVE da última mudança (evita JSON.stringify pesado enquanto o usuário digita)
 
@@ -3289,7 +3314,15 @@ try{if(typeof sincronizarPaginasExtra==='function')sincronizarPaginasExtra();}ca
 }
 function snap(){
 if(v7SuppressSnap)return;
-clearTimeout(snapTimer);snapTimer=setTimeout(()=>{
+clearTimeout(snapTimer);snapTimer=setTimeout(snapAplicar,800);
+snapPendente=true;   /* há um gesto ainda não gravado no histórico */
+}
+/* Grava o estado no histórico. Fica separado do snap() para poder ser
+   chamado na hora: o Ctrl+Z precisa desfazer o que acabou de acontecer, e
+   com o debounce de 800 ms o gesto ainda não tinha entrado na pilha —
+   o Ctrl+Z "não fazia nada" quando a pessoa mexia rápido. */
+function snapAplicar(){
+clearTimeout(snapTimer);snapTimer=null;snapPendente=false;
 // Compara por assinatura leve primeiro — evita JSON.stringify pesado quando nada mudou
 const st=capState();
 const sig=_estadoSig(st);
@@ -3302,10 +3335,12 @@ if(estadoAtual&&_estadoSig(estadoAtual)!==sig){
 }
 estadoAtual=st;snapLastSig=sig;
 redoStack=[];redoSeqStack=[];updUR();
-},800);
 }
+/* Desfazer/refazer jogam o que está pendente no histórico antes de mexer:
+   sem isso o Ctrl+Z logo depois do gesto não tinha o que desfazer. */
 function undo(){
-  if(!undoStack.length)return;
+  try{snapAplicar();}catch(e){}
+  if(!undoStack.length){toast('Nada para desfazer','',1400);return;}
   redoStack.push(capState());redoSeqStack.push(undoSeqStack.pop()||0);
   const alvo=undoStack.pop();
   restState(alvo);
@@ -3313,7 +3348,9 @@ function undo(){
   updUR();toast('↩ Desfeito');
 }
 function redo(){
-  if(!redoStack.length)return;
+  /* aqui NÃO se joga o pendente no histórico: o snapAplicar limparia a
+     pilha de refazer antes de ela ser usada. */
+  if(!redoStack.length){toast('Nada para refazer','',1400);return;}
   undoStack.push(capState());undoSeqStack.push(redoSeqStack.pop()||0);
   const alvo=redoStack.pop();
   restState(alvo);
@@ -3321,6 +3358,24 @@ function redo(){
   updUR();toast('↪ Refeito');
 }
 function updUR(){$('btnUndo').disabled=!undoStack.length;$('btnRedo').disabled=!redoStack.length;}
+/* Semeia o histórico: guarda o estado ATUAL como o "antes" do próximo gesto.
+   Sem isso, o primeiro Ctrl+Z depois de abrir a ficha não tinha o que
+   desfazer (o histórico nascia vazio) — era o "Ctrl+Z não funciona". */
+function v8SemearHistorico(forcar){
+  try{
+    if(forcar){
+      /* o que estava pendente pertence ao documento ANTERIOR: descarta */
+      clearTimeout(snapTimer);snapTimer=null;snapPendente=false;
+    }else{
+      if(estadoAtual)return;   /* já há um "antes" guardado: não mexe */
+      if(snapPendente)return;  /* já mexeu em algo: o snap pendente é o "antes" */
+    }
+    if(estadoAtual)return;
+    estadoAtual=capState();
+    snapLastSig=_estadoSig(estadoAtual);
+    updUR();
+  }catch(e){}
+}
 document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select')&&!e.target.matches('.gi'))snap();if(e.target.matches('[contenteditable]'))snap();});
 
 /* ═══ V8.1 — ÁREA DE TRANSFERÊNCIA DE CAMADAS (Ctrl+C / Ctrl+X / Ctrl+V) ═══
@@ -3330,6 +3385,7 @@ document.addEventListener('input',e=>{if(e.target.matches('input,textarea,select
    dá até para copiar numa página e colar em outra. */
 const V8_CLIP_KEY='vooalto_v8_layer_clip';
 let v8ClipLayer=null;
+let v8ClipLayers=null;   /* várias camadas de uma vez (Shift+clique) */
 
 function v8CamadaSelecionada(){
   for(const p of paginas){
@@ -3338,17 +3394,59 @@ function v8CamadaSelecionada(){
   if(selId){const l=layers.find(x=>x.id===selId);if(l)return {pagina:null,layer:l}}
   return null;
 }
-function v8CopiarCamada(cortar){
+/* Todas as camadas selecionadas (Shift+clique). Antes o Ctrl+C copiava
+   SÓ a última clicada — com duas artes na tela, copiar e colar trazia
+   uma delas e a outra ficava para trás. */
+function v8CamadasSelecionadas(){
+  const out=[];
+  const achadas=[];
+  for(const p of paginas){
+    if(p.msel&&p.msel.length){
+      p.msel.forEach(function(id){
+        const l=p.layers.find(x=>x.id===id);if(l)achadas.push({pagina:p,layer:l});
+      });
+    }
+  }
+  if(achadas.length)return achadas;
+  let multi=[];
+  try{multi=(typeof multiSelIds!=='undefined'&&multiSelIds)?multiSelIds.slice():[];}catch(e){}
+  multi.forEach(function(id){
+    const l=layers.find(x=>x.id===id);if(l)achadas.push({pagina:null,layer:l});
+  });
+  if(achadas.length)return achadas;
   const s=v8CamadaSelecionada();
-  if(!s)return false;
-  v8ClipLayer=serLayer(s.layer);
+  return s?[s]:out;
+}
+function v8CopiarCamada(cortar){
+  const lista=v8CamadasSelecionadas();
+  if(!lista.length)return false;
+  const itens=lista.map(function(s){return serLayer(s.layer);});
+  v8ClipLayer=itens.length===1?itens[0]:{__varios:true,itens:itens};
+  v8ClipLayers=itens;
   try{localStorage.setItem(V8_CLIP_KEY,JSON.stringify(v8ClipLayer))}catch(e){}
-  toast(cortar?'✂ Camada recortada':'⧉ Camada copiada — Ctrl+V cola','',1800);
+  toast((cortar?'✂ ':'⧉ ')+itens.length+(itens.length>1?' camadas copiadas — Ctrl+V cola':' camada copiada — Ctrl+V cola'),'',1800);
   return true;
 }
 function v8ExcluirSelecionada(){
-  const s=v8CamadaSelecionada();
-  if(!s)return false;
+  const lista=v8CamadasSelecionadas();
+  if(!lista.length)return false;
+  /* várias selecionadas: recorta TODAS (o Ctrl+X precisa tirar o grupo
+     inteiro, senão sobra metade na tela) */
+  if(lista.length>1){
+    const ids=lista.map(function(s){return s.layer.id;});
+    const pag=lista[0].pagina;
+    if(pag){
+      const pid=pag.id;
+      pag.msel=ids.slice();
+      mkeExcluirCamada(ids[0],pid);
+    }else{
+      ids.forEach(function(id){try{excluirId(id);}catch(e){}});
+      try{multiSelIds=[];}catch(e){}
+      updPh();updList();savLayers();snap();
+    }
+    return true;
+  }
+  const s=lista[0];
   if(s.pagina)excluirSelExtra(s.pagina.id);else excluirSel();
   return true;
 }
@@ -3400,13 +3498,29 @@ function v8ColarCamada(){
   if(!base){
     try{base=JSON.parse(localStorage.getItem(V8_CLIP_KEY)||'null')}catch(e){base=null}
   }
-  if(!base||!base.type)return false; /* sem camada: deixa o navegador colar texto */
+  /* o clipboard pode ter uma camada (formato antigo) ou várias (Shift+clique) */
+  let itens=null;
+  if(base&&base.__varios&&Array.isArray(base.itens))itens=base.itens.slice();
+  else if(Array.isArray(v8ClipLayers)&&v8ClipLayers.length)itens=v8ClipLayers.slice();
+  else if(base&&base.type)itens=[base];
+  if(!itens||!itens.length)return false; /* sem camada: deixa o navegador colar texto */
   try{
     const destino=v8CamadaAlvoColar();
-    const ok=v8InserirCamada(v8CamadaParaColar(base,true),destino);
-    if(!ok)return false;
+    let coladas=0;
+    itens.forEach(function(def,i){
+      /* cada uma entra um degrau abaixo da anterior: não caem uma em cima
+         da outra (era o que acontecia com várias artes coladas juntas) */
+      const d=v8CamadaParaColar(def,true);
+      if(i>0){
+        d.xp=Math.min(0.94,(d.xp||0)+0.03*i);
+        d.yp=Math.min(0.94,(d.yp||0)+0.03*i);
+        if(d.x1p!==undefined){d.x1p=Math.min(0.94,d.x1p+0.03*i);d.y1p=Math.min(0.94,d.y1p+0.03*i);d.x2p=Math.min(0.94,d.x2p+0.03*i);d.y2p=Math.min(0.94,d.y2p+0.03*i);}
+      }
+      if(v8InserirCamada(d,destino))coladas++;
+    });
+    if(!coladas)return false;
     if(!destino)snap();
-    toast('⧉ Camada colada','',1600);
+    toast('⧉ '+(coladas>1?(coladas+' camadas coladas'):'Camada colada'),'',1600);
     return true;
   }catch(err){
     console.warn('Falha ao colar camada',err);
@@ -3909,7 +4023,7 @@ const rh=document.createElement('div');rh.className='arr-rot';el.appendChild(rh)
 el.addEventListener('mousedown',e=>{if(eyeAtivo||modoSeta)return;if(e.target===rh||e.target===br||e.target===ep1||e.target===ep2)return;e.stopPropagation();selLayer(l.id);initDragArr(e,l,el);});
 br.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayer(l.id);initResizeArr(e,l,el);});
 rh.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayer(l.id);initRotEl(e,l,el);});
-[[ep1,'x1p','y1p'],[ep2,'x2p','y2p']].forEach(([ep,xk,yk])=>{ep.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayer(l.id);const rect=canvasInner.getBoundingClientRect(),W=cw(),H=ch();makeDrag(e,ev=>{l[xk]=(ev.clientX-rect.left)/W;l[yk]=(ev.clientY-rect.top)/H;posArrEl(l,el,false,W,H);refreshArrSVG(l);},()=>{savLayers();snap();});});});
+[[ep1,'x1p','y1p'],[ep2,'x2p','y2p']].forEach(([ep,xk,yk])=>{ep.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();selLayer(l.id);const rect=canvasInner.getBoundingClientRect(),W=cw(),H=ch();makeDrag(e,ev=>{l[xk]=Math.max(0,Math.min(1,(ev.clientX-rect.left)/W));l[yk]=Math.max(0,Math.min(1,(ev.clientY-rect.top)/H));posArrEl(l,el,false,W,H);refreshArrSVG(l);},()=>{savLayers();snap();});});});
 canvasInner.appendChild(el);
 }
 function refreshArrSVG(l){const el=document.getElementById('ly_'+l.id);if(!el)return;const svg=el.querySelector('svg');if(!svg)return;const tmp=document.createElement('div');tmp.innerHTML=buildArrSVG(l);el.replaceChild(tmp.firstChild,svg);}
@@ -3929,7 +4043,13 @@ makeDrag(e,ev=>{
   mkeMostrarMedida(l,W,H);
 },()=>{if(l.type==='txt')el.style.cursor='move';mkeArrasteFim();savLayers();snap();});
 }
-function initDragArr(e,l,el){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,ox1=l.x1p,oy1=l.y1p,ox2=l.x2p,oy2=l.y2p;makeDrag(e,ev=>{const dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H;l.x1p=ox1+dx;l.y1p=oy1+dy;l.x2p=ox2+dx;l.y2p=oy2+dy;posArrEl(l,el,false,W,H);},()=>{savLayers();snap();});}
+function initDragArr(e,l,el){const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,ox1=l.x1p,oy1=l.y1p,ox2=l.x2p,oy2=l.y2p;makeDrag(e,ev=>{const dx=(ev.clientX-sx)/W,dy=(ev.clientY-sy)/H;l.x1p=ox1+dx;l.y1p=oy1+dy;l.x2p=ox2+dx;l.y2p=oy2+dy;
+/* a seta também não some da tela: as duas pontas ficam dentro da área */
+const m=Math.max(Math.min(l.x1p,l.x2p),0),M=Math.min(Math.max(l.x1p,l.x2p),1);
+if(l.x1p<m)l.x1p=m;if(l.x2p<m)l.x2p=m;if(l.x1p>M)l.x1p=M;if(l.x2p>M)l.x2p=M;
+const mn=Math.max(Math.min(l.y1p,l.y2p),0),Mx=Math.min(Math.max(l.y1p,l.y2p),1);
+if(l.y1p<mn)l.y1p=mn;if(l.y2p<mn)l.y2p=mn;if(l.y1p>Mx)l.y1p=Mx;if(l.y2p>Mx)l.y2p=Mx;
+posArrEl(l,el,false,W,H);},()=>{savLayers();snap();});}
 function initResizeImg(e,l,el,c){
 if(l&&l.locked)return;
 const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp,oxp=l.xp,oyp=l.yp;
@@ -3943,14 +4063,16 @@ makeDrag(e,ev=>{
   /* V9.1 — o botão 🔒 da barra trava a PROPORÇÃO. Segurar Shift durante o
      arraste inverte o que está ligado (prender/soltar sem ir ao botão). */
   const manter = ev.shiftKey ? !l.prop : !!l.prop;
-  if(manter){nhp=nwp/l.ratio*(W/H);if(c==='tl'||c==='tr')nyp=oyp+(shp-nhp);if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);}
+  /* a arte não passa da área: ampliar não pode fazer a peça sumir */
+  const lim=mkeLimiteResize(c,{xp:oxp,yp:oyp,wp:swp,hp:shp,ratio:l.ratio},{xp:nxp,yp:nyp,wp:nwp,hp:nhp},manter,W,H);
+  nwp=lim.wp;nhp=lim.hp;nxp=lim.xp;nyp=lim.yp;
   l.wp=nwp;l.hp=nhp;l.xp=nxp;l.yp=nyp;
   el.style.width=(nwp*W)+'px';el.style.height=(nhp*H)+'px';el.style.left=(nxp*W)+'px';el.style.top=(nyp*H)+'px';
   mkeMostrarMedida(l,W,H);
 },()=>{mkeArrasteFim();savLayers();snap();});
 }
-function initResizeTxt(e,l,el){if(l&&l.locked)return;const W=cw(),sx=e.clientX,sw=l.wp*W;makeDrag(e,ev=>{const nwp=Math.max(.06,(sw+(ev.clientX-sx))/W);l.wp=nwp;el.style.width=(nwp*W)+'px';},()=>{savLayers();snap();});}
-function initResizeArr(e,l,el){if(l&&l.locked)return;const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDrag(e,ev=>{l.wp=Math.max(.04,swp+(ev.clientX-sx)/W);l.hp=Math.max(.02,shp+(ev.clientY-sy)/H);el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{savLayers();snap();});}
+function initResizeTxt(e,l,el){if(l&&l.locked)return;const W=cw(),sx=e.clientX,sw=l.wp*W;makeDrag(e,ev=>{/* a caixa de texto também não passa da área */const nwp=Math.min(1,Math.max(.06,(sw+(ev.clientX-sx))/W));l.wp=nwp;el.style.width=(nwp*W)+'px';},()=>{savLayers();snap();});}
+function initResizeArr(e,l,el){if(l&&l.locked)return;const W=cw(),H=ch(),sx=e.clientX,sy=e.clientY,swp=l.wp,shp=l.hp;makeDrag(e,ev=>{/* a seta também não passa da área */l.wp=Math.min(1,Math.max(.04,swp+(ev.clientX-sx)/W));l.hp=Math.min(1,Math.max(.02,shp+(ev.clientY-sy)/H));el.style.width=(l.wp*W)+'px';el.style.height=(l.hp*H)+'px';},()=>{savLayers();snap();});}
 function initRotEl(e,l,el){
 if(l&&l.locked)return;
 const rect=el.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
@@ -4179,7 +4301,19 @@ canvasInner.addEventListener('mousedown',function(ev){
   const starts={};ids.forEach(id=>{const l=layers.find(x=>x.id===id);if(l)starts[id]={xp:l.xp,yp:l.yp,x1p:l.x1p,y1p:l.y1p,x2p:l.x2p,y2p:l.y2p};});
   const sx=ev.clientX,sy=ev.clientY;
   makeDrag(ev,e2=>{
-    const dx=(e2.clientX-sx)/W,dy=(e2.clientY-sy)/H;
+    let dx=(e2.clientX-sx)/W,dy=(e2.clientY-sy)/H;
+    /* V10.8 — o grupo inteiro também não pode sair inteiro da área:
+       o grupo inteiro arrastado para fora sumia da tela. */
+    try{
+      let bx0=1,by0=1,bx1=0,by1=0,n=0;
+      ids.forEach(id=>{const l=layers.find(x=>x.id===id);if(!l)return;const r=_lyRectPct(l);
+        if(n===0){bx0=r.x;by0=r.y;bx1=r.x+r.w;by1=r.y+r.h;}else{bx0=Math.min(bx0,r.x);by0=Math.min(by0,r.y);bx1=Math.max(bx1,r.x+r.w);by1=Math.max(by1,r.y+r.h);}n++;});
+      if(n){
+        const gw=bx1-bx0,gh=by1-by0;
+        const limX=mkeLimite(bx0+dx,gw), limY=mkeLimite(by0+dy,gh);
+        dx+=limX-(bx0+dx); dy+=limY-(by0+dy);
+      }
+    }catch(e){}
     ids.forEach(id=>{
       const l=layers.find(x=>x.id===id);if(!l)return;
       if(l.type==='arr'){
@@ -4435,10 +4569,14 @@ function updPh(){canvasPh.style.display=layers.length?'none':'flex';}
 
 var MKE_SNAP_KEY='vooalto_v9_mockup_ima';
 var MKE_GUIA_KEY='vooalto_v9_mockup_guia';
+var MKE_ALVO_KEY='vooalto_v10_mke_alvo';
 var mkeImaPref=true;
 var mkeGuiaModo='off';
 var mkeAbaAtual='ajustes';
 var mkePronto=false;
+/* Onde alinhar: 'auto' (1 objeto → na área; vários → entre eles),
+   'area' (sempre na área do mockup) ou 'sel' (sempre entre os objetos). */
+var mkeAlvoAlinhar='auto';
 var MKE_MM_PX=210/794;   /* a folha tem 794 px de largura por 210 mm */
 
 (function(){
@@ -4446,6 +4584,8 @@ var MKE_MM_PX=210/794;   /* a folha tem 794 px de largura por 210 mm */
     if(localStorage.getItem(MKE_SNAP_KEY)==='0')mkeImaPref=false;
     var g=localStorage.getItem(MKE_GUIA_KEY);
     if(g==='centro'||g==='grade'||g==='margem')mkeGuiaModo=g;
+    var a=localStorage.getItem(MKE_ALVO_KEY);
+    if(a==='area'||a==='sel')mkeAlvoAlinhar=a;
   }catch(e){}
 })();
 
@@ -4642,13 +4782,74 @@ function mkeAlternarIma(){
   mkeSync();
   toast(mkeImaPref?'🧲 Ímã ligado — encosta nas bordas e no centro':'🧲 Ímã desligado','',1800);
 }
-/* Mantém pelo menos ~10% da camada dentro da área. Antes dava para arrastar
-   uma foto para fora e ela "sumia" (a área recorta) sem jeito de voltar. */
+/* Mantém a camada dentro da área. Antes dava para arrastar uma foto para
+   fora e ela "sumia" (a área recorta) sem jeito de voltar.
+   A regra: sobra sempre um pedaço visível — pelo menos 10% da ÁREA e pelo
+   menos 20% da arte. Assim uma arte pequena ainda pode "sangrar" na borda
+   (como no Canva) e uma arte grande não some da tela. */
 function mkeLimite(v,tamanho){
   var s=(typeof tamanho==='number'&&tamanho>0)?tamanho:0.1;
-  var min=-(s-0.1), max=0.9;
+  var visivel=Math.max(0.1,s*0.2);
+  var min=visivel-s, max=1-visivel;
   if(!isFinite(v))return 0;
   return Math.max(min,Math.min(max,v));
+}
+
+/* Caixa visual da camada em % da área — é o que o alinhamento usa.
+   A seta é medida pelas DUAS pontas e a camada girada pela caixa girada
+   (AABB): sem isso, alinhar duas fotos tortas não encostava as bordas. */
+function mkeCaixaCamada(l,ctx){
+  if(!l)return {x:0,y:0,w:0,h:0};
+  if(l.type==='arr'&&typeof l.x1p==='number'){
+    return {x:Math.min(l.x1p,l.x2p),y:Math.min(l.y1p,l.y2p),
+            w:Math.abs(l.x2p-l.x1p),h:Math.abs(l.y2p-l.y1p)};
+  }
+  var H=(ctx&&ctx.H)?ctx.H():400;
+  var h=(typeof l.hp==='number')?l.hp:mkeAlturaReal(ctx,l)/Math.max(H,1);
+  var w=l.wp||0;
+  if(l.rot){
+    var rad=(l.rot||0)*Math.PI/180,co=Math.abs(Math.cos(rad)),si=Math.abs(Math.sin(rad));
+    var aw=w*co+h*si,ah=w*si+h*co;
+    return {x:l.xp-(aw-w)/2,y:l.yp-(ah-h)/2,w:aw,h:ah};
+  }
+  return {x:l.xp,y:l.yp,w:w,h:h};
+}
+/* Move a camada para que a sua caixa visual fique em (x,y). */
+function mkeMoverParaCaixa(l,alvo,ctx){
+  var c=mkeCaixaCamada(l,ctx);
+  var dx=(alvo.x||0)-c.x, dy=(alvo.y||0)-c.y;
+  if(l.type==='arr'&&typeof l.x1p==='number'){
+    l.x1p+=dx;l.x2p+=dx;l.y1p+=dy;l.y2p+=dy;
+    if(typeof l.xp==='number'){l.xp+=dx;l.yp+=dy;}
+    return;
+  }
+  l.xp+=dx;l.yp+=dy;
+}
+/* Trava do redimensionamento: a arte NUNCA fica maior que a área nem sai
+   dela. Antes, puxar a alça para fora criava uma arte 4× a área — ela sumia
+   (a área recorta) e não dava para voltar. É o "ampliar some da tela". */
+function mkeLimiteResize(c,orig,novo,manter,W,H){
+  var oxp=orig.xp||0,oyp=orig.yp||0,swp=orig.wp||0,shp=orig.hp||0;
+  /* até onde a caixa pode crescer sem passar da borda (o canto âncora fica) */
+  var maxW=1,maxH=1;
+  if(c==='br'){maxW=1-oxp;maxH=1-oyp;}
+  else if(c==='bl'){maxW=oxp+swp;maxH=1-oyp;}
+  else if(c==='tr'){maxW=1-oxp;maxH=oyp+shp;}
+  else{maxW=oxp+swp;maxH=oyp+shp;}
+  var nwp=Math.max(.04,Math.min(novo.wp,maxW));
+  var nhp=Math.max(.03,Math.min(novo.hp,maxH));
+  if(manter&&orig.ratio){
+    nhp=nwp/orig.ratio*(W/H);
+    if(nhp>maxH){nhp=maxH;nwp=nhp*orig.ratio*(H/W);}
+    if(nwp>maxW){nwp=maxW;nhp=nwp/orig.ratio*(W/H);}
+  }
+  var nxp=novo.xp,nyp=novo.yp;
+  if(c==='bl'||c==='tl')nxp=oxp+(swp-nwp);
+  if(c==='tr'||c==='tl')nyp=oyp+(shp-nhp);
+  /* a caixa fica dentro da área: a arte nunca some da tela */
+  nxp=Math.max(0,Math.min(nxp,1-nwp));
+  nyp=Math.max(0,Math.min(nyp,1-nhp));
+  return {xp:nxp,yp:nyp,wp:nwp,hp:nhp};
 }
 function mkeMelhorSnap(ancoras,alvos,tol){
   var melhor=null;
@@ -5025,39 +5226,61 @@ function mkeTravarProporcao(){
 
 /* ─────────────────────────── alinhar / distribuir ─────────────────────────── */
 
-function mkeAlinhar(modo){
+/* Onde alinhar: 'area' (a área do mockup) ou 'sel' (os objetos escolhidos).
+   'auto' = com 1 objeto, na área; com vários, entre eles — como no Canva.
+   Antes não havia escolha: com 2+ camadas o botão "alinhar à esquerda"
+   encostava as duas na mais à esquerda e parecia não fazer nada. */
+function mkeDefinirAlvoAlinhar(v){
+  mkeAlvoAlinhar=(v==='area'||v==='sel')?v:'auto';
+  try{localStorage.setItem(MKE_ALVO_KEY,mkeAlvoAlinhar);}catch(e){}
+  mkeSync();
+}
+function mkeAlinhar(modo,alvo){
   var ctx=mkeCtx(),alvos=mkeAlvos(ctx);
   if(!alvos.length){toast('Selecione uma camada para alinhar','erro');return;}
-  var H=ctx.H();
-  var medir=function(l){
-    var temCaixa=(l.type==='img'||l.type==='rect'||l.type==='circle')&&typeof l.hp==='number';
-    return {x:l.xp,y:l.yp,w:l.wp,h:temCaixa?l.hp:(mkeAlturaReal(ctx,l)/Math.max(H,1))};
-  };
-  /* Com mais de uma camada selecionada (Shift+clique), "alinhar à esquerda"
-     encosta todas na camada mais à esquerda do grupo — que é o que a pessoa
-     quer quando está montando frente e costas. Com uma só, alinha na área. */
-  var grupo=alvos.filter(function(l){return typeof l.xp==='number';}).length>1;
-  var cx0=1,cy0=1,cx1=0,cy1=0;
-  if(grupo){
+  alvo=alvo||mkeAlvoAlinhar||'auto';
+  var usarSel=(alvo==='sel')||(alvo==='auto'&&alvos.length>1);
+  /* "Objetos" com uma camada só não tem grupo: explica em vez de não
+     fazer nada (era o "o botão não funciona") */
+  if(usarSel&&alvos.length<2){
+    if(alvo==='sel'){toast('Alinhar entre objetos precisa de 2 camadas — use Shift+clique','erro');return;}
+    usarSel=false;
+  }
+  /* a caixa de referência: a área inteira ou a caixa do grupo escolhido */
+  var box={x:0,y:0,w:1,h:1};
+  if(usarSel){
+    var minX=1,minY=1,maxX=0,maxY=0,n=0;
     alvos.forEach(function(l){
-      if(typeof l.xp!=='number')return;
-      var m=medir(l);
-      cx0=Math.min(cx0,m.x);cy0=Math.min(cy0,m.y);
-      cx1=Math.max(cx1,m.x+m.w);cy1=Math.max(cy1,m.y+m.h);
+      var c=mkeCaixaCamada(l,ctx);
+      if(!c||(!c.w&&!c.h))return;
+      if(n===0){minX=c.x;minY=c.y;maxX=c.x+c.w;maxY=c.y+c.h;}
+      else{minX=Math.min(minX,c.x);minY=Math.min(minY,c.y);maxX=Math.max(maxX,c.x+c.w);maxY=Math.max(maxY,c.y+c.h);}
+      n++;
     });
+    if(n)box={x:minX,y:minY,w:maxX-minX,h:maxY-minY};
   }
   alvos.forEach(function(l){
-    if(l.type==='arr'||typeof l.xp!=='number')return;
-    var m=medir(l),hp=m.h;
-    if(modo==='esq')l.xp=grupo?cx0:0;
-    if(modo==='cx')l.xp=grupo?((cx0+cx1)/2-l.wp/2):(1-l.wp)/2;
-    if(modo==='dir')l.xp=grupo?(cx1-l.wp):(1-l.wp);
-    if(modo==='topo')l.yp=grupo?cy0:0;
-    if(modo==='cy')l.yp=grupo?((cy0+cy1)/2-hp/2):(1-hp)/2;
-    if(modo==='base')l.yp=grupo?(cy1-hp):(1-hp);
-    if(modo==='centro'){l.xp=(1-l.wp)/2;l.yp=(1-hp)/2;}
+    if(typeof l.xp!=='number'&&l.type!=='arr')return;
+    if(l.locked)return;   /* camada travada não se mexe */
+    var c=mkeCaixaCamada(l,ctx);
+    var nx=null,ny=null;
+    if(modo==='esq')nx=box.x;
+    else if(modo==='cx')nx=box.x+(box.w-c.w)/2;
+    else if(modo==='dir')nx=box.x+box.w-c.w;
+    else if(modo==='topo')ny=box.y;
+    else if(modo==='cy')ny=box.y+(box.h-c.h)/2;
+    else if(modo==='base')ny=box.y+box.h-c.h;
+    else if(modo==='centro'){nx=box.x+(box.w-c.w)/2;ny=box.y+(box.h-c.h)/2;}
+    if(nx===null&&ny===null)return;
+    mkeMoverParaCaixa(l,{x:nx===null?c.x:nx,y:ny===null?c.y:ny},ctx);
   });
   mkePosTodos(ctx);mkeSalvar(ctx);
+  /* a pessoa precisa saber o que aconteceu: antes o botão "parecia não
+     fazer nada" quando o grupo já estava alinhado */
+  var nomes={esq:'à esquerda',cx:'no centro (horizontal)',dir:'à direita',
+             topo:'no topo',cy:'no centro (vertical)',base:'na base',centro:'no centro'};
+  toast('⇤ '+(alvos.length>1?(alvos.length+' camadas alinhadas '+nomes[modo]):('Camada alinhada '+nomes[modo]))
+        +(usarSel?' entre os objetos':' na área'),'',1800);
 }
 /* Marca todas as fotos visíveis da página em foco. É o atalho que faltava
    para quem monta 4 fotos numa página: um clique e o "alinhar/distribuir"
@@ -5088,26 +5311,24 @@ function mkeSelecionarTodas(){
 }
 function mkeDistribuir(eixo){
   var ctx=mkeCtx();
-  var alvos=mkeAlvos(ctx).filter(function(l){return typeof l.xp==='number';});
+  var alvos=mkeAlvos(ctx).filter(function(l){return (typeof l.xp==='number'||l.type==='arr')&&!l.locked;});
   if(alvos.length<3){toast('Selecione 3 ou mais camadas (Shift+clique)','erro');return;}
-  var H=ctx.H();
-  /* Texto e seta não têm hp: usar a altura medida em px, senão o espaço
-     entre eles saía errado e as caixas de texto amontoavam. */
-  var tam=function(l){
-    if(eixo==='h')return l.wp||0;
-    if(typeof l.hp==='number')return l.hp;
-    return mkeAlturaReal(ctx,l)/Math.max(H,1);
-  };
-  var pos=function(l){return eixo==='h'?l.xp:l.yp;};
-  alvos.sort(function(a,b){return pos(a)-pos(b);});
-  var primeiro=alvos[0],ultimo=alvos[alvos.length-1];
-  var ini=pos(primeiro),fim=pos(ultimo)+tam(ultimo);
-  var soma=alvos.reduce(function(s,l){return s+tam(l);},0);
-  var vao=(fim-ini-soma)/Math.max(1,alvos.length-1);
+  /* usa a CAIXA VISUAL de cada camada (igual ao alinhar): com a arte
+     girada ou com seta, o espaço saía errado e as peças se sobrepunham */
+  var caixas=alvos.map(function(l){return {l:l,c:mkeCaixaCamada(l,ctx)};});
+  var pos=function(c){return eixo==='h'?c.x:c.y;};
+  var tam=function(c){return eixo==='h'?c.w:c.h;};
+  caixas.sort(function(a,b){return pos(a.c)-pos(b.c);});
+  var ini=pos(caixas[0].c);
+  var fim=pos(caixas[caixas.length-1].c)+tam(caixas[caixas.length-1].c);
+  var soma=caixas.reduce(function(s,x){return s+tam(x.c);},0);
+  var vao=(fim-ini-soma)/Math.max(1,caixas.length-1);
   var cursor=ini;
-  alvos.forEach(function(l){
-    if(eixo==='h')l.xp=cursor;else l.yp=cursor;
-    cursor+=tam(l)+vao;
+  caixas.forEach(function(x){
+    var c=x.c;
+    var nx=eixo==='h'?cursor:c.x, ny=eixo==='h'?c.y:cursor;
+    mkeMoverParaCaixa(x.l,{x:nx,y:ny},ctx);
+    cursor+=tam(c)+vao;
   });
   mkePosTodos(ctx);mkeSalvar(ctx);
   toast('⋯ Espaçamento igual','',1500);
@@ -5744,7 +5965,12 @@ function mkeMontarPainel(){
        '<div class="mke-hint">Duplo clique no nome da camada (lista 🗂) renomeia. Com o ímã ligado a camada encosta nas bordas, no centro e nas outras camadas; segure <b>Alt</b> para soltar.</div>'+
      '</div>'+
      '<div class="mke-sec" data-sec="alinhar">'+
-       '<div class="mke-lbl">Na área do mockup</div>'+
+       '<div class="mke-lbl">Alinhar em relação a</div>'+
+       '<div class="mke-seg mke-seg-alvo" id="mkeAlvoAlinhar">'+
+         '<button type="button" data-alvo="auto" title="Com 1 objeto, alinhar na área; com vários, alinhar entre eles">⏹ Automático</button>'+
+         '<button type="button" data-alvo="area" title="Alinhar sempre na área do mockup (borda, centro)">▣ Área</button>'+
+         '<button type="button" data-alvo="sel" title="Alinhar sempre entre os objetos selecionados">⧉ Objetos</button>'+
+       '</div>'+
        '<div class="mke-grid g6">'+
          mkeBotao('al-esq','⇤','Encostar à esquerda','sq')+
          mkeBotao('al-cx','↔','Centralizar na horizontal','sq')+
@@ -5763,7 +5989,7 @@ function mkeMontarPainel(){
          mkeBotao('dist-v','⋯ Distribuir ↕','Mesmo espaço entre as camadas na vertical')+
        '</div>'+
        mkeBotao('sel-todas','🖼 Selecionar todas as imagens','Marca todas as fotos da página em foco para alinhar, girar ou distribuir de uma vez')+
-       '<div class="mke-hint"><b>Shift+clique</b> seleciona várias camadas (vale em todas as páginas). O clique no fundo da área, arrastando, também faz uma seleção em grupo na página 1.</div>'+
+       '<div class="mke-hint"><b>Shift+clique</b> seleciona várias camadas (vale em todas as páginas). O clique no fundo da área, arrastando, também faz uma seleção em grupo na página 1. <b>Ctrl+C / Ctrl+V / Ctrl+Z</b> copiam, colam e desfazem como no resto do computador.</div>'+
      '</div>'+
      '<div class="mke-sec" data-sec="organizar">'+
        '<div class="mke-lbl">Todas as imagens da página</div>'+
@@ -5810,6 +6036,9 @@ function mkeMontarPainel(){
      '</div>'+
    '</div>';
   p.addEventListener('click',function(ev){
+    /* alvo do alinhamento (área / objetos / automático) */
+    var al=ev.target.closest('[data-alvo]');
+    if(al){ev.stopPropagation();mkeDefinirAlvoAlinhar(al.dataset.alvo);return;}
     var b=ev.target.closest('[data-acao]');
     if(b){ev.stopPropagation();mkeAcao(b.dataset.acao);return;}
     var t=ev.target.closest('[data-tab]');
@@ -5972,6 +6201,20 @@ function mkeSync(){
   if(bp)bp.classList.toggle('on',!!(l&&l.prop));
   var ba=document.getElementById('mkeBtnIma');
   if(ba)ba.classList.toggle('on',!!mkeImaPref);
+  /* alvo do alinhamento: qual botão fica ligado */
+  var segAlvo=document.getElementById('mkeAlvoAlinhar');
+  if(segAlvo){
+    var _n=0,_q=(typeof multiSelIds!=='undefined'&&multiSelIds)?multiSelIds.length:0;
+    try{var _pp=(ctx&&ctx.page)?ctx.page.msel:null;if(_pp&&_pp.length>_q)_q=_pp.length;}catch(e){}
+    if(_q<2)_n=0;
+    segAlvo.querySelectorAll('[data-alvo]').forEach(function(b){
+      var alvo=b.dataset.alvo;
+      var ligado=(alvo===mkeAlvoAlinhar)||
+        (mkeAlvoAlinhar==='auto'&&alvo===(_q>1?'sel':'area'));
+      b.classList.toggle('on',ligado);
+      b.setAttribute('aria-pressed',String(ligado));
+    });
+  }
   var bg=document.getElementById('mkeBtnGuia');
   if(bg)bg.classList.toggle('on',mkeGuiaModo!=='off');
   var bs=document.getElementById('mkeBtnEstudio');
@@ -7768,7 +8011,10 @@ function limparParaNovaFicha(novoNum) {
   const aviso=$('avisoTxt');if(aviso)aviso.value='⚠ PODEM HAVER DIVERGÊNCIAS DE COR QUANDO FEITO EM SILK DIGITAL!';
   if(typeof atualizarRodapes==='function')atualizarRodapes();
   if(typeof sincTodasPaginas==='function')sincTodasPaginas();
-  v7SuppressSnap=false;snap();
+  v7SuppressSnap=false;
+  /* a ficha nova é o "antes" do próximo gesto: o primeiro Ctrl+Z tem que
+     ter o que desfazer */
+  v8SemearHistorico(true);
   const nomeEl=$('dc_nome');if(nomeEl){try{nomeEl.focus();}catch(e){}}
   toast('📋 Nova ficha Nº '+String(novoNum).padStart(4,'0')+' pronta!','sucesso',2600);
 }
@@ -7824,10 +8070,13 @@ function importarFichaJSON(e) {
 
 function restaurarDeJSON(d) {
   v8FichaAtualId=null;   /* V8: quem chama decide se isto é um registro salvo */
+  /* o histórico recomeça com a ficha aberta como "antes" do próximo gesto
+     (sem isto o primeiro Ctrl+Z depois de abrir não tinha o que desfazer) */
   /* Documento novo = histórico novo. Sem limpar, o primeiro Ctrl+Z depois de
      abrir outra ficha desfazia uma operação de PÁGINA da ficha anterior
      (v7PageUndoStack), apagando uma página da ficha que acabou de abrir. */
   try{undoStack=[];redoStack=[];undoSeqStack=[];redoSeqStack=[];snapLastSig='';estadoAtual=null;
+      clearTimeout(snapTimer);snapTimer=null;snapPendente=false;
       if(typeof updUR==='function')updUR();}catch(e){}
   try{if(typeof v7PageUndoStack!=='undefined'){v7PageUndoStack=[];v7PageRedoStack=[];}}catch(e){}
   if(!d._folha1Removida && !document.getElementById('folha1') && typeof v7RestaurarPaginaP1==='function'){
@@ -7883,7 +8132,9 @@ function restaurarDeJSON(d) {
   if(typeof renderPageStrip==='function')renderPageStrip();
   if(typeof atualizarRodapes==='function')atualizarRodapes();
   if(typeof v7Autosave==='function')v7Autosave();
-  snap();
+  /* a ficha aberta é o "antes" do próximo gesto: sem isto o primeiro Ctrl+Z
+     depois de abrir a ficha não tinha o que desfazer */
+  v8SemearHistorico(true);
 }
 
 /* ══ Modal Revincular Imagens ══ */
@@ -7973,6 +8224,10 @@ function onCanvasFilesPatched(e) {
 document.addEventListener('DOMContentLoaded', () => {
   if(typeof v8ListarFichas==='function')v8ListarFichas();
   atualizarCfgInput();
+  /* O histórico começa com a ficha na tela como "antes" do primeiro gesto.
+     Sem isso, o primeiro Ctrl+Z depois de abrir não tinha o que desfazer.
+     Roda depois da restauração automática (que já semeia o histórico). */
+  setTimeout(function(){try{v8SemearHistorico();}catch(e){}},900);
   const ci = $('canvasInput');
   if(ci) { ci.removeAttribute('onchange'); ci.addEventListener('change', onCanvasFilesPatched); }
   const fichaNum = $('fichaNum');

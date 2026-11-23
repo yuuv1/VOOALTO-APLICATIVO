@@ -477,6 +477,61 @@ ser opcional: quem não usa o recurso não tem a chave, e nada quebra.
 
 ---
 
+## 6.1 Etapa 0 — O que já foi implementado (V10.8.0, 2026-11-23)
+
+Esta etapa existiu para **destravar o uso diário** antes das frentes maiores.
+Ela não é o plano inteiro: é o que faltava para a pessoa conseguir trabalhar
+com a arte sem ficar frustrada. Todas as correções abaixo são **dentro da
+regras do §2.4** — nada mudou na folha A4, no `.json` nem na impressão.
+
+### Alinhar (L4 do §3.2, parte de ergonomia)
+
+| Antes | Agora |
+|---|---|
+| Com 2+ camadas, "alinhar à esquerda" encostava todas na mais à esquerda do grupo e **parecia não fazer nada** | Escolha da referência: **⏹ Automático** (1 objeto → área; vários → entre eles, como o Canva) · **▣ Área** · **⧉ Objetos**. Guardada em `vooalto_v10_mke_alvo`. |
+| Alinhava pelo `xp` cru — uma arte **girada** não encostava na borda | `mkeCaixaCamada()` / `mkeMoverParaCaixa()`: alinha pela **caixa visível** (AABB) e a seta pelas **duas pontas** |
+| Silêncio (ninguém sabia se tinha funcionado) | O painel **avisa**: "3 camadas alinhadas à esquerda na área" |
+| "Objetos" com 1 camada não fazia nada | Explica o motivo em vez de sumir |
+| Camada travada se mexia | Travada **não** se mexe |
+
+`mkeDistribuir()` passou a usar a mesma caixa visível (antes o espaço saía
+errado com arte torta ou seta).
+
+### Copiar / colar / desfazer
+
+| Antes | Agora |
+|---|---|
+| Ctrl+C levava **só a última** camada clicada | Leva **todas** as marcadas (Shift+clique) — clipboard interno `{__varios:true,itens:[…]}` em `vooalto_v8_layer_clip` |
+| Ctrl+V colava todas **uma em cima da outra** | Cada uma entra **um degrau abaixo** da anterior |
+| Ctrl+X tirava só uma | Recorta **todas** |
+| Ctrl+Z tinha **800 ms de atraso** (`snap()`) — mexia rápido e "não fazia nada" | `snapAplicar()` grava na hora; `undo()` joga o pendente no histórico antes de desfazer; `redo()` **não** descarta a pilha de refazer |
+| O **primeiro** Ctrl+Z depois de abrir a ficha não tinha o que desfazer | `v8SemearHistorico()`: a ficha aberta/criada é o estado "antes" do próximo gesto |
+
+### Ampliar / redimensionar sem a arte sumir
+
+| Antes | Agora |
+|---|---|
+| Puxar a alça criava uma arte **4× maior que a área** — ela sumia (a área recorta) sem volta | `mkeLimiteResize()`: a arte **nunca passa da área nem sai dela**, nos 4 cantos, na folha 1 e nas extras |
+| `mkeLimite()` era fixo (0,9): uma arte **grande** saía quase toda da tela | Garante **10% da área e 20% da arte** dentro, para qualquer tamanho — vale para a folha 1, extras, grupo arrastado e seta (as 2 pontas) |
+| Alça de 12 px: no dedo o clique "erraba" a arte | Alça de 14 px + área de clique maior (pseudo-elemento transparente de 7 px) |
+| — | Botão **⇹** na barra da arte abre a aba Alinhar direto |
+
+### Suítes
+
+* `tests/test_mockup_atalhos_v10.js` — **nova, 29 verificações**: alinhar com 1
+  e com várias camadas, os três alvos, seta e camada girada, Ctrl+C/V/X com
+  várias camadas, Ctrl+Z imediato, primeiro Ctrl+Z depois de abrir, ampliar
+  sem sumir, proporção travada e limite de arraste.
+* `tests/test_mockup_v10.js` — 291 → **292 verificações** (a regra do limite
+  mudou e a suíte antiga estava travando o valor antigo).
+
+**O que continua no backlog:** L1 (zoom/pan), L2/L3 (barra e campos junto do
+elemento), L4 (alças de meio lado), L5 (distância no ímã), L6 (agrupar),
+L7 (arrastar para reordenar), L8/L9/L10/L11 (Estúdio da Peça), L12 (sombra,
+borda, texto), L13 (ajuste fino) e L14 (cores com HEX).
+
+---
+
 ## 7. Ordem de execução
 
 **Etapa 1 — clareza (P0).** Duas folhas, poucos dias:
