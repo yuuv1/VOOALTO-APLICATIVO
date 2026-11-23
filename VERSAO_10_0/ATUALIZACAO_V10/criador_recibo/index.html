@@ -18,6 +18,7 @@
   </script>
   <link rel="stylesheet" href="../assets/fonts.css">
   <script src="../assets/html2canvas.min.js"></script>
+  <script src="../assets/cep.js"></script>
   <script src="../assets/zoom-folha.js"></script>
 
   <style>
@@ -58,6 +59,7 @@
     .card-title .n{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--v10-pink);color:#fff;font-size:9px}
     label.fl{display:block;font-size:9.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:var(--v10-t3);margin:8px 0 3px}
     label.fl:first-child{margin-top:0}
+    label.fl .fl-dica{font-weight:600;text-transform:none;letter-spacing:0;color:var(--v10-t3);opacity:.75}
     .inp,select.inp,textarea.inp{
       width:100%;border:1px solid var(--v10-line-2);border-radius:7px;background:var(--v10-bg-2);
       color:var(--v10-t1);font-family:inherit;font-size:12px;padding:7px 9px;line-height:1.35;
@@ -321,6 +323,8 @@
         </div>
         <label class="fl" for="f-end">Endereço</label>
         <input class="inp" id="f-end" type="text" placeholder="Rua, número, bairro" oninput="Recibo.campo('end',this.value)">
+        <label class="fl" for="f-cep">CEP <span class="fl-dica">— preenche o endereço sozinho</span></label>
+        <input class="inp" id="f-cep" type="text" inputmode="numeric" placeholder="00000-000" oninput="Recibo.campo('cep',this.value)">
         <label class="fl" for="f-cidade">Cidade — UF</label>
         <input class="inp" id="f-cidade" type="text" placeholder="Cidade — UF" oninput="Recibo.campo('cidade',this.value)">
       </div>
@@ -840,7 +844,7 @@ function carregarEmpresa(){
 function estadoVazio(){
   return {
     id:'', numero:'', data:hojeISO(),
-    cliente:{nome:'',doc:'',tel:'',end:'',cidade:''},
+    cliente:{nome:'',doc:'',tel:'',end:'',cep:'',cidade:''},
     fichaId:'', fichaNum:'', fichaNome:'', manualSemFicha:false,
     itens:[],
     totalProducao:0, totalManual:false,
@@ -859,7 +863,7 @@ function normalizarEstado(base){
   const limpo=estadoVazio();
   if(!base||typeof base!=='object')return limpo;
   const e=Object.assign(limpo,base);
-  e.cliente=Object.assign({nome:'',doc:'',tel:'',end:'',cidade:''},(base.cliente&&typeof base.cliente==='object')?base.cliente:{});
+  e.cliente=Object.assign({nome:'',doc:'',tel:'',end:'',cep:'',cidade:''},(base.cliente&&typeof base.cliente==='object')?base.cliente:{});
   e.itens=Array.isArray(base.itens)?base.itens.map(it=>({
     modelo:String((it&&it.modelo)||''),
     qtd:num(it&&it.qtd),
@@ -1051,6 +1055,7 @@ function dadosDoCliente(d){
     doc:stripTags(d.dc_doc),
     tel:stripTags(d.dc_tel),
     end:stripTags(d.dc_end),
+    cep:stripTags(d.dc_cep),
     cidade:stripTags(d.dc_cidade)
   };
 }
@@ -1249,6 +1254,7 @@ function campo(chave,valor){
     case 'doc': estado.cliente.doc=String(valor||''); break;
     case 'tel': estado.cliente.tel=String(valor||''); break;
     case 'end': estado.cliente.end=String(valor||''); break;
+    case 'cep': estado.cliente.cep=String(valor||''); break;
     case 'cidade': estado.cliente.cidade=String(valor||''); break;
     case 'total':
       estado.totalProducao=parseBRL(valor);
@@ -1501,6 +1507,7 @@ function renderSidebar(){
   set('f-doc',estado.cliente.doc);
   set('f-tel',estado.cliente.tel);
   set('f-end',estado.cliente.end);
+  set('f-cep',estado.cliente.cep);
   set('f-cidade',estado.cliente.cidade);
   set('f-total',estado.totalProducao?fmtNumInput(estado.totalProducao):'');
   set('f-desconto',estado.desconto?fmtNumInput(estado.desconto):'');
@@ -1541,7 +1548,9 @@ function renderPreview(){
     if(String(e.cliente.doc||'').trim())extras.push('CPF/CNPJ <b>'+esc(e.cliente.doc)+'</b>');
     if(String(e.cliente.tel||'').trim())extras.push('Telefone <b>'+esc(e.cliente.tel)+'</b>');
     const endereco=[String(e.cliente.end||'').trim(),String(e.cliente.cidade||'').trim()].filter(Boolean).join(' — ');
+    const cepCli=String(e.cliente.cep||'').trim();
     if(endereco)extras.push('<b>'+esc(endereco)+'</b>');
+    if(cepCli)extras.push('CEP <b>'+esc(cepCli)+'</b>');
     linhaCliente.innerHTML=extras.length?('Dados do cliente: '+extras.join(' · ')):'';
     linhaCliente.style.display=extras.length?'block':'none';
   }
@@ -2496,6 +2505,52 @@ function iniciar(){
 document.addEventListener('DOMContentLoaded',iniciar);
 
 /* ── API exposta (botões inline e testes) ───────────────────────────────── */
+/* ═══ V10.9 — ENDEREÇO POR CEP ═══
+   O CEP do recibo preenche o endereço e a cidade do cliente. O que a pessoa
+   já escreveu (número, complemento) nunca é apagado, e o que o CEP coloca
+   continua editável. Sem internet ou com CEP inexistente, só avisa. */
+function v10CepAvisar(msg,tipo){
+  try{if(typeof toast==='function')toast(msg,tipo==='erro'?'erro':'');}catch(e){}
+}
+function v10CepPreencher(){
+  const cep=$('f-cep');
+  if(!cep||cep.__v10Cep||typeof VooaltoCep==='undefined')return;
+  cep.__v10Cep=true;
+  /* a máscara do CEP: 00000-000 (o módulo de CEP cuida da consulta) */
+  cep.addEventListener('blur',function(){
+    const d=String(cep.value||'').replace(/\D+/g,'');
+    if(d.length===8){
+      cep.value=d.slice(0,5)+'-'+d.slice(5);
+      try{campo('cep',cep.value);}catch(e){}
+    }
+  });
+  VooaltoCep.ligar({
+    campoCep:cep,
+    campoEndereco:$('f-end'),
+    campoCidade:$('f-cidade'),
+    mesclarEndereco:function(atual,dados){return VooaltoCep.mesclarEndereco(atual,dados);},
+    mesclarCidade:function(atual,dados){return VooaltoCep.mesclarCidade(atual,dados);},
+    avisar:v10CepAvisar,
+    aoPreencher:function(){
+      /* o que apareceu na tela tem que entrar no estado do recibo — os DOIS
+         campos juntos, antes de redesenhar: redesenhar um por vez apagaria
+         o que o CEP acabou de colocar no outro */
+      try{
+        const fim=($('f-end')||{}).value||'';
+        const cid=($('f-cidade')||{}).value||'';
+        estado.autoFicha=false;
+        estado.manualSemFicha=true;
+        estado.cliente.end=String(fim);
+        estado.cliente.cidade=String(cid);
+      }catch(e){}
+      try{renderTudo();}catch(e){}
+      try{agendarAutosave();}catch(e){}
+    }
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v10CepPreencher);
+else v10CepPreencher();
+
 window.Recibo={
   campo,check,empresaCampo,normalizar,
   definirModo,recalcularTotal,recalcularJaRecebido,
@@ -2548,6 +2603,7 @@ window.ReciboInterno={
   dataLonga
 };
 })();
+
 </script>
 </body>
 </html>

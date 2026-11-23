@@ -193,8 +193,8 @@ navegador, com `Cache-Control: no-store`. Não é o servidor do app.
 
 ```
 npm install
-npm test              # 24 suítes jsdom (shell, módulos, recibo, mockup, peça,
-                      # contrato, espelho da folha 1, melhorias)
+npm test              # 32 suítes jsdom (shell, módulos, recibo, mockup, peça,
+                      # contrato, espelho da folha 1, melhorias, CEP, ...)
 npm run test:python   # 15 testes (build + contrato + identidade + servidor)
 npm run build         # gera sw.js e o ZIP
 ```
@@ -290,6 +290,65 @@ Decisões que precisam ser mantidas por quem continuar:
    largura em 794 px → `MKE_MM_PX = 210/794`). O `⚠` da lista de camadas e a
    linha “Resolução da foto” da aba Precisão usam essa conta. O tamanho natural
    fica em `l._nw/_nh` e em `MKE_PX[src]`, nunca em `serLayer`.
+
+## 8.2 Endereço por CEP (V10.9)
+
+O pedido foi: *“coloca o CEP e já puxa os dados de endereço, o que foi
+preenchido pode ser modificado, e o preenchimento não destrói número,
+complemento ou outra informação que não veio da consulta”*.
+
+**Onde mora:** `ATUALIZACAO_V10/assets/cep.js` — um arquivo só, sem
+biblioteca externa, que se pendura em `window.VooaltoCep`. É carregado pela
+Ficha Técnica e pelo Recibo (`<script src="../assets/cep.js">`).
+
+```
+VooaltoCep.normalizar(v)         → '74000000'  (só dígitos, até 8)
+VooaltoCep.formatar(v)           → '74000-000'
+VooaltoCep.valido(v)             → true/false
+VooaltoCep.buscar(v, opcoes?)    → Promise<{ok, dados|erro, mensagem, doCache}>
+VooaltoCep.mesclarEndereco(atual, dados)   → texto final do endereço
+VooaltoCep.mesclarCidade(atual, dados)     → texto final da cidade
+VooaltoCep.ligar(opcoes)         → conecta um campo de CEP a dois campos
+```
+
+**Regras que não podem quebrar** (estão presas em `tests/test_cep_v10.js`):
+
+1. **Dois provedores, um atrás do outro.** BrasilAPI
+   (`https://brasilapi.com.br/api/cep/v1/{cep}`) e ViaCEP
+   (`https://viacep.com.br/ws/{cep}/json/`). O CORS do ViaCEP não é garantido
+   em todo cliente web — por isso **nunca** depender de um só.
+2. **Tempo limite** (7 s por provedor) e `AbortController`: o app não trava.
+3. **Cache local** (`localStorage`, chave `vooalto_v10_cep_cache`, até 400
+   CEPs): o app é offline-first; repetir um CEP é instantâneo e funciona
+   sem internet.
+4. **A mesclagem nunca apaga o que a pessoa escreveu.** Campo vazio → o
+   endereço inteiro; só número (`250`) → o logradouro entra na frente e o
+   250 fica; já com logradouro → mantém e só acrescenta o bairro; outro
+   endereço → não mexe. A comparação ignora acento, pontuação e caixa, e
+   `GO` não casa dentro de `GOIÂNIA`.
+5. **Erro nunca é exceção:** `invalido`, `nao-encontrado`, `rede`, `tempo`,
+   `sem-rede` — cada um com mensagem para a pessoa, e **sem apagar nada**.
+6. **O que o CEP preencheu continua editável** — é texto comum no campo.
+
+**Onde está ligado:**
+
+| Módulo | Campo do CEP | Preenche |
+|---|---|---|
+| Ficha Técnica | `dc_cep` (folha 1) | `dc_end`, `dc_cidade` |
+| Ficha Técnica | `v4qCep` (Preenchimento rápido) | `v4qEnd`, `v4qCidade` |
+| Recibo | `f-cep` (cliente) | `f-end`, `f-cidade` |
+
+Na ficha, depois de preencher vem `sincTodasPaginas()` (as páginas extras
+recebem o mesmo endereço) e `snapAplicar()` (o Ctrl+Z desfaz o
+preenchimento na hora). No recibo, os dois campos entram **juntos** no estado
+antes de redesenhar — redesenhar um por vez apagaria o que o CEP acabou de
+colocar no outro.
+
+**Cuidado ao mexer:** o script principal do Recibo é uma IIFE
+(`(function(){'use strict'; … })()`) e o da Ficha tem um IIFE só na parte de
+backup — código novo que precisa de `$`, `campo()`, `estado` ou `toast` do
+Recibo **tem que entrar dentro da IIFE**, senão dá `ReferenceError` em
+produção.
 
 ## 9. Caminhos possíveis a partir daqui
 

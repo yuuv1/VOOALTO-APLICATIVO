@@ -1,5 +1,85 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.9.0 — Endereço por CEP: digita o CEP e o endereço se preenche (2026-11-23)
+
+**O pedido:** *“implementar um sistema de preenchimento automático de
+endereço por CEP: o usuário informa o CEP, o sistema busca e preenche os
+dados de endereço disponíveis, os dados preenchidos podem ser corrigidos
+manualmente, o preenchimento não deve destruir número, complemento ou
+outra informação que não veio da consulta, e erros de rede, CEP inválido e
+CEP não encontrado devem ser tratados de forma clara.”*
+
+**Módulo novo — `assets/cep.js`** (sem nenhuma biblioteca externa, funciona
+no app, em página `file://` e nos testes):
+
+- **Dois provedores, um atrás do outro:** BrasilAPI
+  (`/api/cep/v1/{cep}`) e ViaCEP (`/ws/{cep}/json/`). Se um estiver fora do
+  ar — ou bloqueado pelo navegador — o outro responde. O CORS do ViaCEP não
+  é garantido em todos os clientes, então **não há dependência de um serviço
+  só**.
+- **Tempo limite** na consulta (7 s por provedor): o app **nunca trava**
+  esperando a rede.
+- **Cache no aparelho** (`localStorage`, até 400 CEPs): repetir o mesmo CEP
+  é instantâneo e **funciona offline** — o app é offline-first e a consulta
+  é um extra, não um requisito.
+- **Erros claros:** `invalido`, `nao-encontrado`, `rede`, `tempo`,
+  `sem-rede` — cada um com uma mensagem que fala com a pessoa
+  (“CEP não encontrado. Confira o número.”, “Não consegui consultar o CEP
+  (sem internet?). Preencha o endereço à mão.”).
+
+**A mesclagem (a parte que protege o que já estava escrito)**
+
+`VooaltoCep.mesclarEndereco()` decide o que fazer com o texto do campo:
+
+| O que já estava no campo | O que o CEP faz |
+|---|---|
+| vazio | escreve o endereço inteiro (logradouro, complemento, bairro) |
+| só o número (`250`) | coloca o logradouro **na frente** e o 250 fica |
+| número + complemento (`250 - Apto 12`) | idem: o complemento fica |
+| já com o logradouro (`Rua X, 250`) | mantém tudo e só acrescenta o bairro que faltava |
+| outro endereço escrito | **não mexe** — só completa o bairro |
+
+`VooaltoCep.mesclarCidade()` faz o mesmo com a cidade: campo vazio vira
+“Cidade - UF”; cidade já escrita **não é trocada**; a UF é acrescentada só se
+faltar. A comparação ignora acento e pontuação, e `GO` não casa dentro de
+`GOIÂNIA`.
+
+**Ficha Técnica**
+
+- O campo **CEP** (`dc_cep`) consulta ao completar os 8 dígitos (700 ms de
+  espera, ou ao sair do campo, ou ao apertar <kbd>Enter</kbd>) e preenche
+  **Endereço** (`dc_end`) e **Cidade** (`dc_cidade`).
+- O **Preenchimento rápido** (`v4qCep`) faz o mesmo dentro da janela
+  (`v4qEnd` / `v4qCidade`).
+- Depois de preencher, `sincTodasPaginas()` leva o endereço para as páginas
+  extras e `snapAplicar()` grava o estado na hora — o **Ctrl+Z desfaz o
+  preenchimento**.
+- O que o CEP preencheu é **texto comum**: continua editável à mão.
+
+**Recibo**
+
+- Novo campo **CEP** no bloco do cliente (`f-cep`), com máscara
+  `00000-000` ao sair do campo.
+- O CEP preenche **Endereço** e **Cidade** do cliente e entra no estado do
+  recibo (`estado.cliente.cep`), junto com o que veio da ficha
+  (`dc_cep` → `dadosDoCliente`).
+- O CEP **sai impresso** no recibo, na linha de dados do cliente.
+
+**Erros**
+
+- **CEP inválido** (menos de 8 dígitos): nem chega à rede; avisa “O CEP
+  precisa ter 8 dígitos.”
+- **CEP não encontrado** (404 nos dois provedores): avisa “CEP não encontrado.
+  Confira o número.”
+- **Sem internet / CORS bloqueado**: avisa e **não apaga nada** — o endereço
+  e a cidade escritos à mão continuam intactos.
+
+**Testes** — `VERSAO_10_0/tests/test_cep_v10.js` (48 verificações, novo
+arquivo no `npm test`): normalização e máscara, a mesclagem que preserva
+número e complemento, a queda do primeiro provedor para o segundo, o cache
+offline, CEP inválido/inexistente/sem rede, a ficha (folha 1 e Preenchimento
+rápido) e o recibo.
+
 ## V10.8.0 — Estúdio do mockup: alinhar, copiar/colar/desfazer e ampliar sem a arte sumir (2026-11-23)
 
 **O pedido:** *“organizar separadamente o planejamento das melhorias do

@@ -165,6 +165,15 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
       <li><b>Colar uma coluna do Excel</b> na grade, nas medidas ou na produção espalha os valores pelas células seguintes. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> copia a tabela inteira de volta para a planilha.</li>
     </ul>
 
+    <h3>Endereço pelo CEP — o endereço se preenche sozinho</h3>
+    <ul>
+      <li>Digite os <b>8 dígitos do CEP</b> no campo <b>CEP</b> da ficha (ou no <b>CEP</b> do <b>Preenchimento rápido</b>) e o <b>endereço</b> e a <b>cidade</b> se completam sozinhos: logradouro, bairro e “Cidade - UF”.</li>
+      <li><b>O que você escreveu continua de pé.</b> Se o número (<b>250</b>) ou o complemento (<b>Apto 12</b>) já estavam no campo, o CEP coloca o logradouro na frente e o seu número é mantido. O que o CEP preencheu também continua editável à mão — basta clicar no campo e corrigir.</li>
+      <li>A consulta usa <b>dois serviços</b> (BrasilAPI e ViaCEP), um atrás do outro: se um estiver fora do ar, o outro responde. O resultado fica <b>guardado no aparelho</b>, então repetir o mesmo CEP é instantâneo e funciona <b>sem internet</b>.</li>
+      <li><b>Se der problema, nada é apagado:</b> CEP inexistente, CEP com número errado ou falta de internet apenas mostram um aviso no canto da tela e a ficha continua editável normalmente — preencha o resto à mão.</li>
+      <li><b>No Recibo</b> funciona igual: o campo <b>CEP</b> do cliente preenche o endereço e a cidade, e o CEP também sai impresso no recibo.</li>
+    </ul>
+
     <h3>Estúdio do mockup — a área das artes</h3>
     <ul>
       <li><b>⤢ Estúdio</b> (régua da área, barra lateral ou barra da página) amplia a área do mockup para a janela inteira. <kbd>Esc</kbd> volta.</li>
@@ -245,6 +254,7 @@ footer.ft{color:var(--muted);font-size:12.5px;text-align:center;padding:18px 0 0
     <ul>
       <li>Clique em <b>✍️ Preencher manualmente</b> para abrir um recibo em branco. Se houver um recibo em edição, salve-o antes de confirmar a substituição para não perder os dados não salvos.</li>
       <li>Digite o <b>número/código da ficha</b> (opcional), o nome e os dados do cliente, os itens e seus valores, ou informe diretamente o total da produção. Depois escolha <b>Total</b> ou <b>Parcial</b> e informe o valor recebido.</li>
+      <li><b>CEP</b>: digite os 8 dígitos e o endereço e a cidade do cliente se preenchem sozinhos (o que você já escreveu, como o número, é mantido). Sem internet ou com CEP inexistente, o recibo apenas avisa e continua editável à mão.</li>
       <li>O código da ficha também pode ser corrigido após importar um PDF; a soma de recibos anteriores passa a usar o novo código. O rascunho manual não será substituído automaticamente pela ficha em edição ao reabrir a tela.</li>
     </ul>
     <h3>Jogar a ficha e o recibo nascer pronto (opcional)</h3>
