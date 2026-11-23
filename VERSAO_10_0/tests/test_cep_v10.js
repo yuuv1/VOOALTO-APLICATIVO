@@ -62,11 +62,19 @@ const BRASILAPI_RAW = {
 const BRASILAPI = {
   cep: '74000000', uf: 'GO', cidade: 'Goiânia',
   bairro: 'Setor Bueno', logradouro: 'Avenida T-9',
-  complemento: 'de frente com o número 1000', fonte: 'brasilapi'
+  complemento: 'Bloco A', fonte: 'brasilapi'
 };
 const VIACEP = {
-  cep: '74000000', logradouro: 'Avenida T-9', complemento: 'de frente com o número 1000',
+  cep: '74000000', logradouro: 'Avenida T-9', complemento: 'Bloco A',
   bairro: 'Setor Bueno', localidade: 'Goiânia', uf: 'GO',
+};
+/* Como os provedores respondem DE VERDADE: o "complemento" deles é a FAIXA
+   de numeração da rua — não o complemento (sala/apto/bloco) de quem mora
+   lá. Se isso entrar no endereço, o campo fica impróprio. */
+const FAIXA = {
+  cep: '01310100', uf: 'SP', cidade: 'São Paulo',
+  bairro: 'Bela Vista', logradouro: 'Avenida Paulista',
+  complemento: 'de 612 a 1510 - lado par', fonte: 'viacep'
 };
 
 function criarFetch(opcoes = {}) {
@@ -125,14 +133,26 @@ function abrirApp(arquivo, fetchFalso) {
     ok('valido aceita 8 dígitos', cepMod.valido('74000-000') === true);
     ok('valido recusa CEP curto', cepMod.valido('7400000') === false);
     ok('mesclarEndereco monta o endereço completo quando o campo está vazio',
-      cepMod.mesclarEndereco('', BRASILAPI) === 'Avenida T-9, de frente com o número 1000, Setor Bueno',
+      cepMod.mesclarEndereco('', BRASILAPI) === 'Avenida T-9, Bloco A, Setor Bueno',
       cepMod.mesclarEndereco('', BRASILAPI));
     ok('mesclarEndereco mantém o NÚMERO que a pessoa escreveu',
-      cepMod.mesclarEndereco('250', BRASILAPI) === 'Avenida T-9, de frente com o número 1000, 250, Setor Bueno',
+      cepMod.mesclarEndereco('250', BRASILAPI) === 'Avenida T-9, Bloco A, 250, Setor Bueno',
       cepMod.mesclarEndereco('250', BRASILAPI));
     ok('mesclarEndereco mantém o COMPLEMENTO que a pessoa escreveu',
-      cepMod.mesclarEndereco('250 - Apto 12', BRASILAPI) === 'Avenida T-9, de frente com o número 1000, 250 - Apto 12, Setor Bueno',
+      cepMod.mesclarEndereco('250 - Apto 12', BRASILAPI) === 'Avenida T-9, Bloco A, 250 - Apto 12, Setor Bueno',
       cepMod.mesclarEndereco('250 - Apto 12', BRASILAPI));
+    ok('a FAIXA da rua que o provedor devolve NÃO entra no endereço',
+      cepMod.mesclarEndereco('', FAIXA) === 'Avenida Paulista, Bela Vista',
+      cepMod.mesclarEndereco('', FAIXA));
+    ok('a faixa da rua também não aparece junto do número da pessoa',
+      cepMod.mesclarEndereco('250', FAIXA) === 'Avenida Paulista, 250, Bela Vista',
+      cepMod.mesclarEndereco('250', FAIXA));
+    ok('complemento de verdade (Bloco/Sala/Apto) é aproveitado',
+      cepMod.complementoUtil('Sala 12') === 'Sala 12' && cepMod.complementoUtil('Bloco A') === 'Bloco A',
+      cepMod.complementoUtil('Sala 12'));
+    ok('faixa da rua é descartada na hora',
+      cepMod.complementoUtil('de 612 a 1510 - lado par') === '' && cepMod.complementoUtil('até 653 - lado ímpar') === '',
+      cepMod.complementoUtil('de 612 a 1510 - lado par'));
     ok('mesclarEndereco não apaga um endereço já escrito (só completa o bairro)',
       cepMod.mesclarEndereco('Rua das Flores, 90', BRASILAPI) === 'Rua das Flores, 90, Setor Bueno',
       cepMod.mesclarEndereco('Rua das Flores, 90', BRASILAPI));
