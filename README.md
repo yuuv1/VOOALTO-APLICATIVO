@@ -77,7 +77,7 @@ Desenvolvimento:
 ```bash
 cd VERSAO_10_0
 npm install            # Node 20+ (jsdom é a única dependência)
-npm test               # suíte JS (jsdom) — 24 suítes
+npm test               # suíte JS (jsdom) — 32 suítes
 npm run test:python    # build, contrato, identidade e servidor (Python 3.10+)
 npm run build          # regenera sw.js e o ZIP de distribuição
 

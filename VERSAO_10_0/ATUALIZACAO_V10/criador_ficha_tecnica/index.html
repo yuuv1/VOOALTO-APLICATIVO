@@ -30,6 +30,7 @@
   <script src="../assets/nuvem.js"></script>
   <script src="../assets/rascunhos.js"></script>
   <script src="../assets/imagem.js"></script>
+  <script src="../assets/cep.js"></script>
   <script src="../assets/zoom-folha.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1410,7 +1411,7 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
 </div>
 <div class="dc-cell">
 <span class="dc-lbl">CEP</span>
-<div class="dc-inp" id="dc_cep" contenteditable="true" data-ph="00000-000" oninput="sincTodasPaginas()"></div>
+<div class="dc-inp" id="dc_cep" contenteditable="true" data-ph="00000-000" title="Digite os 8 dígitos do CEP e o endereço é preenchido sozinho (dá para editar depois)" oninput="sincTodasPaginas()"></div>
 </div>
 </div>
 </div>
@@ -7724,6 +7725,8 @@ function v4AplicarMedidas(){
 
 function abrirPreenchimentoRapido() {
   if(!$('v4QuickModal')) createQuickModal();
+  /* V10.9 — o CEP do painel de Preenchimento rápido também puxa o endereço */
+  try{if(typeof v10CepLigarQuick==='function')v10CepLigarQuick();}catch(e){}
   const setV=(id,v)=>{const el=$(id); if(el) el.value=v||''};
   setV('v4qCliente', $('dc_nome')?($('dc_nome').textContent||'').trim():'');
   setV('v4qVendedor', $('dc_vendedor')?($('dc_vendedor').textContent||'').trim():'');
@@ -10938,6 +10941,74 @@ window.addEventListener('message',ev=>{
   if(ev&&ev.origin&&ev.origin!==location.origin)return;
   if(ev&&ev.data&&ev.data.type==='vooalto-backup-restaurado')v8RecarregarPosBackup();
 });
+
+/* ═══ V10.9 — ENDEREÇO POR CEP ═══
+   "Coloca o CEP e o endereço aparece sozinho."
+
+   COMO FUNCIONA
+     * A pessoa digita os 8 dígitos no campo CEP da ficha (ou no painel de
+       Preenchimento rápido) e o endereço e a cidade se completam sozinhos.
+     * A consulta usa DOIS provedores, um atrás do outro (BrasilAPI e
+       ViaCEP): se um estiver fora do ar, o outro responde.
+     * O resultado fica guardado no aparelho: consultar o mesmo CEP de novo é
+       instantâneo e funciona sem internet.
+     * A consulta tem TEMPO LIMITE — o app não trava esperando a rede.
+
+   O QUE O CEP NÃO FAZ
+     * Não apaga o número, o complemento nem nada que a pessoa escreveu: se o
+       campo já tem "250", o CEP coloca o logradouro NA FRENTE e o 250 fica.
+     * O que o CEP preencheu continua editável como qualquer outro texto.
+     * CEP inválido, CEP inexistente e falta de internet só avisam — nada é
+       apagado e a ficha continua normalmente editável à mão.
+   ══════════════════════════════════════════════════════════════════════════ */
+function v10CepAvisar(msg,tipo){
+  try{if(typeof toast==='function')toast(msg,tipo||'',tipo==='erro'?4200:2800);}catch(e){}
+}
+/* Depois de preencher: as outras páginas recebem o mesmo endereço e o
+   Ctrl+Z consegue desfazer o preenchimento. */
+function v10CepDepois(){
+  try{if(typeof sincTodasPaginas==='function')sincTodasPaginas();}catch(e){}
+  try{if(typeof snapAplicar==='function')snapAplicar();}catch(e){}
+  try{if(typeof snap==='function')snap();}catch(e){}
+}
+function v10CepOpcoes(){
+  return {
+    mesclarEndereco:function(atual,dados){return VooaltoCep.mesclarEndereco(atual,dados);},
+    mesclarCidade:function(atual,dados){return VooaltoCep.mesclarCidade(atual,dados);},
+    avisar:v10CepAvisar
+  };
+}
+/* A ficha (folha 1). */
+function v10CepLigarFicha(){
+  if(typeof VooaltoCep==='undefined')return null;
+  const cep=$('dc_cep');
+  if(!cep||cep.__v10Cep)return null;
+  cep.__v10Cep=true;
+  const o=Object.assign(v10CepOpcoes(),{
+    campoCep:cep,
+    campoEndereco:$('dc_end'),
+    campoCidade:$('dc_cidade'),
+    aoPreencher:function(){v10CepDepois();}
+  });
+  return VooaltoCep.ligar(o);
+}
+/* O painel de Preenchimento rápido — os campos dele só existem depois que a
+   janela é criada, por isso a ligação é refeita a cada abertura. */
+function v10CepLigarQuick(){
+  if(typeof VooaltoCep==='undefined')return null;
+  const cep=$('v4qCep');
+  if(!cep||cep.__v10Cep)return null;
+  cep.__v10Cep=true;
+  const o=Object.assign(v10CepOpcoes(),{
+    campoCep:cep,
+    campoEndereco:$('v4qEnd'),
+    campoCidade:$('v4qCidade'),
+    aoPreencher:function(){}
+  });
+  return VooaltoCep.ligar(o);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v10CepLigarFicha);
+else v10CepLigarFicha();
 </script>
 </body>
 </html>
