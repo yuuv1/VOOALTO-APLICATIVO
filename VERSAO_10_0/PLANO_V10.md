@@ -222,6 +222,11 @@ dessas coisas, a suíte falha.
 
 ## 8.1 Estúdio do mockup (V9.1)
 
+> **O plano de melhoria deste estúdio é um documento separado:**
+> `PLANO_ESTUDIO_MOCKUP.md` — mapa do sistema de modificação da peça (área do
+> mockup + Estúdio da Peça), lacunas em relação às ferramentas do Canva e o
+> backlog priorizado. Quem for mexer aqui, leia os dois.
+
 A área onde as artes entram é a `#canvasOuter` dentro de `.col-dir` (canto
 inferior direito da folha 1, e o mesmo bloco nas páginas extras). O motor de
 camadas é o mesmo desde a V7 (`layers[]` + `posEl`/`posElExtra` + `z`), e a V9.1
