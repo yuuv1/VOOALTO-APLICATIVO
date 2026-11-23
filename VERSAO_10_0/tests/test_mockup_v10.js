@@ -179,8 +179,14 @@ function check(label, ok, extra) {
   check('guia viva some quando não há encaixe', doc.getElementById('mkeSmartV').style.display === 'none');
 
   /* ── 11. Limite: camada não se perde fora da área ── */
-  check('limite impede sair pela direita', t(`mkeLimite(1.4,0.2)`) === 0.9);
-  check('limite deixa pendurar um pouco à esquerda', t(`mkeLimite(-0.5,0.2)`) > -0.2);
+  /* V10.8 — sobra sempre um pedaço visível: pelo menos 10% da área e pelo
+     menos 20% da arte. Antes, uma arte grande saía quase toda da tela
+     (era o "some da tela fora"). */
+  check('limite impede sair pela direita', Math.abs(t(`mkeLimite(1.4,0.2)`) - 0.9) < 1e-9, t(`mkeLimite(1.4,0.2)`));
+  check('limite deixa pendurar um pouco à esquerda', t(`mkeLimite(-0.5,0.2)`) > -0.2, t(`mkeLimite(-0.5,0.2)`));
+  check('com a arte grande, o limite também segura um pedaço dela dentro',
+    t(`mkeLimite(5,0.8)`) <= 0.84 && t(`mkeLimite(-5,0.8)`) >= -0.64,
+    [t(`mkeLimite(5,0.8)`), t(`mkeLimite(-5,0.8)`)]);
 
   /* ── 12. Encaixe automático de imagem nova ── */
   const slot = t(`(function(){

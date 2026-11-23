@@ -27,6 +27,7 @@ VERSAO_10_0/                    ← única versão do app
   tools/atualizar_contrato.py   copia+corrige o motor de contratos para o app
   tests/                        suíte automatizada (jsdom + unittest)
   PLANO_V10.md                  arquitetura do sistema como ele é hoje
+  PLANO_ESTUDIO_MOCKUP.md       plano de melhoria do estúdio do mockup
   CHANGELOG_V10.md              o que mudou em cada versão
 
 documento-contratual/           projeto-fonte do motor de contratos (React + TS)
@@ -127,6 +128,9 @@ reserva localmente e sincroniza depois.
 
 - `VERSAO_10_0/PLANO_V10.md` — como o sistema é por dentro (módulos, dados,
   temas, PWA, servidor, testes, integração do contrato) e o que **não** fazer.
+- `VERSAO_10_0/PLANO_ESTUDIO_MOCKUP.md` — plano do **sistema de modificação da
+  peça** (área do mockup + Estúdio da Peça): o que existe, as lacunas em
+  relação às ferramentas do Canva e o backlog priorizado.
 - `VERSAO_10_0/CHANGELOG_V10.md` — o que mudou, com a causa de cada correção.
 - `VERSAO_10_0/ATUALIZACAO_V10/README.txt` — guia rápido do usuário final.
 - `documento-contratual/INTEGRACAO.md` — como o motor de contratos se integra.

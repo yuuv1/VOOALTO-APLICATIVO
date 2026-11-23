@@ -1,5 +1,77 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.8.0 — Estúdio do mockup: alinhar, copiar/colar/desfazer e ampliar sem a arte sumir (2026-11-23)
+
+**O pedido:** *“organizar separadamente o planejamento das melhorias do
+sistema de modificação/modelagem de camisetas, aproximando o fluxo das
+ferramentas padrão do Canva. Na etapa atual, implementar as correções
+concretas relatadas: alinhar objetos de forma confiável (inclusive várias
+camadas), Ctrl+C/Ctrl+V/Ctrl+Z com as funções esperadas, ampliar/redimensionar
+a imagem com facilidade, e a imagem não deve sumir nem ficar fora da tela
+durante o redimensionamento. As demais ferramentas também precisam ter menos
+dificuldades de uso.”*
+
+**Planejamento** — `VERSAO_10_0/PLANO_ESTUDIO_MOCKUP.md` (documento separado,
+ligado pelo `README.md`): diagnóstico da distância até o Canva, 14 lacunas
+(L1–L14), três frentes de trabalho e backlog priorizado.
+
+**Estúdio do mockup (área de artes da Ficha Técnica)**
+
+- **Alinhar ficou confiável — e agora dá para escolher a referência.** Antes
+  não havia escolha: com 2+ camadas o botão “alinhar à esquerda” encostava
+  todas na mais à esquerda do grupo e **parecia não fazer nada**. Agora a aba
+  **Alinhar** tem o seletor **⏹ Automático / ▣ Área / ⧉ Objetos**:
+  - *Automático* — 1 objeto alinha na **área** do mockup; vários alinha
+    **entre eles** (é o comportamento do Canva);
+  - *Área* — todas encostam na borda da área, sempre;
+  - *Objetos* — todas encostam na mais à esquerda do grupo, sempre.
+  A escolha fica guardada (`vooalto_v10_mke_alvo`) e o botão **⇹** da barra da
+  arte abre a aba direto.
+- **O alinhamento usa a caixa visível de cada objeto** (`mkeCaixaCamada()` /
+  `mkeMoverParaCaixa()`): uma arte **girada** alinha pela borda que aparece na
+  tela (não pelo `xp` cru) e a **seta** alinha pelas duas pontas. O painel
+  **avisa** o que foi feito (“3 camadas alinhadas à esquerda na área”) — o
+  silêncio era o que fazia o botão parecer quebrado.
+- **“Objetos” com uma camada só** explica o motivo em vez de não fazer nada.
+  Camadas **travadas** não se mexem no alinhamento nem na distribuição.
+- **Distribuir** passou a usar a mesma caixa visível: as peças ficam com o
+  mesmo espaço entre elas mesmo estando tortas.
+- **Ctrl+C copia TUDO que está marcado.** Antes o Ctrl+C levava só a última
+  camada clicada: com duas artes na tela, copiar e colar trazia uma delas e a
+  outra ficava para trás. Agora o clipboard interno aceita um grupo
+  (`{__varios:true,itens:[…]}`, guardado em `vooalto_v8_layer_clip`), o
+  **Ctrl+V** cola todas — **cada uma um degrau abaixo da outra**, para não
+  caírem uma em cima da outra — e o **Ctrl+X** recorta todas.
+- **Ctrl+Z desfaz NA HORA.** O `snap()` tinha 800 ms de atraso: quem mexia
+  rápido apertava Ctrl+Z e não acontecia nada. Agora `snapAplicar()` grava
+  o estado na hora e o `undo()` joga o que está pendente no histórico antes
+  de desfazer (o `redo()` **não** descarta a pilha de refazer).
+- **O primeiro Ctrl+Z depois de abrir a ficha tem o que desfazer**
+  (`v8SemearHistorico()`): a ficha aberta/criada passa a ser o estado
+  “antes” do próximo gesto.
+- **Ampliar a imagem não faz mais a arte sumir.** Puxar a alça para fora criava
+  uma arte **4× maior que a área** (ela sumia, recortada pela área, sem
+  volta). Agora `mkeLimiteResize()` trava: a arte **nunca passa do tamanho da
+  área nem sai dela**, e continua dentro dela ao arrastar.
+- **Arrastar para fora sempre deixa um pedaço visível** — `mkeLimite()` agora
+  garante pelo menos 10% da área e 20% da arte dentro, **para qualquer
+  tamanho** (antes o limite era fixo e uma arte grande saía quase toda da
+  tela). Vale para a folha 1, para as páginas extras, para o grupo arrastado
+  e para a seta (as duas pontas ficam dentro).
+- **Alças maiores e mais fáceis de acertar**: as 4 alças de canto passaram de
+  12 px para 14 px e ganharam uma área de clique maior (pseudo-elemento
+  transparente de 7 px) — no dedo, o clique parava de “errar” a arte.
+- **Barra rápida de alinhamento**: o botão **⇹** da barra da arte abre a aba
+  Alinhar sem precisar abrir o painel.
+
+- `version.json`, `package.json`/`package-lock.json` → **10.8.0**.
+- Testes: nova suíte `tests/test_mockup_atalhos_v10.js` (**29 verificações**)
+  — alinhar com 1 e com várias camadas, os três alvos, seta e camada girada,
+  Ctrl+C/V/X com várias camadas, Ctrl+Z imediato, primeiro Ctrl+Z depois de
+  abrir, ampliar sem sumir, proporção travada e limite de arraste.
+  `test_mockup_v10.js` foi de 291 para **292 verificações**.
+  Suíte completa: **29 suítes, tudo OK**.
+
 ## V10.7.4 — Ficha Técnica: as páginas adicionadas têm as mesmas opções de alteração de texto (2026-11-18)
 
 **O pedido:** *“a opção de alteração/modificação de texto que tem no tipo de
