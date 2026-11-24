@@ -1235,6 +1235,12 @@ dos Buritis, Goiânia - GO, 74370-661</textarea>
             <button class="btn btn-secondary" style="flex:2;" onclick="addTableRow()" title="Dica: Tab pula de caixa em caixa; Enter no último campo já cria o próximo item">➕ Adicionar Item <small style="opacity:.6">(ou Enter)</small></button>
             <button class="btn btn-secondary" style="flex:1;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
           </div>
+          <!-- V10.12 — imagens na folha: pode ARRASTAR do computador direto
+               para a folha A4 ou escolher o arquivo aqui. -->
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <button class="btn btn-secondary" style="flex:1;" onclick="orcImgEscolher()" title="Colocar uma imagem na folha atual (ela sai no PDF e no PNG). Também pode arrastar o arquivo do computador para a folha.">🖼 Imagem na folha</button>
+          </div>
+          <input type="file" id="orcImgInput" accept="image/*" multiple style="display:none" onchange="orcImgInputAlterado(event)">
         </div>
 
         <!-- Tab 3: Termos -->
@@ -1289,6 +1295,7 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       <div class="editor-actions">
         <button title="Baixar a proposta como imagem (PNG)" class="btn btn-primary" onclick="exportPNG()">📸 Exportar Imagem (PNG)</button>
         <button title="Imprimir ou salvar em PDF (sai só a folha A4 da proposta)" class="btn btn-success" onclick="printProposal()">📄 Imprimir / Salvar PDF Vetorial</button>
+        <button title="Inserir uma imagem na folha atual — ela fica onde você soltar e sai no PDF e no PNG" class="btn btn-secondary" onclick="orcImgEscolher()">🖼 Imagem na folha <small style="opacity:.6">(ou arraste para a folha)</small></button>
         <div style="display:flex;gap:6px;width:100%">
           <button class="btn btn-secondary" style="flex:1;padding:7px 6px;font-size:11px;" onclick="novoOrcamento()" title="Começar um orçamento novo (campos de volta ao padrão)">🗋 Novo</button>
           <button class="btn btn-secondary" style="flex:1.2;padding:7px 6px;font-size:11px;" onclick="salvarRascunhoOrcamento()" title="Salvar rascunho deste orçamento no navegador">💾 Rascunho</button>
@@ -1506,7 +1513,14 @@ Forma de Pagamento: Depósito bancário, Pix, ou cartão de crédito.</textarea>
       return {
         version: 'vooalto_orcamento_v9',
         form: form,
-        pages: documentPages.map(p => ({ id: p.id, tableItems: p.tableItems })),
+        /* V10.12 — cada página carrega as suas imagens (posição em px da
+           folha: x, y, w, h). É o que faz a imagem sair no PDF/PNG
+           exatamente onde ela foi deixada. */
+        pages: documentPages.map(p => ({
+          id: p.id,
+          tableItems: p.tableItems,
+          images: (typeof orcImgExportar === 'function') ? orcImgExportar(p.images) : (Array.isArray(p.images) ? p.images : [])
+        })),
         /* V10.7 — sinal da produção (% e valor fixo quando houver) */
         sinal: orcSinalEstado(),
         signature: (typeof currentSignatureBase64 !== 'undefined' && currentSignatureBase64 && currentSignatureBase64 !== DEFAULT_SIGNATURE) ? currentSignatureBase64 : ''
@@ -1534,18 +1548,22 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const estado=orcCollectState();
       try{localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(estado));orcMarcarSalvo(true);return true}
       catch(e){
-        /* Cota cheia: a assinatura desenhada é o que pesa. Guardar o
-           orçamento sem ela é melhor do que não guardar nada (antes o
-           trabalho do dia inteiro ficava só na aba aberta). */
+        /* Cota cheia: a assinatura desenhada e as imagens da folha são o
+           que pesa. Guardar o orçamento sem elas é melhor do que não
+           guardar nada (antes o trabalho do dia inteiro ficava só na
+           aba aberta). */
         try{
           const leve=JSON.parse(JSON.stringify(estado));
           const tinhaAssinatura=!!leve.signature;
+          const tinhaImagens=(leve.pages||[]).some(p=>(p.images||[]).length);
           leve.signature='';
+          (leve.pages||[]).forEach(p=>{p.images=[]});
           localStorage.setItem(ORC_AUTOSAVE_KEY,JSON.stringify(leve));
           const chip=document.getElementById('orcSaveChip');
           if(chip){chip.textContent='💾 Salvo sem a assinatura';
             chip.title='A memória do navegador encheu: o orçamento foi guardado sem a assinatura. Libere espaço (ou baixe o .json) e desenhe a assinatura de novo.';}
-          if(tinhaAssinatura)orcToast('⚠️ Memória cheia: orçamento salvo sem a assinatura');
+          if(tinhaImagens)orcToast('⚠️ Memória cheia: orçamento salvo sem as imagens da folha');
+          else if(tinhaAssinatura)orcToast('⚠️ Memória cheia: orçamento salvo sem a assinatura');
           return true;
         }catch(e2){
           console.warn('Autosave do orçamento falhou',e2);orcMarcarSalvo(false);return false;
@@ -1615,6 +1633,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       newPageDom.className = 'page';
       newPageDom.innerHTML = basePage ? basePage.innerHTML : '';
       newPageDom.querySelectorAll('.orc-a4-page-actions').forEach(el => el.remove());
+      /* V10.12 — a página nova não herda as imagens da página modelo
+         (cada folha tem as suas; o estado manda). */
+      newPageDom.querySelectorAll('.orc-img-layer').forEach(el => el.remove());
       _assignPageDomIds(newPageDom, pageId);
       container.appendChild(newPageDom);
       if (typeof setupPageInPlaceListeners === 'function') setupPageInPlaceListeners(newPageDom, pageId);
@@ -1669,6 +1690,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
           act.innerHTML = `<span>Pág. ${idx + 1}/${documentPages.length}</span><button type="button" class="orc-a4-del-btn" onclick="removeActiveDocumentPage(${idx})" title="Remover Página ${idx + 1}">🗑 Excluir pág. ${idx + 1}</button>`;
         }
       });
+      /* V10.12 — as camadas de imagem são redesenhadas a partir do estado
+         (a página nova nasce sem as imagens da página modelo). */
+      if (typeof orcImgRenderTodas === 'function') orcImgRenderTodas();
     }
     window.syncDocumentPagesDOM = syncDocumentPagesDOM;
 
@@ -1678,9 +1702,15 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const fm = s.form;
       ORC_FORM_KEYS.forEach(k => set('edit-' + k, fm[k]));
       if (Array.isArray(s.pages) && s.pages.length) {
-        documentPages = s.pages.map((p, idx) => ({ id: idx + 1, tableItems: Array.isArray(p.tableItems) ? p.tableItems : [] }));
+        documentPages = s.pages.map((p, idx) => ({
+          id: idx + 1,
+          tableItems: Array.isArray(p.tableItems) ? p.tableItems : [],
+          /* V10.12 — as imagens da folha voltam junto (posição e ordem) */
+          images: (typeof orcImgSanear === 'function') ? orcImgSanear(p.images) : []
+        }));
         activeFormPageIndex = 0;
         syncDocumentPagesDOM();
+        if (typeof orcImgRenderTodas === 'function') orcImgRenderTodas();
       }
       /* V10.7 — sinal da produção volta como estava (% / valor fixo) */
       orcSinalAplicarEstado(s.sinal);
@@ -1703,9 +1733,10 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       orcSinalModo = 'percentual';
       const sPct = document.getElementById('orcSinalPct'); if (sPct) sPct.value = '50';
       const sVal = document.getElementById('orcSinalVal'); if (sVal) { sVal.value = ''; sVal.classList.remove('orc-sinal-fixo'); }
-      documentPages = [{ id: 1, tableItems: [] }];
+      documentPages = [{ id: 1, tableItems: [], images: [] }];
       activeFormPageIndex = 0;
       syncDocumentPagesDOM();
+      if (typeof orcImgRenderTodas === 'function') orcImgRenderTodas();
       try { localStorage.removeItem(ORC_AUTOSAVE_KEY); } catch(e){}
       renderItemsEditor();
       updatePreviewFromForm();
@@ -1949,7 +1980,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const newPageId = documentPages.length + 1;
       documentPages.push({
         id: newPageId,
-        tableItems: []
+        tableItems: [],
+        /* V10.12 — página nova começa sem imagens */
+        images: []
       });
       activeFormPageIndex = documentPages.length - 1;
       syncDocumentPagesDOM();
@@ -1969,9 +2002,15 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
       const sourcePage = documentPages[pageIdx];
       if (!sourcePage) return;
       const clonedItems = JSON.parse(JSON.stringify(sourcePage.tableItems || []));
+      /* V10.12 — a página duplicada leva as imagens junto (com ids novos,
+         para as duas folhas poderem ser mexidas separadamente). */
+      const clonedImages = (sourcePage.images || []).map(im => Object.assign({}, im, {
+        id: (typeof orcImgId === 'function') ? orcImgId() : String(im.id) + '_copia'
+      }));
       documentPages.push({
         id: documentPages.length + 1,
-        tableItems: clonedItems
+        tableItems: clonedItems,
+        images: clonedImages
       });
       activeFormPageIndex = documentPages.length - 1;
       syncDocumentPagesDOM();
@@ -3006,7 +3045,9 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
          until every async html2canvas call finishes */
       const hideSelectors = ['.editor-sidebar','.editor-actions','.formatting-toolbar',
         '.tabs-nav','.modal','.v5-drag-tool','.v5-tool-select','.v5-tool-input',
-        '.v5-highlight-group','.orc-a4-page-actions','#budget-settings-modal','#signature-modal','#orcDraftsModal'];
+        '.v5-highlight-group','.orc-a4-page-actions','#budget-settings-modal','#signature-modal','#orcDraftsModal',
+        /* V10.12 — a UI de edição das imagens (botões/alça) não sai no PNG */
+        '.orc-img-ui'];
       const saved = [];
       hideSelectors.forEach(sel => {
         document.querySelectorAll(sel).forEach(el => {
@@ -3014,6 +3055,8 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
           el.style.display = 'none';
         });
       });
+      /* V10.12 — sem contorno de seleção na imagem exportada */
+      document.body.classList.add('orc-exportando');
 
       const restaurarZoom = (window.ZoomFolha && ZoomFolha.suspenderTudo) ? ZoomFolha.suspenderTudo() : null;
       /* Capture every page, collecting promises so we restore UI only AFTER
@@ -3044,6 +3087,7 @@ function abrirAjudaOrcamento(){const el=document.getElementById('ajudaOrcamento'
          estourar antes, para a interface nunca ficar escondida. */
       const devolverUI = () => {
         if (restaurarZoom) restaurarZoom();
+        document.body.classList.remove('orc-exportando');
         saved.forEach(({el, prevDisplay, prevVisibility}) => {
           el.style.display = prevDisplay || '';
           el.style.visibility = prevVisibility || '';
@@ -3098,6 +3142,611 @@ function printProposal() {
   window.print();
 }
 </script>
+
+<style id="v10-orc-imagens-css">
+/* ══════════════════════════════════════════════════════════════════════
+   V10.12 — IMAGENS NA FOLHA DO ORÇAMENTO (arrastar e soltar)
+   A imagem é uma camada de verdade dentro da folha A4: fica exatamente
+   onde foi solta e sai no lugar no PDF e no PNG.
+   ══════════════════════════════════════════════════════════════════════ */
+.orc-img-layer{position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:auto}
+.orc-img{position:absolute;display:block;box-sizing:border-box;pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none;cursor:move;line-height:0}
+.orc-img>img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+.orc-img.sel{outline:2px dashed #D4187A;outline-offset:1px}
+/* A UI só existe (e só é clicável) com a imagem selecionada */
+.orc-img-ui{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .12s ease}
+.orc-img-ui .orc-img-btn,.orc-img-ui .orc-img-handle{pointer-events:none}
+.orc-img.sel .orc-img-ui{opacity:1}
+.orc-img.sel .orc-img-ui .orc-img-btn,.orc-img.sel .orc-img-ui .orc-img-handle{pointer-events:auto}
+.orc-img-btn{position:absolute;width:22px;height:22px;border-radius:6px;border:1px solid rgba(15,23,42,.28);background:rgba(255,255,255,.95);color:#1f2937;font-size:12px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.18);padding:0}
+.orc-img-btn:hover{background:#fff;border-color:#D4187A;color:#D4187A}
+.orc-img-fr{top:-11px;right:15px}
+.orc-img-bk{top:-11px;right:41px}
+.orc-img-del{top:-11px;right:-11px;background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.orc-img-del:hover{background:#fecaca;border-color:#b91c1c;color:#7f1d1d}
+.orc-img-handle{position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;background:#D4187A;border:2px solid #fff;border-radius:4px;cursor:nwse-resize;pointer-events:auto;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.page.orc-drop-ativo{outline:3px dashed #D4187A;outline-offset:-7px}
+/* A UI de edição (botões e alça) NUNCA sai no arquivo final */
+@media print{
+  .orc-img-ui{display:none!important}
+  .orc-img{outline:none!important;box-shadow:none!important;cursor:auto}
+  .page.orc-drop-ativo{outline:none!important}
+}
+body.orc-exportando .orc-img-ui{display:none!important}
+body.orc-exportando .orc-img{outline:none!important;box-shadow:none!important;cursor:auto}
+</style>
+
+<script id="v10-orc-imagens-js">
+/* ══════════════════════════════════════════════════════════════════════
+   V10.12 — IMAGENS NA FOLHA DO ORÇAMENTO (arrastar e soltar)
+   ---------------------------------------------------------------------
+   O pedido: "a gente joga a imagem la e onde ela ficar ela sai no pdf
+   final (ou png)". Então a imagem precisa ser uma camada de verdade
+   dentro da folha A4 — não uma miniatura nem uma galeria separada.
+
+   COMO A POSIÇÃO É GARANTIDA NO ARQUIVO FINAL
+     * a folha é desenhada em 794 x 1120 px (A4 @96dpi);
+     * cada imagem guarda a posição em pixels DESSA folha (x, y, w, h);
+     * na hora de desenhar, a posição vira PORCENTAGEM da folha
+       (left/top/width/height em %) — assim ela sai exatamente onde foi
+       deixada, na tela, no PNG (html2canvas) e no PDF (impressão A4 sem
+       margens, que dá ~793,7px de largura);
+     * a proporção da imagem é sempre preservada (nunca esticada);
+     * a folha tem overflow:hidden, então nada invade a página ao lado.
+
+   VÁRIOS POR FOLHA: sim — cada página guarda a sua própria lista.
+   ══════════════════════════════════════════════════════════════════════ */
+'use strict';
+
+/* Dimensões de projeto da folha A4 (as mesmas do CSS .page) */
+var ORC_IMG_LARG = 794;
+var ORC_IMG_ALT  = 1120;
+var ORC_IMG_MAX_POR_PAGINA = 20;   /* trava de segurança por folha */
+var ORC_IMG_LARG_MAX = 0.45;       /* 45% da largura da folha */
+var ORC_IMG_ALT_MAX  = 0.70;       /* 70% da altura da folha */
+var ORC_IMG_MIN_LARG = 48;         /* nunca microscópica */
+
+var orcImgSel = null;        /* {pageId, id} — imagem selecionada */
+var orcImgSeq = 0;           /* contador de ids */
+var orcImgArrastando = false;/* trava durante o arraste (não redesenhar) */
+
+function orcImgId(){
+  orcImgSeq++;
+  return 'orcimg_' + Date.now().toString(36) + '_' + orcImgSeq;
+}
+
+/* Garante que toda página tenha a sua lista de imagens */
+function orcImgPreparar(){
+  if (typeof documentPages === 'undefined' || !Array.isArray(documentPages)) return;
+  for (var i = 0; i < documentPages.length; i++){
+    if (!Array.isArray(documentPages[i].images)) documentPages[i].images = [];
+  }
+}
+function orcImgPagina(pageId){
+  orcImgPreparar();
+  return documentPages[pageId - 1] || null;
+}
+
+/* Estado que vem do .json/autosave: só entra imagem de verdade */
+function orcImgSanear(lista){
+  if (!Array.isArray(lista)) return [];
+  var saida = [];
+  for (var i = 0; i < lista.length; i++){
+    var raw = lista[i];
+    if (!raw || typeof raw !== 'object') continue;
+    var src = typeof raw.src === 'string' ? raw.src : '';
+    if (src.indexOf('data:image/') !== 0) continue;
+    var x = Number(raw.x), y = Number(raw.y), w = Number(raw.w), h = Number(raw.h);
+    if (!isFinite(x)) x = 0;
+    if (!isFinite(y)) y = 0;
+    if (!isFinite(w) || w <= 0) w = 240;
+    if (!isFinite(h) || h <= 0) h = 180;
+    w = Math.max(24, Math.min(ORC_IMG_LARG, w));
+    h = Math.max(24, Math.min(ORC_IMG_ALT, h));
+    x = Math.max(-w, Math.min(ORC_IMG_LARG, x));
+    y = Math.max(-h, Math.min(ORC_IMG_ALT, y));
+    saida.push({
+      id: raw.id ? String(raw.id) : orcImgId(),
+      src: src,
+      x: x, y: y, w: w, h: h,
+      z: isFinite(Number(raw.z)) ? Number(raw.z) : saida.length,
+      nome: typeof raw.nome === 'string' ? raw.nome.slice(0, 80) : ''
+    });
+  }
+  return saida;
+}
+/* Estado que sai (autosave, rascunho, .json, backup) */
+function orcImgExportar(lista){
+  if (!Array.isArray(lista)) return [];
+  var saida = [];
+  for (var i = 0; i < lista.length; i++){
+    var im = lista[i];
+    if (!im || !im.src) continue;
+    saida.push({
+      id: im.id, src: im.src,
+      x: im.x, y: im.y, w: im.w, h: im.h,
+      z: im.z || 0,
+      nome: im.nome || ''
+    });
+  }
+  return saida;
+}
+
+/* ── camada de imagens dentro da folha ───────────────────────────── */
+function orcImgCamada(pageId){
+  var page = document.getElementById('printable-a4-page-' + pageId);
+  if (!page) return null;
+  var layer = page.querySelector('.orc-img-layer');
+  if (!layer){
+    layer = document.createElement('div');
+    layer.className = 'orc-img-layer';
+    layer.setAttribute('data-page', String(pageId));
+    page.appendChild(layer);
+  }
+  layer.setAttribute('data-page', String(pageId));
+  return layer;
+}
+
+function orcImgAssinaturaEstado(pagina){
+  if (!pagina || !Array.isArray(pagina.images)) return 'vazio';
+  var partes = [];
+  for (var i = 0; i < pagina.images.length; i++){
+    var im = pagina.images[i];
+    var src = im.src || '';
+    partes.push([im.id, im.x, im.y, im.w, im.h, im.z, src.length, src.slice(0, 24)].join('|'));
+  }
+  return partes.join(';');
+}
+
+function orcImgRenderTodas(){
+  orcImgPreparar();
+  for (var i = 0; i < documentPages.length; i++) orcImgRender(documentPages[i].id);
+}
+
+function orcImgRender(pageId){
+  if (orcImgArrastando) return;
+  var pagina = orcImgPagina(pageId);
+  var layer = orcImgCamada(pageId);
+  if (!layer) return;
+  var lista = (pagina && Array.isArray(pagina.images)) ? pagina.images : [];
+  var ass = orcImgAssinaturaEstado(pagina);
+  /* A assinatura fica NA PRÓPRIA CAMADA: se a folha for recriada (restaurar
+     estado, duplicar página), a camada nova vem sem assinatura e o
+     desenho é refeito — nunca fica uma folha vazia com imagens no estado. */
+  if (layer.getAttribute('data-ass') === ass) return;   /* nada mudou — não mexe no DOM */
+  layer.setAttribute('data-ass', ass);
+  layer.innerHTML = '';
+  for (var i = 0; i < lista.length; i++) layer.appendChild(orcImgElemento(lista[i], pageId));
+}
+
+/* Desenha UMA imagem (posição em % da folha = mesma no PDF e no PNG) */
+function orcImgElemento(im, pageId){
+  var el = document.createElement('div');
+  el.className = 'orc-img';
+  el.setAttribute('contenteditable', 'false');
+  el.setAttribute('data-img-id', im.id);
+  el.setAttribute('data-page-id', String(pageId));
+  orcImgAplicarEstilo(el, im);
+  el.style.zIndex = String(20 + (im.z || 0));
+
+  var img = document.createElement('img');
+  img.src = im.src;
+  img.alt = im.nome || 'Imagem do orçamento';
+  img.setAttribute('draggable', 'false');
+  el.appendChild(img);
+
+  var ui = document.createElement('div');
+  ui.className = 'orc-img-ui';
+  ui.innerHTML =
+    '<button type="button" class="orc-img-btn orc-img-fr" title="Trazer para a frente">⤒</button>' +
+    '<button type="button" class="orc-img-btn orc-img-bk" title="Enviar para trás">⤓</button>' +
+    '<button type="button" class="orc-img-btn orc-img-del" title="Remover esta imagem">✕</button>' +
+    '<span class="orc-img-handle" title="Arrastar para redimensionar (mantém a proporção)"></span>';
+  el.appendChild(ui);
+  return el;
+}
+
+function orcImgAplicarEstilo(el, im){
+  el.style.left   = (im.x / ORC_IMG_LARG * 100) + '%';
+  el.style.top    = (im.y / ORC_IMG_ALT  * 100) + '%';
+  el.style.width  = (im.w / ORC_IMG_LARG * 100) + '%';
+  el.style.height = (im.h / ORC_IMG_ALT  * 100) + '%';
+}
+
+/* ── geometria: tela -> pixels da folha ──────────────────────────── */
+function orcImgPonto(folha, clientX, clientY){
+  if (!folha || typeof folha.getBoundingClientRect !== 'function') return {x: 0, y: 0};
+  var r = folha.getBoundingClientRect();
+  var sx = r.width  ? (ORC_IMG_LARG / r.width)  : 1;
+  var sy = r.height ? (ORC_IMG_ALT  / r.height) : 1;
+  return { x: (clientX - r.left) * sx, y: (clientY - r.top) * sy };
+}
+
+/* ── seleção ─────────────────────────────────────────────────────── */
+function orcImgSelecionar(sel){
+  orcImgSel = sel;
+  var container = document.getElementById('preview-pages-container');
+  if (!container) return;
+  var marcados = container.querySelectorAll('.orc-img.sel');
+  for (var i = 0; i < marcados.length; i++) marcados[i].classList.remove('sel');
+  if (sel){
+    var el = container.querySelector('.orc-img[data-img-id="' + sel.id + '"]');
+    if (el) el.classList.add('sel');
+  }
+}
+function orcImgLimparSelecao(){
+  orcImgSel = null;
+  var container = document.getElementById('preview-pages-container');
+  if (!container) return;
+  var marcados = container.querySelectorAll('.orc-img.sel');
+  for (var i = 0; i < marcados.length; i++) marcados[i].classList.remove('sel');
+}
+
+/* ── ações ───────────────────────────────────────────────────────── */
+function orcImgSalvar(){
+  if (typeof scheduleOrcautosave === 'function') scheduleOrcautosave();
+}
+
+function orcImgTamanhoInicial(natW, natH){
+  var w = natW > 0 ? natW : 320;
+  var h = natH > 0 ? natH : 240;
+  var maxW = ORC_IMG_LARG * ORC_IMG_LARG_MAX;
+  var maxH = ORC_IMG_ALT  * ORC_IMG_ALT_MAX;
+  if (w > maxW){ h = h * (maxW / w); w = maxW; }
+  if (h > maxH){ w = w * (maxH / h); h = maxH; }
+  if (w < ORC_IMG_MIN_LARG){ var k = ORC_IMG_MIN_LARG / w; w = ORC_IMG_MIN_LARG; h = h * k; }
+  return { w: Math.round(w), h: Math.round(h) };
+}
+
+function orcImgAdicionar(pageId, src, x, y, nome, natW, natH){
+  var pagina = orcImgPagina(pageId);
+  if (!pagina || !src) return null;
+  if (pagina.images.length >= ORC_IMG_MAX_POR_PAGINA){
+    orcToast('⚠️ Limite de ' + ORC_IMG_MAX_POR_PAGINA + ' imagens por folha.');
+    return null;
+  }
+  var tam = orcImgTamanhoInicial(natW, natH);
+  var px = Math.round(isFinite(x) ? x : 0);
+  var py = Math.round(isFinite(y) ? y : 0);
+  px = Math.max(0, Math.min(ORC_IMG_LARG - tam.w, px));
+  py = Math.max(0, Math.min(ORC_IMG_ALT  - tam.h, py));
+  var im = {
+    id: orcImgId(), src: src,
+    x: px, y: py, w: tam.w, h: tam.h,
+    z: pagina.images.length,
+    nome: nome || ''
+  };
+  pagina.images.push(im);
+  orcImgRender(pageId);
+  orcImgSelecionar({pageId: pageId, id: im.id});
+  orcImgSalvar();
+  return im;
+}
+
+function orcImgRemover(pageId, imgId){
+  var pagina = orcImgPagina(pageId);
+  if (!pagina) return;
+  var i = -1;
+  for (var k = 0; k < pagina.images.length; k++) if (pagina.images[k].id === imgId) i = k;
+  if (i < 0) return;
+  pagina.images.splice(i, 1);
+  for (var j = 0; j < pagina.images.length; j++) pagina.images[j].z = j;
+  if (orcImgSel && orcImgSel.id === imgId) orcImgSel = null;
+  orcImgRender(pageId);
+  orcImgLimparSelecao();
+  orcImgSalvar();
+  orcToast('🗑 Imagem removida da folha.');
+}
+
+function orcImgReordenar(pageId, im, dir){
+  var pagina = orcImgPagina(pageId);
+  if (!pagina) return;
+  var lista = pagina.images;
+  var i = lista.indexOf(im);
+  var j = i + dir;
+  if (i < 0 || j < 0 || j >= lista.length) return;
+  var tmp = lista[i]; lista[i] = lista[j]; lista[j] = tmp;
+  for (var k = 0; k < lista.length; k++) lista[k].z = k;
+  orcImgRender(pageId);
+  orcImgSalvar();
+}
+
+function orcImgAcaoBotao(pageId, im, classe){
+  if (classe.indexOf('orc-img-del') !== -1)   { orcImgRemover(pageId, im.id); return; }
+  if (classe.indexOf('orc-img-fr') !== -1)    { orcImgReordenar(pageId, im, 1); return; }
+  if (classe.indexOf('orc-img-bk') !== -1)    { orcImgReordenar(pageId, im, -1); return; }
+}
+
+/* ── arrastar / redimensionar ────────────────────────────────────── */
+function orcImgPointerDown(e){
+  var alvo = (e.target && e.target.closest) ? e.target.closest('.orc-img') : null;
+  if (!alvo){ orcImgLimparSelecao(); return; }
+  var layer = alvo.parentElement;
+  var pageId = parseInt(layer.getAttribute('data-page'), 10) || 1;
+  var imgId = alvo.getAttribute('data-img-id');
+  var pagina = orcImgPagina(pageId);
+  if (!pagina) return;
+  var im = null;
+  for (var i = 0; i < pagina.images.length; i++) if (pagina.images[i].id === imgId) im = pagina.images[i];
+  if (!im) return;
+
+  var btn = (e.target && e.target.closest) ? e.target.closest('.orc-img-btn') : null;
+  if (btn){
+    /* O botão age no "click" (funciona com mouse, toque e teclado).
+       Aqui só impedimos que o arraste da imagem comece. */
+    e.stopPropagation();
+    return;
+  }
+  var alca = (e.target && e.target.closest) ? e.target.closest('.orc-img-handle') : null;
+  e.preventDefault();
+  e.stopPropagation();
+  orcImgSelecionar({pageId: pageId, id: imgId});
+
+  var folha = document.getElementById('printable-a4-page-' + pageId);
+  var inicio = orcImgPonto(folha, e.clientX, e.clientY);
+  var modo = alca ? 'resize' : 'mover';
+  var x0 = im.x, y0 = im.y, w0 = im.w, h0 = im.h;
+  var razao = w0 / h0;
+  var ponteiro = e.pointerId;
+  orcImgArrastando = true;
+  try { alvo.setPointerCapture(ponteiro); } catch(err){}
+
+  function move(ev){
+    var p = orcImgPonto(folha, ev.clientX, ev.clientY);
+    if (modo === 'mover'){
+      /* A imagem pode encostar na borda (a folha corta o que passa dela),
+         mas nunca some: pelo menos 15% dela fica visível. */
+      im.x = Math.round(Math.max(-im.w * 0.85, Math.min(ORC_IMG_LARG - im.w * 0.15, x0 + (p.x - inicio.x))));
+      im.y = Math.round(Math.max(-im.h * 0.85, Math.min(ORC_IMG_ALT  - im.h * 0.15, y0 + (p.y - inicio.y))));
+    } else {
+      var nw = w0 + (p.x - inicio.x);
+      nw = Math.max(ORC_IMG_MIN_LARG, Math.min(ORC_IMG_LARG, nw));
+      var nh = nw / razao;
+      if (nh > ORC_IMG_ALT){ nh = ORC_IMG_ALT; nw = nh * razao; }
+      im.w = Math.round(nw);
+      im.h = Math.round(nh);
+      if (im.x + im.w > ORC_IMG_LARG) im.x = ORC_IMG_LARG - im.w;
+      if (im.y + im.h > ORC_IMG_ALT)  im.y = ORC_IMG_ALT  - im.h;
+    }
+    orcImgAplicarEstilo(alvo, im);
+  }
+  function fim(){
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', fim);
+    document.removeEventListener('pointercancel', fim);
+    try { alvo.releasePointerCapture(ponteiro); } catch(err){}
+    orcImgArrastando = false;
+    /* redesenha só se a posição mudou de fato (o render compara a
+       assinatura e não mexe no DOM quando nada mudou) */
+    orcImgRender(pageId);
+    orcImgSelecionar({pageId: pageId, id: imgId});
+    orcImgSalvar();
+  }
+  document.addEventListener('pointermove', move);
+  document.addEventListener('pointerup', fim);
+  document.addEventListener('pointercancel', fim);
+}
+
+/* ── clique nos botões da imagem (remover / ordem) ───────────────── */
+function orcImgClick(e){
+  var btn = (e.target && e.target.closest) ? e.target.closest('.orc-img-btn') : null;
+  if (!btn) return;
+  var alvo = btn.closest ? btn.closest('.orc-img') : null;
+  if (!alvo) return;
+  var layer = alvo.parentElement;
+  var pageId = parseInt(layer.getAttribute('data-page'), 10) || 1;
+  var imgId = alvo.getAttribute('data-img-id');
+  var pagina = orcImgPagina(pageId);
+  if (!pagina) return;
+  var im = null;
+  for (var i = 0; i < pagina.images.length; i++) if (pagina.images[i].id === imgId) im = pagina.images[i];
+  if (!im) return;
+  e.preventDefault();
+  e.stopPropagation();
+  orcImgAcaoBotao(pageId, im, btn.className || '');
+}
+
+/* ── arrastar arquivo do computador para a folha ──────────────────── */
+function orcImgEhArquivo(e){
+  var dt = e && e.dataTransfer;
+  if (!dt) return false;
+  if (dt.types){
+    for (var i = 0; i < dt.types.length; i++) if (dt.types[i] === 'Files') return true;
+  }
+  return false;
+}
+function orcImgDragOver(e){
+  var folha = (e.target && e.target.closest) ? e.target.closest('.page') : null;
+  if (!folha) return;
+  if (!orcImgEhArquivo(e)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  try { e.dataTransfer.dropEffect = 'copy'; } catch(err){}
+  folha.classList.add('orc-drop-ativo');
+}
+function orcImgDragLeave(e){
+  var folha = (e.target && e.target.closest) ? e.target.closest('.page') : null;
+  if (folha) folha.classList.remove('orc-drop-ativo');
+}
+function orcImgDrop(e){
+  var folha = (e.target && e.target.closest) ? e.target.closest('.page') : null;
+  if (!folha) return;
+  e.preventDefault();
+  e.stopPropagation();
+  folha.classList.remove('orc-drop-ativo');
+  var dt = e.dataTransfer;
+  var arquivos = [];
+  if (dt && dt.files) for (var i = 0; i < dt.files.length; i++) arquivos.push(dt.files[i]);
+  var imgs = [];
+  for (var j = 0; j < arquivos.length; j++){
+    var f = arquivos[j];
+    if (f && f.type && f.type.indexOf('image/') === 0) imgs.push(f);
+  }
+  if (!imgs.length){
+    orcToast('⚠️ Solte um arquivo de imagem (PNG, JPG, WEBP…).');
+    return;
+  }
+  var pageId = parseInt(String(folha.id).replace('printable-a4-page-', ''), 10) || 1;
+  var pt = orcImgPonto(folha, e.clientX, e.clientY);
+  orcImgInserirArquivos(imgs, pageId, pt.x, pt.y);
+}
+
+/* ── arquivos -> dataURL (otimizado, para não estourar o navegador) ─ */
+function orcImgLerBruto(file, done){
+  try {
+    var r = new FileReader();
+    r.onload = function(){ done(String(r.result || '')); };
+    r.onerror = function(){ done(''); };
+    r.readAsDataURL(file);
+  } catch(e){ done(''); }
+}
+function orcImgLerArquivo(file){
+  return new Promise(function(resolve){
+    var done = function(src){ resolve(src || ''); };
+    if (window.VooaltoImagem && typeof window.VooaltoImagem.otimizarArquivo === 'function'){
+      try {
+        window.VooaltoImagem.otimizarArquivo(file)
+          .then(function(src){ done(src); })
+          .catch(function(){ orcImgLerBruto(file, done); });
+        return;
+      } catch(e){}
+    }
+    orcImgLerBruto(file, done);
+  });
+}
+function orcImgDimensoes(src){
+  return new Promise(function(resolve){
+    /* Se a imagem não decodificar (formato estranho, arquivo corrompido),
+       a espera tem que acabar — senão a imagem nunca entraria na folha. */
+    var respondido = false;
+    function fim(v){ if (respondido) return; respondido = true; resolve(v); }
+    var timer = setTimeout(function(){ fim({ w: 0, h: 0 }); }, 3000);
+    try {
+      var im = new Image();
+      im.onload = function(){ clearTimeout(timer); fim({ w: im.naturalWidth || im.width, h: im.naturalHeight || im.height }); };
+      im.onerror = function(){ clearTimeout(timer); fim({ w: 0, h: 0 }); };
+      im.src = src;
+    } catch(e){ clearTimeout(timer); fim({ w: 0, h: 0 }); }
+  });
+}
+function orcImgInserirArquivos(files, pageId, x, y){
+  var lista = Array.isArray(files) ? files : [files];
+  var n = 0;
+  (function passo(i){
+    if (i >= lista.length){
+      if (n){
+        orcToast('🖼 ' + n + (n > 1 ? ' imagens inseridas' : ' imagem inserida') + ' na folha ' + pageId + ' — sai no PDF e no PNG.');
+      }
+      return;
+    }
+    var f = lista[i];
+    if (!f || !f.type || f.type.indexOf('image/') !== 0){ passo(i + 1); return; }
+    orcImgLerArquivo(f).then(function(src){
+      if (!src){ passo(i + 1); return; }
+      return orcImgDimensoes(src).then(function(nat){
+        var px = x + (n * 20);
+        var py = y + (n * 20);
+        orcImgAdicionar(pageId, src, px, py, f.name || '', nat.w, nat.h);
+        n++;
+        passo(i + 1);
+      });
+    }).catch(function(){ passo(i + 1); });
+  })(0);
+}
+
+/* ── botão "Inserir imagem" (sem arrastar) ───────────────────────── */
+function orcImgEscolher(){
+  var inp = document.getElementById('orcImgInput');
+  if (!inp) return;
+  inp.value = '';
+  inp.click();
+}
+function orcImgInputAlterado(e){
+  var input = e.target;
+  var files = [];
+  if (input.files) for (var i = 0; i < input.files.length; i++) files.push(input.files[i]);
+  input.value = '';
+  if (!files.length) return;
+  var pageId = (typeof activeFormPageIndex === 'number' && activeFormPageIndex >= 0 ? activeFormPageIndex : 0) + 1;
+  var x = (ORC_IMG_LARG - ORC_IMG_LARG * ORC_IMG_LARG_MAX) / 2;
+  var y = 140;
+  orcImgInserirArquivos(files, pageId, x, y);
+}
+
+/* ── colar (Ctrl+V) uma imagem ───────────────────────────────────── */
+function orcImgPaste(e){
+  var dt = e.clipboardData;
+  if (!dt || !dt.items || !dt.items.length) return;
+  var alvo = e.target;
+  if (alvo && (alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+  var itens = [];
+  for (var i = 0; i < dt.items.length; i++){
+    var it = dt.items[i];
+    if (it && it.type && it.type.indexOf('image/') === 0) itens.push(it);
+  }
+  if (!itens.length) return;
+  e.preventDefault();
+  var pageId = (typeof activeFormPageIndex === 'number' && activeFormPageIndex >= 0 ? activeFormPageIndex : 0) + 1;
+  var x = (ORC_IMG_LARG - ORC_IMG_LARG * ORC_IMG_LARG_MAX) / 2;
+  var y = 140;
+  for (var j = 0; j < itens.length; j++){
+    var f = itens[j].getAsFile && itens[j].getAsFile();
+    if (f) orcImgInserirArquivos([f], pageId, x + (j * 20), y + (j * 20));
+  }
+}
+
+/* ── tecla Delete apaga a imagem selecionada ─────────────────────── */
+function orcImgTecla(e){
+  if (!orcImgSel) return;
+  var k = e.key;
+  if (k !== 'Delete' && k !== 'Backspace') return;
+  var a = document.activeElement;
+  if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
+  e.preventDefault();
+  orcImgRemover(orcImgSel.pageId, orcImgSel.id);
+}
+
+/* ── liga tudo ───────────────────────────────────────────────────── */
+function orcImgInstalar(){
+  var container = document.getElementById('preview-pages-container');
+  if (!container) return;
+  container.addEventListener('pointerdown', orcImgPointerDown);
+  container.addEventListener('click', orcImgClick);
+  container.addEventListener('dragover', orcImgDragOver);
+  container.addEventListener('dragleave', orcImgDragLeave);
+  container.addEventListener('drop', orcImgDrop);
+  document.addEventListener('keydown', orcImgTecla);
+  document.addEventListener('paste', orcImgPaste);
+  /* Soltar um arquivo FORA da folha não pode abrir o arquivo no navegador
+     (sairia do app e perderia o orçamento). Aqui o navegador é impedido. */
+  document.addEventListener('dragover', function(e){
+    if (orcImgEhArquivo(e)) e.preventDefault();
+  });
+  document.addEventListener('drop', function(e){
+    if (orcImgEhArquivo(e)) e.preventDefault();
+  });
+  orcImgPreparar();
+  orcImgRenderTodas();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', orcImgInstalar);
+else orcImgInstalar();
+
+/* API pública (usada pelo painel, pelo .json e pelos testes) */
+window.orcImg = {
+  instalar: orcImgInstalar,
+  render: orcImgRender,
+  renderTodas: orcImgRenderTodas,
+  adicionar: orcImgAdicionar,
+  remover: orcImgRemover,
+  sanitizar: orcImgSanear,
+  exportar: orcImgExportar,
+  ponto: orcImgPonto,
+  tamanhoInicial: orcImgTamanhoInicial,
+  escolher: orcImgEscolher,
+  inserirArquivos: orcImgInserirArquivos
+};
+</script>
+
 <style id="v5-orcamento-text-tools-css">
 /* V5 - Ferramentas de texto avançadas no orçamento */
 .formatting-toolbar{
@@ -3236,6 +3885,14 @@ function printProposal() {
     <h4>Páginas</h4>
     <ul>
       <li><b>➕ Add Página</b> cria uma página nova · <b>⧉ Duplicar</b> copia a atual (ótimo para propostas parecidas) · <b>❌ Rem. Página</b> tira a última.</li>
+    </ul>
+    <h4>Imagens na folha</h4>
+    <ul>
+      <li><b>Arraste um arquivo de imagem do computador</b> (PNG, JPG, WEBP…) e solte em cima da folha A4: a imagem <b>fica exatamente onde você soltou</b>.</li>
+      <li>Sem arrastar? Use o botão <b>🖼 Imagem na folha</b> (ou <kbd>Ctrl</kbd>+<kbd>V</kbd> com uma imagem copiada).</li>
+      <li>Depois de inserida, arraste a imagem para mover, use o cantinho <b>rosa</b> para <b>redimensionar</b> (a proporção nunca é esticada) e o <b>✕</b> (ou <kbd>Delete</kbd>) para remover.</li>
+      <li>Os botões <b>⤒</b> e <b>⤓</b> mudam a ordem quando há mais de uma imagem na mesma folha.</li>
+      <li><b>A imagem sai no arquivo final</b>: no <b>PDF</b> e no <b>PNG</b> ela fica no mesmo lugar e com a mesma proporção da tela. Pode ter várias imagens em cada página.</li>
     </ul>
     <h4>Rascunho e arquivo</h4>
     <ul>
@@ -3443,6 +4100,8 @@ document.addEventListener('keydown',e=>{
   let selecaoTexto=false;
   try{selecaoTexto=!!(alvo&&typeof alvo.selectionStart==='number'&&alvo.selectionStart!==alvo.selectionEnd)}catch(_){}
   if(!ctrl&&e.key==='Escape'&&v8OrcSelRow!==null){v8OrcSelRow=null;v8OrcAplicarSelecao();return}
+  /* V10.12 — Esc solta a imagem selecionada na folha (sem apagar nada) */
+  if(!ctrl&&e.key==='Escape'&&typeof orcImgLimparSelecao==='function'&&orcImgSel){orcImgLimparSelecao();return}
   if(!ctrl){
     if(e.key==='Delete'&&v8OrcSelRow!==null&&!digitando){e.preventDefault();v8OrcExcluirItem();}
     return;
