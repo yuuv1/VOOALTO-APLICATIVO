@@ -1,5 +1,41 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.11.0 — A faixa de páginas fica escondida no rodapé (2026-11-24)
+
+**O pedido:** *“coloque essa parte de adicionar novas páginas em formato
+minimizado bem no rodapé, aí ao passar o mouse ele expande pra ficar dessa
+forma. assim fica mais fácil e incomoda menos na hora de mexer.”*
+
+### 1. A faixa de páginas (Ficha Técnica)
+
+A faixa que ficava **sempre aberta** no rodapé — com todas as miniaturas e
+os botões `＋` e `🗋` — agora fica **recolhida**:
+
+- **Fechada**, sobra apenas uma **plaquinha discreta** no rodapé: o ícone
+  de páginas (`🗂`) e a **quantidade de páginas** da ficha. Ela não cobre a
+  folha e não atrapalha enquanto se digita.
+- **Passando o mouse por cima**, a faixa **abre sozinha** (com transição
+  suave) mostrando a **miniatura da página** e os botões **＋** (adicionar
+  página normal) e **🗋** (adicionar página em branco) — exatamente no
+  formato da imagem pedida. Ao tirar o mouse, ela fecha de novo.
+- **No celular** (onde não existe “passar o mouse”) um **toque na plaquinha**
+  abre e deixa a faixa aberta; um toque fora dela fecha.
+- **No teclado** (`Tab` até a plaquinha) a faixa também abre — o recurso não
+  depende só do mouse.
+- **Um clique na plaquinha** deixa a faixa **fixa** aberta, para dar tempo de
+  escolher a página com calma; clicar fora fecha.
+
+**O que continua igual:** navegar pelas miniaturas, arrastar para
+reordenar, excluir (`✕`) e espelhar as páginas. A contagem da plaquinha
+acompanha a ficha (1, 2, 3…).
+
+**Teste novo (`npm test`):** `test_faixa_paginas_v10.js` — 43 verificações
+(estrutura recolhida, regra de hover, contagem, clique que fixa, teclado,
+`aria-expanded`, fechamento ao clicar fora, tela de toque, faixa aberta
+durante o arrasto e o tamanho calculado da abertura).
+
+---
+
 ## V10.10.0 — Endereço mais rápido, Recibo na ordem pedida e edição de texto em toda a ficha (2026-11-24)
 
 **Os pedidos:**

@@ -871,8 +871,28 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 
 
 /* ═══ V7 — FAIXA DE PÁGINAS ESTILO CANVA + BAIXAR COM SELEÇÃO ═══ */
-#pageStripWrap{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--v10-surface);border:1px solid var(--v10-line-2);border-radius:14px;padding:8px 10px;z-index:9600;box-shadow:0 12px 40px rgba(0,0,0,.45);max-width:72vw;overflow-x:auto;overflow-y:hidden}
-#pageStripList{display:flex;gap:8px;align-items:center}
+/* V10.11 — a faixa de páginas fica MINIMIZADA no rodapé: sobra só uma
+   plaquinha com o ícone e a quantidade de páginas. Ela ABRE sozinha quando
+   o mouse passa por cima (e fica aberta com um clique). */
+#pageStripWrap{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:0;background:var(--v10-surface);border:1px solid var(--v10-line-2);border-radius:14px;padding:5px 6px;z-index:9600;box-shadow:0 6px 18px rgba(0,0,0,.28);max-width:92vw;transition:box-shadow .18s ease,padding .18s ease,gap .18s ease}
+#pageStripWrap:hover,#pageStripWrap.aberto,#pageStripWrap.focado{box-shadow:0 12px 40px rgba(0,0,0,.45);padding:8px 10px;gap:8px}
+#pageStripInner{display:flex;align-items:center;gap:8px;flex:0 0 auto;width:0;max-width:0;opacity:0;overflow:hidden;transition:width .24s cubic-bezier(.2,.8,.2,1),max-width .24s cubic-bezier(.2,.8,.2,1),opacity .16s ease}
+#pageStripWrap:hover #pageStripInner,#pageStripWrap.aberto #pageStripInner,#pageStripWrap.focado #pageStripInner,#pageStripWrap.arrastando #pageStripInner{width:var(--v7-strip-w,min(70vw,980px));max-width:var(--v7-strip-w,min(70vw,980px));opacity:1}
+/* V10.11 — em tela de TOQUE (celular/tablet) não existe "passar o mouse":
+   o :hover do navegador gruda depois do toque e a faixa ficaria aberta
+   sozinha. Aí ela só abre pelo toque (a classe .aberto). */
+body.sem-hover #pageStripWrap:hover:not(.aberto):not(.focado):not(.arrastando) #pageStripInner{width:0;max-width:0;opacity:0}
+#pageStripList{display:flex;flex:1 1 auto;gap:8px;align-items:center;min-width:0;max-width:min(62vw,880px);overflow-x:auto;overflow-y:hidden}
+.v7-strip-handle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:4px;height:28px;min-width:46px;padding:0 9px;border-radius:9px;border:1px solid var(--v10-line-2);background:var(--v10-hover);color:var(--v10-t1);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1;opacity:.65;transition:background .15s,opacity .15s,min-width .18s ease,padding .18s ease}
+.v7-strip-handle:hover{background:var(--v10-active);opacity:1}
+#pageStripWrap:hover .v7-strip-handle,#pageStripWrap.aberto .v7-strip-handle,#pageStripWrap.focado .v7-strip-handle{opacity:1}
+/* com a faixa aberta a plaquinha vira um iconezinho (o "Pág. N" de cada
+   miniatura já diz quantas páginas são) */
+#pageStripWrap:hover .v7-strip-handle,#pageStripWrap.aberto .v7-strip-handle,#pageStripWrap.focado .v7-strip-handle{min-width:0;padding:0 7px}
+.v7-strip-count{font-size:10px;font-weight:900;color:var(--v10-t2);min-width:8px;text-align:center}
+/* com a faixa aberta a plaquinha fica só com o icone (o "Pág. N" de cada
+   miniatura ja diz quantas páginas são) */
+#pageStripWrap:hover .v7-strip-count,#pageStripWrap.aberto .v7-strip-count,#pageStripWrap.focado .v7-strip-count{display:none}
 .v7-thumb{position:relative;width:64px;height:92px;border-radius:6px;overflow:hidden;border:2px solid var(--v10-line-2);cursor:pointer;background:var(--v10-paper);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .v7-thumb.active{border-color:#3B82F6;box-shadow:0 0 0 2px rgba(59,130,246,.55)}
 .v7-thumb-scale{position:absolute;top:0;left:0;width:64px;height:92px;overflow:hidden}
@@ -883,7 +903,7 @@ mark{background-color:inherit!important;-webkit-print-color-adjust:exact!importa
 .v7-thumb-del:hover{background:#ef4444}
 .v7-strip-btn{flex-shrink:0;width:38px;height:38px;border-radius:10px;border:1px dashed var(--v10-line-2);background:var(--v10-hover);color:var(--v10-t1);font-size:17px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1}
 .v7-strip-btn:hover{background:var(--v10-active)}
-@media(max-width:900px){#pageStripWrap{max-width:96vw;bottom:8px}}
+@media(max-width:900px){#pageStripWrap{max-width:96vw;bottom:8px}#pageStripList{max-width:min(80vw,880px)}}
 @media print{#pageStripWrap,#v7DownloadModal,#v7PageToolbar{display:none!important}}
 #v7DownloadModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9700;align-items:center;justify-content:center;padding:16px}
 #v7DownloadModal.open{display:flex}
@@ -1742,7 +1762,7 @@ window.__v8MedFabrica=[...document.querySelectorAll('#folha1 .med-inp')].map(i=>
 
 <!-- ═══ V7 — FAIXA DE PÁGINAS (estilo Canva) ═══ -->
 <div id="v7PageToolbar" style="display:none"></div>
-<div id="pageStripWrap"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('normal')" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('branca')" title="Adicionar página em branco">🗋</button></div>
+<div id="pageStripWrap"><button class="v7-strip-handle" id="v7StripHandle" type="button" aria-expanded="false" aria-label="Páginas da ficha — passe o mouse para abrir, toque ou clique para deixar fixo" onclick="v7StripAlternar()" title="Páginas — passe o mouse para abrir (toque ou clique para deixar fixo)"><span aria-hidden="true">🗂</span><span class="v7-strip-count" id="v7StripCount">1</span></button><div id="pageStripInner"><div id="pageStripList" ondragover="v7ListDragOver(event)" ondragleave="v7ListDragLeave(event)" ondrop="v7ListDrop(event)"></div><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('normal')" title="Adicionar página">＋</button><button class="v7-strip-btn" onclick="v7AdicionarPaginaComUndo('branca')" title="Adicionar página em branco">🗋</button></div></div>
 
 <!-- ═══ V7 — MODAL BAIXAR COM SELEÇÃO DE PÁGINAS ═══ -->
 <div id="v7DownloadModal"><div class="v7-dl-card"><div class="v7-dl-head"><h3>⬇ Baixar ficha</h3><button title="Fechar" class="v7-btn sec" onclick="fecharV7Download()">✕</button></div><div class="v7-dl-body"><div style="font-size:11px;color:#6B7280;margin-bottom:10px">Selecione as páginas que quer baixar (todas marcadas por padrão):</div><div class="v7-dl-pages" id="v7DlPages"></div><div class="v7-dl-fmt"><span>Formato:</span><label><input type="radio" name="v7DlFmt" value="png" checked> 📸 PNG (imagens)</label><label><input type="radio" name="v7DlFmt" value="pdf"> 🖨 PDF (imprimir)</label></div></div><div class="v7-dl-foot"><button title="Cancelar" class="v7-btn sec" onclick="fecharV7Download()">Cancelar</button><button title="Baixar as páginas selecionadas" class="v7-btn primary" onclick="v7Baixar()">Baixar selecionadas</button></div></div></div>
@@ -9880,6 +9900,81 @@ function renderPageStrip(){
     list.appendChild(div.firstChild);
   });
   v7AtualizarStripAtiva();
+  v7StripContagem(ids.length);
+  v7StripMedir();
+}
+/* Calcula quanto espaço a faixa precisa quando abre.
+   A conta é feita pelo desenho da faixa (miniatura de 64px + folga de 8px,
+   lista com rolagem, e os dois botões de 38px) — assim a animação de
+   abertura termina exatamente quando a faixa está inteira, sem sobrar
+   espaço vazio e sem o último botão ser cortado. */
+function v7StripMedir(){
+  const wrap=$('pageStripWrap'), list=$('pageStripList');
+  if(!wrap||!list)return;
+  const tela=window.innerWidth||1200;
+  const n=list.children.length;
+  const itens=n?n*72-8:0;                                   /* miniaturas + folgas */
+  const cap=tela<=900?Math.min(tela*0.8,880):Math.min(tela*0.62,880);
+  const larguraLista=Math.min(itens,cap);
+  const total=larguraLista+8+38+8+38;                      /* lista + 2 botões + folgas */
+  /* sobra da tela: a plaquinha (46px), a folga (8px) e a borda (20px) */
+  const sobra=tela<=900?tela*0.96-74:tela*0.92-74;
+  const largura=Math.max(92,Math.min(total,Math.round(sobra)));
+  wrap.style.setProperty('--v7-strip-w',largura+'px');
+}
+
+/* ═══ V10.11 — A FAIXA DE PÁGINAS FICA MINIMIZADA NO RODAPÉ ═══
+   O pedido: *"coloque essa parte de adicionar novas páginas em formato
+   minimizado bem no rodapé, aí ao passar o mouse ele expande pra ficar
+   dessa forma. assim fica mais fácil e incomoda menos na hora de mexer"*.
+
+   Como ficou:
+     * minimizada, sobra só uma plaquinha no rodapé (🗂 e a quantidade de
+       páginas) — ela não cobre a folha e não atrapalha o trabalho;
+     * ao passar o mouse por cima, a faixa abre com as miniaturas e os
+       botões ＋ (adicionar) e 🗋 (adicionar em branco), como sempre;
+     * um clique na plaquinha DEIXA A FAIXA FIXA (útil no celular, onde
+       não existe "passar o mouse") — outro clique desfaz.
+   ══════════════════════════════════════════════════════════════════════ */
+/* A plaquinha mostra quantas páginas a ficha tem. */
+function v7StripContagem(n){
+  const el=$('v7StripCount');
+  if(el)el.textContent=String(n||0);
+}
+/* Clique na plaquinha: abre/fecha a faixa e deixa ela FIXA.
+   (Não para a propagação do clique: quem fecha a faixa ao clicar fora
+   já ignora os cliques dentro de #pageStripWrap.) */
+function v7StripAlternar(){
+  const wrap=$('pageStripWrap');
+  if(!wrap)return;
+  wrap.classList.toggle('aberto');
+  v7StripEstadoAria();
+}
+/* O leitor de tela precisa saber se a faixa está aberta ou não. */
+function v7StripEstadoAria(){
+  const wrap=$('pageStripWrap'), btn=$('v7StripHandle');
+  if(!wrap||!btn)return;
+  const aberto=wrap.classList.contains('aberto')||wrap.classList.contains('focado');
+  btn.setAttribute('aria-expanded',aberto?'true':'false');
+}
+/* A faixa também abre quando alguém chega nela pelo teclado (Tab).
+   Só conta como teclado mesmo: no mouse/toque a faixa já abre pelo
+   hover ou pelo clique, então não é preciso travar ela aberta. */
+let v7StripViaTeclado=false;
+function v7StripFoco(entrou){
+  const wrap=$('pageStripWrap');
+  if(!wrap)return;
+  if(entrou&&!v7StripViaTeclado)return;
+  wrap.classList.toggle('focado',!!entrou);
+  v7StripEstadoAria();
+}
+/* Clicar fora da faixa esconde a faixa que ficou fixa. */
+function v7StripFecharSeFora(e){
+  const wrap=$('pageStripWrap');
+  if(!wrap)return;
+  if(e&&e.target&&e.target.closest&&e.target.closest('#pageStripWrap'))return;
+  wrap.classList.remove('aberto');
+  v7StripEstadoAria();
 }
 function v7GoToPage(folhaId){
   if(v7DragMoved){v7DragMoved=false;return;}
@@ -9999,6 +10094,9 @@ function v7ThumbDragStart(e,id){
   try{e.dataTransfer.setData('text/plain',id);e.dataTransfer.effectAllowed='move';}catch(_){}
   e.currentTarget.classList.add('dragging');
   v7LimparDropIndicadores();
+  /* V10.11 — enquanto a miniatura está sendo arrastada a faixa fica ABERTA
+     (o mouse sai de cima dela para arrastar) */
+  try{const wrap=$('pageStripWrap');if(wrap)wrap.classList.add('arrastando');}catch(_){}
 }
 function v7ThumbDragOver(e,id){
   if(!v7DragId||v7DragId===id)return;
@@ -10064,6 +10162,8 @@ function v7ThumbDragEnd(e){
   e.currentTarget.classList.remove('dragging');
   v7DragId=null;v7DropMeta=null;
   v7LimparDropIndicadores();
+  /* V10.11 — a faixa pode fechar de novo depois do arrasto */
+  try{const wrap=$('pageStripWrap');if(wrap)wrap.classList.remove('arrastando');}catch(_){}
   setTimeout(()=>{v7DragMoved=false;},0);
 }
 
@@ -10279,8 +10379,26 @@ document.addEventListener('click',e=>{
   if(meta){v7MostrarToolbar(meta);v7AtualizarStripAtiva();}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')v7EsconderToolbar();});
+/* V10.11 — a faixa de páginas abre no mouse, no toque e no teclado */
+(function(){
+  const wrap=$('pageStripWrap');
+  if(!wrap)return;
+  /* marca se a última interação foi pelo teclado (Tab) */
+  document.addEventListener('keydown',e=>{if(e.key==='Tab'||e.key==='Enter'||e.key===' ')v7StripViaTeclado=true;},true);
+  document.addEventListener('mousedown',()=>{v7StripViaTeclado=false;},true);
+  document.addEventListener('touchstart',()=>{v7StripViaTeclado=false;},true);
+  /* em tela de TOQUE o :hover do navegador gruda depois do toque: sem isto a
+     faixa abriria sozinha e nunca fecharia. Aí ela abre só pelo toque. */
+  try{
+    const semHover=window.matchMedia&&window.matchMedia('(hover: none)').matches;
+    if(semHover)document.body.classList.add('sem-hover');
+  }catch(e){}
+  wrap.addEventListener('focusin',()=>v7StripFoco(true));
+  wrap.addEventListener('focusout',e=>{if(!e.relatedTarget||!wrap.contains(e.relatedTarget))v7StripFoco(false);});
+  document.addEventListener('click',e=>v7StripFecharSeFora(e));
+})();
 window.addEventListener('scroll',()=>{clearTimeout(v7ScrollTimer);v7ScrollTimer=setTimeout(()=>{v7AtualizarStripAtiva();v7PosicionarToolbar();},150);},true);
-window.addEventListener('resize',()=>v7PosicionarToolbar());
+window.addEventListener('resize',()=>{v7PosicionarToolbar();if(typeof v7StripMedir==='function')v7StripMedir();});
 
 /* ── Init: restaura a ficha em andamento (rascunho vivo) e desenha a faixa ── */
 document.addEventListener('DOMContentLoaded',()=>{
