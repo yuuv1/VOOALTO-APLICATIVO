@@ -1,5 +1,73 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.12.0 — Imagens na folha do Orçamento: arraste, solte, e sai no PDF/PNG (2026-11-23)
+
+**O pedido:** *“a gente joga a imagem la e onde ela ficar ela sai no pdf final
+(ou png)”* — ou seja, a imagem tem que **entrar na folha** e **sair no arquivo
+final no mesmo lugar**, não ser uma miniatura nem uma galeria separada.
+
+### 1. Arrastar e soltar na folha A4
+
+- **Arraste um arquivo de imagem do computador** (PNG, JPG, WEBP…) e solte
+  em cima da folha A4: a imagem **nasce exatamente onde foi solta** (o
+  cantinho superior esquerdo fica no ponto do cursor, sempre dentro da
+  folha).
+- Sem arrastar? Três caminhos: o botão **🖼 Imagem na folha** (no painel de
+  itens e no rodapé do editor), **Ctrl+V** com a imagem copiada, ou o
+  próprio **arrastar do desktop**.
+- A folha pisca com um contorno **rosa** enquanto o arquivo está sobre ela,
+  e a imagem é **reduzida** sozinha se for maior demais (no máximo 45% da
+  largura e 70% da altura da folha), **sempre mantendo a proporção**.
+
+### 2. Mexer na imagem depois de colocar
+
+- **Arrastar a imagem** = mover (a posição é a da folha, não da tela — o
+  zoom de visualização não interfere).
+- **Cantinho rosa** (canto inferior direito) = **redimensionar**, e a
+  **proporção nunca é esticada**.
+- **✕** na imagem (ou a tecla <kbd>Delete</kbd>) = **remover**.
+- **⤒ / ⤓** = **trazer para a frente / enviar para trás**, quando há mais de
+  uma imagem na mesma folha.
+- Os botões e o cantinho **só aparecem com a imagem selecionada** e
+  **nunca saem no arquivo final**.
+
+### 3. A imagem sai no PDF e no PNG no lugar certo
+
+Esta é a parte que realmente importa, e foi feita assim:
+
+- A folha A4 é desenhada em **794 × 1120 px** (A4 a 96dpi). Cada imagem
+  guarda a posição **em pixels dessa folha** (`x`, `y`, `w`, `h`).
+- Na hora de desenhar, essa posição vira **porcentagem da folha**
+  (`left/top/width/height` em `%`). Como o PDF sai em **A4 sem margens**
+  (≈793,7px de largura, o `@page` do app já é `size: A4; margin: 0`), a
+  diferença entre a tela e o papel é de meio pixel — a imagem sai **no
+  mesmo lugar** da tela.
+- O **PNG** (html2canvas) e o **PDF** (impressão do navegador) usam a
+  mesma folha, então os dois batem entre si **e** com a tela.
+- A folha tem `overflow: hidden`: nada invade a página ao lado.
+
+### 4. Várias imagens, e elas sobrevivem a tudo
+
+- **Várias imagens por folha**, cada uma com a sua posição — e cada folha
+  tem a sua lista (a página 2 não repete as imagens da página 1).
+- As imagens entram no **autosave**, no **rascunho**, no **`.json`** e no
+  **backup completo**; voltam nos mesmos lugares ao reabrir.
+- **Duplicar página** leva as imagens junto (com ids novos, para as duas
+  folhas poderem ser mexidas separadamente).
+- **Orçamento novo** limpa tudo.
+- As imagens passam pelo **otimizador** do sistema (`assets/imagem.js`),
+  então uma foto de celular não enche a memória do navegador.
+- Se a memória do navegador encher, o autosave guarda o orçamento **sem as
+  imagens** (em vez de não guardar nada) e avisa.
+
+**Teste novo (`npm test`):** `test_orc_imagens_v10.js` — 66 verificações
+(camada dentro da folha, posição posicional em px e em %, conversão do
+ponto da tela com zoom, várias imagens por folha, mover, redimensionar sem
+esticar, remover, ordem, UI escondida no PNG e no PDF, autosave/rascunho/
+`.json`, estado malformado, orçamento novo e duplicar página).
+
+---
+
 ## V10.11.1 — A faixa de páginas agora fica realmente pequena e encaixada no rodapé (2026-11-24)
 
 **O pedido (depois de ver a V10.11):** *“ficou feio, ficou do tamanho que tava
