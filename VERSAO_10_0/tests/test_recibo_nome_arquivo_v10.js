@@ -29,6 +29,18 @@ const dom = new JSDOM(html,{
   w.Recibo.campo('nome','  Oficina / São João: Pinturas?  ');
   w.Recibo.campo('data','2020-01-05'); // a data do pagamento não substitui a do download
   assert.equal(R.nomeArquivoRecibo(),nome);
+  /* A ORDEM do nome é sempre: RECIBO → nome do cliente → data */
+  const partes=nome.split(' - ');
+  assert.equal(partes[0],'RECIBO','o nome começa com RECIBO');
+  assert.equal(partes[1],'Oficina São João Pinturas','o nome do cliente vem depois do RECIBO');
+  assert.equal(partes[2],hoje,'a data vem por último');
+  assert.ok(nome.startsWith('RECIBO - '),'o nome começa com "RECIBO - "');
+  assert.ok(nome.endsWith(' - '+hoje),'o nome termina com a data');
+  /* mesmo com um cliente que tem " - " no nome, a ordem não muda */
+  const nomeTraco=R.nomeArquivoRecibo({cliente:{nome:'Atelier - Vista Alegre'}},'2026-11-11');
+  assert.equal(nomeTraco,'RECIBO - Atelier - Vista Alegre - 11-11-2026',nomeTraco);
+  assert.ok(nomeTraco.startsWith('RECIBO - '),'continua começando com RECIBO');
+  assert.ok(nomeTraco.endsWith(' - 11-11-2026'),'continua terminando com a data');
   assert.equal(R.nomeArquivoRecibo(null,'2026-12-31'),'RECIBO - Oficina São João Pinturas - 31-12-2026');
   assert.equal(R.nomeArquivoRecibo({cliente:{nome:''}},'2026-11-11'),'RECIBO - SEM CLIENTE - 11-11-2026');
   assert.equal(R.nomeArquivoRecibo({cliente:{nome:'X'.repeat(200)}},'2026-11-11').length,

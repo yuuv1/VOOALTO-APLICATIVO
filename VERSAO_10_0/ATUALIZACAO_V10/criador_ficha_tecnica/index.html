@@ -483,6 +483,15 @@ flex-shrink:0;height:56px;margin-bottom:6px;
 .dc-inp:focus{border-bottom-color:var(--ro)}
 .dc-inp:empty::before{content:attr(data-ph);color:#C5CDD9;font-style:italic;font-weight:400;font-size:10px;pointer-events:none}
 .v7-exporting .dc-inp:empty::before{content:none!important}
+/* V10.10 — a dica e o botão do CEP são da tela, não da ficha */
+.v7-exporting .dc-dica,.v7-exporting .dc-cep-btn{display:none!important}
+/* V10.10 — o endereço mais rápido: o botão de busca do CEP e a dica */
+.dc-cep{display:flex;align-items:center;gap:3px;flex:1;min-width:0}
+.dc-cep .dc-inp{flex:1;min-width:0}
+.dc-cep-btn{width:19px;height:19px;flex-shrink:0;border:1px solid var(--bd);border-radius:6px;background:var(--v10-surface-2);font-size:9px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--v10-t1);transition:background .12s,border-color .12s}
+.dc-cep-btn:hover{background:var(--v10-hover);border-color:var(--v10-pink)}
+.dc-cep-btn:disabled{opacity:.55;cursor:default}
+.dc-dica{font-size:7.5px;color:var(--txl);padding:3px 9px 0;line-height:1.3;font-style:italic}
 
 /* PRODUÇÃO */
 .prod-wrap{display:flex;gap:6px;align-items:flex-start}
@@ -696,17 +705,21 @@ transition:background .15s,border-color .15s,color .15s;
 .arr-drawhint{position:absolute;top:50px;left:50%;transform:translateX(-50%);background:rgba(30,41,55,.92);color:#fff;font-size:9px;font-weight:700;padding:6px 14px;border-radius:20px;white-space:nowrap;pointer-events:none;z-index:600;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3);letter-spacing:.5px}
 .arr-draw-hint.vis{display:block}
 
-/* RICH BAR */
-#richBar{position:fixed;z-index:99998;display:none;align-items:center;gap:4px;background:var(--v10-surface);border:1.5px solid var(--v10-line-2);border-radius:10px;padding:5px 10px;box-shadow:0 6px 24px rgba(0,0,0,.18);backdrop-filter:blur(8px);white-space:nowrap;pointer-events:all}
-#richBar.vis{display:flex}
-.rb-label{font-size:7px;font-weight:800;color:var(--txl);text-transform:uppercase;letter-spacing:.8px}
-.rb-btn{padding:3px 8px;font-size:8px;font-weight:700;border:1.5px solid var(--v10-line-2);border-radius:5px;background:var(--v10-surface-2);cursor:pointer;color:var(--v10-t1);font-family:inherit;transition:all .12s;line-height:1.2}
-.rb-btn:hover{background:var(--v10-hover);border-color:var(--v10-pink)}
+/* RICH BAR — V10.10: barra discreta (sem rótulos, sem faixa pesada).
+   A ideia é uma "mini barra" que aparece em cima do texto selecionado:
+   só os botões, pequenos, com fundo quase transparente. */
+#richBar{position:fixed;z-index:99998;display:none;align-items:center;gap:1px;background:rgba(255,255,255,.92);border:1px solid rgba(15,23,42,.10);border-radius:9px;padding:3px 4px;box-shadow:0 4px 14px rgba(15,23,42,.13);backdrop-filter:blur(6px);white-space:nowrap;pointer-events:all;opacity:0;transform:translateY(4px);transition:opacity .13s ease,transform .13s ease}
+#richBar.vis{display:flex;opacity:1;transform:none}
+.rb-modo{display:none;font-size:6.5px;font-weight:800;color:var(--txl);text-transform:uppercase;letter-spacing:.7px;padding:0 3px 0 2px;flex-shrink:0}
+#richBar.modo-campo .rb-modo{display:inline}
+.rb-btn{width:19px;height:19px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;border:1px solid transparent;border-radius:5px;background:transparent;cursor:pointer;color:var(--v10-t1);font-family:inherit;transition:background .12s,border-color .12s;line-height:1;flex-shrink:0}
+.rb-btn:hover{background:var(--v10-hover);border-color:var(--v10-line-2)}
 .rb-btn.on{background:var(--az);color:#fff;border-color:var(--az)}
-.rb-size{border:1.5px solid var(--v10-line-2);border-radius:5px;padding:2px 4px;font-size:8px;font-family:inherit;outline:none;background:var(--v10-surface-2);color:var(--v10-t1);cursor:pointer;width:46px;text-align:center}
-.rb-color{width:26px;height:26px;border:1.5px solid var(--bd);border-radius:5px;cursor:pointer;padding:0;background:none}
-.rb-sep{width:1px;height:16px;background:var(--bd);flex-shrink:0}
+.rb-size{width:32px;height:19px;border:1px solid var(--v10-line-2);border-radius:5px;padding:0 1px;font-size:8.5px;font-family:inherit;outline:none;background:var(--v10-surface-2);color:var(--v10-t1);cursor:pointer;text-align:center;flex-shrink:0}
+.rb-color{width:18px;height:18px;border:1px solid var(--bd);border-radius:5px;cursor:pointer;padding:0;background:none;flex-shrink:0}
+.rb-sep{width:1px;height:11px;background:var(--bd);flex-shrink:0;margin:0 2px}
 .rb-hint{font-size:7px;color:var(--txl);font-style:italic}
+.rb-label{font-size:7px;font-weight:800;color:var(--txl);text-transform:uppercase;letter-spacing:.8px}
 
 /* LAYERS PANEL */
 .layers-panel{position:absolute;top:8px;right:8px;width:130px;background:var(--v10-surface);border:1px solid var(--v10-line-2);border-radius:7px;box-shadow:var(--v10-shadow);z-index:400;display:none;overflow:hidden}
@@ -770,6 +783,7 @@ transition:background .15s,border-color .15s,color .15s;
 html,body{width:210mm;height:auto;background:#fff!important;color:var(--tx)!important;color-scheme:light!important;margin:0!important;padding:0!important;font-size:11px!important}
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 #sidebar,#sidebar-toggle,#cropModal,#toast,#edPreview,.arr-draw-hint,#arrowPreview,#richBar,.shape-tb,#fichaFloatCta,#fichaSugBox,.grade-copiar{display:none!important}
+.dc-cep-btn,.dc-dica{display:none!important}
 .dc-inp:empty::before{content:none!important}
 #pw{padding:0!important;display:block!important;background:#fff!important;min-height:unset!important;gap:0!important;margin-left:0!important}
 .page-label{display:none!important}
@@ -1326,22 +1340,17 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
 </button>
 
 <div id="richBar">
-<span class="rb-label">Formato:</span>
+<span class="rb-modo">campo</span>
 <button class="rb-btn" id="rbBold" onclick="rfApply('bold')" title="Negrito (Ctrl+B)"><b>N</b></button>
+<button class="rb-btn" id="rbItalic" onclick="rfApply('italic')" title="Itálico (Ctrl+I)"><i>I</i></button>
+<input type="number" class="rb-size" id="rbSize" value="13" min="6" max="120" title="Tamanho da letra" onchange="rfApplySize()">
 <div class="rb-sep"></div>
-<span class="rb-label">Tamanho:</span>
-<input type="number" class="rb-size" id="rbSize" value="13" min="6" max="120" onchange="rfApplySize()">
-<div class="rb-sep"></div>
-<span class="rb-label">Cor:</span>
-<input type="color" class="rb-color" id="rbColor" value="#D4187A" onchange="rfApply('color')">
-<div class="rb-sep"></div>
-<span class="rb-label">Marcador:</span>
-<input type="color" class="rb-color" id="rbHL" value="#FFE066" onchange="rfHL()">
+<input type="color" class="rb-color" id="rbColor" value="#D4187A" title="Cor do texto" onchange="rfCor('color')">
+<input type="color" class="rb-color" id="rbHL" value="#FFE066" title="Cor do destaque" onchange="rfCor('hl')">
 <button title="Destacar o trecho selecionado" class="rb-btn" onclick="rfHL()">🖊</button>
-<button title="Tirar o destaque do trecho" class="rb-btn" onclick="rfHLClear()" style="color:var(--vm)">✕</button>
+<button title="Tirar o destaque do trecho" class="rb-btn" onclick="rfHLClear()">✕</button>
 <div class="rb-sep"></div>
-<button title="Limpar a formatação do texto" class="rb-btn" onclick="rfClear()" style="color:var(--txl)">Limpar</button>
-<span class="rb-hint">· Selecione o texto para formatar</span>
+<button title="Limpar a formatação do texto" class="rb-btn" onclick="rfClear()">⌫</button>
 </div>
 
 <div id="edPreview"></div>
@@ -1411,9 +1420,13 @@ body.mke-exportando .img-layer.mke-sem-img img{outline:none!important}
 </div>
 <div class="dc-cell">
 <span class="dc-lbl">CEP</span>
+<div class="dc-cep">
 <div class="dc-inp" id="dc_cep" contenteditable="true" data-ph="00000-000" title="Digite os 8 dígitos do CEP e o endereço é preenchido sozinho (dá para editar depois)" oninput="sincTodasPaginas()"></div>
+<button class="dc-cep-btn" id="dcCepBtn" type="button" onclick="v10CepBuscar()" title="Buscar o endereço agora pelo CEP">🔍</button>
 </div>
 </div>
+</div>
+<div class="dc-dica">💡 Digite o CEP ou cole o endereço inteiro: o resto se preenche sozinho.</div>
 </div>
 
 <!-- PRODUÇÃO P1 -->
@@ -2446,6 +2459,9 @@ function espelharCamposP1(p){
   P1_CAMPOS_ESPELHADOS.forEach(id=>{
     const src=$(id),dst=$(id+'_'+pid);
     if(src&&dst&&dst.value!==src.value)dst.value=src.value;
+    /* V10.10 — a formatação do campo (negrito, cor, destaque) vai junto:
+       a página extra tem que sair igual à folha 1 na hora de imprimir. */
+    if(src&&dst)rfEspelhar(id,id+'_'+pid);
   });
   /* V10.2 — o "Nº da Operação" da página BRANCA é o mesmo da ficha. Só é
      copiado enquanto a cópia estiver marcada (`data-ficha-num`): se a pessoa
@@ -2482,6 +2498,8 @@ function espelharMedidasP1(p){
       if(src[i]!==undefined&&el.value!==src[i]){el.value=src[i];mudou++;}
     });
   });
+  /* V10.10 — a formatação das medidas vai junto */
+  try{rfEspelharLista('#folha1 .med-inp','#folha_'+p.id+' .med-inp');}catch(e){}
   return mudou;
 }
 
@@ -2511,7 +2529,10 @@ function espelharProducaoP1(p){
   const ev=$('entradaVal'),ev2=$('entradaVal_'+p.id);
   if(ev&&ev2){
     if(ev2.value!==ev.value){ev2.value=ev.value;calcEntradaExtra(p.id);}
+    /* V10.10 — a formatação do valor de entrada vai junto */
+    try{rfEspelhar('entradaVal','entradaVal_'+p.id);}catch(e){}
   }
+  try{rfEspelharLista('#prodLinhas .field','#prodLinhas_'+p.id+' .field');}catch(e){}
   return mudou;
 }
 
@@ -2604,6 +2625,8 @@ tr.innerHTML=`<td><div class="n-cel">${id}</div></td>
 <td style="text-align:right"><span id="vt_${pid}_${id}" style="font-size:10px;font-weight:800;color:var(--az)">—</span></td>
 <td><button title="Remover esta camada" class="del-btn" onclick="removerLExtra('${pid}',${id})">✕</button></td>`;
 const tb=$('prodLinhas_'+pid);if(tb)tb.appendChild(tr);
+/* V10.10 — a linha nova recebe a formatação que a linha antiga tinha */
+rfReaplicar();
 }
 function getTotalLinhasExtra(p){
 let t=0;
@@ -3097,39 +3120,386 @@ if(!idFixo)deselecionarTudoExtra(pid);
 if(p.selId===id)p.selId=null;
 updPhExtra(p);updList();snap();}
 
-/* ═══ RICH FORMAT BAR ═══ */
+/* ═══ RICH FORMAT BAR (V10.10) ═══
+   O QUE MUDOU NESTA VERSÃO
+     * A barra ficou PEQUENA e discreta: é uma "mini barra" que aparece em
+       cima do texto selecionado, só com os botões (sem "Formato:",
+       "Tamanho:", "Cor:" nem a faixa pesada de antes).
+     * A edição que existia no "tipo de tecido" agora existe em TODAS as
+       partes digitáveis da Ficha Técnica: dados do cliente, nº, data,
+       previsão, valor de entrada, separador, títulos, aviso, medidas,
+       grade e linhas de produção.
+     * Em campo de texto simples (<input>) não dá para formatar SÓ um
+       pedaço do texto (o input guarda texto puro, não HTML). Nesses
+       campos a formatação vale para o CAMPO INTEIRO — e a mini barra
+       mostra a dica "campo" para não confundir.
+     * O formato continua salvo: sobrevive ao Ctrl+Z, ao salvar, ao
+       reabrir a ficha e ao espelho das páginas extras.
+   ══════════════════════════════════════════════════════════════════════ */
 const richBar=$('richBar');
 let rfSavedRange=null;
+let rfAlvoEl=null;      /* elemento no modo "campo" (<input>/<textarea>) */
+let rfUltimoEl=null;    /* último campo mirado (o seletor de cor abre uma
+                           janela do sistema e a barra pode se esconder) */
+let rfUltimoModo='';    /* 'ce' | 'campo' — o que era o último alvo */
+let rfModo='nenhum';    /* 'ce' | 'campo' | 'nenhum' */
+
+/* ── mapa dos formatos: um por folha (a 1 e cada página extra) ────────── */
+const RF_FMT_P1={};
+const RF_FMT_PAG={};
+function rfMapa(pid){
+  if(!pid)return RF_FMT_P1;
+  if(!RF_FMT_PAG[pid])RF_FMT_PAG[pid]={};
+  return RF_FMT_PAG[pid];
+}
+/* De qual página (folha) o campo é. Null = folha 1. */
+function rfFolhaDe(el){
+  if(!el||!el.closest)return null;
+  const f=el.closest('.folha,.folha-branca');
+  if(!f||!f.id||f.id==='folha1')return null;
+  return f.id.replace(/^folha_/,'');
+}
+/* A chave do campo DENTRO da folha: não depende do número da página, para
+   o formato voltar no lugar certo quando a ficha é reaberta. */
+function rfChave(el){
+  if(!el||!el.tagName)return null;
+  const pid=rfFolhaDe(el);
+  if(el.id){
+    let nome=el.id;
+    if(pid&&nome.length>pid.length+1&&nome.slice(-(pid.length+1))==='_'+pid){
+      nome=nome.slice(0,nome.length-pid.length-1);
+    }
+    return {chave:'id:'+nome,pid:pid};
+  }
+  const folha=el.closest?el.closest('.folha,.folha-branca'):null;
+  if(folha){
+    if(el.classList&&el.classList.contains('gi')){
+      const l=folha.querySelectorAll('.gi');
+      const i=Array.prototype.indexOf.call(l,el);
+      if(i>=0)return {chave:'gi:'+i,pid:pid};
+    }
+    if(el.classList&&el.classList.contains('med-inp')){
+      const l=folha.querySelectorAll('.med-inp');
+      const i=Array.prototype.indexOf.call(l,el);
+      if(i>=0)return {chave:'med:'+i,pid:pid};
+    }
+  }
+  if(el.classList&&el.classList.contains('field')){
+    const tb=el.closest('tbody'),tr=el.closest('tr');
+    if(tb&&tr){
+      const row=Array.prototype.indexOf.call(tb.querySelectorAll('tr'),tr);
+      const col=Array.prototype.indexOf.call(tr.querySelectorAll('input'),el);
+      if(row>=0&&col>=0)return {chave:'prod:'+row+':'+col,pid:pid};
+    }
+  }
+  return null;
+}
+/* Acha o campo pela chave (para devolver o formato ao salvar/reabrir). */
+function rfResolver(chave,pid){
+  if(!chave)return null;
+  const folha=pid?document.getElementById('folha_'+pid):document.getElementById('folha1');
+  if(chave.indexOf('id:')===0){
+    const nome=chave.slice(3);
+    return document.getElementById(pid?nome+'_'+pid:nome);
+  }
+  if(chave.indexOf('gi:')===0){
+    if(!folha)return null;
+    return folha.querySelectorAll('.gi')[parseInt(chave.slice(3),10)]||null;
+  }
+  if(chave.indexOf('med:')===0){
+    if(!folha)return null;
+    return folha.querySelectorAll('.med-inp')[parseInt(chave.slice(4),10)]||null;
+  }
+  if(chave.indexOf('prod:')===0){
+    const p=chave.slice(5).split(':');
+    const tb=document.getElementById(pid?'prodLinhas_'+pid:'prodLinhas');
+    if(!tb)return null;
+    const tr=tb.querySelectorAll('tr')[parseInt(p[0],10)];
+    if(!tr)return null;
+    return tr.querySelectorAll('input')[parseInt(p[1],10)]||null;
+  }
+  return null;
+}
+/* O separador tem o seu próprio controle de tamanho: o tamanho vai para lá
+   (para os dois lados concordarem) em vez de brigar com ele. */
+function rfEhSeparador(el){return !!(el&&el.id&&el.id.indexOf('sepTxt')===0);}
+
+/* ── estilo do campo: guarda o original para o "Limpar" devolver ─────── */
+function rfOrig(el){
+  if(!el.__rfOrig){
+    el.__rfOrig={fontWeight:el.style.fontWeight||'',fontStyle:el.style.fontStyle||'',
+      fontSize:el.style.fontSize||'',color:el.style.color||'',backgroundColor:el.style.backgroundColor||''};
+  }
+  return el.__rfOrig;
+}
+function rfAplicarEstilo(el,fmt){
+  if(!el)return;
+  const o=rfOrig(el);
+  el.style.fontWeight=(fmt&&fmt.b)?'bold':o.fontWeight;
+  el.style.fontStyle=(fmt&&fmt.i)?'italic':o.fontStyle;
+  /* o separador tem o tamanho no controle dele (sepFontSize): a barra não
+     mexe no tamanho do separador para os dois não brigarem */
+  if(!rfEhSeparador(el))el.style.fontSize=(fmt&&fmt.sz)?(fmt.sz+'px'):o.fontSize;
+  el.style.color=(fmt&&fmt.co)?fmt.co:o.color;
+  el.style.backgroundColor=(fmt&&fmt.hl)?fmt.hl:o.backgroundColor;
+}
+function rfRestaurarEstilo(el){
+  if(!el)return;
+  const o=el.__rfOrig;if(!o)return;
+  el.style.fontWeight=o.fontWeight;el.style.fontStyle=o.fontStyle;el.style.fontSize=o.fontSize;
+  el.style.color=o.color;el.style.backgroundColor=o.backgroundColor;
+  /* o separador tem o tamanho no controle dele: devolve o tamanho salvo */
+  try{
+    if(rfEhSeparador(el)){
+      const pid=rfFolhaDe(el);
+      const fs=$(pid?('sepFS_'+pid):'sepFontSize');
+      if(fs)applySepFontSize(el.id,fs.id);
+    }
+  }catch(e){}
+}
+/* ── guardar/devolver o mapa de formatos (salvar, desfazer, espelhar) ─── */
+function rfMapaResumo(pid){
+  try{return JSON.parse(JSON.stringify(rfMapa(pid)));}catch(e){return {};}
+}
+function rfAplicarMapa(mapa,pid){
+  /* o mapa vira o da folha (e o estilo vai para o campo).
+     A cópia vem ANTES de limpar: senão, quando o mapa é o mesmo da folha
+     (o reaplicar), a limpeza apagava o próprio formato. */
+  if(!mapa)return;
+  let copia={};
+  try{copia=JSON.parse(JSON.stringify(mapa));}catch(e){copia=Object.assign({},mapa);}
+  const destino=rfMapa(pid);
+  Object.keys(destino).forEach(function(k){delete destino[k];});
+  Object.keys(copia).forEach(function(c){
+    destino[c]=Object.assign({},copia[c]);
+    const el=rfResolver(c,pid);
+    if(el)rfAplicarEstilo(el,copia[c]);
+  });
+}
+function rfLimparTudo(){
+  const alvos=[];
+  Object.keys(RF_FMT_P1).forEach(function(c){const el=rfResolver(c,null);if(el)alvos.push(el);});
+  Object.keys(RF_FMT_PAG).forEach(function(pid){
+    Object.keys(RF_FMT_PAG[pid]).forEach(function(c){const el=rfResolver(c,pid);if(el)alvos.push(el);});
+  });
+  alvos.forEach(rfRestaurarEstilo);
+  Object.keys(RF_FMT_P1).forEach(function(k){delete RF_FMT_P1[k];});
+  Object.keys(RF_FMT_PAG).forEach(function(pid){Object.keys(RF_FMT_PAG[pid]).forEach(function(k){delete RF_FMT_PAG[pid][k];});});
+}
+function rfReaplicar(){
+  /* só repõe o estilo nos campos que existem agora (uma linha de produção
+     recriada, por exemplo) — sem mexer no mapa guardado */
+  const alvos=[];
+  Object.keys(RF_FMT_P1).forEach(function(c){const el=rfResolver(c,null);if(el)alvos.push([el,RF_FMT_P1[c]]);});
+  Object.keys(RF_FMT_PAG).forEach(function(pid){
+    Object.keys(RF_FMT_PAG[pid]).forEach(function(c){const el=rfResolver(c,pid);if(el)alvos.push([el,RF_FMT_PAG[pid][c]]);});
+  });
+  alvos.forEach(function(par){rfAplicarEstilo(par[0],par[1]);});
+}
+/* O espelho: o formato do campo da folha 1 vai junto para as páginas extras
+   (senão a ficha impressa sairia com a mesma palavra em letras diferentes). */
+function rfEspelhar(id,idDestino){
+  const src=$(id),dst=$(idDestino);
+  if(!src||!dst)return;
+  const ks=rfChave(src),kd=rfChave(dst);
+  if(!ks||!kd)return;
+  const ms=rfMapa(ks.pid),md=rfMapa(kd.pid);
+  const f=ms[ks.chave];
+  if(f)md[kd.chave]=Object.assign({},f); else delete md[kd.chave];
+  rfAplicarEstilo(dst,f||null);
+}
+/* O mesmo, para uma lista de campos (medidas, linhas de produção). */
+function rfEspelharLista(selSrc,selDst){
+  const src=[].slice.call(document.querySelectorAll(selSrc));
+  const dst=[].slice.call(document.querySelectorAll(selDst));
+  src.forEach((el,i)=>{
+    const o=dst[i];if(!o)return;
+    const ks=rfChave(el),kd=rfChave(o);
+    if(!ks||!kd)return;
+    const ms=rfMapa(ks.pid),md=rfMapa(kd.pid);
+    const f=ms[ks.chave];
+    if(f)md[kd.chave]=Object.assign({},f); else delete md[kd.chave];
+    rfAplicarEstilo(o,f||null);
+  });
+}
+
+/* Depois de formatar: o espelho das páginas e o histórico (Ctrl+Z). */
+function rfDepois(){
+  try{if(typeof sincTodasPaginas==='function')sincTodasPaginas();}catch(e){}
+  try{if(typeof espelharAgendar==='function')espelharAgendar();}catch(e){}
+  try{if(typeof snap==='function')snap();}catch(e){}
+}
+/* ── o que é um alvo de formatação ────────────────────────────────────── */
+/* Texto editável (contenteditable): o "tipo de tecido", os dados do
+   cliente... A formatação vale para o TRECHO selecionado. */
+function rfSelecaoCE(){
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed||!sel.toString().trim())return null;
+  const anc=sel.anchorNode;if(!anc)return null;
+  /* V10.7.4 — o nó da seleção pode ser o próprio campo (seleção de tudo
+     com Ctrl+A) ou um texto dentro dele. */
+  const el=(anc.nodeType===1)?anc:(anc.parentElement||null);if(!el)return null;
+  const inCE=el.closest?el.closest('[contenteditable="true"]'):null;
+  if(!inCE)return null;
+  let rect=null;try{rect=sel.getRangeAt(0).getBoundingClientRect();}catch(e){}
+  return {el:inCE,range:sel.getRangeAt(0).cloneRange(),rect:rect};
+}
+/* Campo de texto simples (<input>/<textarea>) dentro da folha: a formatação
+   vale para o CAMPO INTEIRO (input não guarda HTML dentro do texto). */
+function rfEhCampoTexto(el){
+  if(!el||!el.tagName)return false;
+  const tg=String(el.tagName).toUpperCase();
+  if(tg!=='INPUT'&&tg!=='TEXTAREA')return false;
+  const tipo=String(el.type||'text').toLowerCase();
+  if(['number','color','checkbox','radio','file','range','button','submit','reset','hidden','image'].indexOf(tipo)>=0)return false;
+  if(!el.closest||!el.closest('#pw'))return false;   /* só a parte impressa da ficha */
+  return true;
+}
+function rfCampoSelecionado(){
+  const a=document.activeElement;
+  if(!rfEhCampoTexto(a))return null;
+  const tipo=String(a.type||'text').toLowerCase();
+  if(tipo==='date')return a;          /* data não tem seleção: o foco basta */
+  try{ if(a.selectionStart===a.selectionEnd)return null; }catch(e){ return null; }
+  return a;
+}
+function rfFmtAtual(){
+  const el=rfAlvoEl;if(!el)return null;
+  const k=rfChave(el);if(!k)return null;
+  const mapa=rfMapa(k.pid);
+  return mapa[k.chave]||null;
+}
+
+/* ── mostrar/esconder/posicionar ──────────────────────────────────────── */
 function rfShow(){
-const sel=window.getSelection();if(!sel||sel.isCollapsed||!sel.toString().trim()){rfHide();return;}
-const anc=sel.anchorNode;if(!anc){rfHide();return;}
-/* V10.7.4 — o nó da seleção pode ser o próprio campo (seleção de tudo com
-   Ctrl+A) ou um texto dentro dele. Antes só o segundo caso era reconhecido:
-   com o Ctrl+A dentro do campo, a barra de formatação não abria. */
-const el=(anc.nodeType===1)?anc:(anc.parentElement||null);if(!el){rfHide();return;}
-const inCE=el.closest?el.closest('[contenteditable="true"]'):null;
-if(!inCE){rfHide();return;}
-rfSavedRange=sel.getRangeAt(0).cloneRange();
-const rect=sel.getRangeAt(0).getBoundingClientRect();
+const ce=rfSelecaoCE();
+if(ce){
+rfModo='ce';rfAlvoEl=ce.el;rfUltimoEl=ce.el;rfUltimoModo='ce';rfSavedRange=ce.range;
+richBar.classList.remove('modo-campo');
+const rect=ce.rect||{top:80,left:80,width:0,height:0};
+const vw=window.innerWidth||1024,vh=window.innerHeight||768;
 const barW=richBar.offsetWidth||420;
 /* V10.7.4 — a barra é `position:fixed`: a posição dela é a da TELA, não a
    da página. Antes era `window.scrollY + rect.top`, que contava a rolagem
    duas vezes: na folha 1 (rolagem ~0) a barra aparecia, mas na página
    adicionada (lá embaixo, rolagem de ~1200px) a barra ficava fora da tela
    e o usuário nunca via as opções de formatação do texto. */
-const vw=window.innerWidth||1024,vh=window.innerHeight||768;
 richBar.style.top=Math.max(8,Math.min(rect.top-56,vh-70))+'px';
 richBar.style.left=Math.max(8,Math.min(rect.left+rect.width/2-barW/2,vw-barW-8))+'px';
-richBar.classList.add('vis');rfSyncState();
+richBar.classList.add('vis');rfSyncState();return;
 }
-function rfHide(){richBar.classList.remove('vis');}
-function rfSyncState(){$('rbBold').classList.toggle('on',document.queryCommandState('bold'));}
+const inp=rfCampoSelecionado();
+if(inp){
+rfModo='campo';rfAlvoEl=inp;rfUltimoEl=inp;rfUltimoModo='campo';rfSavedRange=null;
+richBar.classList.add('modo-campo');
+const r=inp.getBoundingClientRect?inp.getBoundingClientRect():{top:80,left:80,width:0,height:0};
+const vw=window.innerWidth||1024,vh=window.innerHeight||768;
+const barW=richBar.offsetWidth||220,barH=richBar.offsetHeight||26;
+richBar.style.top=Math.max(8,Math.min(r.top-barH-8,vh-barH-8))+'px';
+richBar.style.left=Math.max(8,Math.min(r.left+r.width/2-barW/2,vw-barW-8))+'px';
+richBar.classList.add('vis');rfSyncState();return;
+}
+rfHide();
+}
+function rfHide(){richBar.classList.remove('vis');richBar.classList.remove('modo-campo');rfModo='nenhum';rfAlvoEl=null;}
+function rfSyncState(){
+const b=$('rbBold'),i=$('rbItalic');
+if(!b||!i)return;
+if(rfModo==='ce'){
+  let nb=false,ni=false;
+  try{nb=!!document.queryCommandState('bold');ni=!!document.queryCommandState('italic');}catch(e){}
+  b.classList.toggle('on',nb);i.classList.toggle('on',ni);
+}else if(rfModo==='campo'){
+  const f=rfFmtAtual();
+  b.classList.toggle('on',!!(f&&f.b));i.classList.toggle('on',!!(f&&f.i));
+  if(f&&f.sz){try{$('rbSize').value=f.sz;}catch(e){}}
+}else{b.classList.remove('on');i.classList.remove('on');}
+}
 function rfRestore(){if(!rfSavedRange)return false;const sel=window.getSelection();sel.removeAllRanges();sel.addRange(rfSavedRange);return true;}
-function rfApply(cmd){if(!rfRestore())return;if(cmd==='bold')document.execCommand('bold',false,null);else if(cmd==='color')document.execCommand('foreColor',false,$('rbColor').value);rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;}
-function rfApplySize(){if(!rfRestore())return;const size=parseInt($('rbSize').value)||13;document.execCommand('fontSize',false,'7');document.querySelectorAll('[contenteditable] font[size="7"]').forEach(s=>{s.removeAttribute('size');s.style.fontSize=size+'px';});rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;}
-function rfHL(){if(!rfRestore())return;document.execCommand('hiliteColor',false,$('rbHL').value);rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;}
-function rfHLClear(){if(!rfRestore())return;document.execCommand('hiliteColor',false,'transparent');rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;}
-function rfClear(){if(!rfRestore())return;document.execCommand('removeFormat',false,null);}
+/* A formatação de um campo simples (<input>): vale para o campo inteiro. */
+function rfCampoCmd(cmd,valor){
+const el=rfAlvoEl;if(!el)return;
+const k=rfChave(el);
+const mapa=k?rfMapa(k.pid):null;
+let fmt=(k&&mapa&&mapa[k.chave])?Object.assign({},mapa[k.chave]):{};
+let sepSize=null;
+if(cmd==='bold')fmt.b=!fmt.b;
+else if(cmd==='italic')fmt.i=!fmt.i;
+else if(cmd==='color')fmt.co=$('rbColor').value;
+else if(cmd==='hl')fmt.hl=$('rbHL').value;
+else if(cmd==='hlclear')delete fmt.hl;
+else if(cmd==='size'){
+  const sz=parseInt(valor)||13;
+  if(rfEhSeparador(el))sepSize=sz; else fmt.sz=sz;
+}
+else if(cmd==='clear'){
+  if(k&&mapa)delete mapa[k.chave];
+  rfRestaurarEstilo(el);
+  rfSyncState();
+  rfDepois();
+  return;
+}
+if(k&&mapa){ if(Object.keys(fmt).length)mapa[k.chave]=fmt; else delete mapa[k.chave]; }
+rfAplicarEstilo(el,fmt);
+if(sepSize!==null){
+  const pid=k?k.pid:null;
+  const fsId=pid?('sepFS_'+pid):'sepFontSize';
+  const fs=$(fsId);
+  if(fs){fs.value=String(sepSize);try{applySepFontSize(el.id,fsId);}catch(e){}}
+}
+rfSyncState();
+rfDepois();
+}
+/* O alvo de um campo simples: o alvo atual ou, se a barra já se escondeu
+   (o seletor de cor abriu uma janela do sistema), o ÚLTIMO campo mirado. */
+function rfCampoAtivo(){
+  if(rfModo==='campo'&&rfAlvoEl)return rfAlvoEl;
+  if(rfUltimoModo==='campo'&&rfUltimoEl&&rfEhCampoTexto(rfUltimoEl))return rfUltimoEl;
+  return null;
+}
+function rfApply(cmd){
+const campo=rfCampoAtivo();
+if(campo){rfAlvoEl=campo;rfModo='campo';rfCampoCmd(cmd);return;}
+if(!rfRestore())return;
+if(cmd==='bold')document.execCommand('bold',false,null);
+else if(cmd==='italic')document.execCommand('italic',false,null);
+else if(cmd==='color')document.execCommand('foreColor',false,$('rbColor').value);
+rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;
+rfDepois();
+}
+function rfApplySize(){
+const size=parseInt($('rbSize').value)||13;
+const campo=rfCampoAtivo();
+if(campo){rfAlvoEl=campo;rfModo='campo';rfCampoCmd('size',size);return;}
+if(!rfRestore())return;document.execCommand('fontSize',false,'7');document.querySelectorAll('[contenteditable] font[size="7"]').forEach(s=>{s.removeAttribute('size');s.style.fontSize=size+'px';});rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;
+rfDepois();
+}
+function rfHL(){
+const campo=rfCampoAtivo();
+if(campo){rfAlvoEl=campo;rfModo='campo';rfCampoCmd('hl');return;}
+if(!rfRestore())return;document.execCommand('hiliteColor',false,$('rbHL').value);rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;
+rfDepois();
+}
+/* O seletor de cor abre uma janela do sistema: às vezes a barra já se
+   escondeu quando ela fecha. Por isso o ÚLTIMO campo mirado continua
+   guardado e a cor vai nele (e não no texto editável). */
+function rfCor(cmd){
+const el=rfCampoAtivo();
+if(el){rfAlvoEl=el;rfModo='campo';rfCampoCmd(cmd);return;}
+rfApply(cmd);
+}
+function rfHLClear(){
+const campo=rfCampoAtivo();
+if(campo){rfAlvoEl=campo;rfModo='campo';rfCampoCmd('hlclear');return;}
+if(!rfRestore())return;document.execCommand('hiliteColor',false,'transparent');rfSavedRange=window.getSelection().getRangeAt(0)?.cloneRange()||null;
+rfDepois();
+}
+function rfClear(){
+const campo=rfCampoAtivo();
+if(campo){rfAlvoEl=campo;rfModo='campo';rfCampoCmd('clear');return;}
+if(!rfRestore())return;document.execCommand('removeFormat',false,null);
+rfDepois();
+}
 document.addEventListener('mouseup',e=>{setTimeout(()=>{if(!richBar.contains(e.target))rfShow();},80);});
 /* V10.7.4 — a barra de formatação também abre com Ctrl+A e com as setas,
    em QUALQUER campo editável (inclusive o tipo de tecido das páginas
@@ -3138,6 +3508,12 @@ document.addEventListener('keyup',e=>{
   if(e.target&&e.target.closest&&e.target.closest('#richBar'))return;
   if(e.shiftKey||['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)||(e.ctrlKey&&(e.key==='a'||e.key==='A')))setTimeout(rfShow,80);
 });
+/* V10.10 — nos campos simples (input) a barra também aparece quando o
+   texto é selecionado dentro do campo (o evento "select" não sobe, então
+   é ouvido na fase de captura). */
+document.addEventListener('select',e=>{
+  if(e.target&&rfEhCampoTexto(e.target))setTimeout(rfShow,0);
+},true);
 
 /* ═══ UNDO / REDO ═══ */
 const CAMPOS_INPUT=['avisoTxt','entradaVal','previsao','fichaNum','fichaData','sepTxt','sepFontSize','coresTitulo','tipoTitulo'];
@@ -3154,13 +3530,17 @@ CAMPOS_CE.forEach(id=>{const el=$(id);if(el)d[id]=el.innerHTML;});
 const grade={};document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>grade[i]=el.value);d._grade=grade;
 const cores=[];document.querySelectorAll('#coresList [id^="ci_"]').forEach(it=>{const i=it.id.replace('ci_','');cores.push({hex:($(`chi_${i}`)||{}).value||'#fff',nome:($(`cni_${i}`)||{}).value||'COR'});});
 d._cores=cores;d._layers=layers.map(serLayer);
+/* V10.10 — a formatação dos campos simples (negrito, itálico, tamanho, cor
+   e destaque) entra no estado: o Ctrl+Z desfaz a formatação e o "salvar"
+   devolve o campo do mesmo jeito. */
+d._fmt=rfMapaResumo(null);
 d._paginas=paginas.length;
 /* V10.7 — a grade de CADA página entra no estado (desfazer/refazer). Antes a
    grade era sempre cópia da folha 1, então bastava guardar a da folha 1;
    agora cada página tem a sua, e ela volta junto no Ctrl+Z.
    V10.7.3 — a paleta de cores e o tipo de tecido também são de cada página:
    entram no estado para o desfazer devolver a cor que estava na página. */
-d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id),cores:_pagCores(p.id),tipoTecido:($('tipoTecido_'+p.id)||{}).innerHTML||'',coresTitulo:($('coresTitulo_'+p.id)||{}).value||'',tipoTitulo:($('tipoTitulo_'+p.id)||{}).value||''}));
+d._paginasDetalhe=paginas.map(p=>({id:p.id,tipo:p.tipo,layers:p.layers.map(serLayer),zCnt:p.zCnt||10,linhaId:p.linhaId||0,corId:p.corId||0,grade:_pagGradeArr(p.id),cores:_pagCores(p.id),tipoTecido:($('tipoTecido_'+p.id)||{}).innerHTML||'',coresTitulo:($('coresTitulo_'+p.id)||{}).value||'',tipoTitulo:($('tipoTitulo_'+p.id)||{}).value||'',fmt:rfMapaResumo(p.id)}));
 return d;
 }
 /* Paleta de cores de UMA página (folha 1 ou extra). */
@@ -3216,6 +3596,10 @@ function _estadoSig(st){
     return x.id+'#'+(x.coresTitulo||'')+'#'+(x.tipoTitulo||'');
   }).join('&'));
   p.push('P='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+(x.layers||[]).map(_layerSig).join(';');}).join('&'));
+  /* V10.10 — a formatação dos campos também é um "gesto": sem isto o
+     Ctrl+Z não desfazia um negrito aplicado num campo. */
+  p.push('FMT='+JSON.stringify(st._fmt||{}));
+  p.push('FMTP='+(st._paginasDetalhe||[]).map(function(x){return x.id+'#'+JSON.stringify(x.fmt||{});}).join('&'));
   return p.join('\u0002');
 }
 let estadoAtual=null;   /* último estado já capturado (o "antes" do próximo snap) */
@@ -3262,9 +3646,12 @@ if(l.type==='rect'||l.type==='circle'){b.fillColor=l.fillColor;b.strokeColor=l.s
 return b;
 }
 function restState(s){
+/* V10.10 — a formatação volta junto com o resto do estado (Ctrl+Z) */
+rfLimparTudo();
 CAMPOS_INPUT.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.value=s[id];});
 aplicarSepFontSizeP1();
 CAMPOS_CE.forEach(id=>{const el=$(id);if(el&&s[id]!==undefined)el.innerHTML=s[id];});
+rfAplicarMapa(s._fmt,null);
 if(s._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(s._grade[i]!==undefined){el.value=s._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
 recalcGrade();$('coresList').innerHTML='';corId=0;(s._cores||[]).forEach(c=>adicionarCor(c.hex,c.nome));
 clearAllLayers();(s._layers||[]).forEach(x=>{if(x.type==='img')addImgLayer(x.src,x);else if(x.type==='txt')addTxtLayer(x);else if(x.type==='arr')addArrLayer(x);else if(x.type==='rect')addRectLayer(x);else if(x.type==='circle')addCirculoLayer(x);});
@@ -3305,6 +3692,8 @@ if(Array.isArray(s._paginasDetalhe)){
     /* V10.7.4 — o título da seção de cada página */
     if(snap.coresTitulo!==undefined){const ct=$('coresTitulo_'+p.id);if(ct)ct.value=snap.coresTitulo;}
     if(snap.tipoTitulo!==undefined){const tt=$('tipoTitulo_'+p.id);if(tt)tt.value=snap.tipoTitulo;}
+    /* V10.10 — e a formatação dos campos da página */
+    if(snap.fmt)rfAplicarMapa(snap.fmt,p.id);
     if(typeof updPhExtra==='function')updPhExtra(p);
   });
 }
@@ -6764,6 +7153,8 @@ function criarLinha(modelo='',valor='',qtd=''){
 linhaId++;const id=linhaId;const tr=document.createElement('tr');tr.id=`ln_${id}`;
 tr.innerHTML=`<td><div class="n-cel">${id}</div></td><td><input class="field" type="text" value="${modelo}" placeholder="Descrição do produto" style="min-width:60px"></td><td style="text-align:right"><div style="display:flex;align-items:center;gap:2px;justify-content:flex-end"><span style="font-size:8px;color:var(--txl)">R$</span><input class="field" type="text" value="${valor}" placeholder="0,00" style="width:48px;text-align:right" oninput="recalcL(${id})"></div></td><td style="text-align:center;color:var(--txl);font-size:10px">×</td><td><input class="field" type="text" value="${qtd}" placeholder="0" style="width:26px;text-align:center" oninput="recalcL(${id})"></td><td style="text-align:center;color:var(--txl);font-size:10px">=</td><td style="text-align:right"><span id="vt_${id}" style="font-size:10px;font-weight:800;color:var(--az)">—</span></td><td><button title="Remover esta camada" class="del-btn" onclick="removerL(${id})">✕</button></td>`;
 $('prodLinhas').appendChild(tr);
+/* V10.10 — a linha nova recebe a formatação que a linha antiga tinha */
+rfReaplicar();
 }
 function getTotalLinhas(){let t=0;document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const inps=tr.querySelectorAll('input');t+=parseBRL(inps[1]?inps[1].value:'0')*(parseFloat(inps[2]?inps[2].value:'0')||0);});return t;}
 function recalcL(id){const tr=$(`ln_${id}`);if(!tr)return;const inps=tr.querySelectorAll('input');const v=parseBRL(inps[1]?inps[1].value:'0');const q=parseFloat(inps[2]?inps[2].value:'0')||0;const vt=$(`vt_${id}`);if(vt)vt.textContent=(v&&q)?'R$\u00a0'+fmt(v*q):'—';calcTotal();}
@@ -7392,6 +7783,9 @@ function capturarFichaParaJSON() {
     cores.push({ hex: ($('chi_'+i)||{}).value||'#fff', nome: ($('cni_'+i)||{}).value||'COR' });
   });
   d._cores = cores;
+  /* V10.10 — a formatação dos campos simples entra no .json: reabrir a
+     ficha devolve o negrito, a cor, o tamanho e o destaque do campo. */
+  d._fmt = rfMapaResumo(null);
   const medFem = [], medMasc = [];
   document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach(el => medFem.push(el.value));
   document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach(el => medMasc.push(el.value));
@@ -7433,6 +7827,8 @@ function capturarFichaParaJSON() {
        Sem isso o .json salvava o número da branca vazio e ele "sumia". */
     const snapExtra = v7CapturarPaginaExtra(p) || {};
     const hdrExtra = Object.assign({}, snapExtra.hdr || {});
+    /* V10.10 — a formatação dos campos da página extra também vai no .json */
+    hdrExtra.fmt = rfMapaResumo(pid);
     if (!hdrExtra.fichaNum && !snapExtra.fbNum && p.tipo === 'branca') {
       hdrExtra.fichaNum = ($('fbNum_'+pid)||{}).value || '';
     }
@@ -8088,6 +8484,10 @@ function restaurarDeJSON(d) {
   CAMPOS_INPUT_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.value = d[id]; });
   aplicarSepFontSizeP1();
   CAMPOS_CE_SAVE.forEach(id => { const el = $(id); if(el && d[id] !== undefined) el.innerHTML = d[id]; });
+  /* V10.10 — a formatação volta com a ficha (é apagada antes para não
+     sobrar formatação de um campo que o arquivo novo não tem). */
+  rfLimparTudo();
+  rfAplicarMapa(d._fmt,null);
   if(d._grade) { document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i) => { if(d._grade[i] !== undefined) { el.value = d._grade[i]; el.classList.toggle('v',(parseInt(el.value)||0)>0); } }); }
   recalcGrade();
   $('coresList').innerHTML = ''; corId = 0;
@@ -8263,7 +8663,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .sb-v4-btn{border:none;border-radius:10px;padding:9px 10px;background:rgba(255,255,255,.08);color:#fff;font-size:10px;font-weight:800;font-family:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;gap:7px;transition:.15s}.sb-v4-btn:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}.sb-v4-btn.primary{background:#fff;color:#111827}.sb-v4-btn.green{background:#059669;color:#fff}.sb-v4-btn.danger{background:#7F1D1D;color:#FECACA}.sb-v4-btn.blue{background:#1D4ED8;color:#fff}
 .sb-v4-list{max-height:170px;overflow:auto;padding:0 8px 8px;display:flex;flex-direction:column;gap:5px}.sb-v4-draft{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px;color:#fff;display:grid;grid-template-columns:1fr auto;gap:5px;align-items:center}.sb-v4-draft b{font-size:9px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sb-v4-draft small{font-size:7px;color:rgba(255,255,255,.42)}.sb-v4-draft button{border:none;border-radius:7px;padding:5px 7px;font-size:8px;font-weight:800;cursor:pointer;margin-left:3px}.sb-v4-draft .load{background:#DBEAFE;color:#1D4ED8}.sb-v4-draft .del{background:#FEE2E2;color:#991B1B}
 .canvas-tb,.text-tb,.arr-tb{border-radius:14px!important;padding:8px 12px!important;gap:7px!important;box-shadow:0 14px 44px rgba(15,23,42,.18)!important;border:1px solid rgba(15,23,42,.08)!important}.ct-btn,.tt-toggle,.arr-style-btn{font-size:10px!important;padding:6px 10px!important;border-radius:8px!important}.tt-sel,.tt-num{font-size:10px!important;padding:6px 8px!important;border-radius:8px!important}.tt-color{width:82px!important;height:30px!important;border-radius:8px!important;padding:4px 7px!important;font-family:monospace!important;font-size:10px!important}
-#richBar{border-radius:16px!important;padding:8px 12px!important;gap:7px!important}.rb-btn{font-size:10px!important;padding:6px 10px!important;border-radius:8px!important}.rb-size{height:30px!important;font-size:10px!important}.rb-color{width:82px!important;height:30px!important;border-radius:8px!important;padding:4px 7px!important;font-family:monospace!important;font-size:10px!important}
+#richBar{border-radius:9px!important;padding:3px 4px!important;gap:1px!important}.rb-btn{width:19px!important;height:19px!important;font-size:9.5px!important;padding:0!important;border-radius:5px!important;border:1px solid transparent!important}.rb-size{width:32px!important;height:19px!important;font-size:8.5px!important}.rb-color{width:18px!important;height:18px!important;border-radius:5px!important;padding:0!important;font-family:inherit!important;font-size:8.5px!important}
 body.v4-preview-clean #sidebar,body.v4-preview-clean #sidebar-toggle{transform:translateX(calc(-1 * var(--sidebar-w) + 42px))!important}body.v4-preview-clean #pw{margin-left:42px!important}body.v4-preview-clean .canvas-tb,body.v4-preview-clean .text-tb,body.v4-preview-clean .arr-tb,body.v4-preview-clean .shape-tb,body.v4-preview-clean .layers-panel,body.v4-preview-clean .canvas-add-img,body.v4-preview-clean .canvas-ph,body.v4-preview-clean .lyr-h,body.v4-preview-clean .lyr-rot,body.v4-preview-clean .tl-resize,body.v4-preview-clean .tl-rot,body.v4-preview-clean .arr-h,body.v4-preview-clean .arr-rot,body.v4-preview-clean .arr-ep,body.v4-preview-clean .logo-tb,body.v4-preview-clean .lh,body.v4-preview-clean .lh-rot{display:none!important}body.v4-preview-clean .img-layer,body.v4-preview-clean .txt-layer,body.v4-preview-clean .arr-layer,body.v4-preview-clean .rect-layer,body.v4-preview-clean .circle-layer{outline:none!important}
 #v4QuickModal{display:none;position:fixed;inset:0;background:var(--v10-overlay);z-index:10050;align-items:center;justify-content:center;padding:18px}#v4QuickModal.open{display:flex}.v4-modal-card{width:min(760px,96vw);background:var(--v10-surface);border:1px solid var(--v10-line);border-radius:22px;box-shadow:var(--v10-shadow);overflow:hidden;color:var(--v10-t1)}.v4-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--v10-surface-2);border-bottom:1px solid var(--v10-line)}.v4-modal-head h3{font-size:16px;margin:0}.v4-modal-body{padding:18px}.v4-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.v4-field label{display:block;font-size:10px;font-weight:900;color:var(--v10-t3);text-transform:uppercase;margin-bottom:5px}.v4-field input,.v4-field textarea{width:100%;border:1.5px solid var(--v10-line-2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;background:var(--v10-surface);color:var(--v10-t1);-webkit-text-fill-color:var(--v10-t1);caret-color:var(--v10-t1)}.v4-field textarea{min-height:70px;resize:vertical}.v4-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.v4-actions button{border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}.v4-cancel{background:var(--v10-surface-3);color:var(--v10-t2)}.v4-apply{background:#050505;color:#fff}
 
@@ -9145,6 +9545,8 @@ function v7AplicarPaginaSalva(p,s){
     const ct=$('coresTitulo_'+pid),tt=$('tipoTitulo_'+pid);
     if(ct&&s.hdr.coresTitulo!==undefined)ct.value=s.hdr.coresTitulo;
     if(tt&&s.hdr.tipoTitulo!==undefined)tt.value=s.hdr.tipoTitulo;
+    /* V10.10 — a formatação dos campos da página volta com ela */
+    if(s.hdr.fmt)rfAplicarMapa(s.hdr.fmt,pid);
   }
   /* V10.2 — o nº da página BRANCA é restaurado do arquivo salvo; se a ficha
      salva é anterior a esta versão (sem fbNum), herda o nº da folha 1.
@@ -9242,6 +9644,8 @@ function v7CapturarPaginaP1(){
   const medFem=[],medMasc=[];document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach(el=>medFem.push(el.value));document.querySelectorAll('#folha1 .med-bloco.masc .med-inp').forEach(el=>medMasc.push(el.value));d._medFem=medFem;d._medMasc=medMasc;
   const prod=[];document.querySelectorAll('#prodLinhas tr').forEach(tr=>{const inps=tr.querySelectorAll('input');prod.push({modelo:inps[0]?inps[0].value:'',valor:inps[1]?inps[1].value:'',qtd:inps[2]?inps[2].value:''});});d._prod=prod;
   d._layers=layers.map(serLayer);
+  /* V10.10 — a formatação dos campos entra no histórico da folha 1 */
+  d._fmt=rfMapaResumo(null);
   return d;
 }
 function v7RestaurarPaginaP1(snap){
@@ -9261,6 +9665,8 @@ function v7RestaurarPaginaP1(snap){
   if(snap){
     CAMPOS_INPUT_SAVE.forEach(id=>{const el=$(id);if(el&&snap[id]!==undefined)el.value=snap[id];});
     CAMPOS_CE_SAVE.forEach(id=>{const el=$(id);if(el&&snap[id]!==undefined)el.innerHTML=snap[id];});
+    /* V10.10 — a formatação volta com a folha 1 */
+    rfLimparTudo();rfAplicarMapa(snap._fmt,null);
     if(snap._grade){document.querySelectorAll('.gi[data-g="m"],.gi[data-g="b"],.gi[data-g="i"]').forEach((el,i)=>{if(snap._grade[i]!==undefined){el.value=snap._grade[i];el.classList.toggle('v',(parseInt(el.value)||0)>0);}});}
     if(snap._cores&&snap._cores.length){$('coresList').innerHTML='';corId=0;snap._cores.forEach(c=>adicionarCor(c.hex,c.nome));}
     if(snap._medFem)document.querySelectorAll('#folha1 .med-bloco.fem .med-inp').forEach((el,i)=>{if(snap._medFem[i]!==undefined)el.value=snap._medFem[i];});
@@ -9309,7 +9715,9 @@ function v7CapturarPaginaExtra(p){
        voltar com a página (o espelho não devolve mais o da folha 1). */
     coresTitulo:($('coresTitulo_'+pid)||{}).value||'',
     tipoTitulo:($('tipoTitulo_'+pid)||{}).value||'',
-    entradaVal:($('entradaVal_'+pid)||{}).value||''
+    entradaVal:($('entradaVal_'+pid)||{}).value||'',
+    /* V10.10 — a formatação dos campos da página (negrito, cor, tamanho) */
+    fmt:rfMapaResumo(pid)
   };
   /* V10.2 — a página BRANCA tem nº próprio em `fbNum_<pid>`. Ele só vai para
      o .json quando NÃO é a cópia da folha 1 (`data-num-proprio`); senão o
@@ -10979,6 +11387,7 @@ function v10CepOpcoes(){
   };
 }
 /* A ficha (folha 1). */
+let v10CepLink=null;
 function v10CepLigarFicha(){
   if(typeof VooaltoCep==='undefined')return null;
   const cep=$('dc_cep');
@@ -10990,7 +11399,9 @@ function v10CepLigarFicha(){
     campoCidade:$('dc_cidade'),
     aoPreencher:function(){v10CepDepois();}
   });
-  return VooaltoCep.ligar(o);
+  v10CepLink=VooaltoCep.ligar(o);
+  try{v10CepColarLigar();}catch(e){}
+  return v10CepLink;
 }
 /* O painel de Preenchimento rápido — os campos dele só existem depois que a
    janela é criada, por isso a ligação é refeita a cada abertura. */
@@ -11009,6 +11420,77 @@ function v10CepLigarQuick(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v10CepLigarFicha);
 else v10CepLigarFicha();
+
+/* ═══ V10.10 — ENDEREÇO MAIS RÁPIDO ═══
+   O pedido: *"só quero que seja mais rápido de preencher o endereço da
+   ficha técnica"*.
+
+   O QUE FICOU MAIS RÁPIDO
+     1. O botão 🔍 ao lado do CEP consulta NA HORA (sem esperar a pessoa
+        parar de digitar).
+     2. COLAR O ENDEREÇO INTEIRO no campo "Endereço" (é o que a gente copia
+        do site do cliente, do WhatsApp ou do e-mail): o CEP é separado, a
+        cidade vai para o campo dela e o resto do endereço fica como veio.
+     3. COLAR SÓ O CEP: ele vai para o campo CEP e o endereço aparece.
+
+   O QUE CONTINUA IGUAL
+     * O que a pessoa escreveu nunca é sobrescrito: o número e o
+       complemento continuam no lugar.
+     * A consulta tem tempo limite e avisa quando não dá.
+     * O Ctrl+Z desfaz o preenchimento e as outras páginas recebem o mesmo
+       endereço. */
+function v10CepBuscar(){
+  const btn=$('dcCepBtn');
+  const link=v10CepLink;
+  if(!link||typeof link.consultarAgora!=='function'){v10CepAvisar('Digite o CEP no campo ao lado.','erro');return;}
+  if(btn){btn.textContent='…';btn.disabled=true;}
+  const voltar=()=>{if(btn){btn.textContent='🔍';btn.disabled=false;}};
+  let p=null;
+  try{p=link.consultarAgora();}catch(e){voltar();return;}
+  if(p&&typeof p.then==='function')p.then(voltar,voltar);else voltar();
+}
+/* A cidade costuma vir no fim do endereço colado: "..., Goiânia - GO".
+   Ela é a ÚLTIMA parte separada por vírgula — senão "Rua X - Y" viraria
+   cidade. */
+function v10CepSepararCidade(txt){
+  const t=String(txt==null?'':txt).trim();
+  if(!t)return null;
+  const partes=t.split(/[,;]/);
+  const ult=partes[partes.length-1].trim();
+  const m=ult.match(/^([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'’-]{1,45})\s*[-–—]\s*([A-Z]{2})$/);
+  if(!m)return null;
+  return {cidade:m[1].trim()+' - '+m[2],resto:partes.slice(0,-1).join(',').replace(/[\s,;|]+$/,'').trim()};
+}
+/* O texto colado no endereço (ou na cidade) tem CEP? Então preenche tudo. */
+function v10CepProcessarColado(el){
+  if(typeof VooaltoCep==='undefined'||!el)return false;
+  const txt=(el.textContent||'').trim();
+  if(!txt)return false;
+  const cep=VooaltoCep.extrairCep(txt);
+  if(!cep)return false;
+  const campoCep=$('dc_cep'),campoEnd=$('dc_end'),campoCid=$('dc_cidade');
+  if(campoCep)campoCep.textContent=VooaltoCep.formatar(cep);
+  let resto=VooaltoCep.tirarCep(txt);
+  if(el===campoEnd){
+    const sep=v10CepSepararCidade(resto);
+    if(sep){
+      resto=sep.resto;
+      if(campoCid&&!(campoCid.textContent||'').trim())campoCid.textContent=sep.cidade;
+    }
+  }
+  el.textContent=resto;   /* o CEP sai do campo: ele fica no campo CEP */
+  try{if(v10CepLink&&typeof v10CepLink.consultarAgora==='function')v10CepLink.consultarAgora();}catch(e){}
+  try{if(typeof sincTodasPaginas==='function')sincTodasPaginas();}catch(e){}
+  return true;
+}
+function v10CepColarLigar(){
+  const end=$('dc_end'),cid=$('dc_cidade');
+  [end,cid].forEach(el=>{
+    if(!el||el.__v10Colar)return;
+    el.__v10Colar=true;
+    el.addEventListener('paste',()=>{setTimeout(()=>{v10CepProcessarColado(el);},40);});
+  });
+}
 </script>
 </body>
 </html>

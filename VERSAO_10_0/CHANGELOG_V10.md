@@ -1,5 +1,116 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.10.0 — Endereço mais rápido, Recibo na ordem pedida e edição de texto em toda a ficha (2026-11-24)
+
+**Os pedidos:**
+
+1. *“só quero que seja mais rápido de preencher o endereço da ficha
+   técnica”*;
+2. *“a exportação do Recibo deve começar por **RECIBO**, seguida pelo nome
+   do cliente e pela data”*;
+3. *“a edição de texto disponível para o tipo de tecido deve existir em
+   todas as partes digitáveis”* e *“as opções de formatação devem ser um
+   pouco mais discretas”*.
+
+---
+
+### 1. Endereço mais rápido (Ficha Técnica)
+
+O preenchimento por CEP já existia (V10.9.0). Agora o caminho é **mais
+curto**:
+
+- **Botão 🔍 ao lado do CEP** (`dcCepBtn`): consulta **na hora**, sem
+  esperar a pessoa terminar de digitar. O botão mostra “…” enquanto a
+  consulta está em andamento e volta ao normal no fim.
+- **Colar o endereço inteiro** no campo **Endereço** (é o que se copia do
+  site do cliente, do e-mail ou do WhatsApp): o **CEP é separado** do
+  texto, a **cidade** (“Goiânia - GO”) vai para o campo dela e o resto do
+  endereço fica exatamente como veio. A consulta dispara na hora e completa
+  o que falta (bairro, logradouro).
+- **Colar só o CEP**: ele vai para o campo **CEP** e o endereço e a cidade
+  aparecem.
+- A espera antes de consultar caiu de **700 ms para 450 ms** — o endereço
+  já está pronto quando a pessoa termina de digitar o CEP.
+- Dica na tela: *“Digite o CEP ou cole o endereço inteiro: o resto se
+  preenche sozinho.”* (a dica e o botão **não** saem na impressão nem no
+  PNG da folha).
+
+O módulo `assets/cep.js` ganhou `extrairCep()` e `tirarCep()`:
+
+- o CEP é achado no meio de um texto maior (`Rua X, 120, Goiânia - GO,
+  74000-000`);
+- um **telefone de 10 dígitos não vira CEP** (`9812345678` e `(11)
+  98123-4567` são ignorados) — o CEP precisa ter 8 dígitos e terminar ali.
+
+**O que continua igual:** o número e o complemento que a pessoa escreveu
+nunca são apagados; CEP inexistente, sem internet e CEP inválido só
+avisam; o Ctrl+Z desfaz o preenchimento; as páginas extras recebem o mesmo
+endereço.
+
+### 2. Recibo: `RECIBO → cliente → data`
+
+O nome do arquivo do recibo (PDF, PNG e JSON — e o título sugerido na
+impressão) tem **sempre** a mesma ordem:
+
+```
+RECIBO - Oficina São João Pinturas - 24-11-2026
+```
+
+A garantia agora está **escrita no código e travada em teste**: o nome
+começa com `RECIBO - `, o nome do cliente vem no meio e a data (DD-MM-AAAA,
+a data do download) fecha o nome — inclusive quando o cliente tem “ - ”
+no nome. Sem cliente, entra `SEM CLIENTE` no lugar.
+
+### 3. Edição de texto em **todas** as partes digitáveis
+
+A edição que existia no “tipo de tecido” agora está em **todo** campo
+digitável da Ficha Técnica:
+
+| Parte | Onde |
+|---|---|
+| Dados do cliente | nome, CPF/CNPJ, vendedor, telefone, endereço, cidade, CEP |
+| Tipo de tecido | folha 1 e páginas extras |
+| Nº da ficha, data, previsão | topo da folha |
+| Valor de entrada | bloco financeiro |
+| Separador e títulos das seções | “Detalhes do Modelo”, “CORES DO TECIDO”, “TIPO DE TECIDO” |
+| Aviso | rodapé da folha |
+| Grade e medidas | células da produção e tabelas de medidas |
+| Linhas de produção | modelo, valor e quantidade |
+
+- Em **texto editável** (`contenteditable`, como o tipo de tecido) a
+  formatação continua valendo para o **trecho selecionado**.
+- Em **campo simples** (`<input>`) o navegador não guarda HTML dentro do
+  texto — então a formatação vale para o **campo inteiro**, e a mini barra
+  mostra a dica **“campo”** para não haver dúvida.
+- O botão **⌫ (Limpar)** devolve o campo exatamente ao jeito que estava
+  (inclusive a cor e o destaque de fábrica).
+- A formatação **sobrevive**: ao **Ctrl+Z/Ctrl+Y**, ao **salvar** (`.json`
+  e “Minhas fichas”), ao **reabrir** a ficha e ao **espelho** das páginas
+  extras (a folha 1 é a configuração: as páginas saem iguais na
+  impressão).
+- O **separador** continua com o seu controle de tamanho próprio: o
+  tamanho escolhido na barra vai para ele, para os dois não brigarem.
+
+### 4. A barra de formatação ficou discreta
+
+A barra era uma faixa pesada com os rótulos “Formato:”, “Tamanho:”,
+“Cor:” e “Marcador:”. Agora é uma **mini barra**: só os botões, pequenos,
+com fundo quase transparente e cantos de 9 px. Ganhou também o botão de
+**itálico**, e o **⌫** substituiu o texto “Limpar”.
+
+**Testes** — novos arquivos no `npm test`:
+
+- `VERSAO_10_0/tests/test_endereco_rapido_v10.js` (29 verificações): achar
+  o CEP num texto colado, não confundir telefone com CEP, tirar o CEP do
+  texto, o botão que consulta na hora, o endereço colado preenchendo CEP,
+  cidade e endereço, e número/complemento preservados;
+- `VERSAO_10_0/tests/test_texto_rico_v10.js` (32 verificações): a barra
+  discreta, a barra abrindo em todas as partes digitáveis, negrito,
+  itálico, tamanho, cor, destaque, “Limpar”, o formato sobreviving ao
+  Ctrl+Z, ao `.json`, ao reabrir e ao espelho das páginas extras;
+- `VERSAO_10_0/tests/test_recibo_nome_arquivo_v10.js` (novas
+  verificações): a **ordem** `RECIBO → cliente → data` do nome do recibo.
+
 ## V10.9.0 — Endereço por CEP: digita o CEP e o endereço se preenche (2026-11-23)
 
 **O pedido:** *“implementar um sistema de preenchimento automático de

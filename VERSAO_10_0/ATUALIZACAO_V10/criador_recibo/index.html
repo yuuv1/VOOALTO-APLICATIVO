@@ -2341,6 +2341,14 @@ function baixarBlob(blob,nome){
   a.remove();
   setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},10000);
 }
+/* ═══ NOME DO ARQUIVO DO RECIBO ═══
+   A ordem é sempre a mesma, do começo para o fim:
+       RECIBO → nome do cliente → data
+   Ex.: "RECIBO - Oficina São João Pinturas - 24-11-2026"
+
+   O mesmo nome é usado no PDF (o navegador sugere o nome do PDF a partir
+   do título da página), no PNG e no .json — para a pessoa achar o recibo
+   depois sem precisar lembrar como o salvou. */
 function nomeArquivoRecibo(est, dataAtual){
   const e=est||estado;
   const cliente=String(e.cliente&&e.cliente.nome||'').normalize('NFC')
