@@ -84,6 +84,40 @@ class CargaLocal extends ResourceLoader {
     d.querySelectorAll('#pageStripInner .v7-strip-btn').length === 2,
     d.querySelectorAll('#pageStripInner .v7-strip-btn').length);
 
+  /* ══ 1b. A faixa está LITERALMENTE grudada no rodapé ══ */
+  console.log('\n── 1b. Encaixada no rodapé (sem folga) ──');
+  const cssWrap=(css.match(/#pageStripWrap\{[^}]*\}/)||[''])[0];
+  const cssInner=(css.match(/#pageStripInner\{[^}]*\}/)||[''])[0];
+  const cssAberta=(css.match(/#pageStripWrap:hover #pageStripInner[^{]*\{[^}]*\}/)||[''])[0];
+  ok('a faixa está colada na borda de baixo (bottom:0, sem folga)',
+    /bottom:0(px)?[;}]/.test(cssWrap), cssWrap);
+  ok('a folga de 10px do rodapé sumiu',
+    !/bottom:10px/.test(cssWrap) && !/bottom:8px/.test(cssWrap), cssWrap);
+  ok('a borda de baixo some (a faixa se apoia na borda da tela)',
+    /border-bottom:0/.test(cssWrap), cssWrap);
+  ok('o canto de baixo é reto (encostado na tela) e o de cima é arredondado',
+    /border-radius:15px 15px 0 0/.test(cssWrap), cssWrap);
+  ok('a regra do celular também deixa a faixa no rodapé (bottom:0)',
+    /@media\(max-width:900px\)\{[^}]*#pageStripWrap\{[^}]*bottom:0(px)?\}/.test(css),
+    (css.match(/@media\(max-width:900px\)\{[^}]*\}[^}]*\}/)||[''])[0]);
+
+  /* ══ 1c. O estado recolhido é OBJETIVAMENTE pequeno ══ */
+  console.log('\n── 1c. O recolhido é realmente pequeno ──');
+  ok('o conteúdo recolhido tem ALTURA zero (não só largura zero)',
+    /height:0[;}]/.test(cssInner) && /max-height:0[;}]/.test(cssInner), cssInner);
+  ok('o conteúdo recolhido esconde o que transborda',
+    /overflow:hidden/.test(cssInner), cssInner);
+  ok('a miniatura sozinha (92px) não segura mais a faixa em pé',
+    /height:92px/.test(cssAberta) && !/height:92px/.test(cssInner), cssAberta);
+  ok('a altura é animada (a faixa cresce em vez de "pular")',
+    /transition:[^}]*height/.test(cssInner), cssInner);
+  ok('a plaquinha sozinha é o que fica visível (altura pequena)',
+    /\.v7-strip-handle\{[^}]*height:2\dpx/.test(css),
+    (css.match(/\.v7-strip-handle\{[^}]*\}/)||[''])[0]);
+  ok('a lista de miniaturas não cria barra de rolagem (não empurra a altura)',
+    /#pageStripList\{[^}]*scrollbar-width:none/.test(css),
+    (css.match(/#pageStripList\{[^}]*\}/)||[''])[0]);
+
   /* ══ 2. Começa recolhida e abre no mouse ══ */
   console.log('\n── 2. Recolhida por padrão, abre no mouse ──');
   ok('o conteúdo começa recolhido (largura 0 e invisível)',
