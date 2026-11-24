@@ -74,11 +74,27 @@ faltar. A comparação ignora acento e pontuação, e `GO` não casa dentro de
 - **Sem internet / CORS bloqueado**: avisa e **não apaga nada** — o endereço
   e a cidade escritos à mão continuam intactos.
 
-**Testes** — `VERSAO_10_0/tests/test_cep_v10.js` (48 verificações, novo
+**O “complemento” do CEP é a faixa da rua, não o complemento do cliente**
+
+Os provedores devolvem no campo `complemento` a **faixa de numeração
+coberta pelo CEP**, não o complemento (sala/apto/bloco) de quem mora lá:
+
+| Provedor | O que devolve no `complemento` |
+|---|---|
+| ViaCEP | `de 612 a 1510 - lado par`, `até 653 - lado ímpar` |
+| BrasilAPI / OpenCEP | `de frente com o número 1000` |
+
+Escrever isso no endereço deixaria o campo impróprio (“Avenida Paulista, de
+612 a 1510 - lado par, 250”). Então o módulo **descarta a faixa** e só
+aproveita o que é complemento de verdade (`Bloco A`, `Sala 12`,
+`Apto 301`). O complemento que a **pessoa escreveu** no campo nunca é
+apagado — essa parte é intocável.
+
+**Testes** — `VERSAO_10_0/tests/test_cep_v10.js` (52 verificações, novo
 arquivo no `npm test`): normalização e máscara, a mesclagem que preserva
-número e complemento, a queda do primeiro provedor para o segundo, o cache
-offline, CEP inválido/inexistente/sem rede, a ficha (folha 1 e Preenchimento
-rápido) e o recibo.
+número e complemento, o descarte da faixa de rua, a queda do primeiro
+provedor para o segundo, o cache offline, CEP inválido/inexistente/sem
+rede, a ficha (folha 1 e Preenchimento rápido) e o recibo.
 
 ## V10.8.0 — Estúdio do mockup: alinhar, copiar/colar/desfazer e ampliar sem a arte sumir (2026-11-23)
 

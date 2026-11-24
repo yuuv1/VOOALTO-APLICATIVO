@@ -329,6 +329,11 @@ VooaltoCep.ligar(opcoes)         → conecta um campo de CEP a dois campos
 5. **Erro nunca é exceção:** `invalido`, `nao-encontrado`, `rede`, `tempo`,
    `sem-rede` — cada um com mensagem para a pessoa, e **sem apagar nada**.
 6. **O que o CEP preencheu continua editável** — é texto comum no campo.
+7. **O `complemento` do provedor não é o complemento do cliente.** As bases
+   públicas devolvem ali a *faixa* da rua (`de 612 a 1510 - lado par`,
+   `até 653 - lado ímpar`, `de frente com o número 1000`). Isso é
+   descartado por `complementoUtil()`; só entra complemento de verdade
+   (`Bloco A`, `Sala 12`, `Apto 301`).
 
 **Onde está ligado:**
 

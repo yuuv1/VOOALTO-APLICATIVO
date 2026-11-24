@@ -241,6 +241,58 @@
     return resto.length === 0;
   }
 
+  /* ── complemento: o que o CEP traz NÃO é o complemento do cliente ──────
+     Os provedores devolvem no campo "complemento" a FAIXA da rua coberta
+     pelo CEP, não o complemento (sala/apto/bloco) de quem mora lá:
+        "de 612 a 1510 - lado par"   (ViaCEP)
+        "até 653 - lado ímpar"       (ViaCEP)
+        "de frente com o número 1000" (BrasilAPI/OpenCEP)
+     Isso não serve como endereço e polui o campo. Então: quando o texto
+     parece FAIXA/indicação de logradouro, ele é descartado; quando parece
+     complemento de verdade ("Bloco A", "Sala 12", "Apto 301"), é aproveitado.
+     O complemento que a PESSOA escreveu no campo nunca é mexido. */
+  var RE_FAIXA = [
+    /\blado\s+(par|[íi]mpar)\b/,
+    /\bde\s+\d+\s+a\s+\d+\b/,
+    /\bat[ée]\s+\d+\b/,
+    /^\s*\d+\s*-\s*\d+\s*$/,
+    /\bde\s+frente\s+com\b/,
+    /\breferente\s+a\b/,
+    /\bentre\s+os\s+n[úu]meros\b/,
+    /\bnum\.?\s*\d+\s*a\s*\d+\b/
+  ];
+  /* palavras que indicam um complemento de verdade */
+  var PALAVRAS_COMPLEMENTO_REAL = ['bloco', 'apto', 'apartamento', 'sala', 'loja',
+    'casa', 'kit', 'conjunto', 'andar', 'fundos', 'terreo', 'subsolo', 'box',
+    'unidade', 'edificio', 'edif', 'predio', 'galpao', 'pavilhao', 'grupo',
+    'bl', 'conj', 'un'];
+  function ehFaixa(txt) {
+    var t = String(txt == null ? '' : txt).toLowerCase();
+    if (!t.trim()) return false;
+    for (var i = 0; i < RE_FAIXA.length; i++) {
+      if (RE_FAIXA[i].test(t)) return true;
+    }
+    return false;
+  }
+  function ehComplementoReal(txt) {
+    var t = norm(txt);
+    if (!t) return false;
+    var tokens = t.split(' ');
+    for (var i = 0; i < tokens.length; i++) {
+      if (PALAVRAS_COMPLEMENTO_REAL.indexOf(tokens[i]) >= 0) return true;
+    }
+    return false;
+  }
+  /* devolve o complemento que vale a pena escrever no endereço:
+     só quando for um complemento DE VERDADE (bloco, sala, apto...). */
+  function complementoUtil(bruto) {
+    var txt = String(bruto == null ? '' : bruto).trim();
+    if (!txt) return '';
+    if (ehFaixa(txt)) return '';
+    if (!ehComplementoReal(txt)) return '';
+    return txt;
+  }
+
   /* ── montagem dos textos ─────────────────────────────────────────────── */
   function juntar(partes) {
     return partes.filter(function (p) { return String(p || '').trim(); })
@@ -249,7 +301,7 @@
   }
   function montarEndereco(dados) {
     if (!dados) return '';
-    return juntar([dados.logradouro, dados.complemento, dados.bairro]);
+    return juntar([dados.logradouro, complementoUtil(dados.complemento), dados.bairro]);
   }
   function montarCidade(dados) {
     if (!dados) return '';
@@ -271,7 +323,7 @@
     var txt = String(atual == null ? '' : atual).trim();
     if (!dados) return txt;
     var log = String(dados.logradouro || '').trim();
-    var comp = String(dados.complemento || '').trim();
+    var comp = complementoUtil(dados.complemento);
     var bairro = String(dados.bairro || '').trim();
     if (!txt) return juntar([log, comp, bairro]);
     if (log && contem(txt, log)) {
@@ -449,6 +501,8 @@
     norm: norm,
     contem: contem,
     soNumeroComplemento: soNumeroComplemento,
+    complementoUtil: complementoUtil,
+    ehFaixa: ehFaixa,
     ligar: ligar,
     cacheLimpar: cacheLimpar,
     CFG: CFG,
