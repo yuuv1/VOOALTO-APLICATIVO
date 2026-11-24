@@ -1,5 +1,45 @@
 # VOOALTO V10 — Registro de alterações
 
+## V10.11.1 — A faixa de páginas agora fica realmente pequena e encaixada no rodapé (2026-11-24)
+
+**O pedido (depois de ver a V10.11):** *“ficou feio, ficou do tamanho que tava
+antes”* e *“ele tem que encaixar literalmente grudado no rodapé, aí ao passar o
+mouse ele expande pro normal”*.
+
+**O que estava errado:** na V10.11 a faixa só encolhia **na largura**. A
+**altura** continuava sendo a da miniatura (92px), então o que aparecia no
+rodapé era uma **caixa preta alta e vertical** — do mesmo tamanho da faixa
+antiga — em vez de uma plaquinha baixa. Além disso ela ficava com uma folga
+de `bottom:10px` acima da borda inferior da tela.
+
+**O que mudou:**
+
+- **A altura também é recolhida.** O conteúdo da faixa (miniaturas e botões)
+  passa a ter `height:0` / `max-height:0` com `overflow:hidden` quando
+  fechada. Recolhida, sobra só a **plaquinha** (ícone de páginas + nº de
+  páginas), com ~38px de altura.
+- **Encaixada no rodapé de verdade.** A faixa passou de `bottom:10px` para
+  `bottom:0px`, sem folga, com a borda de baixo removida e o canto de baixo
+  reto — ela se apoia na borda da tela (vale também na regra do celular,
+  que estava em `bottom:8px`).
+- **Ao passar o mouse ela sobe e abre no tamanho normal**, com as miniaturas
+  e os botões **＋** (adicionar) e **🗋** (adicionar em branco), como
+  antes. A altura é **animada**, então ela cresce a partir do rodapé em vez
+  de “pular”.
+- **A lista de miniaturas não cria barra de rolagem**, para não empurrar a
+  altura da faixa.
+
+**Continua funcionando como antes:** toque no celular, foco pelo teclado,
+clique que deixa a faixa fixa, contador de páginas, exclusão, duplicação e
+reordenação por arrasto.
+
+**Teste novo (`npm test`):** `test_faixa_paginas_v10.js` — 54 verificações
+(agora incluindo as novas: faixa colada em `bottom:0`, sem folga, canto de
+baixo reto, conteúdo recolhido com **altura** zero e abertura com a altura
+completa).
+
+---
+
 ## V10.11.0 — A faixa de páginas fica escondida no rodapé (2026-11-24)
 
 **O pedido:** *“coloque essa parte de adicionar novas páginas em formato
