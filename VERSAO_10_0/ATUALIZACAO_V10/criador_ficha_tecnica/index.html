@@ -10973,8 +10973,8 @@ function v10CepDepois(){
 }
 function v10CepOpcoes(){
   return {
-    mesclarEndereco:function(atual,dados){return VooaltoCep.mesclarEndereco(atual,dados);},
-    mesclarCidade:function(atual,dados){return VooaltoCep.mesclarCidade(atual,dados);},
+    mesclarEndereco:function(atual,dados,ctx){return VooaltoCep.mesclarEndereco(atual,dados,ctx);},
+    mesclarCidade:function(atual,dados,ctx){return VooaltoCep.mesclarCidade(atual,dados,ctx);},
     avisar:v10CepAvisar
   };
 }

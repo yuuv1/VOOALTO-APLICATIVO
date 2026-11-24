@@ -293,6 +293,44 @@
     return txt;
   }
 
+  /* ── pequenos utilitários de texto ────────────────────────────────────── */
+  /* a "chave" de uma palavra: sem acento, sem caixa e sem pontuação */
+  function chavePalavra(p) {
+    return String(p == null ? '' : p).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+  function palavras(txt) {
+    return String(txt == null ? '' : txt).split(/\s+/)
+      .filter(function (p) { return p.length; })
+      .map(function (p) { return { t: p, k: chavePalavra(p) }; });
+  }
+  /* tira separadores órfãos: ", ,", "- 250", "250 ," */
+  function limparSeparadores(txt) {
+    var t = String(txt == null ? '' : txt);
+    t = t.replace(/\s*,\s*,\s*/g, ', ');
+    t = t.replace(/^[\s,\-\u2013\u2014]+/, '').replace(/[\s,\-\u2013\u2014]+$/, '');
+    return t.replace(/\s+/g, ' ').trim();
+  }
+  /* remove um trecho do texto comparando palavra a palavra (sem acento,
+     sem caixa e ignorando a pontuação). Devolve o texto restante. */
+  function removerTrecho(txt, trecho) {
+    var alvo = palavras(trecho).map(function (p) { return p.k; });
+    if (!alvo.length) return txt;
+    var ps = palavras(txt);
+    for (var i = 0; i + alvo.length <= ps.length; i++) {
+      var igual = true;
+      for (var j = 0; j < alvo.length; j++) {
+        if (ps[i + j].k !== alvo[j]) { igual = false; break; }
+      }
+      if (!igual) continue;
+      var resto = ps.slice(0, i).concat(ps.slice(i + alvo.length))
+        .map(function (p) { return p.t; }).join(' ');
+      return limparSeparadores(resto);
+    }
+    return txt;
+  }
+
   /* ── montagem dos textos ─────────────────────────────────────────────── */
   function juntar(partes) {
     return partes.filter(function (p) { return String(p || '').trim(); })
@@ -319,13 +357,27 @@
        * campo só com número    -> "Rua X, 250, Bairro" (o número fica)
        * campo com outro texto  -> fica como está; o CEP só completa o bairro
      É isto que garante o número e o complemento intactos. */
-  function mesclarEndereco(atual, dados) {
+  /* ctx (opcional) diz o que o CEP escreveu antes neste campo:
+       { anteriorLog, anteriorBairro, anteriorCidadeTexto }
+     Serve para TROCAR DE CEP: o logradouro e a cidade que o CEP tinha
+     posto saem e os novos entram — mas o que a PESSOA escreveu (número,
+     complemento) fica exatamente como está. */
+  function mesclarEndereco(atual, dados, ctx) {
     var txt = String(atual == null ? '' : atual).trim();
     if (!dados) return txt;
     var log = String(dados.logradouro || '').trim();
     var comp = complementoUtil(dados.complemento);
     var bairro = String(dados.bairro || '').trim();
     if (!txt) return juntar([log, comp, bairro]);
+    /* o logradouro que o CEP escreveu ANTES ainda está no campo: a pessoa
+       não mexeu no endereço, só trocou o CEP. Então o velho sai, o novo
+       entra, e o que a pessoa escreveu (nº, complemento) fica. */
+    if (ctx && ctx.anteriorLog && ctx.anteriorLog !== log && contem(txt, ctx.anteriorLog)) {
+      var resto = removerTrecho(txt, ctx.anteriorLog);
+      if (ctx.anteriorBairro) resto = removerTrecho(resto, ctx.anteriorBairro);
+      resto = limparSeparadores(resto);
+      if (resto !== txt) return juntar([log, comp, resto, bairro]);
+    }
     if (log && contem(txt, log)) {
       /* o logradouro já está escrito: o nº e o complemento ficam como
          estão e só o bairro que faltava é acrescentado */
@@ -338,15 +390,66 @@
     if (bairro && !contem(txt, bairro)) return txt + ', ' + bairro;
     return txt;
   }
-  function mesclarCidade(atual, dados) {
+  function mesclarCidade(atual, dados, ctx) {
     var txt = String(atual == null ? '' : atual).trim();
     if (!dados) return txt;
     var cidade = String(dados.cidade || '').trim();
     var uf = String(dados.uf || '').trim();
     if (!txt) return cidade ? (uf ? cidade + ' - ' + uf : cidade) : (uf || '');
+    /* a cidade que o CEP escreveu ANTES ainda está no campo, intacta: a
+       pessoa não mexeu nela, só trocou o CEP. Então a cidade nova entra
+       no lugar — sem apagar nada que a pessoa tenha escrito. */
+    if (ctx && ctx.anteriorCidadeTexto && norm(txt) === norm(ctx.anteriorCidadeTexto)) {
+      return cidade ? (uf ? cidade + ' - ' + uf : cidade) : (uf || '');
+    }
     if (cidade && !contem(txt, cidade)) return txt;   /* outro endereço: mantém */
     if (uf && !contem(txt, uf) && !/[-\u2013\u2014]/.test(txt)) return txt + ' - ' + uf;
     return txt;
+  }
+
+  /* ── o que o CEP já preencheu (compartilhado entre os campos) ──────────
+     O painel de Preenchimento rápido COPIA o endereço da folha 1 para os
+     campos dele. Se cada campo lembrasse sozinho do seu preenchimento, o
+     painel não saberia que aquele logradouro veio do CEP — e não trocaria
+     o endereço quando a pessoa digitasse outro CEP.
+
+     Guardamos aqui os últimos preenchimentos do CEP (os mais recentes
+     primeiro). Para saber se um logradouro no campo é "do CEP" ou "da
+     pessoa", procuramos o registro mais recente cujo logradouro está
+     naquele texto. Aí dá para trocar de CEP sem perder o número e o
+     complemento que a pessoa digitou. */
+  var cepPreenchidos = [];
+  var CEP_PREENCHIDOS_MAX = 20;
+
+  function registrarCep(dados) {
+    var reg = {
+      log: String(dados.logradouro || '').trim(),
+      bairro: String(dados.bairro || '').trim(),
+      cidadeTexto: montarCidade(dados),
+    };
+    if (!reg.log && !reg.cidadeTexto) return;
+    cepPreenchidos.unshift(reg);
+    if (cepPreenchidos.length > CEP_PREENCHIDOS_MAX) cepPreenchidos.length = CEP_PREENCHIDOS_MAX;
+  }
+  /* o registro do CEP que escreveu aquele logradouro (mais recente primeiro) */
+  function cepQueEscreveu(txt) {
+    var t = String(txt == null ? '' : txt);
+    if (!t.trim()) return null;
+    for (var i = 0; i < cepPreenchidos.length; i++) {
+      var r = cepPreenchidos[i];
+      if (r.log && contem(t, r.log)) return r;
+    }
+    return null;
+  }
+  /* o registro do CEP que escreveu aquela cidade */
+  function cepQueEscreveuCidade(txt) {
+    var t = String(txt == null ? '' : txt).trim();
+    if (!t) return null;
+    for (var i = 0; i < cepPreenchidos.length; i++) {
+      var r = cepPreenchidos[i];
+      if (r.cidadeTexto && norm(t) === norm(r.cidadeTexto)) return r;
+    }
+    return null;
   }
 
   /* ── ligar um campo de CEP ───────────────────────────────────────────── */
@@ -369,8 +472,12 @@
 
     /* o que ESTE lookup preencheu — para distinguir "a pessoa escreveu" de
        "foi o CEP que preencheu". O que a pessoa escreveu NUNCA é
-       sobrescrito; o que o CEP preencheu pode ser refeito. */
+       sobrescrito; o que o CEP preencheu pode ser refeito (é assim que
+       trocar de CEP atualiza o endereço e a cidade sem perder o nº). */
     var preenchido = { end: '', cidade: '' };
+    /* o que o CEP escreveu neste campo: permite trocar de CEP mantendo o
+       número/complemento que a pessoa digitou */
+    var doCep = { log: '', bairro: '', cidadeTexto: '' };
 
     function ehCampoFormulario(el) {
       if (!el || !el.tagName) return false;
@@ -399,10 +506,10 @@
     /* preenche um campo: sobrescreve se estiver vazio OU se for exatamente o
        que o CEP escreveu antes (aí o dado do CEP está desatualizado);
        nunca sobrescreve texto escrito pela pessoa. */
-    function aplicarCampo(el, txt, rotulo, mantidos, mesclar, dados) {
+    function aplicarCampo(el, txt, rotulo, mantidos, mesclar, dados, ctx) {
       if (!el) return false;
       var atual = String(lerValor(el) || '').trim();
-      var novo = (typeof mesclar === 'function') ? String(mesclar(atual, dados) || '').trim() : txt;
+      var novo = (typeof mesclar === 'function') ? String(mesclar(atual, dados, ctx) || '').trim() : txt;
       if (!novo) { if (atual) mantidos.push(rotulo); return false; }
       if (novo === atual) { mantidos.push(rotulo); return false; }
       escrever(el, novo);
@@ -411,11 +518,18 @@
     }
 
     function mesclarEnd(atual, dados) {
-      if (typeof o.mesclarEndereco === 'function') return o.mesclarEndereco(atual, dados);
+      var reg = cepQueEscreveu(atual);
+      var ctx = {
+        anteriorLog: reg ? reg.log : '',
+        anteriorBairro: reg ? reg.bairro : '',
+      };
+      if (typeof o.mesclarEndereco === 'function') return o.mesclarEndereco(atual, dados, ctx);
       return atual ? atual : montarEndereco(dados);
     }
     function mesclarCid(atual, dados) {
-      if (typeof o.mesclarCidade === 'function') return o.mesclarCidade(atual, dados);
+      var reg = cepQueEscreveuCidade(atual);
+      var ctx = { anteriorCidadeTexto: reg ? reg.cidadeTexto : '' };
+      if (typeof o.mesclarCidade === 'function') return o.mesclarCidade(atual, dados, ctx);
       return atual ? atual : montarCidade(dados);
     }
 
@@ -423,6 +537,12 @@
       var mantidos = [];
       var mEnd = aplicarCampo(o.campoEndereco, null, 'endereço', mantidos, mesclarEnd, dados);
       var mCid = aplicarCampo(o.campoCidade, null, 'cidade', mantidos, mesclarCid, dados);
+      /* guarda o que o CEP colocou desta vez — é o que será trocado se a
+         pessoa digitar outro CEP depois (mantendo o que ela escreveu) */
+      doCep.log = String(dados.logradouro || '').trim();
+      doCep.bairro = String(dados.bairro || '').trim();
+      doCep.cidadeTexto = montarCidade(dados);
+      registrarCep(dados);
       return { mudou: mEnd || mCid, mantidos: mantidos, end: mEnd ? lerValor(o.campoEndereco) : '', cidade: mCid ? lerValor(o.campoCidade) : '' };
     }
 

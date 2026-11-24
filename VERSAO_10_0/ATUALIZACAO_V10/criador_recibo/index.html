@@ -2528,8 +2528,8 @@ function v10CepPreencher(){
     campoCep:cep,
     campoEndereco:$('f-end'),
     campoCidade:$('f-cidade'),
-    mesclarEndereco:function(atual,dados){return VooaltoCep.mesclarEndereco(atual,dados);},
-    mesclarCidade:function(atual,dados){return VooaltoCep.mesclarCidade(atual,dados);},
+    mesclarEndereco:function(atual,dados,ctx){return VooaltoCep.mesclarEndereco(atual,dados,ctx);},
+    mesclarCidade:function(atual,dados,ctx){return VooaltoCep.mesclarCidade(atual,dados,ctx);},
     avisar:v10CepAvisar,
     aoPreencher:function(){
       /* o que apareceu na tela tem que entrar no estado do recibo — os DOIS

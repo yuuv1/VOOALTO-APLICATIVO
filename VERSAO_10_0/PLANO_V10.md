@@ -334,6 +334,13 @@ VooaltoCep.ligar(opcoes)         → conecta um campo de CEP a dois campos
    `até 653 - lado ímpar`, `de frente com o número 1000`). Isso é
    descartado por `complementoUtil()`; só entra complemento de verdade
    (`Bloco A`, `Sala 12`, `Apto 301`).
+8. **Trocar de CEP troca endereço e cidade, mas não o que a pessoa
+   escreveu.** O módulo guarda os últimos preenchimentos do CEP
+   (`cepPreenchidos`) e, quando o logradouro ou a cidade do CEP anterior
+   aparece no campo, troca só essa parte — o número e o complemento
+   ficam. O registro é **compartilhado entre os campos** porque o painel
+   de Preenchimento rápido copia o endereço da folha 1 para os campos
+   dele.
 
 **Onde está ligado:**
 
