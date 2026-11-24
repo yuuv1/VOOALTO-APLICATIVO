@@ -42,7 +42,7 @@
     ],
     cacheKey: 'vooalto_v10_cep_cache',
     cacheMax: 400,          /* quantos CEPs ficam guardados no aparelho */
-    debounceMs: 700         /* espera a pessoa parar de digitar */
+    debounceMs: 450         /* espera a pessoa parar de digitar */
   };
 
   var LS = { cache: CFG.cacheKey };
@@ -85,6 +85,31 @@
     return d.slice(0, 5) + '-' + d.slice(5);
   }
   function valido(v) { return normalizar(v).length === 8; }
+
+  /* ── CEP dentro de um texto maior ──────────────────────────────────────
+     A pessoa cola o endereço inteiro:
+       "Rua das Flores, 120, Centro, Goiânia - GO, 74000-000"
+     O CEP está no fim. Aqui ele é separado do resto — e o resto continua
+     com a pessoa, para ser conferido.
+
+     Cuidado com o telefone: "9812345678" (10 dígitos) e "(11) 98123-4567"
+     NÃO podem virar CEP. Por isso o CEP precisa terminar ali (não pode ter
+     mais dígito depois) e precisa ter 8 dígitos com o separador opcional. */
+  function extrairCep(txt) {
+    var t = String(txt == null ? '' : txt);
+    var m = t.match(/(?:^|\D)(\d{5}[-\s]?\d{3})(?!\d)/);
+    if (m) return normalizar(m[1]);
+    return '';
+  }
+  /* Tira o CEP do texto e devolve o que sobrou (limpo nas pontas). */
+  function tirarCep(txt) {
+    var t = String(txt == null ? '' : txt);
+    var m = t.match(/(?:^|\D)(\d{5}[-\s]?\d{3})(?!\d)/);
+    if (!m) return t.trim();
+    var antes = t.slice(0, m.index).replace(/[\s,;|]+$/, '');
+    var depois = t.slice(m.index + m[0].length).replace(/^[\s,;|]+/, '');
+    return (antes + (antes && depois ? ' ' : '') + depois).replace(/\s+/g, ' ').trim();
+  }
 
   /* ── rede ────────────────────────────────────────────────────────────── */
   function temFetch() { return typeof raiz.fetch === 'function'; }
@@ -613,6 +638,8 @@
     normalizar: normalizar,
     formatar: formatar,
     valido: valido,
+    extrairCep: extrairCep,
+    tirarCep: tirarCep,
     buscar: buscar,
     montarEndereco: montarEndereco,
     montarCidade: montarCidade,
