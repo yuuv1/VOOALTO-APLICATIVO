@@ -93,9 +93,20 @@ function criarFetch(opcoes = {}) {
     if (ehBrasil && (modo === '404' || modo === 'tudo-404')) return resp({ message: 'CEP não encontrado' }, 404);
     if (/viacep/i.test(u)) {
       if (modo === 'tudo-404') return resp({ erro: true }, 200);
+      if (/30130000/.test(u)) {
+        return resp({ cep: '30130-000', logradouro: 'Avenida Afonso Pena', complemento: 'até 653 - lado ímpar',
+          unidade: '', bairro: 'Centro', localidade: 'Belo Horizonte', uf: 'MG', estado: 'Minas Gerais' });
+      }
       return resp(VIACEP);
     }
-    if (ehBrasil) return resp(BRASILAPI_RAW);
+    if (ehBrasil) {
+      /* outro CEP: a resposta real da BrasilAPI para 30130000 */
+      if (/30130000/.test(u)) {
+        return resp({ cep: '30130000', state: 'MG', city: 'Belo Horizonte', neighborhood: 'Centro',
+          street: 'Avenida Afonso Pena', service: 'open-cep', ibge: { city: '3106200', state: '31' } });
+      }
+      return resp(BRASILAPI_RAW);
+    }
     /* qualquer outra chamada (nuvem etc.) responde de forma inofensiva */
     return resp({ ok: true, servidor: '2026-11-03T00:00:00Z', ultimo_numero: 3387, total_numeros: 0 });
   };
@@ -153,6 +164,18 @@ function abrirApp(arquivo, fetchFalso) {
     ok('faixa da rua é descartada na hora',
       cepMod.complementoUtil('de 612 a 1510 - lado par') === '' && cepMod.complementoUtil('até 653 - lado ímpar') === '',
       cepMod.complementoUtil('de 612 a 1510 - lado par'));
+    /* TROCAR DE CEP: o que o CEP escreveu sai, o que a pessoa escreveu fica */
+    const BH = { logradouro: 'Avenida Afonso Pena', complemento: '', bairro: 'Centro', cidade: 'Belo Horizonte', uf: 'MG' };
+    ok('trocar de CEP troca o logradouro e mantém o número da pessoa',
+      cepMod.mesclarEndereco('Avenida Paulista, 250, Bela Vista', BH,
+        { anteriorLog: 'Avenida Paulista', anteriorBairro: 'Bela Vista' }) === 'Avenida Afonso Pena, 250, Centro',
+      cepMod.mesclarEndereco('Avenida Paulista, 250, Bela Vista', BH, { anteriorLog: 'Avenida Paulista', anteriorBairro: 'Bela Vista' }));
+    ok('trocar de CEP troca a cidade que o CEP tinha posto',
+      cepMod.mesclarCidade('São Paulo - SP', BH, { anteriorCidadeTexto: 'São Paulo - SP' }) === 'Belo Horizonte - MG',
+      cepMod.mesclarCidade('São Paulo - SP', BH, { anteriorCidadeTexto: 'São Paulo - SP' }));
+    ok('trocar de CEP NÃO troca a cidade que a PESSOA escreveu',
+      cepMod.mesclarCidade('Aparecida de Goiânia', BH, { anteriorCidadeTexto: 'São Paulo - SP' }) === 'Aparecida de Goiânia',
+      cepMod.mesclarCidade('Aparecida de Goiânia', BH, { anteriorCidadeTexto: 'São Paulo - SP' }));
     ok('mesclarEndereco não apaga um endereço já escrito (só completa o bairro)',
       cepMod.mesclarEndereco('Rua das Flores, 90', BRASILAPI) === 'Rua das Flores, 90, Setor Bueno',
       cepMod.mesclarEndereco('Rua das Flores, 90', BRASILAPI));
@@ -246,6 +269,17 @@ function abrirApp(arquivo, fetchFalso) {
     ok('o NÚMERO que a pessoa escreveu foi mantido', end.indexOf('250') >= 0, end);
     ok('o endereço preenchido continua editável (é o texto do campo)', typeof $('dc_end').textContent === 'string');
     ok('a página avisou que o endereço foi preenchido', /preenchido/i.test($('toast').textContent || ''), $('toast').textContent);
+
+    /* TROCAR DE CEP: o logradouro E a cidade mudam, o número fica */
+    $('dc_cep').textContent = '30130000';
+    $('dc_cep').dispatchEvent(new w.Event('input', { bubbles: true }));
+    await wait(1400);
+    const endTroca = ($('dc_end').textContent || '').trim();
+    const cidTroca = ($('dc_cidade').textContent || '').trim();
+    ok('trocar de CEP: o logradouro antigo saiu', endTroca.indexOf('Avenida T-9') < 0, endTroca);
+    ok('trocar de CEP: o logradouro novo entrou', endTroca.indexOf('Avenida Afonso Pena') >= 0, endTroca);
+    ok('trocar de CEP: o NÚMERO da pessoa continua lá', endTroca.indexOf('250') >= 0, endTroca);
+    ok('trocar de CEP: a CIDADE também mudou', cidTroca === 'Belo Horizonte - MG', cidTroca);
 
     /* o Preenchimento rápido também puxa o endereço */
     w.abrirPreenchimentoRapido();

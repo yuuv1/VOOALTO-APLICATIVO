@@ -90,11 +90,24 @@ aproveita o que é complemento de verdade (`Bloco A`, `Sala 12`,
 `Apto 301`). O complemento que a **pessoa escreveu** no campo nunca é
 apagado — essa parte é intocável.
 
-**Testes** — `VERSAO_10_0/tests/test_cep_v10.js` (52 verificações, novo
+**Trocar de CEP também troca o endereço e a cidade**
+
+Se a pessoa digita um CEP, e depois corrige e digita outro, o endereço **e**
+a cidade passam a ser os do CEP novo — mas o **número** e o **complemento**
+que ela escreveu continuam lá. Para isso o módulo guarda o que o CEP
+preencheu (por logradouro e por cidade) e reconhece esse texto quando o
+encontra de novo no campo; o que sobra é da pessoa e fica intacto.
+
+Detalhe que só aparece na prática: o painel de **Preenchimento rápido**
+**copia** o endereço da folha 1 para os campos dele. Por isso o registro do
+que o CEP preencheu é compartilhado entre os campos — senão o painel não
+saberia que aquele logradouro veio do CEP e não trocaria o endereço.
+
+**Testes** — `VERSAO_10_0/tests/test_cep_v10.js` (59 verificações, novo
 arquivo no `npm test`): normalização e máscara, a mesclagem que preserva
 número e complemento, o descarte da faixa de rua, a queda do primeiro
 provedor para o segundo, o cache offline, CEP inválido/inexistente/sem
-rede, a ficha (folha 1 e Preenchimento rápido) e o recibo.
+rede, a troca de CEP, a ficha (folha 1 e Preenchimento rápido) e o recibo.
 
 ## V10.8.0 — Estúdio do mockup: alinhar, copiar/colar/desfazer e ampliar sem a arte sumir (2026-11-23)
 
