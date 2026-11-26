@@ -1,3 +1,15 @@
+## Correção — Entrada do orçamento por página (2026-11-26)
+
+- Cada página é um orçamento independente: total do painel e entrada usam
+  somente os itens da página selecionada, sem somar outras folhas.
+- O sinal aparece em todas as folhas, calculado com o percentual daquela
+  página (50% por padrão) ou com seu valor fixo, inclusive na impressão.
+- Percentual, modo e valor fixo são preservados por página no autosave,
+  rascunho e JSON; duplicar copia a condição sem vincular as duas folhas.
+- Arquivos antigos continuam abrindo: percentual antigo é aplicado por página;
+  um valor fixo global antigo fica na primeira página, sem repeti-lo nas demais
+  (que iniciam em 50%).
+
 # VOOALTO V10 — Registro de alterações
 
 ## V10.12.0 — Imagens na folha do Orçamento: arraste, solte, e sai no PDF/PNG (2026-11-23)

@@ -62,7 +62,7 @@ function check(label, ok, extra) {
   check('duplica página com sucesso', pagesAfterDup === initialPages + 1, pagesAfterDup);
   check('página duplicada contém itens clonados', t(`documentPages[1].tableItems.length`) === itemsAfterDup);
   check('DOM da página 2 criado no preview', !!doc.getElementById('printable-a4-page-2'));
-  check('total geral atualizado após duplicação de página', t(`document.getElementById('orcRunningTotal').textContent`) === 'R$ 800,00');
+  check('duplicação mantém total só da página selecionada', t(`document.getElementById('orcRunningTotal').textContent`) === 'R$ 400,00');
 
   // 4. Test Drafts System (Salvar Rascunho)
   check('botão Salvar Rascunho presente no sidebar', !!doc.querySelector('button[onclick*="salvarRascunhoOrcamento"]'));
