@@ -1,8 +1,8 @@
 'use strict';
 /* ══ V10.7 — Sinal da produção no Orçamento ══
 
-   O Orçamento mostra, junto do Total geral, o SINAL da produção: por padrão
-   EXATAMENTE 50% do total, com a porcentagem editável e — para os casos
+   O Orçamento mostra, junto do total de cada página, o SINAL da produção: por padrão
+   EXATAMENTE 50% do total da própria página, com a porcentagem editável e — para os casos
    raros — o valor pode ser digitado por cima (valor fixo).
 
    O que este arquivo trava:
@@ -53,7 +53,7 @@ function check(label, ok, extra) {
   /* ── 1. o campo existe e nasce certo ── */
   check('caixa do sinal (#orcSinalBox) existe', !!doc.getElementById('orcSinalBox'));
   check('campo de porcentagem nasce em 50', t(`document.getElementById('orcSinalPct').value`) === '50');
-  check('sub-título anuncia 50% do total na folha', t(`document.getElementById('orcSinalSub').textContent`) === 'Exatamente 50% do Total geral · sai na folha do orçamento', t(`document.getElementById('orcSinalSub').textContent`));
+  check('sub-título anuncia 50% do total na folha', t(`document.getElementById('orcSinalSub').textContent`) === 'Exatamente 50% do total desta página · sai na folha do orçamento', t(`document.getElementById('orcSinalSub').textContent`));
   check('botão ↺ (voltar ao percentual) existe', !!doc.getElementById('orcSinalReset'));
 
   /* ── 2. acompanha o total: 2 itens × R$ 100 = R$ 200 → sinal R$ 100,00 ── */
@@ -102,7 +102,7 @@ function check(label, ok, extra) {
   /* ── 5. sobrevive ao autosave (orcCollectState / orcRestoreState) ── */
   t(`(function(){var el=document.getElementById('orcSinalVal');el.value='700';el.dispatchEvent(new window.Event('input',{bubbles:true}));return 'ok'})()`);
   const estado = t(`JSON.parse(JSON.stringify(orcCollectState()))`);
-  check('estado guarda o sinal', !!(estado && estado.sinal && estado.sinal.modo === 'fixo' && estado.sinal.fixo === '700'), estado && estado.sinal);
+  check('estado guarda o sinal', !!(estado && estado.pages[0].sinal && estado.pages[0].sinal.modo === 'fixo' && estado.pages[0].sinal.fixo === '700'), estado && estado.sinal);
   /* restaura em outro estado: percentual 40% */
   t(`orcRestoreState({version:'vooalto_orcamento_v9',form:{},pages:[{id:1,tableItems:[{modelo:'X',qnt:1,unit:100}]}],sinal:{pct:'40',modo:'percentual'}}); 'ok'`);
   t(`orcUpdateRunningTotal(); 'ok'`);
@@ -149,12 +149,28 @@ function check(label, ok, extra) {
   t(`(function(){var el=document.getElementById('orcSinalVal');el.value='250';el.dispatchEvent(new window.Event('input',{bubbles:true}));return 'ok'})()`);
   check('valor fixo aparece na folha (sem %)', t(`document.getElementById('preview-sinal-bar-1').innerText`) === 'SINAL DA PRODUÇÃO: R$ 250,00', t(`document.getElementById('preview-sinal-bar-1').innerText`));
 
-  /* multi-página: o sinal fecha a proposta — só na ÚLTIMA página */
-  t(`addDocumentPage(); updatePreviewFromForm(); 'ok'`);
-  check('com 2 páginas, a 1ª NÃO mostra o sinal', t(`document.getElementById('preview-sinal-bar-1').style.display`) === 'none', t(`document.getElementById('preview-sinal-bar-1').style.display`));
-  check('a 2ª (última) mostra, com base no total geral', t(`document.getElementById('preview-sinal-bar-2').innerText`) === 'SINAL DA PRODUÇÃO: R$ 250,00' && t(`document.getElementById('preview-sinal-bar-2').style.display`) === 'flex', t(`document.getElementById('preview-sinal-bar-2').innerText`));
+  /* Cada página é um orçamento independente, inclusive percentual e fixo. */
+  t(`addDocumentPage(); addTableRow(); documentPages[1].tableItems[0].qnt=2; documentPages[1].tableItems[0].unit=200; updatePreviewFromForm(); 'ok'`);
+  const barra = id => t(`document.getElementById('preview-sinal-bar-${id}').innerText`);
+  check('1ª página mantém seu sinal fixo visível', barra(1) === 'SINAL DA PRODUÇÃO: R$ 250,00' && t(`document.getElementById('preview-sinal-bar-1').style.display`) === 'flex', barra(1));
+  check('nova página usa 50% só dos seus R$ 400', barra(2) === 'SINAL DA PRODUÇÃO (50%): R$ 200,00', barra(2));
+  check('painel soma apenas a página selecionada', t(`document.getElementById('orcRunningTotal').textContent`) === 'R$ 400,00');
+  t(`document.getElementById('orcSinalPct').value='25'; orcSinalAoMudarPct(); changeActiveFormPage(0); 'ok'`);
+  check('trocar página restaura o modo fixo e valor anteriores', t(`orcSinalModo`) === 'fixo' && t(`document.getElementById('orcSinalVal').value`) === '250');
+  check('percentual da 2ª não altera a 1ª', barra(1) === 'SINAL DA PRODUÇÃO: R$ 250,00' && barra(2) === 'SINAL DA PRODUÇÃO (25%): R$ 100,00');
+  t(`documentPages[1].tableItems[0].qnt=4; recalculateTotalsFromTable(1); 'ok'`);
+  check('editar folha inativa recalcula só o sinal dela', barra(2) === 'SINAL DA PRODUÇÃO (25%): R$ 200,00' && barra(1) === 'SINAL DA PRODUÇÃO: R$ 250,00');
+  const multi = t(`JSON.stringify(orcCollectState())`);
+  t(`novoOrcamento(); orcRestoreState(JSON.parse(${JSON.stringify(multi)})); updatePreviewFromForm(); 'ok'`);
+  check('JSON restaura os dois sinais independentes', barra(1) === 'SINAL DA PRODUÇÃO: R$ 250,00' && barra(2) === 'SINAL DA PRODUÇÃO (25%): R$ 200,00');
+  t(`changeActiveFormPage(1); 'ok'`);
+  check('painel restaura percentual e valor da 2ª', t(`document.getElementById('orcSinalPct').value`) === '25' && t(`document.getElementById('orcSinalVal').value`) === '200,00');
+  t(`duplicateDocumentPage(1); document.getElementById('orcSinalPct').value='30'; orcSinalAoMudarPct(); 'ok'`);
+  check('duplicar copia condição sem compartilhar alterações', barra(2) === 'SINAL DA PRODUÇÃO (25%): R$ 200,00' && barra(3) === 'SINAL DA PRODUÇÃO (30%): R$ 240,00');
+  t(`removeActiveDocumentPage(0); updatePreviewFromForm(); 'ok'`);
+  check('excluir e renumerar mantém sinais corretos', barra(1) === 'SINAL DA PRODUÇÃO (25%): R$ 200,00' && barra(2) === 'SINAL DA PRODUÇÃO (30%): R$ 240,00');
   t(`removeActiveDocumentPage(); updatePreviewFromForm(); 'ok'`);
-  check('voltando a 1 página, o sinal volta a aparecer na folha', t(`document.getElementById('preview-sinal-bar-1').style.display`) === 'flex');
+  check('voltando a 1 página mantém condição própria', barra(1) === 'SINAL DA PRODUÇÃO (25%): R$ 200,00');
 
   /* a barra do sinal NÃO pode estar na lista de elementos escondidos na impressão */
   const idxChrome = html.indexOf('Hide ALL editor / UI chrome');
